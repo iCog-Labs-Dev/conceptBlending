@@ -49,7 +49,7 @@
 
 (: deep-member (-> Atom Expression Bool))
 (= (deep-member $item $expr)
-   (let $flat (collapse (superpose (flatten $expr)))   ; Force evaluation of the flattened result
+   (let $flat (flatten $expr)
        (foldl-atom $flat False $acc $x
          (or $acc (== $x $item))
        )
