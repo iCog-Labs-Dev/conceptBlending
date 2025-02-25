@@ -31,3 +31,28 @@
 ;       of a nested structure is needed.
 
 (= (flatten $expr) (collapse (unNest $expr)))
+
+
+
+; deep-member function
+; @description Recursively checks if a target atom exists within a potentially nested expression, determining membership
+;              by flattening the expression, collapsing its non-deterministic results, and folding over the flattened list
+;              to check for equality with the target. This function is optimized for handling complex, nested structures
+;              in conceptual blending, such as verifying the presence of specific roles or elements in mental spaces.
+; @param $item The atom (e.g., symbol, number) to search for within the expression, such as 'shelter' or '3'.
+; @param $expr The expression (potentially nested) to search within, which can include lists, atoms, or sub-expressions,
+;              such as (purpose (primary shelter (temporary tent))) or (list 1 (list 2 (list 3 4)) 5).
+; @return Bool: True if the target atom is found at any level of the expression, False otherwise.
+; @note This function leverages flatten, superpose, collapse, and foldl-atom from the MeTTa Standard Library to process
+;       nested structures efficiently. It is ideal for Phase 1 (Defining Core Data Structures) and
+;       subsequent phases in conceptual blending, such as checking roles (e.g., shelter in (purpose (primary shelter)))
+
+(: deep-member (-> Atom Expression Bool))
+(= (deep-member $item $expr)
+   (let $flat (collapse (superpose (flatten $expr)))   ; Force evaluation of the flattened result
+       (foldl-atom $flat False $acc $x
+         (or $acc (== $x $item))
+       )
+   )
+)
+
