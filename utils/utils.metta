@@ -86,8 +86,6 @@
     )
 )
 
-! (getValue d ((purpose (primary shelter)) (color (b (c (d blue)))) (weight 43)))
-
 
 
 
