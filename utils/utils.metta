@@ -56,34 +56,37 @@
    )
 )
 
-
-; safe-assoc function
-; @description Safely associates a key with its value in an association list returning
-;              the key-value pair as a list if the key is found, or logging a message and implicitly returning an empty
-;              list if not found. This function is designed to support conceptual blending tasks by retrieving roles or
-;              properties from mental spaces, handling explicitly structured association lists.
-; @param $key The symbol (e.g., 'purpose', 'color') to search for in the association list, representing a key in a mental
+; getValue function
+; @description Recursively retrieves the value associated with a target key in a nested association list by leveraging 
+;              non-deterministic computation. This function  extracts the key from 
+;              each pair, and returns the full pair (key-value) if the key matches
+;              It is designed to support conceptual blending tasks by accessing nested roles or properties 
+;              in mental spaces, handling deeply nested structures effectively.
+; @param $key The symbol (e.g., 'd', 'purpose') to search for in the association list, representing a key in a mental 
 ;             space's role or property mapping.
-; @param $alist The expression representing the association list, constructed with 'list' and containing pairs of the form
-;               (list $k $v) (e.g., (list (list purpose shelter) (list color blue))), which may include nested structures
-;               like (list (list color blue) ()).
-; @return Expression: A list containing the key-value pair (list $k $v) if found (e.g., (list purpose shelter)), or
-;                    implicitly () if the key is not found (not explicitly returned but assumed due to println! behavior).
-; @note the $rest parameter for the functon should also be represented as the list before it. i.e (list (list $k $v))
-(: safe-assoc (-> Symbol Expression Expression))
+; @param $list The expression representing the association list (e.g., ((purpose (primary shelter)) (color (b (c (d blue)))) 
+;               (weight 43))), which may contain nested pairs where values can be atoms or complex nested expressions.
+; @return Expression: The full pair (list $key $value) if the key is found (e.g., (d blue)), or implicitly () if the key 
+;                    is not found (not explicitly returned but assumed due to recursive termination in MeTTa).
+;@example ! (getValue d ((purpose (primary shelter)) (color (b (c (d blue)))) (weight 43))) returns (d blue)
 
-; Base case: If the association list is empty, log and return an empty list.
-(= (safe-assoc $key (list))
-   (println! "key not found"))
+(= (getValue $key $list)
+    (let*
+        (
+            ($el (superpose $list))
+            ($k1 (car-atom $el))
+        )
+        (if (== $k1 $key)
+            $el
+            (let $t (cdr-atom $el)
+                (getValue $key $t)
+            )
+        )
 
-; Recursive case: Pattern-match on the association list,
-; expecting it to be of the form (list (list $k $v) $rest).
-(= (safe-assoc $key (list (list $k $v) $rest))
-   (if (== $k $key)
-       (list $k $v)       ; If the key matches, return the pair.
-       (safe-assoc $key $rest)  ; Otherwise, continue searching in the rest.
-   )
+    )
 )
+
+! (getValue d ((purpose (primary shelter)) (color (b (c (d blue)))) (weight 43)))
 
 
 
