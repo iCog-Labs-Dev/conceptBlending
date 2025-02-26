@@ -85,13 +85,7 @@
    )
 )
 
-! (safe-assoc purpose
-      (list (list purpose shelter)
-            (list color blue)))
 
-! (safe-assoc color
-      (list (list purpose shelter)
-            (list (list color blue) ())))
 
 
 
