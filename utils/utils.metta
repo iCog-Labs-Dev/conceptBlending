@@ -56,3 +56,43 @@
    )
 )
 
+
+; safe-assoc function
+; @description Safely associates a key with its value in an association list returning
+;              the key-value pair as a list if the key is found, or logging a message and implicitly returning an empty
+;              list if not found. This function is designed to support conceptual blending tasks by retrieving roles or
+;              properties from mental spaces, handling explicitly structured association lists.
+; @param $key The symbol (e.g., 'purpose', 'color') to search for in the association list, representing a key in a mental
+;             space's role or property mapping.
+; @param $alist The expression representing the association list, constructed with 'list' and containing pairs of the form
+;               (list $k $v) (e.g., (list (list purpose shelter) (list color blue))), which may include nested structures
+;               like (list (list color blue) ()).
+; @return Expression: A list containing the key-value pair (list $k $v) if found (e.g., (list purpose shelter)), or
+;                    implicitly () if the key is not found (not explicitly returned but assumed due to println! behavior).
+; @note the $rest parameter for the functon should also be represented as the list before it. i.e (list (list $k $v))
+(: safe-assoc (-> Symbol Expression Expression))
+
+; Base case: If the association list is empty, log and return an empty list.
+(= (safe-assoc $key (list))
+   (println! "key not found"))
+
+; Recursive case: Pattern-match on the association list,
+; expecting it to be of the form (list (list $k $v) $rest).
+(= (safe-assoc $key (list (list $k $v) $rest))
+   (if (== $k $key)
+       (list $k $v)       ; If the key matches, return the pair.
+       (safe-assoc $key $rest)  ; Otherwise, continue searching in the rest.
+   )
+)
+
+! (safe-assoc purpose
+      (list (list purpose shelter)
+            (list color blue)))
+
+! (safe-assoc color
+      (list (list purpose shelter)
+            (list (list color blue) ())))
+
+
+
+
