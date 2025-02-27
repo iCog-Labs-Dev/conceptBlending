@@ -57,16 +57,16 @@
 )
 
 ; getValue function
-; @description Recursively retrieves the value associated with a target key in a nested association list by leveraging 
-;              non-deterministic computation. This function  extracts the key from 
+; @description Recursively retrieves the value associated with a target key in a nested association list by leveraging
+;              non-deterministic computation. This function  extracts the key from
 ;              each pair, and returns the full pair (key-value) if the key matches
-;              It is designed to support conceptual blending tasks by accessing nested roles or properties 
+;              It is designed to support conceptual blending tasks by accessing nested roles or properties
 ;              in mental spaces, handling deeply nested structures effectively.
-; @param $key The symbol (e.g., 'd', 'purpose') to search for in the association list, representing a key in a mental 
+; @param $key The symbol (e.g., 'd', 'purpose') to search for in the association list, representing a key in a mental
 ;             space's role or property mapping.
-; @param $list The expression representing the association list (e.g., ((purpose (primary shelter)) (color (b (c (d blue)))) 
+; @param $list The expression representing the association list (e.g., ((purpose (primary shelter)) (color (b (c (d blue))))
 ;               (weight 43))), which may contain nested pairs where values can be atoms or complex nested expressions.
-; @return Expression: The full pair (list $key $value) if the key is found (e.g., (d blue)), or implicitly () if the key 
+; @return Expression: The full pair (list $key $value) if the key is found (e.g., (d blue)), or implicitly () if the key
 ;                    is not found (not explicitly returned but assumed due to recursive termination in MeTTa).
 ;@example ! (getValue d ((purpose (primary shelter)) (color (b (c (d blue)))) (weight 43))) returns (d blue)
 
@@ -88,6 +88,29 @@
 
 
 
+; setValue function
+; @description Updates or sets a new value for a specified key in an association list by retrieving the existing key-value
+;              pair using getValue and replacing the value with a new one, creating a new key-value pair. This function
+;              supports conceptual blending tasks by dynamically modifying roles or properties in mental spaces, handling
+;              nested structures effectively.
+; @param $key The symbol (e.g., 'color', 'purpose') identifying the key in the association list whose value needs to be
+;             updated or set, representing a role or property in a mental space.
+; @param $list The expression representing the association list (e.g., ((purpose (primary shelter)) (color (b (c (d blue))))
+;               (weight 43))), which may contain nested pairs where values can be atoms or complex nested expressions.
+; @param $nval The new value (e.g., 'white', a nested expression) to associate with the specified key, replacing the
+;              existing value or creating a new pair if the key doesn’t exist.
+; @return Expression: A new key-value pair representing the updated or newly set association (e.g., (color white))
+; @note . Ideal for Phase 1 (Defining Core Data Structures) and beyond in updating roles or properties (e.g., setting color white for a
+;       mental space element) or modifying LLM outputs
 
 
+(= (setValue $key $list $nval)
+    (let*
+        (
+            (($key $oval) (getValue $key $list))
+            ($newPair (cons-atom $key ($nval)))
+        )
+        $newPair)
+)
 
+; ! (setValue primary ((purpose (primary shelter)) (color (b (c (d blue)))) (weight 43)) transportation ) returns (primary transportation)
