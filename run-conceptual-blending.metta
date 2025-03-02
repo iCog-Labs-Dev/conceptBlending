@@ -89,3 +89,44 @@
 ; ; [()]
 ; ; [()]
 ; ; [[`, (simplexBlend (blend historyMemory civilization riverPathCarving) temporalErosion), `], [`, (simplexBlend (blend historyMemory civilization forestBreathesLife) ecologicalMemory), `], [`, (simplexBlend (blend historyMemory oceanStories) civilizationWhispers), `], [`, (simplexBlend (blend philosophy riverPath) existentialErosion), `], [`, (simplexBlend (blend philosophy forest) existentialEcology), `], [`, (simplexBlend (blend philosophy oceanWhispers) existentialTides), `], [`, (simplexBlend (blend mathematics riverPath) patternErosion), `], [`, (simplexBlend (blend mathematics forest) patternEcology), `], [(simplexBlend (blend mathematicsPatterns oceanStories) narrativePatterns)]]
+
+
+
+
+; metta function to blend all atoms in a given list
+; (= (blend_from_list $network $list)
+;     ($network $list $list)
+; )
+
+
+; metta function to blend all atoms in a given lists
+; (= (blend_from_lists $network $list1 $list2)
+;     ($network $list1 $list2)
+; )
+
+
+; metta function to blend all atoms in given space using let*
+; limit input list for testing
+(= (blend_from_space $network $space)
+    (let*
+        (
+            ($knowledge_example (match $space (knowledge $y) $y))
+            ($nature_example (match $space (nature $x) $x))
+        )
+        ($network $knowledge_example $nature_example)
+    )
+)
+
+; (= (blend_from_space $network $space)
+;     (let*
+;         (
+;             ($first_item (match $space ($y) $y))
+;             ($second_item (match $space ($x) $x))
+;         )
+;         ($network $first_item $second_item)
+;     )
+; )
+
+
+! (import! &testSpace data)
+! (blend_from_space gpt_simplex &testSpace)
