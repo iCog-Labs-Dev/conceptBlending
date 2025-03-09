@@ -114,3 +114,8 @@
 )
 
 ; ! (setValue primary ((purpose (primary shelter)) (color (b (c (d blue)))) (weight 43)) transportation ) returns (primary transportation)
+
+
+
+
+
