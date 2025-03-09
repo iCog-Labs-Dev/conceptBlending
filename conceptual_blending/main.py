@@ -3,7 +3,7 @@ from hyperon.ext import register_atoms
 from .agents import *
 
 # Define networks and their corresponding function names
-NETWORKS = ["simplex", "mirror", "single", "double"]
+NETWORKS = ["simplex", "mirror", "single", "double", "vector"]
 
 @register_atoms(pass_metta=True)
 def grounded_atoms(metta):
