@@ -4,6 +4,7 @@ from conceptual_blending.prompts.simplex_network import SIMPLEX_PROMPT
 from conceptual_blending.prompts.mirror_network import MIRROR_PROMPT
 from conceptual_blending.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
 from conceptual_blending.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
+from conceptual_blending.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
 
 
 def get_prompt(network: str) -> str:
@@ -12,7 +13,8 @@ def get_prompt(network: str) -> str:
         "simplex": SIMPLEX_PROMPT,
         "mirror": MIRROR_PROMPT,
         "single": SINGLE_SCOPE_PROMPT,
-        "double": DOUBLE_SCOPE_PROMPT
+        "double": DOUBLE_SCOPE_PROMPT,
+        "vector": VECTOR_EXTRACTION_PROMPT
     }
     return prompts.get(network, "Error")
 
