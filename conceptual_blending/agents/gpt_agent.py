@@ -33,4 +33,6 @@ def prompt_agent(metta: MeTTa, network: str, *args):
 
     # Parse and return the result as atoms
     atoms = metta.parse_all(answer.content)
-    return [ValueAtom(atoms, 'Expression')]
+    atoms = ValueAtom(atoms, 'Expression')
+    atoms = E(atoms)
+    return [atoms]

@@ -2,7 +2,7 @@
 ! (import! &self conceptual_blending)
 
  ;; Ask the GPT agent with two explicit concepts for different networks
-; ! (gpt_simplex "Music" "Painting")
+! (let $v (gpt_simplex "Music" "Painting") (get-metatype $v))
 ; ! (gpt_mirror "Light" "Wisdom")
 ; ! (gpt_single "Nature" "Technology")
 ; ! (gpt_double "Emotion" "Mathematics")
@@ -130,7 +130,9 @@
 
 ; ! (import! &testSpace data)
 ; ! (blend_from_space gpt_simplex &testSpace)
-! (gpt_vector "Spider" "Man")
-! (gpt_vector "Bat" "Man")
-! (gpt_vector "messi" "ronaldo")
-! (gpt_vector "music" "painitng")
+;! (gpt_vector "Spider" "Man")
+;! (gpt_vector "Bat" "Man")
+;! (gpt_vector "messi" "ronaldo")
+;! (gpt_vector "music" "painitng")
+;! (gpt_vector "bird" "car")
+;! (gpt_vector "fish" "car")
