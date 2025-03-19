@@ -1,5 +1,6 @@
-;;define the type of concept
+;;this is an attempt for a formal computation of blending using info-theoretic measures and intensional theory
 
+;;define the type of concept
 (: concept Concept)
  ;;function that takes a concept and returns the number of properties that represent it.
  ;;parameter: concept
