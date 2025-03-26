@@ -10,13 +10,13 @@ load_dotenv()
 github_token = os.getenv("GITHUB_TOKEN")
 openai_key = os.getenv("OPENAI_API_KEY")
 
-if github_token:
-    endpoint = "https://models.inference.ai.azure.com"  # GitHub Marketplace API endpoint
-    client = OpenAI(
-        api_key=github_token,
-        base_url=endpoint
-    )
-elif openai_key:
+# if github_token:
+#     endpoint = "https://models.inference.ai.azure.com"  # GitHub Marketplace API endpoint
+#     client = OpenAI(
+#         api_key=github_token,
+#         base_url=endpoint
+#     )
+if openai_key:
     client = OpenAI(api_key=openai_key)
 else:
     raise ValueError("No API key found. Set GITHUB_TOKEN or OPENAI_API_KEY in the environment.")

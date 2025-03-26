@@ -1,10 +1,14 @@
 ;;this is an attempt for a formal computation of blending using info-theoretic measures and intensional theory
 
 ;;define the type of concept
-(: concept Concept)
+(: Concept Concept)
  ;;function that takes a concept and returns the number of properties that represent it.
  ;;parameter: concept
  ;;return: number of properties
+
+; !(let $q (cdr-atom (InputSpaces (Concept Spider@Man (Property (Legs 1.0) (Intelligence 0.2) (WebBuilding 1.0) (SocialStructure 0.1) (PredatoryBehavior 1.0) (Communication 0.2) (Symbolism 0.5) (PhysicalStrength 0.1))) (Concept Man@Spider (Property (Legs 0.1) (Intelligence 1.0) (WebBuilding 0.0) (SocialStructure 1.0) (PredatoryBehavior 0.3) (Communication 1.0) (Symbolism 0.8) (PhysicalStrength 0.7))))) (car-atom $q))
+
+
 (: get-number-of-properties (-> Concept Number))
 (=(get-number-of-properties $concept)
     (
