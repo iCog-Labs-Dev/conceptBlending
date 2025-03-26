@@ -71,3 +71,18 @@
 )
 ; ! (property-product ((web-creation 0.1) (intelligence 0.2) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)) ((web-creation 1.0) (intelligence 0.4) (physical-strength 0.1) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)))
 ; Output [((web-creation 0.1) (intelligence 0.08000000000000002) (physical-strength 0.06) (mobility 0.6400000000000001) (predatory-behavior 1.0) (social-structure 0.04000000000000001) (symbolism 0.48999999999999994) (tool-use 0.010000000000000002))]
+
+
+; ###################### Calculate Degree function ##########################
+(=(property-degree $concept)
+    (let*(
+        ($properties (get-properties $concept))
+        ($num-properties (size-atom $properties))
+        ($probability (/ 1.0 $num-properties))
+        ($degree (* -1 (log-math 10 $probability)))
+    )
+        $degree
+    )
+)
+; ! (property-degree (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
+; Output [0.9030899869919434]
