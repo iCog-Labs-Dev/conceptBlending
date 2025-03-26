@@ -199,3 +199,30 @@
 ;     $calculated-mu-emergence
 ; )
 ; Output [((web-creation 0.0) (intelligence 0.5030899869919434) (physical-strength 0.30308998699194345) (mobility 0.10308998699194338) (predatory-behavior 0.0) (social-structure 0.7030899869919434) (symbolism 0.20308998699194347) (tool-use 0.8030899869919434))]
+
+
+; ###################### Calculate mu hq blend ##########################
+(= (mu-hqblend $mu-emer $properties-min)
+    (let*(
+        ($product-emer-min (property-product $mu-emer $properties-min))
+        ($product-emer-min-nums (get-values $product-emer-min))
+        ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
+        ($num-properties (size-atom $product-emer-min))
+        ($1-over-prop (/ 1.0 $num-properties))
+        ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
+    )
+        (min-atom ($1-over-prop-summation 1))
+    )
+)
+; ! (let*(
+;         ($concept1 (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
+;         ($concept2 (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.2) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
+;         ($degree (property-degree $concept1))
+;         ($max (property-max $concept1 $concept2))
+;         ($min (property-min $concept1 $concept2))
+;         ($calculated-mu-emergence (mu-emergence $degree $max))
+;         ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
+;     )
+;     $calculated-mu-hqblend
+; )
+; Output [0.08213837126018374]
