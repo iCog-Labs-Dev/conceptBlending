@@ -3,14 +3,41 @@
 ! (import! &self conceptual_blending)
 ! (import! &self conceptBlending:utils:utils)
 
-! (getValue d ((purpose (primary shelter)) (color (b (c (d blue)))) (weight 43)))
+; ! (getValue d ((purpose (primary shelter)) (color (b (c (d blue)))) (weight 43)))
 
 
 
-;! (gpt_vector "Spider" "Man")
+! (gpt_vector "Spider" "Man")
 ;! (gpt_vector "Bat" "Man")
 ;! (gpt_vector "messi" "ronaldo")
 ;! (gpt_vector "music" "painitng")
 
 
-!(let* ( ($c (gpt_vector "Spider" "Man") )($s (car-atom $c)))$s)
+; !(let* ( ($c (gpt_vector "Spider" "Man") )($s (car-atom $c)))$s)
+!(let $i (gpt_vector "Spider" "Man") (get-metatype $i))
+
+!(
+    let* (
+        ($c (gpt_vector "Spider" "Man"))
+        ($s (superpose $c))
+        ($ff (collapse $s))
+        ($ee (car-atom $ff))
+        ($oo (cdr-atom $ee))
+        ($zz (cdr-atom $oo))
+        ($tt (car-atom $zz))
+        ($pp (car-atom $tt))
+        ($typee (get-metatype $pp))
+      
+        ; ($head (get-metatype $pp))
+
+        
+        
+       
+
+
+
+      
+    )
+  $typee
+    
+)
