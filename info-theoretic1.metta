@@ -86,3 +86,55 @@
 )
 ; ! (property-degree (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
 ; Output [0.9030899869919434]
+
+
+; ###################### Calculate min and max for Properties ##########################
+(= (min-property $properties1 $properties2)
+    (let*(
+        ($property1 (car-atom $properties1))
+        ($property2 (car-atom $properties2))
+        ($num1 (get-num $property1))
+        ($num2 (get-num $property2))
+        ($num-properties (size-atom $properties1))
+        ($min-prop ((car-atom $property1) (min-atom ($num1 $num2))))
+    )
+        (if (not (== $num-properties 1))
+            (let*(
+                ($tail-properties1 (cdr-atom $properties1))
+                ($tail-properties2 (cdr-atom $properties2))
+                ($call-back (min-property $tail-properties1 $tail-properties2))
+            )
+                (cons-atom $min-prop $call-back)
+            )
+            ($min-prop)
+        )
+    )
+)
+; ! (min-property ((web-creation 0.1) (intelligence 0.2) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)) ((web-creation 1.0) (intelligence 0.4) (physical-strength 0.1) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)))
+; Output [((web-creation 0.1) (intelligence 0.2) (physical-strength 0.1) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))]
+
+
+(= (max-property $properties1 $properties2)
+    (let*(
+        ($property1 (car-atom $properties1))
+        ($property2 (car-atom $properties2))
+        ($num1 (get-num $property1))
+        ($num2 (get-num $property2))
+        ($num-properties (size-atom $properties1))
+        ($max-prop ((car-atom $property1) (max-atom ($num1 $num2))))
+    )
+        (if (not (== $num-properties 1))
+            (let*(
+                ($tail-properties1 (cdr-atom $properties1))
+                ($tail-properties2 (cdr-atom $properties2))
+                ($call-back (max-property $tail-properties1 $tail-properties2))
+            )
+                (cons-atom $max-prop $call-back)
+            )
+            ($max-prop)
+
+        )
+    )
+)
+; ! (max-property ((web-creation 0.1) (intelligence 0.2) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)) ((web-creation 1.0) (intelligence 0.4) (physical-strength 0.1) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)))
+; Output [((web-creation 1.0) (intelligence 0.4) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))]
