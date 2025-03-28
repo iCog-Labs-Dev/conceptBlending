@@ -53,4 +53,7 @@ VECTOR_EXTRACTION_PROMPT = """
     - **Return only two lines in this format. Avoid explanations.**
     - Maintain MeTTa-style syntax and spacing.
     - Do **not** return explanations or backticks (```).
+    - **Make sure it is wrapped with bracket () like ((Concept '.....')(Concept '......'))**
+    - **Avoid wrapping it in**
+
 """
