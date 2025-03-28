@@ -20,7 +20,21 @@ def get_prompt(network: str) -> str:
 
 
 def prompt_agent(metta: MeTTa, network: str, *args):
-    """Generates a prompt, calls the GPT agent, and parses the response into atoms."""
+    """
+    Generates a prompt using the given network type and concepts,
+    calls the GPT agent, and parses the response into a list of MeTTa atoms.
+    
+    Steps:
+      1. Convert the provided concepts into strings.
+      2. Select and format the appropriate prompt.
+      3. Send the prompt via the GPT agent.
+      4. Use metta.parse_all to parse the returned text into a list of atoms.
+      5. Always return the list (even if it contains a single element) to satisfy
+         the grounded operation’s type requirement.
+    
+    Returns:
+      A list of MeTTa atoms.
+    """
     concept1 = str(args[0])
     concept2 = str(args[1])
     prompt = get_prompt(network)
@@ -29,10 +43,9 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     gpt_agent = ChatGPTAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
     answer = gpt_agent(messages, functions=[])
-    print(answer.content)
 
-    # Parse and return the result as atoms
-    atoms = metta.parse_all(answer.content)
-    atoms = ValueAtom(atoms, 'Expression')
-    atoms = E(atoms)
-    return [atoms]
+    # Use the built-in parser to convert the response text into atoms.
+    parsed_atoms = metta.parse_all(answer.content.strip())
+    
+    # Always return a list of atoms.
+    return parsed_atoms
