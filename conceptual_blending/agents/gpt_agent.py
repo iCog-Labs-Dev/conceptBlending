@@ -1,5 +1,6 @@
 from hyperon import *
 from .llmagent import ChatGPTAgent
+from conceptual_blending.prompts.network_selector import NETWORK_SELECTOR_PROMPT
 from conceptual_blending.prompts.simplex_network import SIMPLEX_PROMPT
 from conceptual_blending.prompts.mirror_network import MIRROR_PROMPT
 from conceptual_blending.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
@@ -14,7 +15,8 @@ def get_prompt(network: str) -> str:
         "mirror": MIRROR_PROMPT,
         "single": SINGLE_SCOPE_PROMPT,
         "double": DOUBLE_SCOPE_PROMPT,
-        "vector": VECTOR_EXTRACTION_PROMPT
+        "vector": VECTOR_EXTRACTION_PROMPT,
+        "network_selector": NETWORK_SELECTOR_PROMPT
     }
     return prompts.get(network, "Error")
 
