@@ -37,10 +37,10 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     Returns:
       A list of MeTTa atoms.
     """
-    concept1 = str(args[0])
-    concept2 = str(args[1])
+    concept_pair = str(args[0])
+    property_vector = str(args[1])
     prompt = get_prompt(network)
-    formatted_prompt = prompt.format(concept1=concept1, concept2=concept2)
+    formatted_prompt = prompt.format(concept_pair=concept_pair, property_vector=property_vector)
 
     gpt_agent = ChatGPTAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
