@@ -17,15 +17,15 @@
 ; !(let* ( ($c (gpt_vector "Spider" "Man") )($s (car-atom $c)))$s)
 !(let $i (gpt_vector "Spider" "Man") (get-number-of-properties $i))
 
-; !(
-;     let* (
-;         ($c (gpt_vector "Spider" "Man"))
-;         ($s (superpose $c))
-;         ($ff (collapse $s))
-;         ($ee (car-atom $ff))
-;         ($oo (cdr-atom $ee))
-;         ($zz (cdr-atom $oo))
-;         ; ($head (get-metatype $pp))
+!(
+    let* (
+        ($c (gpt_vector "Spider" "Man"))
+        ($s (superpose $c))
+        ($ff (collapse $s))
+        ($ee (car-atom $ff))
+        ($oo (cdr-atom $ee))
+        ($zz (cdr-atom $oo))
+        ; ($head (get-metatype $pp))
 
         
         
@@ -34,7 +34,7 @@
 
 
       
-;     )
-;   $zz
+    )
+  $zz
     
-; )
+)
