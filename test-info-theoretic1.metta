@@ -1,7 +1,6 @@
 ! (import! &self conceptual_blending)
 ! (import! &self info-theoretic1)
 
-
 ! (let*(
         ($concepts (gpt_vector "Spider" "Man"))
         (() (println! $concepts))
