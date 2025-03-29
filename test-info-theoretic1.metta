@@ -4,6 +4,7 @@
 
 ! (let*(
         ($concepts (gpt_vector "Spider" "Man"))
+        (() (println! $concepts))
         ($concept1 (car-atom $concepts))
         ($wrapped-concept2 (cdr-atom $concepts))
         ($concept2 (car-atom $wrapped-concept2))
