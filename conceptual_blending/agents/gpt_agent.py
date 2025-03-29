@@ -37,10 +37,19 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     Returns:
       A list of MeTTa atoms.
     """
-    concept_pair = str(args[0])
-    property_vector = str(args[1])
+    
     prompt = get_prompt(network)
-    formatted_prompt = prompt.format(concept_pair=concept_pair, property_vector=property_vector)
+    if network == "network_selector":
+        concept1 = str(args[0])
+        formatted_prompt = prompt.format(concept1=concept1)
+    elif network == "vector":
+      concept1 = str(args[0])
+      concept2 = str(args[1])
+      formatted_prompt = prompt.format(concept1=concept1, concept2=concept2)
+    else:
+      concept_pair = str(args[0])
+      property_vector = str(args[1])
+      formatted_prompt = prompt.format(concept_pair=concept_pair, property_vector=property_vector)
 
     gpt_agent = ChatGPTAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
@@ -48,6 +57,6 @@ def prompt_agent(metta: MeTTa, network: str, *args):
 
     # Use the built-in parser to convert the response text into atoms.
     parsed_atoms = metta.parse_all(answer.content.strip())
-    
+    # print("Parsed atoms:", parsed_atoms)
     # Always return a list of atoms.
     return parsed_atoms
