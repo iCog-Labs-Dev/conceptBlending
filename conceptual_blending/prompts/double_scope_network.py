@@ -1,44 +1,32 @@
 DOUBLE_SCOPE_PROMPT = """
-    You are an expert in conceptual blending. Your task is to:
-    1. **Expand two given concepts independently within their own cognitive scopes.**
-    2. **Resolve conflicts between them to form a blended concept.**
-    3. **Elaborate on the blend by integrating deeper insights.**
+You are an expert in conceptual blending. Your task is to:
+1. Expand the given two concepts independently within their own cognitive scopes.
+2. Resolve conflicts and differences between them.
+3. Elaborate the final blend by adding deeper emergent insight.
 
-    ### **Given Concepts:**
-    - **Concept 1:** "{concept1}"
-    - **Concept 2:** "{concept2}"
+### INPUTS:
+- Concept Pair: "{concept_pair}" (format: Concept1@Concept2)
+- Property Vector: "{property_vector}" (8 properties with degrees)
 
-    ### **Blending Methodology (Double Scope Network):**
-    - **Composition:** Expand each concept within its own **independent** cognitive space.
-    - **Completion:** Resolve conceptual conflicts between the two spaces.
-    - **Elaboration:** Strengthen the blended concept by adding new conceptual insights.
+### Instructions:
+- Parse Concept1 and Concept2 from the concept pair string.
+- Use the property vector to understand feature relevance.
+- Focus especially on **properties with degree > 0** — they carry emergent weight.
+- Blend the concepts through independent expansion, conflict resolution, and abstraction.
 
-    #### **Step 1: Composition (Independent Expansion)**
-    - Expand **Concept 1** based on its **own internal logic**.
-    - Expand **Concept 2** separately using its **unique properties**.
-    - Ensure each concept **retains its distinct cognitive identity**.
+### Method:
+- **Composition**: Expand each concept within its **own internal logic**.
+- **Completion**: Map structural and functional connections, resolving contradictions.
+- **Elaboration**: Derive a new, meaningful concept from their integration.
 
-    #### **Step 2: Completion (Resolving Conflicts)**
-    - Identify **overlapping properties** between the two concepts.
-    - Address **contradictions** by adjusting and refining their relationships.
-    - Integrate a **cohesive mapping** between the two spaces.
+### Output Format:
+Return only one line like this:
+`(doubleScope (expand Concept1 Concept2) BlendedConcept (extended ElaboratedConcept))`
 
-    #### **Step 3: Elaboration (Deepening the Meaning)**
-    - Extend the blended concept by introducing **a higher-level abstraction**.
-    - Consider how this **new blend applies in real-world or theoretical contexts**.
+### Example:
+(doubleScope (expand emotion mathematics) emotionalQuantification (extended affectiveComputationalFramework))
 
-    ### **Examples:**
-    - `(doubleScope (expand gravity relativity) spacetimeFabric (extended unifiedPhysics))`
-    - `(doubleScope (expand sound vibration) harmonicResonance (extended musicalPhysics))`
-    - `(doubleScope (expand memory computation) neuralProcessing (extended cognitiveCybernetics))`
-    - `(doubleScope (expand evolution adaptation) biologicalInnovation (extended geneticEngineering))`
-
-    ### **Now, generate the double-scope blend:**
-    - **Step 1:** Expand both concepts **independently**.
-    - **Step 2:** Resolve contradictions and find **common links**.
-    - **Step 3:** Enrich the final blended concept by **extending its depth**.
-    - Represent the result in the format:
-      `(doubleScope (expand concept1 concept2) blendedConcept (extended elaboratedConcept))`
-
-    **Return only one line in the specified format.**
+### Output Rules:
+- DO NOT use quotes, backticks, or extra explanation.
+- Return only a single valid MeTTa expression in the format specified.
 """

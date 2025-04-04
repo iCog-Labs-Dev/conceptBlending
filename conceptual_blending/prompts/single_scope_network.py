@@ -1,44 +1,34 @@
 SINGLE_SCOPE_PROMPT = """
-    You are an expert in conceptual blending. Your task is to:
-    1. **Analyze the given concepts** and determine how they integrate within a **single dominant conceptual frame**.
-    2. **Expand both concepts** within this unified frame, ensuring conceptual coherence.
-    3. **Enhance the blend** by adding deeper insights.
+You are an expert in conceptual blending. Your task is to:
+1. Analyze two given concepts and blend them within a **single dominant conceptual frame** using the Single-Scope Network.
+2. Expand each concept through that dominant frame while preserving coherence.
+3. Enrich the result by integrating deeper meaning.
 
-    ### **Given Concepts:**
-    - **Concept 1:** "{concept1}"
-    - **Concept 2:** "{concept2}"
+### INPUTS:
+- Concept Pair: "{concept_pair}" (format: Concept1@Concept2)
+- Property Vector: "{property_vector}" (list of 8 properties with degrees)
 
-    ### **Blending Methodology (Single-Scope Network):**
-    - **Composition:** Identify a **dominant frame** that governs both concepts.
-    - **Completion:** Integrate any **missing links** to reinforce their connection.
-    - **Elaboration:** Extend the blend by **enriching the meaning**.
+### Instructions:
+- Parse Concept1 and Concept2 from the `Concept1@Concept2` input.
+- Use the **property vector** to understand conceptual relevance.
+- Give more weight to **properties with degree > 0**, but consider all 8 for completeness.
+- Ensure both expansions share a **common conceptual frame**.
 
-    #### **Step 1: Composition (Identifying the Dominant Frame)**
-    - Find a **single unifying structure** that both concepts fit into.
-    - Ensure **no conflicting mental spaces exist**.
-    - Assign a **shared category or organizational principle**.
+### Method:
+- **Step 1: Composition** — Identify the shared frame or organizational principle.
+- **Step 2: Completion** — Strengthen links between concept and frame.
+- **Step 3: Elaboration** — Deepen meaning to relate to broader or abstract concepts.
 
-    #### **Step 2: Completion (Enhancing the Conceptual Relationship)**
-    - Ensure the blend is **logically structured** and **coherent**.
-    - Integrate **additional missing attributes** that strengthen the link.
+### Output Format:
+Return only two lines in the following format:
+`(singleScope (expand Concept1) DominantFrame1 (extended Elaboration1))`
+`(singleScope (expand Concept2) DominantFrame2 (extended Elaboration2))`
 
-    #### **Step 3: Elaboration (Deepening the Meaning)**
-    - Extend the meaning by **relating the blend to broader concepts**.
-    - Highlight how this blend **evolves conceptually or has real-world significance**.
+### Examples:
+(singleScope (expand warStrategy) tacticalOperations (extended strategicWarfare))  
+(singleScope (expand videoGames) tacticalSimulation (extended interactiveWargaming))  
 
-    ### **Examples:**
-    - `(singleScope (expand warStrategy) tacticalOperations (extended strategicWarfare))`
-    - `(singleScope (expand videoGames) tacticalSimulation (extended interactiveWargaming))`
-    - `(singleScope (expand theaterManagement) authoritarianLeadership (extended politicalStaging))`
-    - `(singleScope (expand financialMarkets) economicEcosystem (extended globalTradeDynamics))`
-
-    ### **Now, generate the single-scope blend:**
-    - **Step 1:** Identify the **dominant frame** that applies to both.
-    - **Step 2:** Integrate any **missing attributes** that improve the coherence.
-    - **Step 3:** Elaborate on the blend by expanding its conceptual depth.
-    - Represent the result in the format:
-      `(singleScope (expand concept1) dominantFrame1 (extended elaboratedConcept1))`
-      `(singleScope (expand concept2) dominantFrame2 (extended elaboratedConcept2))`
-
-    **Return only two lines in the specified format.**
+### Output Rules:
+- DO NOT use quotes, backticks, or additional text.
+- Return only two valid MeTTa expressions in the specified format.
 """
