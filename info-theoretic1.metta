@@ -1,76 +1,39 @@
+!(import! &self list-mult)
 (: Concept Concept)
 
 ; ###################### Helper functions ##########################
-(=(get-properties $concept)
-    (let*(
-        ($full-concept (superpose $concept))
-    )
-        (if (== (get-metatype $full-concept) Expression)
-            (let $property (cdr-atom $full-concept)
-                $property)
-            (empty)
-        )
-    )
+
+(=(get-properties $concept) 
+    (let (Concept $x $y) $concept (cdr-atom $y))
 )
 ;! (get-properties (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))]
 
-
 (= (get-value $property)
-    (let*(
-        ($value (cdr-atom $property))
-        ($num (car-atom $value))
-    )
-        $num
-    )
+    (let ($x $y) $property $y)
 )
 ;! (get-value (mobility 0.9))
 ; Output [0.9]
 
-
-(=(get-values $properties)
-    (let*(
-        ($property (car-atom $properties))
-        ($num (get-value $property))
-        ($num-properties (size-atom $properties))
-    )
-        (if (not (== $num-properties 1))
-            (let*(
-                ($tail-properties (cdr-atom $properties))
-                ($call-back (get-values $tail-properties))
-            )
-                (cons-atom $num $call-back)
-            )
-            ($num)
-        )
-    )
+(= (get-values $properties)
+        (map-atom $properties $x (get-value $x))
 )
 ;! (get-values (get-properties (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))))
 ; Output [(0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7)]
 
 
+
 ; ###################### Calculate product of two properites ##########################
 (= (property-product $properties1 $properties2)
     (let*(
-        ($property1 (car-atom $properties1))
-        ($property2 (car-atom $properties2))
-        ($num1 (get-value $property1))
-        ($num2 (get-value $property2))
-        ($num-properties (size-atom $properties1))
-        ($product ((car-atom $property1) (* $num1 $num2)))
+        ($property1 (get-values $properties1))
+        ($property2 (get-values $properties2))
     )
-        (if (not (== $num-properties 1))
-            (let*(
-                ($tail-properties1 (cdr-atom $properties1))
-                ($tail-properties2 (cdr-atom $properties2))
-                ($call-back (property-product $tail-properties1 $tail-properties2))
-            )
-                (cons-atom $product $call-back)
-            )
-            ($product)
-        )
+
+        (list-multiply $property1 $property2)
     )
 )
+
 ;! (property-product ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)) ((mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
 ; Output [((mobility 0.7200000000000001) (intelligence 0.18000000000000002) (web-creation 0.0) (social-structure 0.24) (predatory-behavior 0.18000000000000002) (communication 0.36000000000000004) (symbolism 0.42) (physical-strength 0.21))]
 
@@ -246,8 +209,7 @@
 (= (mu-hqblend $mu-emer $properties-min)
     (let*(
         ($product-emer-min (property-product $mu-emer $properties-min))
-        ($product-emer-min-nums (get-values $product-emer-min))
-        ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
+        ($product-emer-min-summation (foldl-atom $product-emer-min 0 $acc $val (+ $acc $val)))
         ($num-properties (size-atom $product-emer-min))
         ($1-over-prop (/ 1.0 (decimal $num-properties)))
         ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
@@ -255,16 +217,15 @@
         (min-atom ($1-over-prop-summation 1))
     )
 )
-! (let*(
-        ($concept1 (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
-        ($concept2 (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
-        ($degree (property-degree $concept1))
-        ($max (property-max $concept1 $concept2))
-        ($min (property-min $concept1 $concept2))
-        ($calculated-mu-emergence (mu-emergence $degree $max))
-        ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
-    )
-    $calculated-mu-hqblend
-)
+;! (let*(
+;      ($concept1 (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
+;      ($concept2 (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
+;      ($degree (property-degree $concept1))
+;      ($max (property-max $concept1 $concept2))
+;      ($min (property-min $concept1 $concept2))
+;      ($calculated-mu-emergence (mu-emergence $degree $max))
+;      ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
+;  )
+;  $calculated-mu-hqblend
+;)
 ;Output [0.027331495447180196]
-
