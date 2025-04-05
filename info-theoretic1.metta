@@ -32,21 +32,7 @@
 
 
 (=(get-values $properties)
-    (let*(
-        ($property (car-atom $properties))
-        ($num (get-value $property))
-        ($num-properties (size-atom $properties))
-    )
-        (if (not (== $num-properties 1))
-            (let*(
-                ($tail-properties (cdr-atom $properties))
-                ($call-back (get-values $tail-properties))
-            )
-                (cons-atom $num $call-back)
-            )
-            ($num)
-        )
-    )
+    (map-atom $properties $property (get-value $property))
 )
 ;! (get-values (get-properties (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))))
 ; Output [(0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7)]
