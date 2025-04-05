@@ -30,7 +30,7 @@
         ($property2 (get-values $properties2))
     )
 
-        (list-multiply $property1 $property2)
+        (tuple-multiply $property1 $property2)
     )
 )
 
