@@ -1,5 +1,5 @@
 
-(=(list-multiply $property1values $property2values)(
+(=(tuple-multiply $property1values $property2values)(
     collapse(
         superpose(
             (* (index-atom $property1values 0) (index-atom $property2values 0))
