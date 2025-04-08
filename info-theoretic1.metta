@@ -269,8 +269,7 @@
         ($calculated-mu-emergence (mu-emergence $degree $max))
         ($min (property-min $concept1 $concept2))
         ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
-        ($unwrapped-concepts (cdr-atom $concept1))
-        ($concept-pair (car-atom $unwrapped-concepts))
+        ($concept-pair (let (Concept $x $y) $concept1 $x))
     )
         (if (> $calculated-mu-hqblend 0)
             (let*(
