@@ -1,14 +1,25 @@
-!(import! &self list-mult)
+!(import! &self list-op-utils)
 (: Concept Concept)
 
 ; ###################### Helper functions ##########################
 
-(=(get-properties $concept) 
+(=(get-prop-value-pairs $concept) 
     (let (Concept $x $y) $concept (cdr-atom $y))
 )
-;! (get-properties (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
+;! (get-prop-value-pairs (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))]
 
+(= (get-property $prop-value-pair)
+    (
+        let ($x $y) $prop-value-pair $x
+    )
+)
+(= (get-properties $prop-value-pairs)
+    (
+        map-atom $prop-value-pairs $x (get-property $x)
+    )
+)
+;!(get-properties ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
 (= (get-value $property)
     (let ($x $y) $property $y)
 )
@@ -18,19 +29,17 @@
 (= (get-values $properties)
         (map-atom $properties $x (get-value $x))
 )
-;! (get-values (get-properties (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))))
+;! (get-values (get-prop-value-pairs (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))))
 ; Output [(0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7)]
 
 
 
 ; ###################### Calculate product of two properites ##########################
 (= (property-product $properties1 $properties2)
-    (let*(
-        ($property1 (get-values $properties1))
-        ($property2 (get-values $properties2))
-    )
-
-        (tuple-multiply $property1 $property2)
+    (let 
+        ($property1values $property2values $properties) 
+        (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1))))
+        (tuple-multiply $property1values $property2values $properties)
     )
 )
 
@@ -73,7 +82,7 @@
     )
     $probability
     )
-    )
+)
 ;!(property-probability (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [0.125]
 
@@ -90,67 +99,13 @@
 ;! (property-degree (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [0.9030899869919434]
 
-; ###################### Calculate min and max for Properties ##########################
-(= (min-property $properties1 $properties2)
-    (let*(
-        ($property1 (car-atom $properties1))
-        ($property2 (car-atom $properties2))
-        ($num1 (get-value $property1))
-        ($num2 (get-value $property2))
-        ($num-properties (size-atom $properties1))
-        ($min-prop ((car-atom $property1) (min-atom ($num1 $num2))))
-    )
-        (if (not (== $num-properties 1))
-            (let*(
-                ($tail-properties1 (cdr-atom $properties1))
-                ($tail-properties2 (cdr-atom $properties2))
-                ($call-back (min-property $tail-properties1 $tail-properties2))
-            )
-                (cons-atom $min-prop $call-back)
-            )
-            ($min-prop)
-        )
-    )
-)
-;! (min-property ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)) ((mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
-; Output [((mobility 0.8) (intelligence 0.2) (web-creation 0.0) (social-structure 0.3) (predatory-behavior 0.2) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))]
-
-
-(= (max-property $properties1 $properties2)
-    (let*(
-        ($property1 (car-atom $properties1))
-        ($property2 (car-atom $properties2))
-        ($num1 (get-value $property1))
-        ($num2 (get-value $property2))
-        ($num-properties (size-atom $properties1))
-        ($max-prop ((car-atom $property1) (max-atom ($num1 $num2))))
-        ;(() (println! $max-prop))
-    )
-        (if (not (== $num-properties 1))
-            (let*(
-                ($tail-properties1 (cdr-atom $properties1))
-                ($tail-properties2 (cdr-atom $properties2))
-                ($call-back (max-property $tail-properties1 $tail-properties2))
-                ;(() (println! (quote ($call-back (max-property $tail-properties1 $tail-properties2)))))
-            ) 
-                (cons-atom $max-prop $call-back) 
-            )
-            ($max-prop)
-
-        )
-    )
-)
-;! (max-property ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)) ((mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
-; Output [((mobility 0.9) (intelligence 0.9) (web-creation 1.0) (social-structure 0.8) (predatory-behavior 0.9) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))]
-
-
 ; ###################### Calculate min and max for Concepts ##########################
 (=(property-min $concept1 $concept2)
     (let*(
-        ($properties1 (get-properties $concept1))
-        ($properties2 (get-properties $concept2))
+        (($properties1 $properties2) (collapse(superpose((get-prop-value-pairs $concept1) (get-prop-value-pairs $concept2)))))
+        (($properties1values $properties2values $properties) (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1)))))
     )
-        (min-property $properties1 $properties2)
+        (min-elements $properties1values $properties2values $properties)
     )
 )
 ;!(property-min (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
@@ -159,10 +114,10 @@
 
 (=(property-max $concept1 $concept2)
     (let*(
-        ($properties1 (get-properties $concept1))
-        ($properties2 (get-properties $concept2))
+        (($properties1 $properties2) (collapse(superpose((get-prop-value-pairs $concept1) (get-prop-value-pairs $concept2)))))
+        (($properties1values $properties2values $properties) (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1)))))
     )
-        (max-property $properties1 $properties2)
+        (max-elements $properties1values $properties2values $properties)
     )
 )
 ;!(property-max (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
@@ -171,23 +126,11 @@
 
 ; ###################### Calculate mu emergence ##########################
 (= (mu-emergence $property-degree $properties-max)
-    (let*(
-        ($property (car-atom $properties-max))
-        ($num (get-value $property))
-        ($num-properties (size-atom $properties-max))
-        ($property-minus-num (- $property-degree $num))
-        ($non-zero (max-atom ($property-minus-num 0)))
-        ($result ((car-atom $property) $non-zero))
-    )
-        (if (not (== $num-properties 1))
-            (let*(
-                ($tail-properties (cdr-atom $properties-max))
-                ($call-back (mu-emergence $property-degree $tail-properties))
-            )
-                (cons-atom $result $call-back)
-            )
-            ($result)
-        )
+    (
+        let
+        ($propertiesvalues $properties)
+        (collapse(superpose((get-values $properties-max) (get-properties $properties-max))))
+        (tuple-substract $property-degree $propertiesvalues $properties)
     )
 )
 ;! (mu-emergence 0.9030899869919434 (property-max (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))))
@@ -209,7 +152,8 @@
 (= (mu-hqblend $mu-emer $properties-min)
     (let*(
         ($product-emer-min (property-product $mu-emer $properties-min))
-        ($product-emer-min-summation (foldl-atom $product-emer-min 0 $acc $val (+ $acc $val)))
+        ($product-emer-min-nums (get-values $product-emer-min))
+        ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
         ($num-properties (size-atom $product-emer-min))
         ($1-over-prop (/ 1.0 (decimal $num-properties)))
         ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
@@ -217,15 +161,15 @@
         (min-atom ($1-over-prop-summation 1))
     )
 )
-;! (let*(
-;      ($concept1 (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
-;      ($concept2 (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
-;      ($degree (property-degree $concept1))
-;      ($max (property-max $concept1 $concept2))
-;      ($min (property-min $concept1 $concept2))
-;      ($calculated-mu-emergence (mu-emergence $degree $max))
-;      ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
-;  )
-;  $calculated-mu-hqblend
-;)
+! (let*(
+    ($concept1 (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
+    ($concept2 (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
+    ($degree (property-degree $concept1))
+    ($max (property-max $concept1 $concept2))
+    ($min (property-min $concept1 $concept2))
+    ($calculated-mu-emergence (mu-emergence $degree $max))
+    ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
+)
+$calculated-mu-hqblend
+)
 ;Output [0.027331495447180196]
