@@ -36,6 +36,9 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     
     Returns:
       A list of MeTTa atoms.
+    Constraints:
+     When returing a list of MeTTa atoms make sure it is correct
+     if not correct retry 
     """
     
     prompt = get_prompt(network)
