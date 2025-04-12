@@ -31,14 +31,13 @@ def prompt_agent(metta: MeTTa, network: str, *args):
       2. Select and format the appropriate prompt.
       3. Send the prompt via the GPT agent.
       4. Use metta.parse_all to parse the returned text into a list of atoms.
-      5. Always return the list (even if it contains a single element) to satisfy
+      5. Validate the parsed atoms to ensure correctness.
+      6. Retry if the response is invalid until a correct response is obtained.
+      7. Always return the list (even if it contains a single element) to satisfy
          the grounded operation’s type requirement.
     
     Returns:
-      A list of MeTTa atoms.
-    Constraints:
-     When returing a list of MeTTa atoms make sure it is correct
-     if not correct retry 
+      A list of MeTTa atoms which are correct.
     """
     
     prompt = get_prompt(network)
@@ -46,20 +45,38 @@ def prompt_agent(metta: MeTTa, network: str, *args):
         concept1 = str(args[0])
         formatted_prompt = prompt.format(concept1=concept1)
     elif network == "vector":
-      concept1 = str(args[0])
-      concept2 = str(args[1])
-      formatted_prompt = prompt.format(concept1=concept1, concept2=concept2)
+        concept1 = str(args[0])
+        concept2 = str(args[1])
+        formatted_prompt = prompt.format(concept1=concept1, concept2=concept2)
     else:
-      concept_pair = str(args[0])
-      property_vector = str(args[1])
-      formatted_prompt = prompt.format(concept_pair=concept_pair, property_vector=property_vector)
+        concept_pair = str(args[0])
+        property_vector = str(args[1])
+        formatted_prompt = prompt.format(concept_pair=concept_pair, property_vector=property_vector)
 
     gpt_agent = ChatGPTAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
-    answer = gpt_agent(messages, functions=[])
+    
+    while True:
+        answer = gpt_agent(messages, functions=[])
+        parsed_atoms = metta.parse_all(answer.content.strip())
+        
+        # Validate the parsed atoms to ensure correctness.
+        if validate_atoms(parsed_atoms):
+            return parsed_atoms
+        else:
+            print("Invalid response received. Retrying...")
 
-    # Use the built-in parser to convert the response text into atoms.
-    parsed_atoms = metta.parse_all(answer.content.strip())
-    # print("Parsed atoms:", parsed_atoms)
-    # Always return a list of atoms.
-    return parsed_atoms
+def validate_atoms(atoms):
+    """
+    Validates the parsed atoms to ensure they are correct.
+    
+    Args:
+      atoms: List of parsed atoms.
+    
+    Returns:
+      True if the atoms are valid, False otherwise.
+    """
+    for atom in atoms:
+        if "Error Concept BadType" in str(atom):
+            return False
+    return True
