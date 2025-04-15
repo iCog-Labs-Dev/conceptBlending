@@ -284,5 +284,5 @@
         )
     )
 )
-; ! (blend "Bat" "Man")
+ ! (blend "Bat" "Man")
 ; [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]
