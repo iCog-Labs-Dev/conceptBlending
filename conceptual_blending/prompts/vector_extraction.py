@@ -19,6 +19,7 @@ VECTOR_EXTRACTION_PROMPT = """
 
     #### **Step 2: Assign Degrees of Relevance**
     - Assign a **degree (0 to 1)** to each property based on its presence in the respective concept.
+    - make the assignment in comparison to the other concept.
     - Example:  
       - A bat has high **flight ability (0.9)**, while a human has **none (0.0)**.
       - A human has **strong reasoning ability (0.9)**, whereas a bat has **limited reasoning (0.3)**.
@@ -45,15 +46,15 @@ VECTOR_EXTRACTION_PROMPT = """
     - Identify **exactly 8 relevant properties** for both concepts.
     - Assign **degrees (0-1)** based on how strongly each concept possesses each property.
     - Return the **structured representation** in exactly the following format:
-  
-    (Concept Concept1@Concept2 (Property (Property1 Degree1) (Property2 Degree2) ... (Property8 Degree8)))
-    (Concept Concept2@Concept1 (Property (Property1 Degree1) (Property2 Degree2) ... (Property8 Degree8)))
+    (
+      (Concept Concept1@Concept2 (Property (Property1 Degree1) (Property2 Degree2) ... (Property8 Degree8)))
+      (Concept Concept2@Concept1 (Property (Property1 Degree1) (Property2 Degree2) ... (Property8 Degree8)))
+    )
    
     - **Ensure exactly 8 properties are listed for each concept.**
-    - **Return only two lines in this format. Avoid explanations.**
+    - **Return only two lines in this format wrapped by a bracket (). Avoid explanations, and backticks.**
     - Maintain MeTTa-style syntax and spacing.
-    - Do **not** return explanations or backticks (```).
+    - Avoid returning explanations or backticks (```).
     - **Make sure it is wrapped with bracket () like ((Concept '.....')(Concept '......'))**
-    - **Avoid wrapping it in**
 
 """

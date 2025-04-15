@@ -93,10 +93,10 @@
         ($probability (property-probability $concept))
         ($degree (* -1 (log-math 10 $probability)))
     )
-        $degree
+        ((py-atom round) $degree 2)
     )
 )
-;! (property-degree (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
+! (property-degree (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [0.9030899869919434]
 
 ; ###################### Calculate min and max for Concepts ##########################
@@ -161,15 +161,15 @@
         (min-atom ($1-over-prop-summation 1))
     )
 )
-! (let*(
-    ($concept1 (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
-    ($concept2 (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
-    ($degree (property-degree $concept1))
-    ($max (property-max $concept1 $concept2))
-    ($min (property-min $concept1 $concept2))
-    ($calculated-mu-emergence (mu-emergence $degree $max))
-    ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
-)
-$calculated-mu-hqblend
-)
+; ! (let*(
+;     ($concept1 (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
+;     ($concept2 (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
+;     ($degree (property-degree $concept1))
+;     ($max (property-max $concept1 $concept2))
+;     ($min (property-min $concept1 $concept2))
+;     ($calculated-mu-emergence (mu-emergence $degree $max))
+;     ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
+; )
+; $calculated-mu-hqblend
+; )
 ;Output [0.027331495447180196]
