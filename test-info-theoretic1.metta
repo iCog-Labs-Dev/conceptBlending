@@ -2,7 +2,8 @@
 ! (import! &self info-theoretic1)
 
 ! (let*(
-         ($concepts (gpt_vector "Spider" "Man"))
+         ($concepts (gpt_vector "bird" "car"))
+         (()(println! $concepts))
          ($concept1 (car-atom $concepts))
          ($wrapped-concept2 (cdr-atom $concepts))
          ($concept2 (car-atom $wrapped-concept2))
