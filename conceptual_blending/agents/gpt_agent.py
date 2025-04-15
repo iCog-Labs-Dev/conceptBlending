@@ -75,17 +75,40 @@ def prompt_agent(metta: MeTTa, network: str, *args):
         else:
             print("Invalid response received. Retrying...")
 
+knowledge_base = {
+    "valid_atoms": set(),  # Store valid atoms
+    "invalid_atoms": set()  # Store invalid atoms
+}
 def validate_atoms(atoms):
     """
-    Validates the parsed atoms to ensure they are correct.
+    Validates the parsed atoms to ensure they are correct, using a knowledge base.
     
     Args:
       atoms: List of parsed atoms.
     
     Returns:
-      True if the atoms are valid, False otherwise.
+      True if at least one atom is valid, False otherwise.
     """
+    # print("Validating atoms...")
     for atom in atoms:
-        if "(Error Concept BadType)" in str(atom):
-            return False
-    return True
+        atom_str = str(atom)
+        # Check if the atom is already known to be valid
+        if atom_str in knowledge_base["valid_atoms"]:
+            print(f"Atom '{atom_str}' is already known to be valid.")
+            return True
+        
+        # Check if the atom is already known to be invalid
+        elif atom_str in knowledge_base["invalid_atoms"]:
+            print(f"Atom '{atom_str}' is already known to be invalid.")
+            continue
+        
+        # Perform validation for new atoms
+        elif "(Error Concept BadType)" in atom_str:
+            #print(f"Atom '{atom_str}' is invalid. Adding to knowledge base.")
+            knowledge_base["invalid_atoms"].add(atom_str)
+        else:
+            #print(f"Atom '{atom_str}' is valid. Adding to knowledge base.")
+            knowledge_base["valid_atoms"].add(atom_str)
+            return True  # Return immediately if a valid atom is found
+    
+    return False  
