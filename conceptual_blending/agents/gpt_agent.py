@@ -57,7 +57,16 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     messages = [{"role": "user", "content": formatted_prompt}]
     
     while True:
-        answer = gpt_agent(messages, functions=[])
+        answer = gpt_agent(messages, functions=[{
+            "name": "validate_response",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "atoms": {"type": "array", "items": {"type": "string"}}
+                },
+                "required": ["atoms"]
+            }
+        }])
         parsed_atoms = metta.parse_all(answer.content.strip())
         
         # Validate the parsed atoms to ensure correctness.
@@ -77,6 +86,6 @@ def validate_atoms(atoms):
       True if the atoms are valid, False otherwise.
     """
     for atom in atoms:
-        if "Error Concept BadType" in str(atom):
+        if "(Error Concept BadType)" in str(atom):
             return False
     return True
