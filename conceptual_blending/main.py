@@ -1,9 +1,12 @@
+import os
 from hyperon import *
 from hyperon.ext import register_atoms
 from .agents import *
 
+
 # Define networks and their corresponding function names
 NETWORKS = ["simplex", "mirror", "single", "double", "vector", "network_selector"]
+
 
 @register_atoms(pass_metta=True)
 def grounded_atoms(metta):
@@ -27,3 +30,19 @@ def grounded_atoms(metta):
             )
 
     return registered_operations
+
+
+def to_file(input_tuple):
+    file_path, data = input_tuple
+    space = file_path.split("/")[-1].split(".")[0]
+    data = str(data).replace(",", "")
+    # Make path relative to script location
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    resolved_path = os.path.join(base_dir, file_path)
+
+    try:
+        with open(resolved_path, 'a+') as f:
+            f.write(f"{data}\n")
+        print(f"Added {data} to \"{space}\" file.")
+    except Exception as e:
+        print(f"Error adding {data} to \"{space}\" file: {e}")
