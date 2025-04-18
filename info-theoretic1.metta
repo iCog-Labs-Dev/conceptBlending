@@ -1,5 +1,6 @@
 ! (import! &self conceptual_blending)
 !(import! &self list-op-utils)
+
 (: Concept Concept)
 
 ; ###################### Helper functions ##########################
@@ -26,6 +27,7 @@
 )
 ;! (get-value (mobility 0.9))
 ; Output [0.9]
+
 
 (= (get-values $properties)
         (map-atom $properties $x (get-value $x))
@@ -201,5 +203,6 @@
         )
     )
 )
+
 ; ! (blend "Bat" "Man")
 ; [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]
