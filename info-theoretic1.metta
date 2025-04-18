@@ -1,27 +1,31 @@
 ! (import! &self conceptual_blending)
-!(import! &self list-op-utils)
+! (import! &self list-op-utils)
 
 (: Concept Concept)
 
 ; ###################### Helper functions ##########################
 
-(=(get-prop-value-pairs $concept) 
+(=(get-prop-value-pairs $concept)
     (let (Concept $x $y) $concept (cdr-atom $y))
 )
 ;! (get-prop-value-pairs (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))]
 
+
 (= (get-property $prop-value-pair)
-    (
-        let ($x $y) $prop-value-pair $x
-    )
+    (let ($x $y) $prop-value-pair $x)
 )
++;! (get-property (mobility 0.9))
++; Output [mobility]
+
+
 (= (get-properties $prop-value-pairs)
-    (
-        map-atom $prop-value-pairs $x (get-property $x)
-    )
+    (map-atom $prop-value-pairs $x (get-property $x))
 )
 ;!(get-properties ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+; Output [(mobility intelligence web-creation social-structure predatory-behavior communication symbolism physical-strength)]
+
+
 (= (get-value $property)
     (let ($x $y) $property $y)
 )
@@ -30,42 +34,41 @@
 
 
 (= (get-values $properties)
-        (map-atom $properties $x (get-value $x))
+    (map-atom $properties $x (get-value $x))
 )
 ;! (get-values (get-prop-value-pairs (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))))
 ; Output [(0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7)]
 
 
-
 ; ###################### Calculate product of two properites ##########################
 (= (property-product $properties1 $properties2)
-    (let 
-        ($property1values $property2values $properties) 
+    (let
+        ($property1values $property2values $properties)
         (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1))))
         (tuple-multiply $property1values $property2values $properties)
     )
 )
-
 ;! (property-product ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)) ((mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
 ; Output [((mobility 0.7200000000000001) (intelligence 0.18000000000000002) (web-creation 0.0) (social-structure 0.24) (predatory-behavior 0.18000000000000002) (communication 0.36000000000000004) (symbolism 0.42) (physical-strength 0.21))]
+
 
 ; ###################### Calculate Number of properties #####################
 (: get-number-of-properties (-> Concept Number))
 (=(get-number-of-properties $concept)
-    (
-        let*(
-                ($a $concept)
-                ($b (superpose $a))
-        )
-    (if (== (get-metatype $b) Expression)
-        (let $c (cdr-atom $b)
-            (size-atom $c))
-        (empty)
+    (let*(
+        ($a $concept)
+        ($b (superpose $a))
     )
-)
+        (if (== (get-metatype $b) Expression)
+            (let $c (cdr-atom $b)
+                (size-atom $c))
+            (empty)
+        )
+    )
 )
 ;!(get-number-of-properties (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [8]
+
 
 ; ################### Convert Number to Decimal ##########################
 (: decimal (-> Number Number))
@@ -89,6 +92,7 @@
 ;!(property-probability (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [0.125]
 
+
 ; ###################### Calculate Degree function ##########################
 (: property-degree (-> Concept Number))
 (=(property-degree $concept)
@@ -101,6 +105,7 @@
 )
 ! (property-degree (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [0.9030899869919434]
+
 
 ; ###################### Calculate min and max for Concepts ##########################
 (=(property-min $concept1 $concept2)
@@ -177,6 +182,7 @@
 ; )
 ;Output [0.027331495447180196]
 
+
 (= (blend $input1 $input2)
     (let*(
         ($concepts (gpt_vector $input1 $input2))
@@ -203,6 +209,5 @@
         )
     )
 )
-
 ; ! (blend "Bat" "Man")
 ; [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]
