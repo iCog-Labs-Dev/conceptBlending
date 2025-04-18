@@ -38,6 +38,6 @@ class ChatGPTAgent():
                 messages=messages,
                 functions=functions,
                 function_call="auto",
-                temperature=0,
+                temperature=0.1,
                 timeout = 15)
         return response.choices[0].message

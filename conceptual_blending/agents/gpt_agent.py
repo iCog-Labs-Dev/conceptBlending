@@ -54,9 +54,8 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     gpt_agent = ChatGPTAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
     answer = gpt_agent(messages, functions=[])
-
+    # print(answer.content.strip())
     # Use the built-in parser to convert the response text into atoms.
     parsed_atoms = metta.parse_all(answer.content.strip())
-    # print("Parsed atoms:", parsed_atoms)
     # Always return a list of atoms.
     return parsed_atoms

@@ -7,7 +7,6 @@ You are an expert in conceptual blending networks. Your task is to:
 
 ### Input Format:
 - The concept string is of the format: "Concept1@Concept2"
-- You'll receive it twice as two identical parameters for compatibility reasons.
 
 ---
 
