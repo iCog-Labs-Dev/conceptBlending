@@ -1,3 +1,4 @@
+! (import! &self conceptual_blending)
 !(import! &self list-op-utils)
 (: Concept Concept)
 
@@ -173,3 +174,32 @@
 ; $calculated-mu-hqblend
 ; )
 ;Output [0.027331495447180196]
+
+(= (blend $input1 $input2)
+    (let*(
+        ($concepts (gpt_vector $input1 $input2))
+        ($concept1 (car-atom $concepts))
+        ($wrapped-concept2 (cdr-atom $concepts))
+        ($concept2 (car-atom $wrapped-concept2))
+        ($degree (property-degree $concept1))
+        ($max (property-max $concept1 $concept2))
+        ($calculated-mu-emergence (mu-emergence $degree $max))
+        ($min (property-min $concept1 $concept2))
+        ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
+        ($concept-pair (let (Concept $x $y) $concept1 $x))
+    )
+        (if (> $calculated-mu-hqblend 0)
+            (let*(
+                ($network (gpt_network_selector $concept-pair))
+            )
+                (if (not (noreduce-eq $network None))
+                    ($network $concept-pair $calculated-mu-emergence)
+                    (empty)
+                )
+            )
+            (empty)
+        )
+    )
+)
+; ! (blend "Bat" "Man")
+; [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]
