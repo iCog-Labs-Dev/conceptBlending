@@ -3,10 +3,10 @@ name: CI/CD Workflow
 on:
   push:
     branches:
-      - main
+      - ci_cd_pipeline
   pull_request:
     branches:
-      - main
+      - ci_cd_pipeline
 
 jobs:
   build:
