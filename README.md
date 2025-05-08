@@ -3,26 +3,6 @@
 
 This project extracts conceptual knowledge from [ConceptNet](https://conceptnet.io/) and converts it into the `.metta` format for symbolic reasoning. It also provides visual graph representations of the extracted concepts.
 
----
-
-## 📦 Project Structure
-
-```
-.
-├── src/
-│   ├── input\_system/
-│   │   ├── conceptnet_adapter.py
-│   │   ├── metta_converter.py
-│   │   ├── save_metta_knowledge.py
-│   └── visualization/
-│       └── graph_plotter.py
-├── tests/
-├── run_cli.py
-├── requirements.txt
-├── .gitignore
-├── README.md
-
-````
 
 ## ⚙️ Setup
 
