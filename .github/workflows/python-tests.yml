@@ -29,14 +29,14 @@ jobs:
       run: |
         pytest --cov=src --cov-report=term-missing --cov-report=html --cov-fail-under=80 tests/
 
-    - name: Upload coverage report as artifact
+    - name: Upload .coverage file as artifact
       uses: actions/upload-artifact@v3
       with:
         name: coverage-report
-        path: .coverage
+        path: .coverage  # This is the raw coverage data, useful for analysis
 
     - name: Upload HTML coverage report
       uses: actions/upload-artifact@v3
       with:
         name: html-coverage-report
-        path: htmlcov/index.html
+        path: htmlcov/index.html  # This is the HTML report that can be opened and viewed
