@@ -1,0 +1,6 @@
+requests
+pytest
+argparse
+networkx
+matplotlib
+pytest-cov
