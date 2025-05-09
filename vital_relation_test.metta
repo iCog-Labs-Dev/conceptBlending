@@ -2,4 +2,5 @@
 
 
 ! (gpt_vital_relation "Bat")
+
 ; [(Category Part-Whole Role Representation Material Identity)]
