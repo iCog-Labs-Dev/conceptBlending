@@ -4,3 +4,4 @@ argparse
 networkx
 matplotlib
 pytest-cov
+colorama
