@@ -8,3 +8,5 @@ htmlcov/
 # Byte-compiled files
 __pycache__/
 
+.env
+a_naive_approch/.env
