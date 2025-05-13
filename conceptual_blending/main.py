@@ -5,6 +5,7 @@ from .agents import *
 
 
 # Define networks and their corresponding function names
+
 NETWORKS = ["simplex", "mirror", "single", "double", "vector", "network_selector", "vital_relation"]
 
 
@@ -14,6 +15,7 @@ def grounded_atoms(metta):
 
     for network in NETWORKS:
         operation_name = f"gpt_{network}"  # e.g., gpt_simplex, gpt_mirror
+
         if network in ["network_selector", "vital_relation"]:
             registered_operations[operation_name] = OperationAtom(
             operation_name,

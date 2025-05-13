@@ -8,8 +8,6 @@ from conceptual_blending.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
 from conceptual_blending.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
 from conceptual_blending.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
 
-
-
 def get_prompt(network: str) -> str:
     """Returns the appropriate prompt based on the network type."""
     prompts = {
@@ -104,4 +102,3 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     parsed_atoms = metta.parse_all(answer.content.strip())
     # Always return a list of atoms.
     return parsed_atoms
-
