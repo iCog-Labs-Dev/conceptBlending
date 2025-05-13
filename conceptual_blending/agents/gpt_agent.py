@@ -6,7 +6,7 @@ from conceptual_blending.prompts.mirror_network import MIRROR_PROMPT
 from conceptual_blending.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
 from conceptual_blending.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
 from conceptual_blending.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
-
+from conceptual_blending.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
 
 def get_prompt(network: str) -> str:
     """Returns the appropriate prompt based on the network type."""
@@ -16,9 +16,46 @@ def get_prompt(network: str) -> str:
         "single": SINGLE_SCOPE_PROMPT,
         "double": DOUBLE_SCOPE_PROMPT,
         "vector": VECTOR_EXTRACTION_PROMPT,
+        "vital_relation": VITAL_RELATION_EXTRACTION_PROMPT,
         "network_selector": NETWORK_SELECTOR_PROMPT
     }
     return prompts.get(network, "Error")
+
+def fetch_context(concept):
+    return [
+        "bat is used_for playing baseball"
+        "bat is made_of wood"
+        "bat is a type_of mammal"
+        "bat is capable_of flying"
+        "bat is located_in cave"
+        "bat has wings"
+        "bat is similar_to mouse"
+        "bat is a kind_of tool"
+        "bat is active_at night"
+        "bat is used_to hit baseball"
+        "bat is represented_by 🦇"
+        "bat is found_in attic"
+        "bat can be a weapon"
+        "bat is not a bird"
+        "bat is a kind_of animal"
+        "bat is derived_from old english batt"
+        "bat is used_for playing baseball"
+        "bat is made_of wood"
+        "bat is a type_of mammal"
+        "bat is capable_of flying"
+        "bat is located_in cave"
+        "bat has wings"
+        "bat is similar_to mouse"
+        "bat is a kind_of tool"
+        "bat is active_at night"
+        "bat is used_to hit baseball"
+        "bat is represented_by 🦇"
+        "bat is found_in attic"
+        "bat can be a weapon"
+        "bat is not a bird"
+        "bat is a kind_of animal"
+        "bat is derived_from old english batt"
+      ]
 
 
 def prompt_agent(metta: MeTTa, network: str, *args):
@@ -42,6 +79,12 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     if network == "network_selector":
         concept1 = str(args[0])
         formatted_prompt = prompt.format(concept1=concept1)
+        
+    elif network == "vital_relation":
+        concept1 = str(args[0])
+        context = fetch_context(concept1)
+        formatted_prompt = prompt.format(concept1=concept1, context=context)
+        
     elif network == "vector":
       concept1 = str(args[0])
       concept2 = str(args[1])

@@ -1,4 +1,3 @@
-
 # Conceptual Blending Project
 
 ## Overview
