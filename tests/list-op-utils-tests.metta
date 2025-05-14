@@ -1,4 +1,5 @@
-! (import! &self list-op-utils)
+! (register-module! ../../conceptBlending)
+! (import! &self conceptBlending:utils:list-op-utils)
 
 
 ; Test tuple-multiply

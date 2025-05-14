@@ -1,4 +1,5 @@
-! (import! &self utils)
+! (register-module! ../../conceptBlending)
+! (import! &self conceptBlending:utils:expression-man-utils)
 
 
 ; ; Test unNest

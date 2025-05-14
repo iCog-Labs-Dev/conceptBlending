@@ -1,4 +1,5 @@
-! (import! &self info-theoretic1)
+! (register-module! ../../conceptBlending)
+! (import! &self conceptBlending:info-theoretic)
 
 
 ; Test get-prop-value-pairs
@@ -113,3 +114,7 @@
         0.08125000000000002
     )
 )
+
+; Test blend(the main) function
+!(blend "Bat" "Man")
+;; Output: [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]

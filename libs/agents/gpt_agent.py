@@ -1,13 +1,14 @@
 from hyperon import *
 from .llmagent import ChatGPTAgent
-from conceptual_blending.prompts.network_selector import NETWORK_SELECTOR_PROMPT
-from conceptual_blending.prompts.simplex_network import SIMPLEX_PROMPT
-from conceptual_blending.prompts.mirror_network import MIRROR_PROMPT
-from conceptual_blending.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
-from conceptual_blending.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
-from conceptual_blending.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
-from conceptual_blending.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
-from conceptual_blending.agents.conceptnet_adapter import get_conceptnet_edges
+import threading
+from libs.prompts.network_selector import NETWORK_SELECTOR_PROMPT
+from libs.prompts.simplex_network import SIMPLEX_PROMPT
+from libs.prompts.mirror_network import MIRROR_PROMPT
+from libs.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
+from libs.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
+from libs.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
+from libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
+from libs.agents.conceptnet_adapter import get_conceptnet_edges
 
 def get_prompt(network: str) -> str:
     """Returns the appropriate prompt based on the network type."""
@@ -27,7 +28,6 @@ def fetch_context(concept):
     context = []
     for edge in edges:
         context.append(edge["surftext"].replace("[[", "").replace("]]", ""))
-    print(f"Context for {concept}: {context}")
     return context
 
 def prompt_agent(metta: MeTTa, network: str, *args):

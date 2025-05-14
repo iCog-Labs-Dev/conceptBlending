@@ -1,5 +1,6 @@
-! (import! &self conceptual_blending)
-! (import! &self info-theoretic1)
+! (register-module! ../../conceptBlending)
+! (import! &self conceptBlending:libs)
+! (import! &self info-theoretic)
 
 
 
