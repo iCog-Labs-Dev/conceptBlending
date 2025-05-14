@@ -23,6 +23,13 @@ def grounded_atoms(metta):
             [AtomType.ATOM, "Expression"],
             unwrap=False
         )
+        elif network == "vector":
+            registered_operations[operation_name] = OperationAtom(
+                operation_name,
+                lambda *args, network=network: prompt_agent(metta, network, *args),
+                [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
+                unwrap=False
+            )
         else:
             registered_operations[operation_name] = OperationAtom(
                 operation_name,

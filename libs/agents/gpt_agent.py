@@ -60,7 +60,8 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     elif network == "vector":
       concept1 = str(args[0])
       concept2 = str(args[1])
-      formatted_prompt = prompt.format(concept1=concept1, concept2=concept2)
+      vital_relations = str(args[2])
+      formatted_prompt = prompt.format(concept1=concept1, concept2=concept2, vital_relations=vital_relations)
     else:
       concept_pair = str(args[0])
       property_vector = str(args[1])
