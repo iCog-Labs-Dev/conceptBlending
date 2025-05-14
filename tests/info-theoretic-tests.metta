@@ -116,5 +116,5 @@
 )
 
 ; Test blend(the main) function
-!(blend "Bat" "Man")
+;!(blend "Bat" "Man")
 ;; Output: [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]

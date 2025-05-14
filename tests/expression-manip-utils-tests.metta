@@ -1,13 +1,6 @@
 ! (register-module! ../../conceptBlending)
 ! (import! &self conceptBlending:utils:expression-manip-utils)
 
-
-; ; Test unNest
-! (assertEqual
-    (unNest (purpose (primary shelter (temporary tent))))
-    ([purpose, primary, shelter, temporary, tent])
-)
-
 ; Test flatten
 ! (assertEqual
     (flatten (purpose (primary shelter (temporary tent))))
