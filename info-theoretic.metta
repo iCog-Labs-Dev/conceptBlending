@@ -185,7 +185,10 @@
 
 (= (blend $input1 $input2)
     (let*(
-        ($concepts (gpt_vector $input1 $input2))
+        ($vital-relation-1 (gpt_vital_relation $input1))
+        ($vital-relation-2 (gpt_vital_relation $input2))
+        ($vital-relations (let $t (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $t)))
+        ($concepts (gpt_vector $input1 $input2 $vital-relations))
         ($concept1 (car-atom $concepts))
         ($wrapped-concept2 (cdr-atom $concepts))
         ($concept2 (car-atom $wrapped-concept2))
@@ -209,5 +212,5 @@
         )
     )
 )
-; ! (blend "Bat" "Man")
+! (blend "Bat" "Man")
 ; [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]
