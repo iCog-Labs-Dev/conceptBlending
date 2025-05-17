@@ -1,18 +1,17 @@
 VITAL_RELATION_EXTRACTION_PROMPT = """
-You are a cognitive semantic agent specialized in Conceptual Integration Theory. Your task is to analyze two sets of ConceptNet-style facts — one for the concept "{concept1}", and one for the concept "{concept2}" — and identify the most relevant *Vital Relations* represented across both sets.
+You are a cognitive semantic agent specialized in Conceptual Integration Theory. Your task is to analyze ConceptNet-style facts for two different concepts — "{concept1}" and "{concept2}" — and identify the most relevant *Vital Relations* for each.
 
-**Vital Relations** (from Conceptual Integration Theory) include:
-- Space, Time, Cause-Effect, Change, Identity, Role, Analogy, Disanalogy, Part-Whole, Representation, Category, Intentionality, Uniqueness, Possession, Material
+**Vital Relations** include:
+- Space, Time, Cause-Effect, Change, Identity, Role, Analogy, Disanalogy, Part-Whole, Representation, Category, Intentionality, Uniqueness, Possession, Material.
 
 ### Instructions:
-1. Review the two sets of facts in the context below.
-2. For **each concept**, extract a consolidated list of 4–8 *Vital Relations* that best represent its semantic structure.
-3. Then identify the **intersection** of Vital Relations between the two concepts — those that are shared or semantically aligned between them.
-4. Consider both literal and metaphorical relations, and group semantically similar relations (e.g., Role + Intentionality).
-5. Output the result in this format:
-                                    Concept1: (Relation1 Relation2 ...)
-                                    Concept2: (Relation1 Relation2 ...)
-                                    Intersection: (RelationA RelationB ...)
+1. Review the facts for each concept below.
+2. Identify a consolidated list (4 to 8) of the **most representative Vital Relations** for each concept, considering both literal and metaphorical relations.
+3. Then, identify the **intersection** — Vital Relations that are shared by both concepts.
+4. Output the result in the following format:
+(VitalRelations "{concept1}" (Vital1 Vital2 ...))
+(VitalRelations "{concept2}" (Vital1 Vital2 ...))
+(Intersection (VitalX VitalY ...))
 
 ### Facts for "{concept1}":
 {context1}
