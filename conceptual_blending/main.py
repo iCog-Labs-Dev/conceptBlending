@@ -20,7 +20,7 @@ def grounded_atoms(metta):
             registered_operations[operation_name] = OperationAtom(
             operation_name,
             lambda *args, network=network: prompt_agent(metta, network, *args),
-            [AtomType.ATOM, "Expression"],
+            [AtomType.ATOM, AtomType.ATOM, "Expression"],
             unwrap=False
         )
         else:

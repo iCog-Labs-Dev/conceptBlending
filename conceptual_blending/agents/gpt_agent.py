@@ -22,41 +22,44 @@ def get_prompt(network: str) -> str:
     return prompts.get(network, "Error")
 
 def fetch_context(concept):
-    return [
-        "bat is used_for playing baseball"
-        "bat is made_of wood"
-        "bat is a type_of mammal"
-        "bat is capable_of flying"
-        "bat is located_in cave"
-        "bat has wings"
-        "bat is similar_to mouse"
-        "bat is a kind_of tool"
-        "bat is active_at night"
-        "bat is used_to hit baseball"
-        "bat is represented_by 🦇"
-        "bat is found_in attic"
-        "bat can be a weapon"
-        "bat is not a bird"
-        "bat is a kind_of animal"
-        "bat is derived_from old english batt"
-        "bat is used_for playing baseball"
-        "bat is made_of wood"
-        "bat is a type_of mammal"
-        "bat is capable_of flying"
-        "bat is located_in cave"
-        "bat has wings"
-        "bat is similar_to mouse"
-        "bat is a kind_of tool"
-        "bat is active_at night"
-        "bat is used_to hit baseball"
-        "bat is represented_by 🦇"
-        "bat is found_in attic"
-        "bat can be a weapon"
-        "bat is not a bird"
-        "bat is a kind_of animal"
-        "bat is derived_from old english batt"
-      ]
-
+    concept = concept.lower()
+    
+    if concept == "bat":
+        return [
+            "bat is used_for playing baseball",
+            "bat is made_of wood",
+            "bat is a type_of mammal",
+            "bat is capable_of flying",
+            "bat is located_in cave",
+            "bat has wings",
+            "bat is similar_to mouse",
+            "bat is a kind_of tool",
+            "bat is active_at night",
+            "bat is used_to hit baseball",
+            "bat is represented_by 🦇",
+            "bat is found_in attic",
+            "bat can be a weapon",
+            "bat is not a bird",
+            "bat is a kind_of animal",
+            "bat is derived_from old english batt"
+        ]
+    
+    elif concept == "tool":
+        return [
+            "tool is used_for performing tasks",
+            "tool is made_of metal or plastic",
+            "tool is found_in workshop",
+            "tool is a kind_of instrument",
+            "tool can be a hammer, wrench, or screwdriver",
+            "tool is held_by hand",
+            "tool is created_by humans",
+            "tool is essential_for construction",
+            "tool is stored_in toolbox",
+            "tool helps_to fix things"
+        ]
+    
+    else:
+        return [f"{concept} is related_to unknown"]  
 
 def prompt_agent(metta: MeTTa, network: str, *args):
     """
@@ -81,10 +84,17 @@ def prompt_agent(metta: MeTTa, network: str, *args):
         formatted_prompt = prompt.format(concept1=concept1)
         
     elif network == "vital_relation":
-        concept1 = str(args[0])
-        context = fetch_context(concept1)
-        formatted_prompt = prompt.format(concept1=concept1, context=context)
-        
+      concept1 = str(args[0])
+      concept2 = str(args[1])
+      context1 = fetch_context(concept1)
+      context2 = fetch_context(concept2)
+      formatted_prompt = VITAL_RELATION_EXTRACTION_PROMPT.format(
+        concept1=concept1,
+        concept2=concept2,
+        context1=context1,
+        context2=context2
+    )
+     
     elif network == "vector":
       concept1 = str(args[0])
       concept2 = str(args[1])
