@@ -1,3 +1,4 @@
+import os
 from hyperon import *
 from .llmagent import ChatGPTAgent
 from conceptual_blending.prompts.network_selector import NETWORK_SELECTOR_PROMPT
@@ -7,6 +8,7 @@ from conceptual_blending.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
 from conceptual_blending.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
 from conceptual_blending.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
 from conceptual_blending.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
+from conceptual_blending.adapter.conceptnet_adapter import get_conceptnet_edges, edges_to_facts
 
 def get_prompt(network: str) -> str:
     """Returns the appropriate prompt based on the network type."""
@@ -21,45 +23,16 @@ def get_prompt(network: str) -> str:
     }
     return prompts.get(network, "Error")
 
-def fetch_context(concept):
-    concept = concept.lower()
-    
-    if concept == "bat":
-        return [
-            "bat is used_for playing baseball",
-            "bat is made_of wood",
-            "bat is a type_of mammal",
-            "bat is capable_of flying",
-            "bat is located_in cave",
-            "bat has wings",
-            "bat is similar_to mouse",
-            "bat is a kind_of tool",
-            "bat is active_at night",
-            "bat is used_to hit baseball",
-            "bat is represented_by 🦇",
-            "bat is found_in attic",
-            "bat can be a weapon",
-            "bat is not a bird",
-            "bat is a kind_of animal",
-            "bat is derived_from old english batt"
-        ]
-    
-    elif concept == "tool":
-        return [
-            "tool is used_for performing tasks",
-            "tool is made_of metal or plastic",
-            "tool is found_in workshop",
-            "tool is a kind_of instrument",
-            "tool can be a hammer, wrench, or screwdriver",
-            "tool is held_by hand",
-            "tool is created_by humans",
-            "tool is essential_for construction",
-            "tool is stored_in toolbox",
-            "tool helps_to fix things"
-        ]
-    
-    else:
-        return [f"{concept} is related_to unknown"]  
+def fetch_context(concept, limit=100) -> list[str]:
+    """
+    fetches ConceptNet edges for a given concept and converts them to facts.
+    """
+    concept = concept.strip().lower()
+    edges = get_conceptnet_edges(concept, limit)
+    facts = edges_to_facts(edges)
+    return facts
+
+  
 
 def prompt_agent(metta: MeTTa, network: str, *args):
     """
@@ -94,7 +67,6 @@ def prompt_agent(metta: MeTTa, network: str, *args):
         context1=context1,
         context2=context2
     )
-     
     elif network == "vector":
       concept1 = str(args[0])
       concept2 = str(args[1])
@@ -112,3 +84,4 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     parsed_atoms = metta.parse_all(answer.content.strip())
     # Always return a list of atoms.
     return parsed_atoms
+
