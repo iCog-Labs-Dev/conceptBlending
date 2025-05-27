@@ -1,0 +1,6 @@
+Integration: 0.88
+Topology: 1.00
+Web: 1.00
+Unpacking: 1.00
+Metonymy: 0.88
+Good_reason: 0.00
