@@ -184,15 +184,30 @@
 ; $calculated-mu-hqblend
 ; )
 ;Output [0.027331495447180196]
-(=(extract-intersection-vitals $vital_output)
-    (let*(
-        ($intersection-pair ( ))
-        
-    )
-        (!println ($vital2))
-        $Intersect
+
+;                                                 ###################### Calculate Intersection ##########################
+; This Function Extracts the intersection of the given list of vital realtions from gpt_vital_relation function
+(=(extract-intersection $list )
+(foldl-atom $list (empty) $acc $item (let ($head $tail) $item
+  (if (== $head Intersection) $tail $acc))))
+
+; checks if a given item is a member of the list
+(= (is-member $item $list)
+    (foldl-atom $list False $acc $element
+        (or $acc (== $item $element))
     )
 )
+; Helper function to check if a vital relation is the intersection of the two concepts 
+; if it is it multiplies the value of the property by 1.5
+(=(weight ($prop $val) $vital-types)( if (is-member $prop $vital-types)
+                 ($prop (* 1.5 $val)) ; boost important properties
+                ($prop $val)
+            ))
+; Applies the vital weighting to the mu-emergence values
+(= (apply-vital-weighting $mu-emergence $vital-types)(
+    collapse (weight (superpose $mu-emergence) $vital-types)
+))
+
 
 (= (blend $input1 $input2)
     (let*(
@@ -201,6 +216,9 @@
         ($wrapped-concept2 (cdr-atom $concepts))
         ($concept2 (car-atom $wrapped-concept2))
         ;; Call Vital relation Agent
+        (vital-output (gpt_vital_relation $input1 $input2))
+        ($vital-types (extract-intersection $vital-output))
+        
         
         ($degree (property-degree $concept1))
         ($max (property-max $concept1 $concept2))
