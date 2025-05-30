@@ -1,31 +1,33 @@
 ! (import! &self conceptual_blending)
 ! (import! &self list-op-utils)
-
+; Defines type of Concept
 (: Concept Concept)
 
 ; ###################### Helper functions ##########################
 
+; extract the list of (prop value) pair from the concept
 (=(get-prop-value-pairs $concept)
     (let (Concept $x $y) $concept (cdr-atom $y))
 )
+
 ;! (get-prop-value-pairs (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))]
 
-
+; extracts the property name from a pair
 (= (get-property $prop-value-pair)
     (let ($x $y) $prop-value-pair $x)
 )
 +;! (get-property (mobility 0.9))
 +; Output [mobility]
 
-
+; Maps over all pairs to get just the property names
 (= (get-properties $prop-value-pairs)
     (map-atom $prop-value-pairs $x (get-property $x))
 )
 ;!(get-properties ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
 ; Output [(mobility intelligence web-creation social-structure predatory-behavior communication symbolism physical-strength)]
 
-
+; extracts numeric values from one or all properties
 (= (get-value $property)
     (let ($x $y) $property $y)
 )
@@ -41,6 +43,7 @@
 
 
 ; ###################### Calculate product of two properites ##########################
+
 (= (property-product $properties1 $properties2)
     (let
         ($property1values $property2values $properties)
@@ -181,7 +184,15 @@
 ; $calculated-mu-hqblend
 ; )
 ;Output [0.027331495447180196]
-
+(=(extract-intersection-vitals $vital_output)
+    (let*(
+        ($intersection-pair ( ))
+        
+    )
+        (!println ($vital2))
+        $Intersect
+    )
+)
 
 (= (blend $input1 $input2)
     (let*(
@@ -189,6 +200,8 @@
         ($concept1 (car-atom $concepts))
         ($wrapped-concept2 (cdr-atom $concepts))
         ($concept2 (car-atom $wrapped-concept2))
+        ;; Call Vital relation Agent
+        
         ($degree (property-degree $concept1))
         ($max (property-max $concept1 $concept2))
         ($calculated-mu-emergence (mu-emergence $degree $max))
@@ -196,7 +209,7 @@
         ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
         ($concept-pair (let (Concept $x $y) $concept1 $x))
     )
-        (if (> $calculated-mu-hqblend 0)
+        (if (> $calculated-mu-hqblend <0)
             (let*(
                 ($network (gpt_network_selector $concept-pair))
             )
@@ -209,5 +222,6 @@
         )
     )
 )
+! (gpt_vital_relation house boat)
 ; ! (blend "Bat" "Man")
 ; [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]

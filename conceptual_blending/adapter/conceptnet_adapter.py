@@ -83,4 +83,3 @@ def edges_to_facts(edges: list[dict]) -> list[str]:
         rel = RELATION_TO_STRING[e["relation"]]
         facts.append(f"{e['start'].lower()} {rel} {e['end'].lower()}")
     return facts
-
