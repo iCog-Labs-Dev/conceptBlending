@@ -216,23 +216,23 @@
         ($wrapped-concept2 (cdr-atom $concepts))
         ($concept2 (car-atom $wrapped-concept2))
         ;; Call Vital relation Agent
-        (vital-output (gpt_vital_relation $input1 $input2))
+        ($vital-output (gpt_vital_relation $input1 $input2))
         ($vital-types (extract-intersection $vital-output))
-        
         
         ($degree (property-degree $concept1))
         ($max (property-max $concept1 $concept2))
         ($calculated-mu-emergence (mu-emergence $degree $max))
+        ($weighted-mu-emergence (apply-vital-weighting $calculated-mu-emergence $vital-types))
         ($min (property-min $concept1 $concept2))
-        ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
+        ($calculated-mu-hqblend (mu-hqblend $weighted-mu-emergence $min))
         ($concept-pair (let (Concept $x $y) $concept1 $x))
     )
-        (if (> $calculated-mu-hqblend <0)
+        (if (> $calculated-mu-hqblend 0)
             (let*(
                 ($network (gpt_network_selector $concept-pair))
             )
                 (if (not (noreduce-eq $network None))
-                    ($network $concept-pair $calculated-mu-emergence)
+                    ($network $concept-pair $weighted-mu-emergence)
                     (empty)
                 )
             )
@@ -240,6 +240,8 @@
         )
     )
 )
-! (gpt_vital_relation house boat)
-; ! (blend "Bat" "Man")
+
+
+;! (gpt_vital_relation house boat)
+ ! (blend Bat Man)
 ; [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]

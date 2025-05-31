@@ -8,10 +8,10 @@ You are a cognitive semantic agent specialized in Conceptual Integration Theory.
 1. Review the facts for each concept below.
 2. Identify a consolidated list (4 to 8) of the **most representative Vital Relations** for each concept, considering both literal and metaphorical relations.
 3. Then, identify the **intersection** — Vital Relations that are shared by both concepts.
-4. Output the result in the following format:
+4. Output the result exactly in the following format:
 (VitalRelations "{concept1}" (Vital1 Vital2 ...))
-(VitalRelations "{concept2}" (Vital1 Vital2 ...))
-(Intersection (VitalX VitalY ...))
+(VitalRelations "{concept2}" (Vital1 Vital2 ...)) 
+(Intersection (VitalX VitalY ...)) 
 
 ### Facts for "{concept1}":
 {context1}
