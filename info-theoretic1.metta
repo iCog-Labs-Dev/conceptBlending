@@ -216,9 +216,9 @@
         ($wrapped-concept2 (cdr-atom $concepts))
         ($concept2 (car-atom $wrapped-concept2))
         ;; Call Vital relation Agent
-        ($vital-output (gpt_vital_relation $input1 $input2))
+        ($vital-output ((gpt_vital_relation $input1 $input2)))
         ($vital-types (extract-intersection $vital-output))
-        
+        (() (println! $vital-types))
         ($degree (property-degree $concept1))
         ($max (property-max $concept1 $concept2))
         ($calculated-mu-emergence (mu-emergence $degree $max))
