@@ -53,9 +53,9 @@ def prompt_agent(metta: MeTTa, network: str, *args):
         formatted_prompt = prompt.format(concept1=concept1)
         
     elif network == "vital_relation":
-        concept1 = str(args[0])
-        context = fetch_context(concept1)
-        formatted_prompt = prompt.format(concept1=concept1, context=context)
+        concept1, concept2 = str(args[0]), str(args[1])
+        context1, context2 = fetch_context(concept1), fetch_context(concept2)
+        formatted_prompt = prompt.format(concept1=concept1, concept2=concept2, context1=context1, context2=context2)
         
     elif network == "vector":
       concept1 = str(args[0])

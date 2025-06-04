@@ -16,7 +16,7 @@ def grounded_atoms(metta):
     for network in NETWORKS:
         operation_name = f"gpt_{network}"  # e.g., gpt_simplex, gpt_mirror
 
-        if network in ["network_selector", "vital_relation"]:
+        if network in ["network_selector"]:
             registered_operations[operation_name] = OperationAtom(
             operation_name,
             lambda *args, network=network: prompt_agent(metta, network, *args),
