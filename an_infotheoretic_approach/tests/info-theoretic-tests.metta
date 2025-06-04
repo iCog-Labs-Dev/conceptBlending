@@ -1,5 +1,5 @@
-! (register-module! ../../conceptBlending)
-! (import! &self conceptBlending:info-theoretic)
+! (register-module! ../../an_infotheoretic_approach)
+! (import! &self an_infotheoretic_approach:info-theoretic)
 
 
 ; Test get-prop-value-pairs

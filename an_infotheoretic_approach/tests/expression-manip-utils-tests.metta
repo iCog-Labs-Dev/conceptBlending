@@ -1,5 +1,5 @@
-! (register-module! ../../conceptBlending)
-! (import! &self conceptBlending:utils:expression-manip-utils)
+! (register-module! ../../an_infotheoretic_approach)
+! (import! &self an_infotheoretic_approach:utils:expression-manip-utils)
 
 ; Test flatten
 ! (assertEqual

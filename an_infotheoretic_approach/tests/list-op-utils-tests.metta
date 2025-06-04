@@ -1,5 +1,5 @@
-! (register-module! ../../conceptBlending)
-! (import! &self conceptBlending:utils:list-op-utils)
+! (register-module! ../../an_infotheoretic_approach)
+! (import! &self an_infotheoretic_approach:utils:list-op-utils)
 
 
 ; Test tuple-multiply

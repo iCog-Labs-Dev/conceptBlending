@@ -2,8 +2,8 @@
 ! (import! &self info-theoretic)
 
 ;!(bind! &input-space (new-space))
-!(bind! &generic-space (new-space))
-!(bind! &blended-space (new-space))
+;!(bind! &generic-space (new-space))
+;!(bind! &blended-space (new-space))
 
 
 ; metta function to add given expressions to space and file(external file)
@@ -71,7 +71,7 @@
         (empty)
     )
 )
-! (blend_to_space Bat Man)
+;! (blend_to_space Bat Man)
 
 
 ; metta function to blend all atoms in a given lists

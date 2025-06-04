@@ -1,6 +1,6 @@
 
-! (register-module! ../../conceptBlending)
-! (import! &self conceptBlending:libs)
+! (register-module! ../../an_infotheoretic_approach)
+! (import! &self an_infotheoretic_approach:libs)
 
 ; Test vital relation extracting agent
 !(let* (
