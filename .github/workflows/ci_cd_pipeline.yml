@@ -24,10 +24,11 @@ jobs:
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip==23.1.2
-        python -m pip install -r requirements.txt
+        cd ../conceptBlending/an_infotheoretic_approach
+        pip install -r requirements.txt
 
 
     - name: Run Tests
       run: |
-        cd ../conceptBlending
+        cd ../conceptBlending/an_infotheoretic_approach
         python scripts/run-tests.py
