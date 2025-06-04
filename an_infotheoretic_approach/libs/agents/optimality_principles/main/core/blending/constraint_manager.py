@@ -1,11 +1,11 @@
-from conceptual_integration.core.blending.constraints.integration import IntegrationConstraint
-from conceptual_integration.core.blending.constraints.topology import TopologyConstraint
-from conceptual_integration.core.blending.constraints.web import WebConstraint
-from conceptual_integration.core.blending.constraints.unpacking import UnpackingConstraint
-from conceptual_integration.core.blending.constraints.metonymy import MetonymyConstraint
-from conceptual_integration.core.blending.constraints.good_reason import GoodReasonConstraint
-from conceptual_integration.data_sources.conceptnet_adapter import ConceptNetAdapter
-from conceptual_integration.data_sources.llm_integration import LLMIntegration
+from main.core.blending.constraints.integration import IntegrationConstraint
+from main.core.blending.constraints.topology import TopologyConstraint
+from main.core.blending.constraints.web import WebConstraint
+from main.core.blending.constraints.unpacking import UnpackingConstraint
+from main.core.blending.constraints.metonymy import MetonymyConstraint
+from main.core.blending.constraints.good_reason import GoodReasonConstraint
+from main.data_sources.conceptnet_adapter import ConceptNetAdapter
+from main.data_sources.llm_integration import LLMIntegration
 
 class ConstraintManager:
     def __init__(self, config: dict):

@@ -1,4 +1,4 @@
-from conceptual_integration.data_sources.conceptnet_adapter import ConceptNetAdapter
+from main.data_sources.conceptnet_adapter import ConceptNetAdapter
 
 class UnpackingConstraint:
     def __init__(self, config: dict = None, conceptnet=None):

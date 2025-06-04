@@ -1,8 +1,8 @@
 import json
 import re
-from conceptual_integration.data_sources.conceptnet_adapter import ConceptNetAdapter
-from conceptual_integration.data_sources.llm_integration import LLMIntegration
-from conceptual_integration.core.representation.concept import Concept
+from main.data_sources.conceptnet_adapter import ConceptNetAdapter
+from main.data_sources.llm_integration import LLMIntegration
+from main.core.representation.concept import Concept
 
 class GoodReasonConstraint:
     def __init__(self, config: dict = None, conceptnet=None, llm=None):

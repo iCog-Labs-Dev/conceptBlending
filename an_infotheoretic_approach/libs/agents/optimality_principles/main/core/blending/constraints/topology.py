@@ -1,4 +1,4 @@
-from conceptual_integration.data_sources.conceptnet_adapter import ConceptNetAdapter
+from main.data_sources.conceptnet_adapter import ConceptNetAdapter
 
 class TopologyConstraint:
     def __init__(self, conceptnet=None, similarity_threshold=0.65):

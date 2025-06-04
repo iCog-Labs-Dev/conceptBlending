@@ -1,7 +1,7 @@
-from conceptual_integration.core.representation.concept import Concept, Property, Relation
-from conceptual_integration.core.blending.constraint_manager import ConstraintManager
-from conceptual_integration.data_sources.conceptnet_adapter import ConceptNetAdapter
-from conceptual_integration.data_sources.llm_integration import LLMIntegration
+from main.core.representation.concept import Concept, Property, Relation
+from main.core.blending.constraint_manager import ConstraintManager
+from main.data_sources.conceptnet_adapter import ConceptNetAdapter
+from main.data_sources.llm_integration import LLMIntegration
 import yaml
 import time
 import os
