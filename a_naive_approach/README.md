@@ -1,4 +1,4 @@
-# Conceptual Blending Project
+# A Naive Conceptual Blending Approach Implementation.
 
 ## Overview
 
@@ -11,30 +11,13 @@ The **Conceptual Blending Project** develops an AI-driven system that integrates
 
 The system processes natural language queries and explicit concept pairs, leveraging structured reasoning to generate novel conceptual combinations stored in a MeTTa space for further analysis.
 
-## Directory Structure
-
-```plaintext
-.
-|-- conceptual_blending
-|   |-- agents
-|   |   |-- gpt_agent.py          # GPT-based agent for generating blended concepts
-|   |   |-- __init__.py           # Initialize the agent module
-|   |   |-- llmagent.py           # Handles API authentication and requests
-|   |-- __init__.py               # Initialize the conceptual_blending module
-|   |-- main.py                   # Main logic for blending concepts and running agents
-|   |-- prompts                   # Prompt templates for different blending networks
-|-- requirements.txt             # Python dependencies for the project
-|-- run-conceptual-blending.metta # MeTTa script for reasoning and running the project
-|-- .env                         # Environment variables for API authentication
-```
-
 ## Setup and Run
 
 ### 1. Clone the repository and navigate to the project folder:
 
 ```bash
 git clone https://github.com/iCog-Labs-Dev/conceptBlending.git
-cd conceptBlending/
+cd conceptBlending/a_naive_approach
 ```
 
 ### 2. Create a virtual environment and activate it:
@@ -55,14 +38,6 @@ pip install -r requirements.txt
 Create a `.env` file and add one of the following API credentials:
 
 ```plaintext
-# ===================
-# DEVELOPMENT (GitHub Marketplace OpenAI API)
-# ===================
-GITHUB_TOKEN=your_github_marketplace_api_key_here
-
-# ===================
-# PRODUCTION (OpenAI API)
-# ===================
 OPENAI_API_KEY=your_openai_api_key_here
 ```
 
