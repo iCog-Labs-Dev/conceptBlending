@@ -1,7 +1,7 @@
 ! (import! &self conceptual_blending)
 
 
-;  ! (gpt_vital_relation house boat)
+ ! (gpt_vital_relation house boat)
 
 ; [(VitalRelations "house" (Space Part-Whole Category Role Possession Material)), 
 ; (VitalRelations "boat" (Space Category Role Material Part-Whole)), 
@@ -15,7 +15,7 @@
 (=(extract-intersection $list )
         (foldl-atom $list (empty) $acc $item
             (let ($head $tail) $item
-              (if (== $head Intersection)
+              (if (== $head Union)
                ($tail)
                 $acc
                )
@@ -28,10 +28,9 @@
 
 !(let* (($input ((gpt_vital_relation house boat)))
         ;  (() (println! $input))
-         ($intersected (extract-intersection $input))
-          (() (println! $intersected))
+         ($Union (extract-intersection $input))
 )
- (println! $intersected)
+ (println! $Union)
  )
 
 (= (is-member $item $list)
