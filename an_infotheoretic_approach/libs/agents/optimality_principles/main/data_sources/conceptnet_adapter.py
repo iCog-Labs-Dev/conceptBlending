@@ -2,6 +2,7 @@ import requests
 import json
 from urllib.parse import quote
 from functools import lru_cache
+from hyperon import *
 
 class ConceptNetAdapter:
     BASE_URL = "http://api.conceptnet.io"
@@ -41,6 +42,9 @@ class ConceptNetAdapter:
         edges = self.get_edges(term1, "Antonym")
         antonym_terms = {edge["end"]["label"].lower() for edge in edges if "end" in edge}
         return term2.lower() in antonym_terms
+
+    def are_terms_antonyms(self, metta: MeTTa, *args):
+        return [ValueAtom(self.are_antonyms(str(args[0]), str(args[1])))]
 
     def is_related(self, term1, term2, rel_type=None):
         """Check if term1 has a specified relationship to term2."""
