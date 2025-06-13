@@ -2,6 +2,7 @@ import os
 from hyperon import *
 from hyperon.ext import register_atoms
 from .agents import *
+from .agents.optimality_principles.main.data_sources.conceptnet_adapter import ConceptNetAdapter
 
 
 # Define networks and their corresponding function names
@@ -37,6 +38,14 @@ def grounded_atoms(metta):
                 [AtomType.ATOM, AtomType.ATOM, "Expression"],
                 unwrap=False
             )
+
+    conceptnet = ConceptNetAdapter(True)
+    registered_operations["are_terms_antonyms"] = OperationAtom(
+        "are_terms_antonyms",
+        lambda *args: conceptnet.are_terms_antonyms(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
+        unwrap=False
+    )
 
     return registered_operations
 
