@@ -14,6 +14,7 @@
     )
 )
 )
+(= (similarity_threshold) 0.65)
 
 (= (find-similar-known-relation $rel $knowns)
    (if (== (size-atom $knowns) 0)
@@ -24,7 +25,7 @@
            ($type-similarity (get_similarity_score (car-atom $rel) (car-atom $head)))
            ($target-similarity (get_similarity_score (index-atom $rel 1) (index-atom $head 1)))
          )
-         (if (and (> $type-similarity 0.65) (> $target-similarity 0.65))
+         (if (and (> $type-similarity (similarity_threshold)) (> $target-similarity (similarity_threshold)))
             $head
              (find-similar-known-relation $rel $tail)
              ))))
