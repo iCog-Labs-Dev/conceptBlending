@@ -1,3 +1,5 @@
+!(register-module! ../libs)
+! (import! &self libs)
 
 (= (get-property $prop-value-pair)
     (let ($x $y) $prop-value-pair $x)
@@ -45,15 +47,62 @@
   )
 
 )
+
+(= (check-relations-loop $rels $a-type $a-target $b-type $b-target $threshold)
+  (if (== (size-atom $rels) 0)
+      False
+      (let* (
+          ($head (car-atom $rels))
+          ($tail (cdr-atom $rels))
+      )
+        (if (< (size-atom $head) 2)
+            (check-relations-loop $tail $a-type $a-target $b-type $b-target $threshold)
+            (let* (
+                ($rel-type (car-atom $head))
+                ($rel-target (index-atom $head 1))
+                ($a-type-similarity (get_similarity_score $rel-type $a-type))
+                ($a-target-similarity (get_similarity_score $rel-target $a-target))
+                ($b-type-similarity (get_similarity_score $rel-type $b-type))
+                ($b-target-similarity (get_similarity_score $rel-target $b-target))
+                ($match-a (and (> $a-type-similarity $threshold)
+                               (> $a-target-similarity $threshold)))
+                ($match-b (and (> $b-type-similarity $threshold)
+                               (> $b-target-similarity $threshold)))
+            )
+              (if (and $match-a $match-b)
+                True
+                (check-relations-loop $tail $a-type $a-target $b-type $b-target $threshold))
+            )
+        )
+      )
+  )
+)
+
+(= (semantic-threshold) 0.75)
+
 (= (score-cross-mapping $blend-relations $a-kv $b-kv)
    (let* (
-       ($a-exists (relation-exists-in-blend $blend-relations $a-kv))
-       ($b-exists (relation-exists-in-blend $blend-relations $b-kv))
+        ($a-exists (relation-exists-in-blend $blend-relations $a-kv))
+        ($b-exists (relation-exists-in-blend $blend-relations $b-kv))
+        
+        ($a-kv-inner (car-atom $a-kv))
+        ($b-kv-inner (car-atom $b-kv))
+
+        ($a-type (car-atom $a-kv-inner))
+        ($a-target (index-atom $a-kv-inner 1))
+        ($b-type (car-atom $b-kv-inner))
+        ($b-target (index-atom $b-kv-inner 1))
+        ($threshold (semantic-threshold))
    )
      (
         if (and $a-exists $b-exists)
          1.0
-         0.8
+         (
+            if (check-relations-loop $blend-relations $a-type $a-target $b-type $b-target $threshold)
+                0.8
+                0.0
+            
+        )
      )
    )
 )
