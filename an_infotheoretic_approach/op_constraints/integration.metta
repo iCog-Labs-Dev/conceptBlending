@@ -1,5 +1,5 @@
+!(register-module! ../libs)
 ! (import! &self libs)
-! (import! &self utils:list-op-utils)
 
 
 (= (check-against-predefined-list $item $item2 $terms_antonymity $list)

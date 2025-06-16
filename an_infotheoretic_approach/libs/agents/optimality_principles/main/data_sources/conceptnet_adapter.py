@@ -37,6 +37,9 @@ class ConceptNetAdapter:
         except (requests.exceptions.RequestException, ValueError, json.JSONDecodeError):
             return 0
 
+    def get_similarity_score(self, metta: MeTTa, *args):
+        return [ValueAtom(self.get_similarity(str(args[0]), str(args[1])))]
+
     def are_antonyms(self, term1, term2):
         """Check whether two terms are antonyms."""
         edges = self.get_edges(term1, "Antonym")

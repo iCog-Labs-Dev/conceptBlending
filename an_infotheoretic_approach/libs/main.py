@@ -46,6 +46,13 @@ def grounded_atoms(metta):
         [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
         unwrap=False
     )
+    registered_operations["get_similarity_score"] = OperationAtom(
+        "get_similarity_score",
+        lambda *args: conceptnet.get_similarity_score(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
+        unwrap=False
+    )
+    
 
     return registered_operations
 
