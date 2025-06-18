@@ -24,6 +24,40 @@ class ConceptNetAdapter:
         except (requests.exceptions.RequestException, ValueError, json.JSONDecodeError):
             return []
 
+    def get_expand_provenance(self, metta: MeTTa, *args):
+        # (car) or (car boat)
+        input_expr = args[0]
+
+        if not isinstance(input_expr, ExpressionAtom):
+            return E(S('Error'), S('Invalid-Input-Not-An-Expression'))
+            
+        # Convert the children (which are SymbolAtoms) into a Python list of strings
+        provenance_list = [atom.get_name() for atom in input_expr.get_children()]
+
+        expanded = set(provenance_list)
+        for source in provenance_list:
+            try:
+                edges = self.get_edges(source, "RelatedTo")
+                for edge in edges:
+                    if "end" in edge and "label" in edge["end"]:
+                        expanded.add(edge["end"]["label"].lower())
+            except Exception:
+                continue
+        
+        # For each phrase in our results, create its own ExpressionAtom
+        nested_expressions = []
+        for phrase in list(expanded):
+            # Split a multi-word phrase like "a car show" into ["a", "car", "show"]
+            words = phrase.split()
+            # Convert each word into a SymbolAtom -> [S('a'), S('car'), S('show')]
+            word_atoms = [S(word) for word in words]
+            # Create an inner expression -> E(S('a'), S('car'), S('show')) which is (a car show)
+            inner_expr = E(*word_atoms)
+            nested_expressions.append(inner_expr)
+            
+        final_outer_expr = E(*nested_expressions)
+        return [final_outer_expr]
+
     @lru_cache(maxsize=1000)
     def get_similarity(self, term1, term2):
         """Returns similarity score between two terms using ConceptNet relatedness."""
@@ -53,6 +87,9 @@ class ConceptNetAdapter:
         """Check if term1 has a specified relationship to term2."""
         edges = self.get_edges(term1, rel_type)
         return any(edge["end"]["label"].lower() == term2.lower() for edge in edges if "end" in edge)
+
+    def are_related(self, metta: MeTTa, *args):
+        return [ValueAtom(self.is_related(str(args[0]), str(args[1])))]
 
     def is_metonymy(self, term, context):
         """Heuristic for metonymy detection using ConceptNet relation types."""
