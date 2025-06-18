@@ -52,6 +52,19 @@ def grounded_atoms(metta):
         [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
         unwrap=False
     )
+
+    registered_operations["get_expand_provenance"] = OperationAtom(
+        "get_expand_provenance",
+        lambda *args: conceptnet.get_expand_provenance(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM],
+        unwrap=False
+    )
+    registered_operations["are_related"] = OperationAtom(
+        "are_related",
+        lambda *args: conceptnet.are_related(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
+        unwrap=False
+    )
     
 
     return registered_operations
