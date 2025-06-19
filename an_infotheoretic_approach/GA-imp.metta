@@ -13,3 +13,25 @@
 
 ;;;; INITIAL POPULATION ;;;;
 !(random-list (POP_SIZE) (GENES) 0 1)
+
+
+; Roulette Wheel Selection 
+(: roulette-select (List List -> Any))
+(= (roulette-select $population $fitnesses)
+   (let* (
+           ($w-max (max-atom $fitnesses))          ; highest fitness 
+           ($n     (size-atom $population))        ; list length     
+         )
+     (roulette-loop $population $fitnesses $w-max $n)))
+
+ (: roulette-loop (List List Number Number -> Any))
+    (= (roulette-loop $pop $fits $w-max $n)
+    (let* (
+            ($i (random-int &rng 0 $n)) 
+            ($r (random-float &rng 0 1))                       
+            ($fit-i (index-atom  $fits $i))          
+            )
+    (if (< $r (/ $fit-i $w-max))                
+        (index-atom $pop $i)
+        (roulette-loop $pop $fits $w-max $n))))
+; Output [4]
