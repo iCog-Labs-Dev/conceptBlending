@@ -12,7 +12,7 @@
 (= (ETA_PARAM) (2 1.05))
 
 ;;;; INITIAL POPULATION ;;;;
-!(random-list (POP_SIZE) (GENES) 0 1)
+; !(random-list (POP_SIZE) (GENES) 0 1)
 
 
 ; Roulette Wheel Selection 
@@ -37,12 +37,20 @@
 ; Output [4]
 
 
-
+;; Helper Function to get the second element of the Pair
 (= (get-second $pair)
    (let* (($cdr (cdr-atom $pair))) ; extract tail of the pair
         (car-atom $cdr)           ; head of the tail is second element
    )
 )
+
+(=(random) ((py-dot np random.random)))
+
+(=(sbx_crossover $p1 $p2 $eta)
+(if (> (random) (CROSSOVER_RATE))
+    ($p1 $p2) 
+    (sbx_gene $p1 $p2 $eta)
+ ))
 
 (=(sbx_gene $x1 $x2 $eta)
 (if (<= (abs-math(- $x1 $x2)) 1e-14)
@@ -50,7 +58,7 @@
 (let* (
     ($xl (min-atom ($x1 $x2)))
     ($xh (max-atom ($x1 $x2)))
-    ($rand ((py-dot np random.random)))
+    ($rand (random))
     ($beta (+ 1.0 (* 2.0 (/ $xl (- $xh $xl)))))
     ($alpha (- 2.0 (pow-math $beta (- 0.0 (+ $eta 1.0)))))
     ; (() (println! $alpha))
@@ -62,12 +70,10 @@
     ; (() (println! $c1))
     ($c2 (max-atom ((min-atom ((/ (+ (+ $xl $xh) (* $betaq (- $xh $xl))) 2.0) 1.0)) 0.0)))
 )
-( $c1 $c2)
+($c1 $c2)
 )
 )
 )
-
-
 ;; Base Case
 (= (sbx_crossover_list () () $eta)
    ( () () )  ;; return two empty lists
@@ -82,7 +88,7 @@
     ;   (() (println!( "T1"$t1 )))
       ($t2 (cdr-atom $list2))
     ;   (() (println!( "T2"$t2 )))
-      ($pair (sbx_gene $x1 $x2 $eta))
+      ($pair (sbx_crossover $x1 $x2 $eta))
     ;   (() (println!( "pair" $pair )))
       ($c1 (first-from-pair $pair))
     ;   (() (println! ("C1"$c1)))
