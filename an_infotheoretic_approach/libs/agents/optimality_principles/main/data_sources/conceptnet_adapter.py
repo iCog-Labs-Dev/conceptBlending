@@ -24,6 +24,10 @@ class ConceptNetAdapter:
         except (requests.exceptions.RequestException, ValueError, json.JSONDecodeError):
             return []
 
+    def is_abbreviation(self, metta: MeTTa, *args):
+        return [ValueAtom(any(edge["rel"]["label"] in ["Abbreviation", "Acronym"]
+               for edge in self.get_edges(str(args[0]), "FormOf")))]
+
     def get_expand_provenance(self, metta: MeTTa, *args):
         # (car) or (car boat)
         input_expr = args[0]
@@ -98,9 +102,15 @@ class ConceptNetAdapter:
                 self.is_related(term, context, "LocatedNear") or
                 self.is_related(term, context, "SymbolOf"))
 
+    def is_relation_metonymy(self, metta: MeTTa, *args):
+        return [ValueAtom(self.is_metonymy(str(args[0]), str(args[1])))]
+
     def is_part_of(self, part, whole):
         """Determine if one concept is part of another."""
         return self.is_related(part, whole, "PartOf")
+
+    def is_relation_part_of(self, metta: MeTTa, *args):
+        return [ValueAtom(self.is_part_of(str(args[0]), str(args[1])))]
 
     def is_justified(self, property, context):
         """Determine whether a property is justified in the context of a concept."""

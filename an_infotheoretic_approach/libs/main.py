@@ -65,6 +65,24 @@ def grounded_atoms(metta):
         [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
         unwrap=False
     )
+    registered_operations["is_abbreviation"] = OperationAtom(
+        "is_abbreviation",
+        lambda *args: conceptnet.is_abbreviation(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM],
+        unwrap=False
+    )
+    registered_operations["is_relation_metonymy"] = OperationAtom(
+        "is_relation_metonymy",
+        lambda *args: conceptnet.is_relation_metonymy(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
+        unwrap=False
+    )
+    registered_operations["is_relation_part_of"] = OperationAtom(
+        "is_relation_part_of",
+        lambda *args: conceptnet.is_relation_part_of(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
+        unwrap=False
+    )
     
 
     return registered_operations
