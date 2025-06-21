@@ -34,7 +34,7 @@
         (if (< $r $fit-i)
             (index-atom $pop $i)
             (roulette-loop $pop $fits $w-max $n))))
-; Output [4]
+; Output [0.8]
 
 
 ;; Helper Function to get the second element of the Pair
