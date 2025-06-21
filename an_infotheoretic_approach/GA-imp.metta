@@ -34,7 +34,7 @@
         (if (< $r $fit-i)
             (index-atom $pop $i)
             (roulette-loop $pop $fits $w-max $n))))
-; Output [4]
+; Output [0.8]
 
 
 
