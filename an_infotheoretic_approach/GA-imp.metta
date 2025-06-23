@@ -1,5 +1,9 @@
 ! (import! &self utils:random-list-initializer)
 ! (bind! np (py-atom numpy))
+
+;; ==== SEED FOR REPRODUCIBILITY ====
+((py-dot np random.seed) 42)
+
 ;;;; PARAMETERS ;;;;
 (= (POP_SIZE) 50)
 (= (GENES) 8)
@@ -8,6 +12,9 @@
 (= (CROSSOVER_RATE) 0.9)
 ;; Mutation_rate, Initial_Mutation_STD, and Mutation_Decay respectively
 (= (MUTATION_PARAM) (0.1 0.5 0.95))
+(= (MUTATION_RATE) 0.5)
+(= (random) ((py-dot np random.random)))
+(= (gauss 0 1) ((py-dot np random.normal) 0 1))
 ;; Initial_SBX_STD, and SBX_ETA_Growth respectively
 (= (ETA_PARAM) (2 1.05))
 
@@ -110,3 +117,38 @@
 
 ; Example Output
 ;[((0.09033706260063018 0.03160994601048184 0.5507596758996745 0.06223446850446518) (0.7577880647059907 0.7908288642996885 0.6033648376156933 0.4397225358444596))]
+
+
+
+;; ==== CLAMP FUNCTION ====
+(: clamp (Number -> Number))
+(= (clamp $x)
+   (if (< $x 0) 0 (if (> $x 1) 1 $x))
+)
+
+;; ==== MUTATE GENE ====
+(: mutate_gene (Number Number -> Number))
+(= (mutate_gene $gene $std)
+   (if (< (random) (MUTATION_RATE))
+       (clamp (+ $gene (* $std (gauss 0 1))))
+       $gene
+   )
+)
+
+;; ==== MUTATE LIST ====
+(: mutate_list (List Number -> List))
+(= (mutate_list () $std) ())
+(= (mutate_list $genes $std)
+   (let* (
+          ($head (car-atom $genes))
+          ($tail (cdr-atom $genes))
+          ($mutated-head (mutate_gene $head $std))
+          ($mutated-tail (mutate_list $tail $std))
+       )
+       (cons-atom $mutated-head $mutated-tail)
+   )
+)
+
+;; ==== Output ====
+
+;[((0.14657740354356366 0.5 0.7104228400171473 0.1 0.33858887366361495 0.6384209255140325 0.7 0.8413943283960914))]
