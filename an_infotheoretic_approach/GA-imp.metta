@@ -27,13 +27,13 @@
  (: roulette-loop (List List Number Number -> Any))
     (= (roulette-loop $pop $fits $w-max $n)
     (let* (
-            ($i (random-int &rng 0 $n))
-            ($r     (random-float &rng 0 $w-max))     
-            ($fit-i (index-atom  $fits $i))             
+            ($i (random-int &rng 0 $n)) 
+            ($r (random-float &rng 0 1))                       
+            ($fit-i (index-atom  $fits $i))          
             )
-        (if (< $r $fit-i)
-            (index-atom $pop $i)
-            (roulette-loop $pop $fits $w-max $n))))
+    (if (< $r (/ $fit-i $w-max))                
+        (index-atom $pop $i)
+        (roulette-loop $pop $fits $w-max $n))))
 ; Output [0.8]
 
 
