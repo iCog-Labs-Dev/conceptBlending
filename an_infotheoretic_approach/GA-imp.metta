@@ -7,8 +7,8 @@
 
 
 ;;;; PARAMETERS ;;;;
-(= (POP_SIZE) 50)
-(= (GENES) 8)
+(= (POP_SIZE) 5)
+(= (GENES) 4)
 (= (GENERATIONS) 30)
 (= (ELITE_COUNT) 3)
 (= (CROSSOVER_RATE) 0.9)
@@ -40,6 +40,8 @@
 ;!(initial-population)
 
 ;!(let $population (initial-population) (zip-list $population (population-fitness-score $population)))
+
+
 !(let $population (initial-population) 
     (let* (
         ($popfitness (population-fitness-score $population))
@@ -47,7 +49,7 @@
         ($zippedpopfit (zip-list $population $popfitness))
         (() (println! $zippedpopfit))
         ($added (add-list-element-to-space $zippedpopfit &fittestindividuals))
-        ($nfitindiv (n-fit-individuals $popfitness &fittestindividuals (ELITE_COUNT)))
+        ($nfitindiv (n-fit-individuals1 $popfitness &fittestindividuals (ELITE_COUNT)))
         )
         $nfitindiv
     )

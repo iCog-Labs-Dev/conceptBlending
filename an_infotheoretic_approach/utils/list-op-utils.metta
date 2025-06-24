@@ -339,27 +339,82 @@
     )
 )
 
-;!(bind! &fittestindividuals (new-space))
-;(= (n-fit-individuals1 $list $newlist 0) $newlist)
-
-(= (n-fit-individuals1 $list $space $newlist $n)
+(= (check-all-equal $list $firstelem)
     (
-        if (<= $n 0) 
-        $newlist
+        if (== (size-atom $list) 0)
+        True
         (let*
-        (
-            ($max (max-atom $list))
-            ($list1 (remove-list-element $list $max))
-            ($maxfitindiv (match $space (Individual $x $max) $x))
-            ($newlist1 (cons-atom $maxfitindiv $newlist))
-            ($max1 (n-fit-individuals1 $list1 $space $newlist1 (- $n 1)))
-        )
-        $max1
+            (
+                ($elem (car-atom $list))
+                ($list1 (cdr-atom $list))
+                (() (println! $list1))
+                ($result (and (== $elem $firstelem) (check-all-equal $list1 $firstelem)))
+                (() (println! (quote (and (== $elem $firstelem) (check-all-equal $list1 $firstelem)))))
+            )
+            $result
         )
     )
 )
 
+(= (check-all-equal1 $list $firstelem)
+    (
+        collapse(
+            superpose(
+                (== (index-atom $list 1) $firstelem)
+                (== (index-atom $list 2) $firstelem)
+                (== (index-atom $list 3) $firstelem)
+                (== (index-atom $list 4) $firstelem)
+                (== (index-atom $list 5) $firstelem)
+                (== (index-atom $list 6) $firstelem)
+                (== (index-atom $list 7) $firstelem)
+                (== (index-atom $list 8) $firstelem)
+                (== (index-atom $list 9) $firstelem)
+                (== (index-atom $list 10) $firstelem)
+                (== (index-atom $list 11) $firstelem)
+                (== (index-atom $list 12) $firstelem)
+                (== (index-atom $list 13) $firstelem)
+                (== (index-atom $list 14) $firstelem)
+                (== (index-atom $list 15) $firstelem)
+                (== (index-atom $list 16) $firstelem)
+                (== (index-atom $list 17) $firstelem)
+                (== (index-atom $list 18) $firstelem)
+                (== (index-atom $list 19) $firstelem)
+                (== (index-atom $list 20) $firstelem)
+                (== (index-atom $list 21) $firstelem)
+                (== (index-atom $list 22) $firstelem)
+                (== (index-atom $list 23) $firstelem)
+                (== (index-atom $list 24) $firstelem)
+                (== (index-atom $list 25) $firstelem)
+            )
+        )
+    )
+)
+;!(check-all-equal1 (5 4 5 5 5 5 5 5 4 3 5 5 5 5 5 5 5 5 5 5 5 5 5 4 5) 5)
+
+(= (match-single-individual $space $max)
+    (
+        let $individuals (collapse(match $space (Individual $x $max) $x)) (car-atom $individuals)
+    )
+)
+
+;!(bind! &fittestindividuals (new-space))
+;(= (n-fit-individuals1 $list $newlist 0) $newlist)
+
+(= (n-fit-individuals1 $list $space $n)
+    (
+        if (<= $n 0) 
+        ()
+        (let*
+        (
+            ($max (max-atom $list))
+            (($temp1 $temp2) (collapse(superpose((index-atom $list 0) (index-atom $list 1)))))
+            ($list1 (if (and (== $temp1 $max) (== $temp2 $max)) (cdr-atom $list) (remove-list-element $list $max)))
+            ($maxfitindiv (match-single-individual $space $max))
+            ($max1 (n-fit-individuals1 $list1 $space (- $n 1)))
+        )
+        (cons-atom $maxfitindiv $max1)
+        )
+    )
+)
 
 ;!(n-fit-individuals1 (1 5 3 8 6) () 3)
-
-;!(cons-atom 6 (cons-atom 5 ()))
