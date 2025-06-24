@@ -45,7 +45,7 @@
     (let
         ($property1values $property2values $properties)
         (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1))))
-        (tuple-multiply $property1values $property2values $properties)
+        (list-multiply $property1values $property2values $properties)
     )
 )
 ;! (property-product ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)) ((mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
@@ -133,15 +133,15 @@
 
 
 ; ###################### Calculate mu emergence ##########################
-(= (mu-emergence $property-degree $properties-max)
+(= (mu-emergence $candidate-degrees $properties-max)
     (
         let
         ($propertiesvalues $properties)
         (collapse(superpose((get-values $properties-max) (get-properties $properties-max))))
-        (tuple-substract $property-degree $propertiesvalues $properties)
+        (list-substract $candidate-degrees $propertiesvalues $properties)
     )
 )
-;! (mu-emergence 0.9030899869919434 (property-max (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))))
+;! (mu-emergence (0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434)(property-max (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))))
 ; Output [((mobility 0.0030899869919434053) (intelligence 0.0030899869919434053) (web-creation 0.0) (social-structure 0.10308998699194338) (predatory-behavior 0.0030899869919434053) (communication 0.0030899869919434053) (symbolism 0.20308998699194347) (physical-strength 0.20308998699194347))]
 
 ; ! (let*(
@@ -157,8 +157,11 @@
 
 
 ; ###################### Calculate mu hq blend ##########################
-(= (mu-hqblend $mu-emer $properties-min)
+(= (mu-hqblend $candidate-degrees $concept1 $concept2)
     (let*(
+        ($properties-max (property-max $concept1 $concept2))
+        ($properties-min (property-min $concept1 $concept2))
+        ($mu-emer (mu-emergence $candidate-degrees $properties-max))
         ($product-emer-min (property-product $mu-emer $properties-min))
         ($product-emer-min-nums (get-values $product-emer-min))
         ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
@@ -167,8 +170,9 @@
         ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
     )
         (min-atom ($1-over-prop-summation 1))
-    )
+    ) 
 )
+;!(mu-hqblend (0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434) (concept1) (concept2))
 ; ! (let*(
 ;     ($concept1 (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ;     ($concept2 (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
@@ -211,5 +215,8 @@
         )
     )
 )
-! (blend "Bat" "Man")
+;! (blend "Bat" "Man")
 ; [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]
+
+
+(0.7352380026737566 0.8362539775620614 0.9292737955032941 0.11636467124290206 0.6078475071973759 0.3321796745622012 0.923134342455938 0.5868026737606684)
