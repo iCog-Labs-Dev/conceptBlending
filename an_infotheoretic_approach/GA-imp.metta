@@ -2,26 +2,26 @@
 ! (import! &self info-theoretic)
 
 ;; ==== SEED FOR REPRODUCIBILITY ====
-((py-dot np random.seed) 42)
-
+! (bind! np-rnd (py-atom numpy.random))
+; ! ((py-dot np-rnd seed) 42)
 
 ;;;; SPACES ;;;;
 !(bind! &fittestindividuals (new-space))
 
 ;;;; PARAMETERS ;;;;
-(= (POP_SIZE) 5)
-(= (GENES) 4)
+(= (POP_SIZE) 50)
+(= (GENES) 8)
 (= (GENERATIONS) 30)
 (= (ELITE_COUNT) 3)
 (= (CROSSOVER_RATE) 0.9)
 ;; Mutation_rate, Initial_Mutation_STD, and Mutation_Decay respectively
-(= (MUTATION_PARAM) (0.1 0.5 0.95))
+(= (MUTATION_PARAM) (0.5 0.95))
 (= (MUTATION_RATE) 0.5)
-(= (random) ((py-dot np random.random)))
-(= (gauss 0 1) ((py-dot np random.normal) 0 1))
+(= (random)((py-dot np-rnd random)))
+(= (gauss $std) ((py-dot np-rnd normal) 0 $std))
 ;; Initial_SBX_STD, and SBX_ETA_Growth respectively
 (= (ETA_PARAM) (2 1.05))
-
+;!(gauss 0.5)
 ;;;; INITIAL POPULATION ;;;;
 ; !(random-list (POP_SIZE) (GENES) 0 1)
 
@@ -29,7 +29,8 @@
 ; Roulette Wheel Selection 
 (: roulette-select (List List -> Any))
 (= (roulette-select $population $fitnesses)
-   (let* (
+   (
+      let* (
            ($w-max (max-atom $fitnesses))          ; highest fitness 
            ($n     (size-atom $population))        ; list length     
          )
@@ -55,10 +56,8 @@
    )
 )
 
-(=(random) ((py-dot np random.random)))
-
 (=(sbx_crossover $p1 $p2 $eta)
-(if (> (random) (CROSSOVER_RATE))
+(if (> 0.5 (CROSSOVER_RATE))
     ($p1 $p2) 
     (sbx_gene $p1 $p2 $eta)
  ))
@@ -100,24 +99,26 @@
       ($t2 (cdr-atom $list2))
     ;   (() (println!( "T2"$t2 )))
       ($pair (sbx_crossover $x1 $x2 $eta))
-    ;   (() (println!( "pair" $pair )))
+      ;  (() (println!( "pair" $pair )))
       ($c1 (first-from-pair $pair))
-    ;   (() (println! ("C1"$c1)))
+      ;  (() (println! ("C1"$c1)))
       ($c2 (get-second $pair))
-    ;   (() (println! ("C2"$c2)))
+      ;  (() (println! ("C2"$c2)))
       ($rest (sbx_crossover_list $t1 $t2 $eta))
-    ;   (() (println! ("rest" $rest)))
+      ;  (() (println! ("rest" $rest)))
       ($rest1 (first-from-pair $rest))
+      ; (() (println! ("rest1" $rest1)))
       ($rest2 (get-second $rest))
+      ; (() (println! ("rest2" $rest2)))
    )
    ((cons-atom $c1 $rest1) (cons-atom $c2 $rest2)))
 )
 
-! (sbx_crossover_list 
-     (0.8049752249385809 0.00860769711541609 0.5493969678679462 0.48351403591210507)
-     (0.04314990236803995 0.8138311131947542 0.6047275456474215 0.018442968436819696)
-     2.0
-)
+; ! (sbx_crossover_list 
+;      (0.8049752249385809 0.00860769711541609 0.5493969678679462 0.48351403591210507)
+;      (0.04314990236803995 0.8138311131947542 0.6047275456474215 0.018442968436819696)
+;      2.0
+; )
 
 ; Example Output
 ;[((0.09033706260063018 0.03160994601048184 0.5507596758996745 0.06223446850446518) (0.7577880647059907 0.7908288642996885 0.6033648376156933 0.4397225358444596))]
@@ -134,7 +135,7 @@
 (: mutate_gene (Number Number -> Number))
 (= (mutate_gene $gene $std)
    (if (< (random) (MUTATION_RATE))
-       (clamp (+ $gene (* $std (gauss 0 1))))
+       (clamp (+ $gene (gauss $std)))
        $gene
    )
 )
@@ -152,6 +153,7 @@
        (cons-atom $mutated-head $mutated-tail)
    )
 )
+
 
 ;; ==== Output ====
 
@@ -174,6 +176,25 @@
     (map-atom $population $x (mu-hqblend $x (concept1) (concept2)))
 )
 
+;;;; NEW POPULATION POPULATING LOOP ;;;;
+(= (populate-new-population $population $fitness $elitepop $eta $std $emplist)
+    (
+      if (>= (size-atom $emplist) (POP_SIZE))
+      $elitepop
+      (
+        let* (
+          (($parent1 $parent2) (collapse(superpose((roulette-select $population $fitness) (roulette-select $population $fitness)))))
+          (($child1 $child2) (sbx_crossover_list $parent1 $parent2 $eta))
+          (($mutated-child1 $mutated-child2) (collapse(superpose((mutate_list $child1 $std) (mutate_list $child2 $std)))))
+          (() (println! ("Mutated childs" $mutated-child1 $mutated-child2)))
+          ($newpoplist (chain (cons-atom $mutated-child1 $emplist) $x (cons-atom $mutated-child2 $x)))
+          ($new-population (populate-new-population $population $fitness $elitepop $eta $std $newpoplist))
+        )
+        (chain (cons-atom $mutated-child1 $new-population) $x (cons-atom $mutated-child2 $x))
+      )
+    )
+)
+
 ;!(population-fitness-score (initial-population))
 
 ;!(initial-population)
@@ -189,7 +210,11 @@
         (() (println! $zippedpopfit))
         ($added (add-list-element-to-space $zippedpopfit &fittestindividuals))
         ($nfitindiv (n-fit-individuals1 $popfitness &fittestindividuals (ELITE_COUNT)))
+        ; ($rempopnum (- (POP_SIZE) (size-atom $nfitindiv)))
+        (($mutstd $mutdecay) (MUTATION_PARAM))
+        (($initeta $etagrowth) (ETA_PARAM))
+        ($new-population (populate-new-population $population $popfitness $nfitindiv $initeta $mutstd ()))
         )
-        $nfitindiv
+        $new-population
     )
 )
