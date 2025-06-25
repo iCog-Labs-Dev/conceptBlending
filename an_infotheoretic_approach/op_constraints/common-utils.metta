@@ -34,3 +34,39 @@
 
 
 (= (blend-name ($blend_or_concept $blend_name $properties $relations)) $blend_name )
+
+
+
+
+(= (remove-none $list)
+  (if (== (size-atom $list) 0)
+      ()
+      (let* (
+          ($head (car-atom $list))
+          ($tail (cdr-atom $list))
+        )
+        (if (== $head None)
+            (remove-none $tail)
+            (let* (
+                ($next-head (remove-none $tail))
+            )
+            (cons-atom $head $next-head)
+            )
+        )
+      )
+  )
+)
+
+(= (provenance-sources $blend-properties)
+    (let* (
+        ($mapped (map-atom $blend-properties $prop
+        (if (> (size-atom $prop) 1)
+           (index-atom $prop 1)
+            (None))))
+        ($filtered (map-atom $mapped $prov (car-atom $prov)))
+        ($provenance (remove-none $filtered))
+
+    )
+        $provenance 
+    )
+)

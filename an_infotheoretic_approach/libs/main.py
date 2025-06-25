@@ -1,13 +1,21 @@
-import os
+import os, yaml
 from hyperon import *
 from hyperon.ext import register_atoms
 from .agents import *
 from .agents.optimality_principles.main.data_sources.conceptnet_adapter import ConceptNetAdapter
+from .agents.optimality_principles.main.data_sources.llm_integration import LLMIntegration
 
 
 # Define networks and their corresponding function names
 
 NETWORKS = ["simplex", "mirror", "single", "double", "vector", "network_selector", "vital_relation"]
+
+def load_config():
+    with open("../libs/agents/optimality_principles/config/constraints.yaml") as f:
+        config = yaml.safe_load(f)
+    if "llm" in config and "api_key" in config["llm"]:
+        config["llm"]["api_key"] = os.path.expandvars(config["llm"]["api_key"])
+    return config
 
 
 @register_atoms(pass_metta=True)
@@ -81,6 +89,21 @@ def grounded_atoms(metta):
         "is_relation_part_of",
         lambda *args: conceptnet.is_relation_part_of(metta, *args),
         [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
+        unwrap=False
+    )
+    registered_operations["is_property_justified"] = OperationAtom(
+        "is_property_justified",
+        lambda *args: conceptnet.is_property_justified(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
+        unwrap=False
+    )
+
+    config = load_config()
+    llm = LLMIntegration(config)
+    registered_operations["good_reason_llm"] = OperationAtom(
+        "good_reason_llm",
+        lambda *args: llm.good_reason_llm(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM],
         unwrap=False
     )
     
