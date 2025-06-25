@@ -6,20 +6,20 @@
 ; ! ((py-dot np-rnd seed) 42)
 
 ;;;; SPACES ;;;;
-!(bind! &fittestindividuals (new-space))
+!(bind! &individuals (new-space))
 
 ;;;; PARAMETERS ;;;;
-(= (POP_SIZE) 50)
-(= (GENES) 8)
-(= (GENERATIONS) 30)
+(= (POP_SIZE) 5)
+(= (GENES) 4)
+(= (GENERATIONS) 5)
 (= (ELITE_COUNT) 3)
 (= (CROSSOVER_RATE) 0.9)
-;; Mutation_rate, Initial_Mutation_STD, and Mutation_Decay respectively
+;; Initial_Mutation_STD, and Mutation_Decay respectively
 (= (MUTATION_PARAM) (0.5 0.95))
 (= (MUTATION_RATE) 0.5)
 (= (random)((py-dot np-rnd random)))
 (= (gauss $std) ((py-dot np-rnd normal) 0 $std))
-;; Initial_SBX_STD, and SBX_ETA_Growth respectively
+;; Initial_SBX_ETA, and SBX_ETA_Growth respectively
 (= (ETA_PARAM) (2 1.05))
 ;!(gauss 0.5)
 ;;;; INITIAL POPULATION ;;;;
@@ -57,32 +57,34 @@
 )
 
 (=(sbx_crossover $p1 $p2 $eta)
-(if (> 0.5 (CROSSOVER_RATE))
+(if (> (random) (CROSSOVER_RATE))
     ($p1 $p2) 
-    (sbx_gene $p1 $p2 $eta)
+    (sbx_gene1 $p1 $p2 $eta)
  ))
 
 (=(sbx_gene $x1 $x2 $eta)
-(if (<= (abs-math(- $x1 $x2)) 1e-14)
-( $x1 $x2)
-(let* (
-    ($xl (min-atom ($x1 $x2)))
-    ($xh (max-atom ($x1 $x2)))
-    ($rand (random))
-    ($beta (+ 1.0 (* 2.0 (/ $xl (- $xh $xl)))))
-    ($alpha (- 2.0 (pow-math $beta (- 0.0 (+ $eta 1.0)))))
-    ; (() (println! $alpha))
-    ($betaq (if (<= $rand (/ 1.0 $alpha))
-                (pow-math (* $rand $alpha) (/ 1.0 (+ $eta 1.0)))
-                (pow-math (/ 1.0 (- 2.0 ( * $rand $alpha))) (/ 1.0 (+ $eta 1.0)))))
-    ; (() (println! ("BE"$betaq)))
-    ($c1 (max-atom ((min-atom ((/ (- (+ $xl $xh) (* $betaq (- $xh $xl))) 2.0) 1.0)) 0.0)))
-    ; (() (println! $c1))
-    ($c2 (max-atom ((min-atom ((/ (+ (+ $xl $xh) (* $betaq (- $xh $xl))) 2.0) 1.0)) 0.0)))
-)
-($c1 $c2)
-)
-)
+
+    (
+        if (<= (abs-math(- $x1 $x2)) 1e-14)
+        ( $x1 $x2)
+        (let* (
+            ($xl (min-atom ($x1 $x2)))
+            ($xh (max-atom ($x1 $x2)))
+            ($rand (random))
+            ($beta (+ 1.0 (* 2.0 (/ $xl (- $xh $xl)))))
+            ($alpha (- 2.0 (pow-math $beta (- 0.0 (+ $eta 1.0)))))
+            ; (() (println! $alpha))
+            ($betaq (if (<= $rand (/ 1.0 $alpha))
+                        (pow-math (* $rand $alpha) (/ 1.0 (+ $eta 1.0)))
+                        (pow-math (/ 1.0 (- 2.0 ( * $rand $alpha))) (/ 1.0 (+ $eta 1.0)))))
+            ; (() (println! ("BE"$betaq)))
+            ($c1 (max-atom ((min-atom ((/ (- (+ $xl $xh) (* $betaq (- $xh $xl))) 2.0) 1.0)) 0.0)))
+            ; (() (println! $c1))
+            ($c2 (max-atom ((min-atom ((/ (+ (+ $xl $xh) (* $betaq (- $xh $xl))) 2.0) 1.0)) 0.0)))
+        )
+        ($c1 $c2)
+        )
+    )
 )
 ;; Base Case
 (= (sbx_crossover_list () () $eta)
@@ -113,6 +115,31 @@
    )
    ((cons-atom $c1 $rest1) (cons-atom $c2 $rest2)))
 )
+
+;;;; NON_DETERMINISTIC IMPLEMENTATION OF SBX CROSSOVER ;;;;
+(=(sbx_gene1 $x1 $x2 $eta)
+    (
+      if (<= (abs-math(- $x1 $x2)) 1e-14)
+      ($x1 $x2)
+      (let* 
+          (
+            (($xl $xh) (collapse(superpose((min-atom ($x1 $x2)) (max-atom ($x1 $x2))))))
+            ($rand (random))
+            ($beta  (+ 1.0 (* 2.0 (/ $xl (- $xh $xl)))))
+            ($alpha (- 2.0 (pow-math $beta (- 0.0 (+ $eta 1.0)))))
+            ($betaq (if (<= $rand (/ 1.0 $alpha))
+                        (pow-math (* $rand $alpha) (/ 1.0 (+ $eta 1.0)))
+                        (pow-math (/ 1.0 (- 2.0 ( * $rand $alpha))) (/ 1.0 (+ $eta 1.0)))))
+            ; (() (println! ("BE"$betaq)))
+            (($c1 $c2) (collapse(superpose((max-atom ((min-atom ((/ (- (+ $xl $xh) (* $betaq (- $xh $xl))) 2.0) 1.0)) 0.0)) (max-atom ((min-atom ((/ (+ (+ $xl $xh) (* $betaq (- $xh $xl))) 2.0) 1.0)) 0.0))))))
+            ; (() (println! $c1))
+          ) 
+          ($c1 $c2)
+        )
+    )
+)
+
+
 
 ; ! (sbx_crossover_list 
 ;      (0.8049752249385809 0.00860769711541609 0.5493969678679462 0.48351403591210507)
@@ -154,12 +181,34 @@
    )
 )
 
-
 ;; ==== Output ====
 
 ;[((0.14657740354356366 0.5 0.7104228400171473 0.1 0.33858887366361495 0.6384209255140325 0.7 0.8413943283960914))]
 
-(= (initial-population) (random-list (POP_SIZE) (GENES) 0 1))
+;;;; NON_DETERMINSTIC MUTATION IMPLEMENTATION ;;;;
+(= (mutate-list1 $genes $std)
+    (
+      collapse(
+        superpose(
+          (mutate_gene (index-atom $genes 0) $std)
+          (mutate_gene (index-atom $genes 1) $std)
+          (mutate_gene (index-atom $genes 2) $std)
+          (mutate_gene (index-atom $genes 3) $std)
+          (mutate_gene (index-atom $genes 4) $std)
+          (mutate_gene (index-atom $genes 5) $std)
+          (mutate_gene (index-atom $genes 6) $std)
+          (mutate_gene (index-atom $genes 7) $std)
+          (mutate_gene (index-atom $genes 8) $std)
+          (mutate_gene (index-atom $genes 9) $std)
+          (mutate_gene (index-atom $genes 10) $std)
+        )
+      )
+    )
+)
+
+;!(mutate-list1 (0.4 0.5 0.3 0.5 0.23 0.54 0.34 0.54) 0.5)
+
+(= (initialize-population) (random-list (POP_SIZE) (GENES) 0 1))
 
 ;;;; INPUT CONCEPTS ;;;;
 (= (concept1) 
@@ -185,7 +234,7 @@
         let* (
           (($parent1 $parent2) (collapse(superpose((roulette-select $population $fitness) (roulette-select $population $fitness)))))
           (($child1 $child2) (sbx_crossover_list $parent1 $parent2 $eta))
-          (($mutated-child1 $mutated-child2) (collapse(superpose((mutate_list $child1 $std) (mutate_list $child2 $std)))))
+          (($mutated-child1 $mutated-child2) (collapse(superpose((mutate-list1 $child1 $std) (mutate-list1 $child2 $std)))))
           (() (println! ("Mutated childs" $mutated-child1 $mutated-child2)))
           ($newpoplist (chain (cons-atom $mutated-child1 $emplist) $x (cons-atom $mutated-child2 $x)))
           ($new-population (populate-new-population $population $fitness $elitepop $eta $std $newpoplist))
@@ -195,26 +244,39 @@
     )
 )
 
-;!(population-fitness-score (initial-population))
-
-;!(initial-population)
-
-;!(let $population (initial-population) (zip-list $population (population-fitness-score $population)))
-
-
-!(let $population (initial-population) 
-    (let* (
-        ($popfitness (population-fitness-score $population))
-        (() (println! $popfitness))
-        ($zippedpopfit (zip-list $population $popfitness))
-        (() (println! $zippedpopfit))
-        ($added (add-list-element-to-space $zippedpopfit &fittestindividuals))
-        ($nfitindiv (n-fit-individuals1 $popfitness &fittestindividuals (ELITE_COUNT)))
-        ; ($rempopnum (- (POP_SIZE) (size-atom $nfitindiv)))
-        (($mutstd $mutdecay) (MUTATION_PARAM))
-        (($initeta $etagrowth) (ETA_PARAM))
-        ($new-population (populate-new-population $population $popfitness $nfitindiv $initeta $mutstd ()))
+; !(let $population (initial-population) 
+;     (let* (
+;         ($popfitness (population-fitness-score $population))
+;         (() (println! $popfitness))
+;         ($zippedpopfit (zip-list $population $popfitness))
+;         (() (println! $zippedpopfit))
+;         ($added (add-list-element-to-space $zippedpopfit &individuals))
+;         ($nfitindiv (n-fit-individuals1 $popfitness &individuals (ELITE_COUNT)))
+;         ; ($rempopnum (- (POP_SIZE) (size-atom $nfitindiv)))
+;         (($mutstd $mutdecay) (MUTATION_PARAM))
+;         (($initeta $etagrowth) (ETA_PARAM))
+;         ($new-population (populate-new-population $population $popfitness $nfitindiv $initeta $mutstd ()))
+;         )
+;         $new-population
+;     )
+; )
+(= (main-loop $population ($init-eta $eta-growth) ($init-mut-std $mut-decay) $generation-number)
+    (
+        if (<= $generation-number 0)
+        $population
+        (let* (
+            ($popfitness (population-fitness-score $population))
+            ($zippedpopfit (zip-list $population $popfitness))
+            ($add (add-list-element-to-space $zippedpopfit &individuals))
+            ($elites (elite-individuals $popfitness &individuals (ELITE_COUNT)))
+            ($new-population (populate-new-population $population $popfitness $elites $init-eta $init-mut-std ()))
+            (($upd-eta $upd-mut-std) (collapse(superpose((* $init-eta $eta-growth) (* $init-mut-std $mut-decay)))))
+            ($next-generation (main-loop $new-population ($upd-eta $eta-growth) ($upd-mut-std $mut-decay) (- $generation-number 1)))
+            (() (println! ("GENERATION: " $generation-number)))
         )
-        $new-population
+        $next-generation
+        )
     )
 )
+
+!(main-loop (initialize-population) (ETA_PARAM) (MUTATION_PARAM) (GENERATIONS))

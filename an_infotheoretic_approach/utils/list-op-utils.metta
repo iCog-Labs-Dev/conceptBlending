@@ -1,4 +1,3 @@
-
 (=(list-multiply $property1values $property2values $properties)(
     collapse(
         superpose(
@@ -33,7 +32,6 @@
         )
     )
 )
-
 
 (=(min-elements $property1values $property2values $properties)(
     collapse(
@@ -199,63 +197,71 @@
 
 (= (remove-list-element $list $val)
     (
-        collapse(
-            superpose(
-                (let $val0 (index-atom $list 0) (if (== $val0 $val) Empty $val0))
-                (let $val1 (index-atom $list 1) (if (== $val1 $val) Empty $val1))
-                (let $val2 (index-atom $list 2) (if (== $val2 $val) Empty $val2))
-                (let $val3 (index-atom $list 3) (if (== $val3 $val) Empty $val3))
-                (let $val4 (index-atom $list 4) (if (== $val4 $val) Empty $val4))
-                (let $val5 (index-atom $list 5) (if (== $val5 $val) Empty $val5))
-                (let $val6 (index-atom $list 6) (if (== $val6 $val) Empty $val6))
-                (let $val7 (index-atom $list 7) (if (== $val7 $val) Empty $val7))
-                (let $val8 (index-atom $list 8) (if (== $val8 $val) Empty $val8))
-                (let $val9 (index-atom $list 9) (if (== $val9 $val) Empty $val9))
-                (let $val10 (index-atom $list 10) (if (== $val10 $val) Empty $val10))
-                (let $val11 (index-atom $list 11) (if (== $val11 $val) Empty $val11))
-                (let $val12 (index-atom $list 12) (if (== $val12 $val) Empty $val12))
-                (let $val13 (index-atom $list 13) (if (== $val13 $val) Empty $val13))
-                (let $val14 (index-atom $list 14) (if (== $val14 $val) Empty $val14))
-                (let $val15 (index-atom $list 15) (if (== $val15 $val) Empty $val15))
-                (let $val16 (index-atom $list 16) (if (== $val16 $val) Empty $val16))
-                (let $val17 (index-atom $list 17) (if (== $val17 $val) Empty $val17))
-                (let $val18 (index-atom $list 18) (if (== $val18 $val) Empty $val18))
-                (let $val19 (index-atom $list 19) (if (== $val19 $val) Empty $val19))
-                (let $val20 (index-atom $list 20) (if (== $val20 $val) Empty $val20))
-                (let $val21 (index-atom $list 21) (if (== $val21 $val) Empty $val21))
-                (let $val22 (index-atom $list 22) (if (== $val22 $val) Empty $val22))
-                (let $val23 (index-atom $list 23) (if (== $val23 $val) Empty $val23))
-                (let $val24 (index-atom $list 24) (if (== $val24 $val) Empty $val24))
-                (let $val25 (index-atom $list 25) (if (== $val25 $val) Empty $val25))
-                (let $val26 (index-atom $list 26) (if (== $val26 $val) Empty $val26))
-                (let $val27 (index-atom $list 27) (if (== $val27 $val) Empty $val27))
-                (let $val28 (index-atom $list 28) (if (== $val28 $val) Empty $val28))
-                (let $val29 (index-atom $list 29) (if (== $val29 $val) Empty $val29))
-                (let $val30 (index-atom $list 30) (if (== $val30 $val) Empty $val30))
-                (let $val31 (index-atom $list 31) (if (== $val31 $val) Empty $val31))
-                (let $val32 (index-atom $list 32) (if (== $val32 $val) Empty $val32))
-                (let $val33 (index-atom $list 33) (if (== $val33 $val) Empty $val33))
-                (let $val34 (index-atom $list 34) (if (== $val34 $val) Empty $val34))
-                (let $val35 (index-atom $list 35) (if (== $val35 $val) Empty $val35))
-                (let $val36 (index-atom $list 36) (if (== $val36 $val) Empty $val36))
-                (let $val37 (index-atom $list 37) (if (== $val37 $val) Empty $val37))
-                (let $val38 (index-atom $list 38) (if (== $val38 $val) Empty $val38))
-                (let $val39 (index-atom $list 39) (if (== $val39 $val) Empty $val39))
-                (let $val40 (index-atom $list 40) (if (== $val40 $val) Empty $val40))
-                (let $val41 (index-atom $list 41) (if (== $val41 $val) Empty $val41))
-                (let $val42 (index-atom $list 42) (if (== $val42 $val) Empty $val42))
-                (let $val43 (index-atom $list 43) (if (== $val43 $val) Empty $val43))
-                (let $val44 (index-atom $list 44) (if (== $val44 $val) Empty $val44))
-                (let $val45 (index-atom $list 45) (if (== $val45 $val) Empty $val45))
-                (let $val46 (index-atom $list 46) (if (== $val46 $val) Empty $val46))
-                (let $val47 (index-atom $list 47) (if (== $val47 $val) Empty $val47))
-                (let $val48 (index-atom $list 48) (if (== $val48 $val) Empty $val48))
-                (let $val49 (index-atom $list 49) (if (== $val49 $val) Empty $val49))
-                (let $val50 (index-atom $list 50) (if (== $val50 $val) Empty $val50))
+        if (== (size-atom $list) 0)
+        ()
+        (
+            if (let $max (max-atom $list) (and (== (index-atom $list 0) $max) (== $val $max)))
+            (cdr-atom $list)
+            (collapse(
+                superpose(
+                    (let $val0 (index-atom $list 0) (if (== $val0 $val) Empty $val0))
+                    (let $val1 (index-atom $list 1) (if (== $val1 $val) Empty $val1))
+                    (let $val2 (index-atom $list 2) (if (== $val2 $val) Empty $val2))
+                    (let $val3 (index-atom $list 3) (if (== $val3 $val) Empty $val3))
+                    (let $val4 (index-atom $list 4) (if (== $val4 $val) Empty $val4))
+                    (let $val5 (index-atom $list 5) (if (== $val5 $val) Empty $val5))
+                    (let $val6 (index-atom $list 6) (if (== $val6 $val) Empty $val6))
+                    (let $val7 (index-atom $list 7) (if (== $val7 $val) Empty $val7))
+                    (let $val8 (index-atom $list 8) (if (== $val8 $val) Empty $val8))
+                    (let $val9 (index-atom $list 9) (if (== $val9 $val) Empty $val9))
+                    (let $val10 (index-atom $list 10) (if (== $val10 $val) Empty $val10))
+                    (let $val11 (index-atom $list 11) (if (== $val11 $val) Empty $val11))
+                    (let $val12 (index-atom $list 12) (if (== $val12 $val) Empty $val12))
+                    (let $val13 (index-atom $list 13) (if (== $val13 $val) Empty $val13))
+                    (let $val14 (index-atom $list 14) (if (== $val14 $val) Empty $val14))
+                    (let $val15 (index-atom $list 15) (if (== $val15 $val) Empty $val15))
+                    (let $val16 (index-atom $list 16) (if (== $val16 $val) Empty $val16))
+                    (let $val17 (index-atom $list 17) (if (== $val17 $val) Empty $val17))
+                    (let $val18 (index-atom $list 18) (if (== $val18 $val) Empty $val18))
+                    (let $val19 (index-atom $list 19) (if (== $val19 $val) Empty $val19))
+                    (let $val20 (index-atom $list 20) (if (== $val20 $val) Empty $val20))
+                    (let $val21 (index-atom $list 21) (if (== $val21 $val) Empty $val21))
+                    (let $val22 (index-atom $list 22) (if (== $val22 $val) Empty $val22))
+                    (let $val23 (index-atom $list 23) (if (== $val23 $val) Empty $val23))
+                    (let $val24 (index-atom $list 24) (if (== $val24 $val) Empty $val24))
+                    (let $val25 (index-atom $list 25) (if (== $val25 $val) Empty $val25))
+                    (let $val26 (index-atom $list 26) (if (== $val26 $val) Empty $val26))
+                    (let $val27 (index-atom $list 27) (if (== $val27 $val) Empty $val27))
+                    (let $val28 (index-atom $list 28) (if (== $val28 $val) Empty $val28))
+                    (let $val29 (index-atom $list 29) (if (== $val29 $val) Empty $val29))
+                    (let $val30 (index-atom $list 30) (if (== $val30 $val) Empty $val30))
+                    (let $val31 (index-atom $list 31) (if (== $val31 $val) Empty $val31))
+                    (let $val32 (index-atom $list 32) (if (== $val32 $val) Empty $val32))
+                    (let $val33 (index-atom $list 33) (if (== $val33 $val) Empty $val33))
+                    (let $val34 (index-atom $list 34) (if (== $val34 $val) Empty $val34))
+                    (let $val35 (index-atom $list 35) (if (== $val35 $val) Empty $val35))
+                    (let $val36 (index-atom $list 36) (if (== $val36 $val) Empty $val36))
+                    (let $val37 (index-atom $list 37) (if (== $val37 $val) Empty $val37))
+                    (let $val38 (index-atom $list 38) (if (== $val38 $val) Empty $val38))
+                    (let $val39 (index-atom $list 39) (if (== $val39 $val) Empty $val39))
+                    (let $val40 (index-atom $list 40) (if (== $val40 $val) Empty $val40))
+                    (let $val41 (index-atom $list 41) (if (== $val41 $val) Empty $val41))
+                    (let $val42 (index-atom $list 42) (if (== $val42 $val) Empty $val42))
+                    (let $val43 (index-atom $list 43) (if (== $val43 $val) Empty $val43))
+                    (let $val44 (index-atom $list 44) (if (== $val44 $val) Empty $val44))
+                    (let $val45 (index-atom $list 45) (if (== $val45 $val) Empty $val45))
+                    (let $val46 (index-atom $list 46) (if (== $val46 $val) Empty $val46))
+                    (let $val47 (index-atom $list 47) (if (== $val47 $val) Empty $val47))
+                    (let $val48 (index-atom $list 48) (if (== $val48 $val) Empty $val48))
+                    (let $val49 (index-atom $list 49) (if (== $val49 $val) Empty $val49))
+                    (let $val50 (index-atom $list 50) (if (== $val50 $val) Empty $val50))
+                    )
                 )
+            )
         )
     )
 )
+
 (= (add-list-element-to-space $list $space)
     (
         collapse(
@@ -315,30 +321,6 @@
     )
 )
 
-(= (n-fit-individuals $list $space $n)
-    (
-        collapse(
-            superpose(
-                (
-                    if (>= (- $n 1) 0)
-                    (let $max (max-atom $list) (match $space (Individual $x $max) $x))
-                    Empty
-                )
-                (
-                    if (>= (- $n 2) 0)
-                    (let $max (max-atom (remove-list-element $list (max-atom $list))) (match $space (Individual $x $max) $x))
-                    Empty
-                )
-                (
-                    if (>= (- $n 3) 0)
-                    (let $max (max-atom (remove-list-element (remove-list-element $list (max-atom $list)) (max-atom (remove-list-element $list (max-atom $list))))) (match $space (Individual $x $max) $x))
-                    Empty
-                )
-            )
-        )
-    )
-)
-
 (= (check-all-equal $list $firstelem)
     (
         if (== (size-atom $list) 0)
@@ -347,49 +329,12 @@
             (
                 ($elem (car-atom $list))
                 ($list1 (cdr-atom $list))
-                (() (println! $list1))
                 ($result (and (== $elem $firstelem) (check-all-equal $list1 $firstelem)))
-                (() (println! (quote (and (== $elem $firstelem) (check-all-equal $list1 $firstelem)))))
             )
             $result
         )
     )
 )
-
-(= (check-all-equal1 $list $firstelem)
-    (
-        collapse(
-            superpose(
-                (== (index-atom $list 1) $firstelem)
-                (== (index-atom $list 2) $firstelem)
-                (== (index-atom $list 3) $firstelem)
-                (== (index-atom $list 4) $firstelem)
-                (== (index-atom $list 5) $firstelem)
-                (== (index-atom $list 6) $firstelem)
-                (== (index-atom $list 7) $firstelem)
-                (== (index-atom $list 8) $firstelem)
-                (== (index-atom $list 9) $firstelem)
-                (== (index-atom $list 10) $firstelem)
-                (== (index-atom $list 11) $firstelem)
-                (== (index-atom $list 12) $firstelem)
-                (== (index-atom $list 13) $firstelem)
-                (== (index-atom $list 14) $firstelem)
-                (== (index-atom $list 15) $firstelem)
-                (== (index-atom $list 16) $firstelem)
-                (== (index-atom $list 17) $firstelem)
-                (== (index-atom $list 18) $firstelem)
-                (== (index-atom $list 19) $firstelem)
-                (== (index-atom $list 20) $firstelem)
-                (== (index-atom $list 21) $firstelem)
-                (== (index-atom $list 22) $firstelem)
-                (== (index-atom $list 23) $firstelem)
-                (== (index-atom $list 24) $firstelem)
-                (== (index-atom $list 25) $firstelem)
-            )
-        )
-    )
-)
-;!(check-all-equal1 (5 4 5 5 5 5 5 5 4 3 5 5 5 5 5 5 5 5 5 5 5 5 5 4 5) 5)
 
 (= (match-single-individual $space $max)
     (
@@ -397,24 +342,42 @@
     )
 )
 
-;!(bind! &fittestindividuals (new-space))
-;(= (n-fit-individuals1 $list $newlist 0) $newlist)
+(= (elite-individuals $list $space $n)
+    (
+        collapse(
+            superpose(
+                (
+                    if (>= (- $n 1) 0)
+                    (let $max (max-atom $list) (match-single-individual $space $max))
+                    Empty
+                )
+                (
+                    if (>= (- $n 2) 0)
+                    (let $max (max-atom (remove-list-element $list (max-atom $list))) (match-single-individual $space $max))
+                    Empty
+                )
+                (
+                    if (>= (- $n 3) 0)
+                    (let $max (max-atom (remove-list-element (remove-list-element $list (max-atom $list)) (max-atom (remove-list-element $list (max-atom $list))))) (match-single-individual $space $max))
+                    Empty
+                )
+            )
+        )
+    )
+)
 
-(= (n-fit-individuals1 $list $space $n)
+(= (elite-individuals1 $list $space $n)
     (
         if (<= $n 0) 
         ()
         (let*
         (
             ($max (max-atom $list))
-            (($temp1 $temp2) (collapse(superpose((index-atom $list 0) (index-atom $list 1)))))
-            ($list1 (if (and (== $temp1 $max) (== $temp2 $max)) (cdr-atom $list) (remove-list-element $list $max)))
+            ($list1 (remove-list-element $list $max))
             ($maxfitindiv (match-single-individual $space $max))
-            ($max1 (n-fit-individuals1 $list1 $space (- $n 1)))
+            ($max1 (elite-individuals1 $list1 $space (- $n 1)))
         )
         (cons-atom $maxfitindiv $max1)
         )
     )
 )
-
-;!(n-fit-individuals1 (1 5 3 8 6) () 3)
