@@ -9,7 +9,7 @@
 !(bind! &individuals (new-space))
 
 ;;;; PARAMETERS ;;;;
-(= (POP_SIZE) 5)
+(= (POP_SIZE) 6)
 (= (GENES) 4)
 (= (GENERATIONS) 5)
 (= (ELITE_COUNT) 3)
@@ -219,8 +219,6 @@
 )
 
 ;;;; POPULATION FITNESS SCORE CALCULATION ;;;;
-;!(mu-hqblend (0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434) (concept1) (concept2))
-
 (= (population-fitness-score $population) 
     (map-atom $population $x (mu-hqblend $x (concept1) (concept2)))
 )
@@ -228,7 +226,7 @@
 ;;;; NEW POPULATION POPULATING LOOP ;;;;
 (= (populate-new-population $population $fitness $elitepop $eta $std $emplist)
     (
-      if (>= (size-atom $emplist) (POP_SIZE))
+      if (>= (size-atom $emplist) (- (POP_SIZE) (ELITE_COUNT)))
       $elitepop
       (
         let* (
@@ -244,35 +242,21 @@
     )
 )
 
-; !(let $population (initial-population) 
-;     (let* (
-;         ($popfitness (population-fitness-score $population))
-;         (() (println! $popfitness))
-;         ($zippedpopfit (zip-list $population $popfitness))
-;         (() (println! $zippedpopfit))
-;         ($added (add-list-element-to-space $zippedpopfit &individuals))
-;         ($nfitindiv (n-fit-individuals1 $popfitness &individuals (ELITE_COUNT)))
-;         ; ($rempopnum (- (POP_SIZE) (size-atom $nfitindiv)))
-;         (($mutstd $mutdecay) (MUTATION_PARAM))
-;         (($initeta $etagrowth) (ETA_PARAM))
-;         ($new-population (populate-new-population $population $popfitness $nfitindiv $initeta $mutstd ()))
-;         )
-;         $new-population
-;     )
-; )
 (= (main-loop $population ($init-eta $eta-growth) ($init-mut-std $mut-decay) $generation-number)
     (
         if (<= $generation-number 0)
         $population
         (let* (
+            (() (println! (GENERATION: (- (GENERATIONS) (- $generation-number 1)))))
             ($popfitness (population-fitness-score $population))
+            (() (println! (BEST-FITNESS: (max-atom $popfitness))))
             ($zippedpopfit (zip-list $population $popfitness))
             ($add (add-list-element-to-space $zippedpopfit &individuals))
             ($elites (elite-individuals $popfitness &individuals (ELITE_COUNT)))
             ($new-population (populate-new-population $population $popfitness $elites $init-eta $init-mut-std ()))
+            ($new-population-clipped (if (== (size-atom $new-population) (POP_SIZE)) $new-population (cdr-atom $new-population)))
             (($upd-eta $upd-mut-std) (collapse(superpose((* $init-eta $eta-growth) (* $init-mut-std $mut-decay)))))
-            ($next-generation (main-loop $new-population ($upd-eta $eta-growth) ($upd-mut-std $mut-decay) (- $generation-number 1)))
-            (() (println! ("GENERATION: " $generation-number)))
+            ($next-generation (main-loop $new-population-clipped ($upd-eta $eta-growth) ($upd-mut-std $mut-decay) (- $generation-number 1)))
         )
         $next-generation
         )
