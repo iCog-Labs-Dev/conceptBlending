@@ -132,6 +132,9 @@ class ConceptNetAdapter:
 
         return False
 
+    def is_property_justified(self, metta: MeTTa, *args):
+        return [ValueAtom(self.is_justified(str(args[0]), str(args[1])))]
+
     def get_raw_relations(self, term):
         """Optional utility to retrieve all raw ConceptNet edges for a term."""
         return self.get_edges(term)

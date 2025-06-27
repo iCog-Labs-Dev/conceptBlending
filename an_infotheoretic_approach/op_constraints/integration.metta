@@ -1,5 +1,6 @@
 !(register-module! ../libs)
 ! (import! &self libs)
+! (import! &self common-utils)
 
 
 (= (check-against-predefined-list $item $item2 $terms_antonymity $list)
@@ -44,11 +45,6 @@
   )
 )
 
-(= (properties-list (Blend $blend_name $properties $relations)) (
-    let $prop_list $properties (cdr-atom $prop_list)
-    )
-)
-
 (= (integration_op $blend )
     (let*(
         ($prop-list (properties-list $blend))
@@ -62,16 +58,4 @@
     )
 )
 
-
-(= (predefined-conflicts)
-    ((hot cold) (liquid solid) (alive dead) (floats metald) (floats sinks) (on off) (open close) (true false) (win lose))
-)
-
-(= (amphibious_vehicle)
-    (Blend amphibious_vehicle 
-    (Properties  (metal (car)) (floats (boat)) (waterproof))
-    (Relations (UsedFor (transportation 1.0) (Short_HasPart (engine 0.8))))
-    )
-)
-
-! (integration_op (amphibious_vehicle))
+! (integration_op (good_blend))
