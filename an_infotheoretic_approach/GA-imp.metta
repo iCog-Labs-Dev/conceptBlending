@@ -11,7 +11,7 @@
 ;;;; PARAMETERS ;;;;
 (= (POP_SIZE) 50)
 (= (GENES) 8)
-(= (GENERATIONS) 5)
+(= (GENERATIONS) 20)
 (= (ELITE_COUNT) 3)
 (= (CROSSOVER_RATE) 0.9)
 ;; Initial_Mutation_STD, and Mutation_Decay respectively
@@ -54,7 +54,7 @@
 (= (roulette-loop $pop $fits $w-max $n)
     (let* 
         (
-            (() (println! "Roulette loop called"))
+            ; (() (println! "Roulette loop called"))
             ($i (random-int &rng 0 $n)) 
             ($r (random-float &rng 0 1))                       
             ($fit-i (index-atom  $fits $i))
@@ -103,30 +103,15 @@
 ;; ==== MUTATE GENE ====
 (: mutate-gene (Number Number -> Number))
 (= (mutate-gene $gene $std)
-   (if (< (random) (MUTATION_RATE))
-       (clamp (+ $gene (gauss $std)))
-       $gene
+   (
+        if (< (random) (MUTATION_RATE))
+        (clamp (+ $gene (gauss $std)))
+        $gene
    )
 )
 
 (= (mutate-individual $genes $std)
-    (
-      collapse(
-        superpose(
-          (mutate-gene (index-atom $genes 0) $std)
-          (mutate-gene (index-atom $genes 1) $std)
-          (mutate-gene (index-atom $genes 2) $std)
-          (mutate-gene (index-atom $genes 3) $std)
-          (mutate-gene (index-atom $genes 4) $std)
-          (mutate-gene (index-atom $genes 5) $std)
-          (mutate-gene (index-atom $genes 6) $std)
-          (mutate-gene (index-atom $genes 7) $std)
-          (mutate-gene (index-atom $genes 8) $std)
-          (mutate-gene (index-atom $genes 9) $std)
-          (mutate-gene (index-atom $genes 10) $std)
-        )
-      )
-    )
+    (collapse(mutate-gene (superpose $genes) $std))
 )
 
 ;;;; NEW POPULATION POPULATING LOOP ;;;;
@@ -142,11 +127,10 @@
     )
 )
 
-
 (= (populate-new-population $population $fitness $elitepop $eta $std)
     (let*
         (
-            ($toy-list (generate-toy-list (round-math (/ (- (POP_SIZE) (ELITE_COUNT)) 2))))
+            ($toy-list (generate-toy-list (round-math (/ (- (POP_SIZE) (ELITE_COUNT)) 2.0))))
             ($new-pop (map-atom $toy-list $x (populate-two-child $population $fitness $eta $std)))
             ($unzipped-new-pop (unzip-list $new-pop))
             ($merged-new-pop (merge-list (index-atom $unzipped-new-pop 0) (index-atom $unzipped-new-pop 1)))
