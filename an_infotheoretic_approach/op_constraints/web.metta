@@ -1,47 +1,14 @@
 !(register-module! ../libs)
 ! (import! &self libs)
-
-(= (get-property $prop-value-pair)
-    (let ($x $y) $prop-value-pair $x)
-)
-
-(= (relation-key-value $relations) (
-    (let*(
-        ($relation-type (map-atom $relations $relation ((car-atom $relation)(get-property (index-atom $relation 1))) ))
-    )
-        $relation-type
-    )
-)
-)
-; relation-key-value (UsedFor (transportation 0.9))
-; Expected output (UsedFor transportation)
-
-(= (relations-key-value-list ($blend_or_concept $blend_name $properties $relations)) (
-    (let*(
-        ($prop_list (cdr-atom $relations))
-        ($relation-type (map-atom $prop_list $x ((car-atom $x) (get-property (index-atom $x 1))) ))
-    )
-        $relation-type
-    )
-)
-)
+! (import! &self common-utils)
 
 
-(= (list-member $item ())
-   False)
-(= (list-member $item $source)
-   (if (== $item (car-atom $source))
-       True
-       (list-member $item (cdr-atom $source))
-   )
-)
-(=
-(relation-exists-in-blend $blend-relations $concept-relation)
+(= (relation-exists-in-blend $blend-relations $concept-relation)
   (let* (
     ($rel-pair (car-atom $concept-relation))
   )
     (or
-      (list-member $rel-pair $blend-relations)
+      (is-list-member $rel-pair $blend-relations)  ; TODO: should be replaced with filter-atom
       False
     )
   )
@@ -101,21 +68,9 @@
             if (check-relations-loop $blend-relations $a-type $a-target $b-type $b-target $threshold)
                 0.8
                 0.0
-            
         )
      )
    )
-)
-
-(= (concept-relation-mapping ($relation $rel-type ($concept_a_relation $concept_b_relation) $confidence))(
-    $concept_a_relation $concept_b_relation
-)
-)
-
-
-(= (sum ()) 0)
-(= (sum $lst)
-   (+ (car-atom $lst) (sum (cdr-atom $lst)))
 )
 
 (= (web_op $cross_mappings $blend)
@@ -142,24 +97,5 @@
   )
 )
 
-
-
-(= (cross_mappings)(
-        (relation_type UsedFor 
-            (
-                (concept_a_relation  (UsedFor (transportation 0.9)))
-                (concept_b_relation  (UsedFor (transportation 0.9)))
-            )
-            (confidence 1.0)
-        )
-    )
-)
-
-(= (good_blend)
-    (Blend amphibious_vehicle 
-    (Properties  (metal (car)) (floats (boat)) (waterproof))
-    (Relations (UsedFor (transportation 1.0)) (HasPartd (engine 0.8)))
-    )
-)
 
 ! (web_op (cross_mappings) (good_blend))
