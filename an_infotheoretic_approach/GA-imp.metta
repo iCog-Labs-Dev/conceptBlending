@@ -27,13 +27,31 @@
 
 
 ; Roulette Wheel Selection 
-(: roulette-select (List List -> Any))
+(: roulette-select (List List -> Number))
 (= (roulette-select $population $fitnesses)
    (let* (
-           ($w-max (max-atom $fitnesses))          ; highest fitness 
-           ($n     (size-atom $population))        ; list length     
+           ($popSize (size-atom $population))
+           ($fitSize (size-atom $fitnesses))
          )
-     (roulette-loop $population $fitnesses $w-max $n)))
+     (if (or (== $popSize 0) (== $fitSize 0))
+         (Error (quote (roulette-select $population $fitnesses)) EmptyList)
+         
+         (if (not (== $popSize $fitSize))
+             (Error (quote (roulette-select $population $fitnesses)) LengthMismatch)
+             
+             (let* (
+                     ($w-max (max-atom $fitnesses))
+                   )
+               (if (== $w-max 0)
+                   (Error (quote (roulette-select $population $fitnesses)) ZeroMaxFitness)
+                   
+                   (roulette-loop $population $fitnesses $w-max $popSize)
+               )
+             )
+         )
+     )
+   )
+)
 
  (: roulette-loop (List List Number Number -> Any))
     (= (roulette-loop $pop $fits $w-max $n)
