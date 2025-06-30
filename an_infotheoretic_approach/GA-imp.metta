@@ -11,7 +11,7 @@
 ;;;; PARAMETERS ;;;;
 (= (POP_SIZE) 50)
 (= (GENES) 8)
-(= (GENERATIONS) 30)
+(= (GENERATIONS) 20)
 (= (ELITE_COUNT) 3)
 (= (CROSSOVER_RATE) 0.9)
 ;; Initial_Mutation_STD, and Mutation_Decay respectively
