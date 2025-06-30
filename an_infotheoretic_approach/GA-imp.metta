@@ -11,7 +11,7 @@
 ;;;; PARAMETERS ;;;;
 (= (POP_SIZE) 50)
 (= (GENES) 8)
-(= (GENERATIONS) 20)
+(= (GENERATIONS) 30)
 (= (ELITE_COUNT) 3)
 (= (CROSSOVER_RATE) 0.9)
 ;; Initial_Mutation_STD, and Mutation_Decay respectively
@@ -120,7 +120,6 @@
         (
             (($parent1 $parent2) (collapse(superpose((roulette-select $population $fitness) (roulette-select $population $fitness)))))
             (($child1 $child2) (if (> (random) (CROSSOVER_RATE)) ($parent1 $parent2) (sbx-crossover-individuals $parent1 $parent2 $eta)))
-            (() (println! "Running Mutation"))
             (($mutated-child1 $mutated-child2) (collapse(superpose((mutate-individual $child1 $std) (mutate-individual $child2 $std)))))
         )
         ($mutated-child1 $mutated-child2)
@@ -130,13 +129,13 @@
 (= (populate-new-population $population $fitness $elitepop $eta $std)
     (let*
         (
-            ($toy-list (generate-toy-list (round-math (/ (- (POP_SIZE) (ELITE_COUNT)) 2.0))))
+            ($toy-list (generate-toy-list (round-math (/ (decimal (- (POP_SIZE) (ELITE_COUNT))) 2.0))))
             ($new-pop (map-atom $toy-list $x (populate-two-child $population $fitness $eta $std)))
             ($unzipped-new-pop (unzip-list $new-pop))
             ($merged-new-pop (merge-list (index-atom $unzipped-new-pop 0) (index-atom $unzipped-new-pop 1)))
             ($merged-new-pop-elites (merge-list $merged-new-pop $elitepop))
         )
-        $merged-new-pop
+        $merged-new-pop-elites
     )
 )
 
@@ -148,7 +147,7 @@
             ($popfitness (population-fitness-score $population))
             (() (println! (GENERATION: (- (GENERATIONS) (- $generation-number 1)) | BEST-FITNESS: (max-atom $popfitness))))
             ($zippedpopfit (zip-list $population $popfitness))
-            ($add (add-list-element-to-space $zippedpopfit &individuals))
+            ($add (add-list-to-space $zippedpopfit &individuals))
             ($elites (elite-individuals $popfitness &individuals (ELITE_COUNT)))
             ($new-population (populate-new-population $population $popfitness $elites $init-eta $init-mut-std))
             ($new-population-clipped (if (== (size-atom $new-population) (POP_SIZE)) $new-population (cdr-atom $new-population)))
@@ -160,4 +159,4 @@
     )
 )
 
-!(main-loop (initialize-population) (ETA_PARAM) (MUTATION_PARAM) (GENERATIONS))
+; !(main-loop (initialize-population) (ETA_PARAM) (MUTATION_PARAM) (GENERATIONS))
