@@ -69,15 +69,12 @@
 ;!(get-number-of-properties (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [8]
 
-
-; ################### Convert Number to Decimal ##########################
 (: decimal (-> Number Number))
 (=(decimal $number)
     (+ $number 0.0)
 )
 ;!(decimal 1)
 ; Output [1.0]
-
 
 ; ###################### Calculate Probability ##############################
 (: property-probability (-> Concept Number))
