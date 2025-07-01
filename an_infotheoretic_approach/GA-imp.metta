@@ -9,7 +9,7 @@
 !(bind! &individuals (new-space))
 
 ;;;; PARAMETERS ;;;;
-(= (POP_SIZE) 50)
+(= (POP_SIZE) 30)
 (= (GENES) 8)
 (= (GENERATIONS) 20)
 (= (ELITE_COUNT) 3)
