@@ -17,7 +17,7 @@ YELLOW = "\033[93m"
 # Metta command
 metta_run_command = "metta"
 root = pathlib.Path(".")
-test_files = list(root.rglob("testGA/*.metta"))
+test_files = list(root.rglob("tests/*-tests.metta"))
 total_files = len(test_files)
 
 results = []

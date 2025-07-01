@@ -9,9 +9,9 @@
 !(bind! &individuals (new-space))
 
 ;;;; PARAMETERS ;;;;
-(= (POP_SIZE) 30)
+(= (POP_SIZE) 20)
 (= (GENES) 8)
-(= (GENERATIONS) 20)
+(= (GENERATIONS) 10)
 (= (ELITE_COUNT) 3)
 (= (CROSSOVER_RATE) 0.9)
 ;; Initial_Mutation_STD, and Mutation_Decay respectively
@@ -120,6 +120,7 @@
         (
             (($parent1 $parent2) (collapse(superpose((roulette-select $population $fitness) (roulette-select $population $fitness)))))
             (($child1 $child2) (if (> (random) (CROSSOVER_RATE)) ($parent1 $parent2) (sbx-crossover-individuals $parent1 $parent2 $eta)))
+            ; (() (println! "Running Mutation"))
             (($mutated-child1 $mutated-child2) (collapse(superpose((mutate-individual $child1 $std) (mutate-individual $child2 $std)))))
         )
         ($mutated-child1 $mutated-child2)

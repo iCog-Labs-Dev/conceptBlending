@@ -346,12 +346,6 @@
     )
 )
 
-(= (match-single-individual $space $max)
-    (
-        let $individuals (collapse(match $space (Individual $x $max) $x)) (if (== (size-atom $individuals) 0) () (car-atom $individuals))
-    )
-)
-
 (= (elite-individuals $list $space $n)
     (
         if (== (size-atom $list) 0)
