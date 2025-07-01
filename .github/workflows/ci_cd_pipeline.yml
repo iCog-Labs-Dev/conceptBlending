@@ -3,10 +3,10 @@ name: CI/CD Workflow
 on:
   push:
     branches:
-      - tempbranch
+      - GAbranch
   pull_request:
     branches:
-      - tempbranch
+      - GAbranch
 
 jobs:
   build:
