@@ -123,3 +123,49 @@
     (let $x (main-loop (initialize-population) (ETA_PARAM) (MUTATION_PARAM) (GENERATIONS)) (collapse(superpose((size-atom $x) (let $y (car-atom $x) (size-atom $y))))))
     (20 8)
 )
+
+; 1. Weighted selection: This test verifies that roulette-select never picks an individual with 0 fitness.
+!(assertEqual (roulette-select
+  (
+    (0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8)
+    (0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9)
+    (0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2)
+  )
+  (0 0.5 0)
+)
+   (0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9))
+
+; 2. Single-item list should always return that item: Since it's the only option, roulette-select should always return it.
+!(assertEqual
+   (roulette-select ((0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8)) (1))
+   (0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8))
+
+; 3. Empty lists error: Here, the population list is empty while fitnesses are given.
+; The selector should detect this invalid input and return an EmptyList error.
+!(assertEqualToResult (roulette-select () (0.2 0.5 0.8)) ((Error EmptyList)))
+
+; 4. Mismatched lengths error:  Tests that when the population and fitness lists have different lengths
+; the function correctly fails with a LengthMismatch error.
+!(assertEqualToResult (roulette-select
+  (
+    (0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8)
+    (0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9)
+    (0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2)
+  )
+  (0.2 0.5)
+) ((Error LengthMismatch)))
+
+; 5. All-zero fitness list should error with ZeroMaxFitness
+!(assertEqualToResult
+   (roulette-select
+     (
+       (0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8)
+       (0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9)
+       (0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2)
+     )
+     (0 0 0)
+   )
+   ((Error ZeroMaxFitness)))
+
+
+   

@@ -39,24 +39,21 @@
 )
 
 ; Roulette Wheel Selection 
-(: roulette-select (List List -> Number))
+(: roulette-select (List List -> Any))
 (= (roulette-select $population $fitnesses)
    (let* (
            ($popSize (size-atom $population))
            ($fitSize (size-atom $fitnesses))
          )
      (if (or (== $popSize 0) (== $fitSize 0))
-         (Error (quote (roulette-select $population $fitnesses)) EmptyList)
-         
+         (Error EmptyList)
          (if (not (== $popSize $fitSize))
-             (Error (quote (roulette-select $population $fitnesses)) LengthMismatch)
-             
+             (Error LengthMismatch)
              (let* (
                      ($w-max (max-atom $fitnesses))
                    )
                (if (== $w-max 0)
-                   (Error (quote (roulette-select $population $fitnesses)) ZeroMaxFitness)
-                   
+                   (Error ZeroMaxFitness)
                    (roulette-loop $population $fitnesses $w-max $popSize)
                )
              )
