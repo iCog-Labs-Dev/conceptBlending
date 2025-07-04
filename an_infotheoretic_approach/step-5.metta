@@ -43,6 +43,10 @@
     )
 )
 
+!(cholesky-decomposition ((6 2 3)
+ (2 6 3)
+ (3 3 6))
+)
 
 (= (sum-product $L $I $i $j $k $i_max)
    (if (< $k $i_max)
@@ -212,7 +216,7 @@
     )
 )
 
-!(step5) ; It will take longer time on cholesky & transpose
+; !(step5) ; It will take longer time on cholesky & transpose
 
 ; Expected Output
 

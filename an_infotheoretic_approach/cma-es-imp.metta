@@ -1,7 +1,8 @@
 ;;;; CMA-ES(Convolution Matrix Adaptation Evolution Strategy) Implementation.
 
-
-
+!(import! &self utils:random-list-utils)
+!(import! &self utils:cma-es-utils)
+!(import! &self utils:list-op-utils)
 
 (: lambda-calc (Number Number -> Number))
 (= (lambda-calc $population_size $dim)
@@ -103,4 +104,46 @@
         (list $c_sigma $d_sigma $c_c $c1 $c_mu)))
 
 
+;;;; PARAMETERS ;;;;
 
+;;;; DIMENSION, INITIAL MEAN, COVARIANCE, AND STEP SIZE
+
+(= (dim) 8)
+; (= (mean)(let $x (random-list 1 (dim) 0 1) (car-atom $x)))
+; (= (cov) (identity-matrice (dim)))
+(= (step_size) 20)
+(= (e) 2.71828)
+
+;;;; STRATEGY PARAMETERS ;;;;
+
+(= (lambda_) (+ 4 (round-math (* 3 (log-math (e) (dim))))))
+(= (mu) (/ (lambda_) 2))
+(= (weights) (let ($mu-logged $range-logged)  ((log-math (e) (+ (mu) 0.5)) (let $range (range 1 (+ (mu) 1)) (apply-log $range (e)))) (rev-scalar-op $mu-logged $range-logged -)))
+(= (normalized_weights)(scalar-op (weights) (sum (weights)) /))
+(= (mu_eff)(/ 1 (sum (apply-power (normalized_weights) 2))))
+
+;;;; LEARNING RATES ;;;;
+(= (c_sigma) (let $mu-eff (mu_eff) (/ (+ $mu-eff 2) (+ 5 (+ $mu-eff (dim))))))
+(= (d_sigma) (+ 1 (+ (* 2 (max-atom(0 (- (sqrt-math (/ (- (mu_eff) 1) (+ (dim) 1))) 1)))) (c_sigma))))
+(= (c_c) (let ($mu-eff $dim) ((mu_eff) (dim)) (/ (+ 4 (/ $mu-eff $dim)) (+ $dim (+ 4 (/ (* 2 $mu-eff) $dim))))))
+(= (c1) (/ 2 (+ (pow-math (+ (dim) 1.3) 2) (mu_eff))))
+(= (c_mu) (let $mu-eff (mu_eff) (min-atom((- 1 (c1)) (/ (* 2 (+ (- $mu-eff 2) (/ 1 $mu-eff))) (+ (pow-math (+ (dim) 2) 2) $mu-eff))))))
+
+;;;; EVOLUTION PATHS ;;;;
+(= (p_c) (zeros-vec (dim)))
+(= (p_sigma) (zeros-vec (dim)))
+
+; !(mean)
+; !(cov)
+; !(lambda_)
+; !(mu)
+; !(weights)
+; !(normalized-weights)
+; !(mu_eff)
+; !(c_sigma)
+; !(d_sigma)
+; !(c_c)
+; !(c1)
+; !(c_mu)
+; !(p_c)
+; !(p_sigma)
