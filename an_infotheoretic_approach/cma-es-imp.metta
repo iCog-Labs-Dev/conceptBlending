@@ -3,21 +3,37 @@
 
 
 
-
-
-
 (: lambda-calc (Number Number -> Number))
 (= (lambda-calc $population_size $dim)
    (if (== $population_size 0)                                      
        (+ 4
           (floor-math (* 3 (log-math 2.718281828459045 $dim))))     
-       $population_size))                                        
+       $population_size))    
+                                           
+(: range (Number Number Number -> List))
+(= (range $start $end $step)
+    (if (> $start $end)
+        ()
+        (let*
+            (
+                ($next (range (+ $start $step) $end $step))
+            )   
+            (cons-atom $start $next)
+        )
+    )
+)
 
-; TODO: raw-weights function
+(: raw-weights (Number -> List))
+(= (raw-weights $mu)
+   (let* (
+          ($idxs  (range 1 $mu 1))                             
+          ($const (log-math 2.718281828459045 (+ $mu 0.5)))
+         )
+         (map-atom $idxs $i
+                   (- $const (log-math 2.718281828459045 $i)))))    
 
 (: mu-calc (Number -> Number))
 (= (mu-calc $lambda) (floor-math (/ $lambda 2)))
-
 
 (: norm-weights (List -> List))
 (= (norm-weights $w_raw)
