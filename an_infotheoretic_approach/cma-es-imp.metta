@@ -16,18 +16,6 @@
 (= (mu-calc $lambda) (floor-math (/ $lambda 2)))
 ; !(mu-calc (lambda-calc 0 6))
 
-(: range (Number Number Number -> List))
-(= (range $start $end $step)
-    (if (> $start $end)
-        ()
-        (let*
-            (
-                ($next (range (+ $start $step) $end $step))
-            )   
-            (cons-atom $start $next)
-        )
-    )
-)
 ; !(range 1 7 1) 
 
 (: raw-weights (Number -> List))
@@ -69,7 +57,7 @@
          )
          ($lambda $mu $weights $mu_eff)))
 
-!(cma-strategy 0 6)      
+; !(cma-strategy 0 6)      
 
 
 ; ======== LEARNING RATE CALCULATIONS ========
@@ -147,3 +135,110 @@
 ; !(c_mu)
 ; !(p_c)
 ; !(p_sigma)
+
+
+
+;––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+;pair-index-fitness: zip indices and fitnesses
+(: pair-index-fitness (List List -> List))
+(= (pair-index-fitness $inds $fits)
+   (map-atom $inds $i
+     ($i (index-atom $fits $i))
+   )
+)
+; ! (pair-index-fitness (make-indices (10 30 20)) (10 30 20)) ; [((0 10) (1 30) (2 20))]
+
+; find-max-helper: helper to find index of max fitness
+(: find-max-helper (List Number Number Number -> Number))
+(= (find-max-helper $pairs $i $max-idx $maxval)
+   (if (== $i (size-atom $pairs))
+       $max-idx
+       (let*
+         (
+           ($pair (index-atom $pairs $i))   ; (idx fitness)
+           ($val  (index-atom $pair 1))     ; fitness
+         )
+         (if (> $val $maxval)
+             (find-max-helper $pairs (+ $i 1) $i   $val)
+             (find-max-helper $pairs (+ $i 1) $max-idx $maxval)
+         )
+       )
+   )
+)
+
+; max-index: find index of highest-fitness pair
+(: max-index (List -> Number))
+(= (max-index $pairs)
+   (let*
+     (
+       ($first (index-atom $pairs 0))
+       ($start (index-atom $first 1))
+     )
+     (find-max-helper $pairs 1 0 $start)
+   )
+)
+; ! (max-index ((0 10) (1 30) (2 20)))  ; [1]
+
+; sort-pairs-desc
+(: sort-pairs-desc (List -> List))
+(= (sort-pairs-desc $pairs)
+   (if (< (size-atom $pairs) 2)       
+       $pairs                         
+       (let* (
+               ($idx        (max-index    $pairs))       
+               ($maxPair    (index-atom   $pairs $idx)) 
+               ($rest       (remove-index $pairs $idx))  
+               ($sorted-rest (sort-pairs-desc $rest))   
+             )
+         (cons-atom $maxPair $sorted-rest)           
+       )
+   )
+)
+; ! (sort-pairs-desc ((0 10) (1 30) (2 20)))  ; [((1 30) (2 20) (0 10))]
+
+; extract-indices: take top mu indices
+(: extract-indices (List Number -> List))
+(= (extract-indices $pairs $mu)
+   (if (or (== $mu 0) (== (size-atom $pairs) 0))
+       ()
+       (let*
+         (
+           ($first-pair (index-atom $pairs 0))
+           ($idx         (index-atom $first-pair 0))
+           ($rest        (remove-index $pairs 0))
+           ($tail        (extract-indices $rest (- $mu 1)))
+         )
+         (cons-atom $idx $tail)
+       )
+   )
+)
+; ! (extract-indices ((1 30) (2 20) (0 10)) 2) ; [(1 2)]
+
+
+; select-by-indices: pick samples by indices
+(: select-by-indices (List List -> List))
+(= (select-by-indices $samples $indices)
+   (if (== (size-atom $indices) 0)
+       ()
+       (let*
+         (
+           ($first-i (index-atom $indices 0))
+           ($item    (index-atom $samples $first-i))
+           ($rest    (remove-index $indices 0))
+           ($tail    (select-by-indices $samples $rest))
+         )
+         (cons-atom $item $tail)
+       )
+   )
+)
+; ! (select-by-indices (5 6 7) (1 2))  
+
+; Full pipeline test
+(= (fitnesses) (10 30 20))
+(= (samples)   (4  5  6))
+; (= (mu)        2)
+
+; ! (pair-index-fitness (make-indices (fitnesses)) (fitnesses))
+; ! (sort-pairs-desc (pair-index-fitness  (make-indices (fitnesses)) (fitnesses)))
+; ! (extract-indices (sort-pairs-desc (pair-index-fitness (make-indices (fitnesses)) (fitnesses))) (mu))
+; ! (select-by-indices (samples) (extract-indices (sort-pairs-desc (pair-index-fitness (make-indices (fitnesses)) (fitnesses))) (mu)))
