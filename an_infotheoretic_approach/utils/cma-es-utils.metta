@@ -370,3 +370,42 @@
 
 ; !(l2-norm (1 2 3 4))
 
+(: range (Number Number Number -> List))
+(= (range $start $end $step)
+    (if (> $start $end)
+        ()
+        (let*
+            (
+                ($next (range (+ $start $step) $end $step))
+            )   
+            (cons-atom $start $next)
+        )
+    )
+)
+
+;––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+; make-indices: 0-based indices for a list
+(: make-indices (List -> List))
+(= (make-indices $lst) (range 0 (- (size-atom $lst) 1) 1))
+; ! (make-indices (10 30 20))
+
+
+; remove-index: remove the i-th element
+(: remove-index (List Number -> List))
+(= (remove-index $lst $i)
+   (if (== $i 0)
+       (cdr-atom $lst)                       
+       (let* (
+               ($head (index-atom $lst 0))   
+               ($tail (cdr-atom   $lst))    
+               ($rest (remove-index $tail (- $i 1))) 
+             )
+         (cons-atom $head $rest)        
+       )
+   )
+)
+; ! (remove-index ((0 10) (1 30) (2 20)) 1)   ; [((0 10) (2 20))]
+
+
+
+
