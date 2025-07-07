@@ -638,5 +638,31 @@
 ; ! (remove-index ((0 10) (1 30) (2 20)) 1)   ; [((0 10) (2 20))]
 
 
+(: vec-scale (Number List -> List))          
+(= (vec-scale $c $v)
+   (map-atom                                 
+     $v $x
+     (* $c $x))                              
+)
+; ! (vec-scale 0.5  (2 4 6))        ; Expected -> [(1 2 3)]
+
+(: vec-add (List List -> List))            
+(: vec-add (List List -> List))            
+(= (vec-add $a $b)
+   (if (== (size-atom $a) 0)                
+       ()
+       (let* (
+               ($sum  (+ (index-atom $a 0)   
+                          (index-atom $b 0)))
+               ($tail (vec-add              
+                         (cdr-atom $a)
+                         (cdr-atom $b)))
+             )
+         (cons-atom $sum $tail)              
+       )
+   )
+)
+; ! (vec-add (1 2 3) (4 5 6))          ; Expected -> [(5 7 9)]
+
 
 
