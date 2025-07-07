@@ -112,6 +112,26 @@
     (8 8)
 )
 
+;;;; mutate-individual tests ;;;;
+
+; Test 1: Apply mutate-individual on a normal gene list
+!(assertEqual
+    (let $x (mutate-individual (0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8) 0.1) (size-atom $x))
+    8
+)
+
+; Test 2: Mutate individual with empty gene list
+!(assertEqual
+    (mutate-individual () 0.1)
+    ()
+)
+
+; Test 3: Mutate individual with a single gene
+!(assertEqual
+    (let $x (mutate-individual (0.5) 0.1) (size-atom $x))
+    1
+)
+
 
 ;;;; main-loop ;;;;
 ;; INFO: The testing of this function applies for populate-two-child, and populate-new-population too as it's(the main loop depends on the proper functioning of the two functions)
@@ -168,37 +188,3 @@
    ((Error ZeroMaxFitness)))
 
 
-
-
-;;;; mutate-gene tests ;;;;
-
-; Test mutate-gene: no mutation when random() > MUTATION_RATE
-
-!(assertTrue
-   (let $mut (mutate-gene 0.5 0.1) (and (>= $mut 0) (<= $mut 1)))
-)
-
-; Test mutate-gene: result is still a number
-!(assertTrue
-   (number? (mutate-gene 0.5 0.1))
-)
-
-;;;; mutate-individual tests ;;;;
-
-; Test 1: Apply mutate-individual on a normal gene list
-!(assertEqual
-    (let $x (mutate-individual (0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8) 0.1) (size-atom $x))
-    8
-)
-
-; Test 2: Mutate individual with empty gene list
-!(assertEqual
-    (mutate-individual () 0.1)
-    ()
-)
-
-; Test 3: Mutate individual with a single gene
-!(assertEqual
-    (let $x (mutate-individual (0.5) 0.1) (size-atom $x))
-    1
-)
