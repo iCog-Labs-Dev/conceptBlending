@@ -34,7 +34,7 @@
           ($sum_w  (foldl-atom $w_raw 0 $acc $x (+ $acc $x)))
          )
          (map-atom $w_raw $w (/ $w $sum_w))))
-; !(norm-weights (raw-weights (mu-calc (lambda-calc 0 6))))
+; (= (weights)(norm-weights (raw-weights (mu-calc (lambda-calc 0 6)))))
 
 (: mu-eff (List -> Number))
 (= (mu-eff $weights)
@@ -243,4 +243,30 @@
 ; ! (sort-pairs-desc (pair-index-fitness  (make-indices (fitnesses)) (fitnesses)))
 ; ! (extract-indices (sort-pairs-desc (pair-index-fitness (make-indices (fitnesses)) (fitnesses))) (mu))
 ! (select-by-indices (samples) (extract-indices(sort-pairs-desc (pair-index-fitness(make-indices (fitnesses)) (fitnesses)))(mu)))
+
+(: update-mean (List List -> List))
+(= (update-mean $w $sel)
+   (if (== (size-atom $w) 0)             
+       ()                                  
+       (let* (
+               ($scaled                 
+                 (vec-scale
+                   (index-atom $w   0)
+                   (index-atom $sel 0)))
+               ($rest                     
+                 (update-mean
+                   (cdr-atom $w)
+                   (cdr-atom $sel)))
+             )
+         (if (== (size-atom $rest) 0)
+             $scaled                       
+             (vec-add $scaled $rest))      
+       )
+   )
+)
+; ! (update-mean (1)        ((5)))           ; Expected -> [(5)]
+(= (old_mean) (0.97539962 0.2234363  0.51327389 0.73508769 0.51021857 0.26006022 0.54089707 0.32556931))
+(= (mean) (update-mean (weights) (samples)  ))         
+!(mean)
+
 
