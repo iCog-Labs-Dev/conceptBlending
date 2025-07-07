@@ -139,7 +139,7 @@
 
 
 ;––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-;pair-index-fitness: zip indices and fitnesses
+; pair-index-fitness: zip indices and fitnesses
 (: pair-index-fitness (List List -> List))
 (= (pair-index-fitness $inds $fits)
    (map-atom $inds $i
@@ -214,31 +214,33 @@
 )
 ; ! (extract-indices ((1 30) (2 20) (0 10)) 2) ; [(1 2)]
 
-
 ; select-by-indices: pick samples by indices
 (: select-by-indices (List List -> List))
 (= (select-by-indices $samples $indices)
    (if (== (size-atom $indices) 0)
        ()
-       (let*
-         (
-           ($first-i (index-atom $indices 0))
-           ($item    (index-atom $samples $first-i))
-           ($rest    (remove-index $indices 0))
-           ($tail    (select-by-indices $samples $rest))
-         )
-         (cons-atom $item $tail)
+       (let* (
+               ($first-i (index-atom $indices 0))
+               ($item    (index-atom $samples $first-i))
+               ($rest    (select-by-indices $samples (cdr-atom $indices)))
+             )
+         (cons-atom $item $rest)
        )
    )
 )
 ; ! (select-by-indices (5 6 7) (1 2))  
 
-; Full pipeline test
-(= (fitnesses) (10 30 20))
-(= (samples)   (4  5  6))
+; Full pipeline test with literals
+; (= (fitnesses) (10 30 20))
+; (= (samples)   (4  5  6))
 ; (= (mu)        2)
+
+(= (fitnesses) (0.0675 0.0475 0.045  0.1175 0.0625 0.085  0.0225 0.035 0.0325 0.0725))
+(= (samples) ((1 0 0 0 0 1 1 1) (1 0 0 1 1 1 1 0) (1 0 0 1 0 0 1 1) (0 0 0 1 1 1 0 1) (1 0 0 1 1 1 1 1) (1 0 0 1 1 0 1 0) (1 0 0 1 1 1 1 1) (1 0 0 1 1 1 0 1) (1 0 0 1 0 0 0 1) (1 0 0 1 0 1 0 1)))
+; (= (mu)        6)
 
 ; ! (pair-index-fitness (make-indices (fitnesses)) (fitnesses))
 ; ! (sort-pairs-desc (pair-index-fitness  (make-indices (fitnesses)) (fitnesses)))
 ; ! (extract-indices (sort-pairs-desc (pair-index-fitness (make-indices (fitnesses)) (fitnesses))) (mu))
-; ! (select-by-indices (samples) (extract-indices (sort-pairs-desc (pair-index-fitness (make-indices (fitnesses)) (fitnesses))) (mu)))
+! (select-by-indices (samples) (extract-indices(sort-pairs-desc (pair-index-fitness(make-indices (fitnesses)) (fitnesses)))(mu)))
+
