@@ -97,8 +97,8 @@
 ;;;; DIMENSION, INITIAL MEAN, COVARIANCE, AND STEP SIZE
 
 (= (dim) 8)
-; (= (mean)(let $x (random-list 1 (dim) 0 1) (car-atom $x)))
-; (= (cov) (identity-matrice (dim)))
+(= (mean)(let $x (random-list 1 (dim) 0 1) (car-atom $x)))
+(= (cov) (identity-matrice (dim)))
 (= (step_size) 20)
 (= (e) 2.71828)
 
@@ -126,7 +126,7 @@
 ; !(lambda_)
 ; !(mu)
 ; !(weights)
-; !(normalized-weights)
+; !(normalized_weights)
 ; !(mu_eff)
 ; !(c_sigma)
 ; !(d_sigma)
