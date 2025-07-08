@@ -137,6 +137,8 @@
 ; !(p_sigma)
 
 
+; !(random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) 10)
+; !(standard-normal 8 10)
 
 ;––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 ; pair-index-fitness: zip indices and fitnesses
@@ -242,7 +244,7 @@
 ; ! (pair-index-fitness (make-indices (fitnesses)) (fitnesses))
 ; ! (sort-pairs-desc (pair-index-fitness  (make-indices (fitnesses)) (fitnesses)))
 ; ! (extract-indices (sort-pairs-desc (pair-index-fitness (make-indices (fitnesses)) (fitnesses))) (mu))
-! (select-by-indices (samples) (extract-indices(sort-pairs-desc (pair-index-fitness(make-indices (fitnesses)) (fitnesses)))(mu)))
+; ! (select-by-indices (samples) (extract-indices(sort-pairs-desc (pair-index-fitness(make-indices (fitnesses)) (fitnesses)))(mu)))
 
 (: update-mean (List List -> List))
 (= (update-mean $w $sel)
