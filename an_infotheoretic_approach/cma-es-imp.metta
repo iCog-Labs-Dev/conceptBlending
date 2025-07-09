@@ -104,7 +104,7 @@
 ; !(p_sigma)
 
 
-!(mat-clip (random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) 10) 0 1)
+; !(mat-clip (random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) 10) 0 1)
 ; !(standard-normal 8 10)
 
 ; ======== LEARNING RATE CALCULATIONS ========
@@ -263,15 +263,14 @@
                    (cdr-atom $w)
                    (cdr-atom $sel)))
              )
-         (if (== (size-atom $rest) 0)
-             $scaled                       
-             (vec-add $scaled $rest))      
+        (if (== (size-atom $rest) 0)
+            $scaled 
+            (vector-op $scaled $rest +)
+        )      
        )
    )
 )
 ; ! (update-mean (1)        ((5)))           ; Expected -> [(5)]
 (= (old_mean) (0.97539962 0.2234363  0.51327389 0.73508769 0.51021857 0.26006022 0.54089707 0.32556931))
-(= (mean) (update-mean (weights) (samples)  ))         
-; !(mean)
-
-
+(= (new-mean) (update-mean (normalized_weights) (select-by-indices (samples) (extract-indices(sort-pairs-desc (pair-index-fitness(make-indices (fitnesses)) (fitnesses)))(mu)))))         
+!(new-mean)

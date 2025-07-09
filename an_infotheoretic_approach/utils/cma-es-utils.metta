@@ -173,6 +173,31 @@
     (map-atom $vector $x ($op $num $x))
 )
 
+(= (vector-op $vector1 $vector2 $op)
+    (let ($length1 $length2) ((size-atom $vector1) (size-atom $vector2))
+        (
+            if (not (== $length1 $length2))
+            (Error ($length1 $length2) LengthMismatch)
+            (collapse
+                (superpose
+                    (
+                        (if (>= (- $length1 1) 0) ($op (index-atom $vector1 0) (index-atom $vector2 0)) Empty)
+                        (if (>= (- $length1 2) 0) ($op (index-atom $vector1 1) (index-atom $vector2 1)) Empty)
+                        (if (>= (- $length1 3) 0) ($op (index-atom $vector1 2) (index-atom $vector2 2)) Empty)
+                        (if (>= (- $length1 4) 0) ($op (index-atom $vector1 3) (index-atom $vector2 3)) Empty)
+                        (if (>= (- $length1 5) 0) ($op (index-atom $vector1 4) (index-atom $vector2 4)) Empty)
+                        (if (>= (- $length1 6) 0) ($op (index-atom $vector1 5) (index-atom $vector2 5)) Empty)
+                        (if (>= (- $length1 7) 0) ($op (index-atom $vector1 6) (index-atom $vector2 6)) Empty)
+                        (if (>= (- $length1 8) 0) ($op (index-atom $vector1 7) (index-atom $vector2 7)) Empty)
+                    )
+                )
+            )
+        )
+    )
+)
+
+; !(vector-op (1 2 3 4 5 6 5 4) (2 3 4 5 6 4 3 2) +)
+
 (= (mat-scalar-op $matrice $num $op)
     (map-atom $matrice $x (scalar-op $x $num $op))    
 )
@@ -692,6 +717,15 @@
 )
 )
 
+; !(chol-decomp ((6 2 3 2 1 1 1 1)
+;  (2 6 3 2 1 1 1 1)
+;  (3 3 6 2 1 1 1 1)
+;  (2 2 2 6 1 1 1 1)
+;  (1 1 1 1 6 1 1 1)
+;  (1 1 1 1 1 6 1 1)
+;  (1 1 1 1 1 1 6 1)
+;  (1 1 1 1 1 1 1 6)))
+
 ; (= (standard-normal $dim $lambda_)
 ;     (let $lambda-list (generate-toy-list $lambda_) (map-atom $lambda-list $x (let $dim-list (generate-toy-list $dim) (map-atom $dim-list $y (gauss 1)))))
 ; )
@@ -1078,7 +1112,6 @@
 ; ! (vec-scale 0.5  (2 4 6))        ; Expected -> [(1 2 3)]
 
 (: vec-add (List List -> List))            
-(: vec-add (List List -> List))            
 (= (vec-add $a $b)
    (if (== (size-atom $a) 0)                
        ()
@@ -1093,4 +1126,4 @@
        )
    )
 )
-; ! (vec-add (1 2 3) (4 5 6))          ; Expected -> [(5 7 9)]
+; ! (vec-add (1 2 3 4 5 6 7 8) (4 5 6 6 7 6 7 8))          ; Expected -> [(5 7 9)]
