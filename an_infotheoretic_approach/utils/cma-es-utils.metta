@@ -177,6 +177,29 @@
     (map-atom $matrice $x (scalar-op $x $num $op))    
 )
 
+(= (num-clip $x $lb $ub)
+    (superpose(
+        (if (< $x $lb) $lb Empty)
+        (if (> $x $ub) $ub Empty)
+        (if (and (>= $x $lb) (<= $x $ub)) $x Empty)
+        )
+    )
+)
+
+; !(num-clip 5 0 1)
+
+(= (vec-clip $vec $lb $ub)
+    (map-atom $vec $x (num-clip $x $lb $ub))
+)
+
+; !(vec-clip (2 1 0.5 -0.5 -4 1.1 53 4 1 2 -77 4 53 -43 -3 44 565 32 56 67 43 -54 -67 -8 -8 9 2 34 56 0 1) 0 1)
+
+(= (mat-clip $matrice $lb $ub)
+    (map-atom $matrice $x (vec-clip $x $lb $ub))
+)
+
+; !(mat-clip ((33 3 4 5 6 6 6 3) (33 3 4 5 6 6 6 3) (33 3 4 5 6 6 6 3) (33 3 4 5 6 6 6 3) (33 3 4 5 6 6 6 3) (33 3 4 5 6 6 6 3) (33 3 4 5 6 6 6 3) (33 3 4 5 6 6 6 3) (33 3 4 5 6 6 6 3) (33 3 4 5 6 6 6 3)) 0 1)
+
 !(bind! &lspace (new-space))
 
 (= (call-lik $i $k)
