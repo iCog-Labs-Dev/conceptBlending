@@ -2,7 +2,16 @@
 
 !(import! &self utils:random-list-utils)
 !(import! &self utils:cma-es-utils)
-!(import! &self utils:list-op-utils)
+; !(import! &self utils:list-op-utils)
+!(import! &self info-theoretic)
+
+;;;; INPUT CONCEPTS ;;;;
+(= (concept1) 
+    (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+)
+(= (concept2) 
+    (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+)
 
 (: lambda-calc (Number Number -> Number))
 (= (lambda-calc $population_size $dim)
@@ -103,9 +112,13 @@
 ; !(p_c)
 ; !(p_sigma)
 
+;;;; POPULATION FITNESS SCORE CALCULATION ;;;;
+(= (population-fitness-score $population) 
+    (map-atom $population $x (mu-hqblend $x (concept1) (concept2)))
+)
 
 ; !(mat-clip (random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) 10) 0 1)
-; !(standard-normal 8 10)
+
 
 ; ======== LEARNING RATE CALCULATIONS ========
 (= (compute-learning-rates $dim $mu_eff)
@@ -240,8 +253,8 @@
 ; (= (samples)   (4  5  6))
 ; (= (mu)        2)
 
-(= (fitnesses) (0.0675 0.0475 0.045  0.1175 0.0625 0.085  0.0225 0.035 0.0325 0.0725))
-(= (samples) ((1 0 0 0 0 1 1 1) (1 0 0 1 1 1 1 0) (1 0 0 1 0 0 1 1) (0 0 0 1 1 1 0 1) (1 0 0 1 1 1 1 1) (1 0 0 1 1 0 1 0) (1 0 0 1 1 1 1 1) (1 0 0 1 1 1 0 1) (1 0 0 1 0 0 0 1) (1 0 0 1 0 1 0 1)))
+; (= (fitnesses) (0.0675 0.0475 0.045  0.1175 0.0625 0.085  0.0225 0.035 0.0325 0.0725))
+; (= (samples) ((1 0 0 0 0 1 1 1) (1 0 0 1 1 1 1 0) (1 0 0 1 0 0 1 1) (0 0 0 1 1 1 0 1) (1 0 0 1 1 1 1 1) (1 0 0 1 1 0 1 0) (1 0 0 1 1 1 1 1) (1 0 0 1 1 1 0 1) (1 0 0 1 0 0 0 1) (1 0 0 1 0 1 0 1)))
 ; (= (mu)        6)
 
 ; ! (pair-index-fitness (make-indices (fitnesses)) (fitnesses))
@@ -273,4 +286,14 @@
 ; ! (update-mean (1)        ((5)))           ; Expected -> [(5)]
 (= (old_mean) (0.97539962 0.2234363  0.51327389 0.73508769 0.51021857 0.26006022 0.54089707 0.32556931))
 (= (new-mean) (update-mean (normalized_weights) (select-by-indices (samples) (extract-indices(sort-pairs-desc (pair-index-fitness(make-indices (fitnesses)) (fitnesses)))(mu)))))         
-!(new-mean)
+; !(new-mean)
+
+!(let*
+    (
+        ($samples (mat-clip (random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) 10) 0 1))
+        ($fitness-score (population-fitness-score $samples))
+        ($fitness-idx-pair (pair-index-fitness (make-indices $fitness-score) $fitness-score))
+        ($selected (select-by-indices $samples (extract-indices (sort-pairs-desc $fitness-idx-pair) (mu))))
+    )
+    $selected
+)
