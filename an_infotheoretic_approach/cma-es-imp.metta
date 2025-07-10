@@ -121,38 +121,21 @@
 
 
 ; ======== LEARNING RATE CALCULATIONS ========
-(= (compute-learning-rates $dim $mu_eff)
-   (let* (
-        ; 1. c_sigma calculation
-        ($c_sigma (/ (+ $mu_eff 2.0) (+ $dim $mu_eff 5.0)))
+;; Calculate c_sigma
+(= c_sigma (/ (+ mu_eff 2) (+ dim mu_eff 5)))
 
-        ; 2. d_sigma calculation
-        ($inner_term1 (/ (- $mu_eff 1.0) (+ $dim 1.0)))
-        ($sqrt_term (sqrt-math $inner_term1))
-        ($max_term (max-atom (0.0 (- $sqrt_term 1.0))))
-        ($d_sigma (+ 1.0 (+ (* 2.0 $max_term) $c_sigma)))
+;; Calculate d_sigma
+(= d_sigma (+ (+ 1 (* 2 (max-atom (0 (- (sqrt-math (/ (- mu_eff 1) (+ dim 1)) 1)))) c_sigma))))
 
-        ; 3. c_c calculation
-        ($c_c_num (+ 4.0 (/ $mu_eff $dim)))
-        ($c_c_den (+ $dim 4.0 (* 2.0 (/ $mu_eff $dim))))
-        ($c_c (/ $c_c_num $c_c_den))
+;; Calculate c_c
+(= c_c (/ (+ 4 (/ mu_eff dim)) (+ dim 4 (* 2 (/ mu_eff dim)))))
 
-        ; 4. c1 calculation
-        ($dim_term (pow-math (+ $dim 1.3) 2.0))
-        ($c1_den (+ $dim_term $mu_eff))
-        ($c1 (/ 2.0 $c1_den))
+;; Calculate c1
+(= c1 (/ 2 (+ (pow-math (+ dim 1.3) 2) mu_eff)))
 
-        ; 5. c_mu calculation
-        ($c_mu_term1 (- 1.0 $c1))
-        ($c_mu_num (* 2.0 (+ (- $mu_eff 2.0) (/ 1.0 $mu_eff))))
-        ($c_mu_den (+ (pow-math (+ $dim 2.0) 2.0) $mu_eff))
-        ($c_mu_term2 (/ $c_mu_num $c_mu_den))
-        ($c_mu (min-atom ($c_mu_term1 $c_mu_term2)))
-        )
-        ; Return all parameters as a list
-        (list $c_sigma $d_sigma $c_c $c1 $c_mu)
-    )
-)
+;; Calculate c_mu
+(= c_mu (min-atom ((- 1 c1) (/ (* 2 (+ (- mu_eff 2) (/ 1 mu_eff))) (+ (pow-math (+ dim 2) 2) mu_eff)))))
+
 
 ; !(compute-learning-rates (dim) (mu_eff))
 
