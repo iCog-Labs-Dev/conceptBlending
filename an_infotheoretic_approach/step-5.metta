@@ -212,7 +212,7 @@
     )
 )
 
-!(step5) ; It will take longer time on cholesky & transpose
+; !(step5) ; It will take longer time on cholesky & transpose
 
 ; Expected Output
 
