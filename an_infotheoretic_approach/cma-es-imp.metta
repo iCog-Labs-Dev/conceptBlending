@@ -4,7 +4,7 @@
 !(import! &self utils:cma-es-utils)
 ; !(import! &self utils:list-op-utils)
 !(import! &self info-theoretic)
-
+!(import! &self step-5)
 ;;;; INPUT CONCEPTS ;;;;
 (= (concept1) 
     (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
@@ -117,7 +117,7 @@
     (map-atom $population $x (mu-hqblend $x (concept1) (concept2)))
 )
 
-; !(mat-clip (random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) 10) 0 1)
+!(mat-clip (random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) 10) 0 1)
 
 
 ; ======== LEARNING RATE CALCULATIONS ========
@@ -139,7 +139,9 @@
 
 ; !(compute-learning-rates (dim) (mu_eff))
 
-;––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+;;;; RECOMBINATION(UPDATE MEAN) ;;;;
+
 ; pair-index-fitness: zip indices and fitnesses
 (: pair-index-fitness (List List -> List))
 (= (pair-index-fitness $inds $fits)
@@ -236,8 +238,8 @@
 ; (= (samples)   (4  5  6))
 ; (= (mu)        2)
 
-; (= (fitnesses) (0.0675 0.0475 0.045  0.1175 0.0625 0.085  0.0225 0.035 0.0325 0.0725))
-; (= (samples) ((1 0 0 0 0 1 1 1) (1 0 0 1 1 1 1 0) (1 0 0 1 0 0 1 1) (0 0 0 1 1 1 0 1) (1 0 0 1 1 1 1 1) (1 0 0 1 1 0 1 0) (1 0 0 1 1 1 1 1) (1 0 0 1 1 1 0 1) (1 0 0 1 0 0 0 1) (1 0 0 1 0 1 0 1)))
+(= (fitnesses) (0.0675 0.0475 0.045  0.1175 0.0625 0.085  0.0225 0.035 0.0325 0.0725))
+(= (samples) ((1 0 0 0 0 1 1 1) (1 0 0 1 1 1 1 0) (1 0 0 1 0 0 1 1) (0 0 0 1 1 1 0 1) (1 0 0 1 1 1 1 1) (1 0 0 1 1 0 1 0) (1 0 0 1 1 1 1 1) (1 0 0 1 1 1 0 1) (1 0 0 1 0 0 0 1) (1 0 0 1 0 1 0 1)))
 ; (= (mu)        6)
 
 ; ! (pair-index-fitness (make-indices (fitnesses)) (fitnesses))
@@ -271,12 +273,20 @@
 (= (new-mean) (update-mean (normalized_weights) (select-by-indices (samples) (extract-indices(sort-pairs-desc (pair-index-fitness(make-indices (fitnesses)) (fitnesses)))(mu)))))         
 ; !(new-mean)
 
-!(let*
-    (
-        ($samples (mat-clip (random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) 10) 0 1))
-        ($fitness-score (population-fitness-score $samples))
-        ($fitness-idx-pair (pair-index-fitness (make-indices $fitness-score) $fitness-score))
-        ($selected (select-by-indices $samples (extract-indices (sort-pairs-desc $fitness-idx-pair) (mu))))
-    )
-    $selected
+;;;; STEP SIZE EVOLUTION PATH ADAPTATION ;;;;
+
+(= (y $new-mean $old-mean $step-size)
+  (let $mean-diff (vector-op $new-mean $old-mean -) (scalar-op $mean-diff $step-size /))
 )
+
+; !(let*
+;     (
+;         ($samples (mat-clip (random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) (lambda_)) 0 1))
+;         ($fitness-score (population-fitness-score $samples))
+;         ($fitness-idx-pair (pair-index-fitness (make-indices $fitness-score) $fitness-score))
+;         ($selected (select-by-indices $samples (extract-indices (sort-pairs-desc $fitness-idx-pair) (mu))))
+;         ($new-mean (update-mean (normalized_weights) $selected))
+;         ($y (y $new-mean (mean) (step_size)))
+;     )
+;     $y
+; )
