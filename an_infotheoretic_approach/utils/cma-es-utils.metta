@@ -858,7 +858,7 @@
 ;  (1 1 1 1 1 1 1 6))) (match &lspace $x $x))
 
 (= (chol-decomp $cov-matrice)
-    (let ($rows $columns) ((size-atom $cov-matrice) (let $row1 (index-atom $cov-matrice 0) (size-atom $row1)))
+    (let ($rows $columns $clean) ((size-atom $cov-matrice) (let $row1 (index-atom $cov-matrice 0) (size-atom $row1)) (collapse(match &lspace (cell $x $y) (remove-atom &lspace (cell $x $y)))))
     (collapse
         (superpose
             (
@@ -1377,15 +1377,58 @@
     )
 )
 
-!(inverse-lmatrice ((6 2 3 2 1 1 1 1)
- (2 6 3 2 1 1 1 1)
- (3 3 6 2 1 1 1 1)
- (2 2 2 6 1 1 1 1)
- (1 1 1 1 6 1 1 1)
- (1 1 1 1 1 6 1 1)
- (1 1 1 1 1 1 6 1)
- (1 1 1 1 1 1 1 6)))
+; !(inverse-lmatrice ((2.449489742783178 0 0 0 0 0 0 0) (0.8164965809277261 2.309401076758503 0 0 0 0 0 0) (1.2247448713915892 0.8660254037844386 1.9364916731037085 0 0 0 0 0) (0.8164965809277261 0.5773502691896256 0.2581988897471611 2.2211108331943574 0 0 0 0) (0.4082482904638631 0.2886751345948128 0.12909944487358055 0.2101050788156825 2.38520212753326 0 0 0) (0.4082482904638631 0.2886751345948128 0.12909944487358055 0.2101050788156825 0.288943725663174 2.3676361022313106 0 0) (0.4082482904638631 0.2886751345948128 0.12909944487358055 0.2101050788156825 0.288943725663174 0.2558250873173662 2.353774466105055 0) (0.4082482904638631 0.2886751345948128 0.12909944487358055 0.2101050788156825 0.288943725663174 0.2558250873173662 0.22952676438118122 2.3425566592338467)))
 
+(= (transpose-matrice $matrice)
+    (let ($rows $columns) ((size-atom $matrice) (let $row0 (index-atom $matrice 0) (size-atom $row0)))
+        (collapse
+            (superpose
+                (
+                    (if (>= (- $columns 1) 0)
+                    (collapse(superpose((if (>= (- $rows 1) 0) (let $row0 (index-atom $matrice 0) (index-atom $row0 0)) Empty) (if (>= (- $rows 2) 0) (let $row1 (index-atom $matrice 1) (index-atom $row1 0)) Empty) (if (>= (- $rows 3) 0) (let $row2 (index-atom $matrice 2) (index-atom $row2 0)) Empty) (if (>= (- $rows 4) 0) (let $row3 (index-atom $matrice 3) (index-atom $row3 0)) Empty) (if (>= (- $rows 5) 0) (let $row4 (index-atom $matrice 4) (index-atom $row4 0)) Empty) (if (>= (- $rows 6) 0) (let $row5 (index-atom $matrice 5) (index-atom $row5 0)) Empty) (if (>= (- $rows 7) 0) (let $row6 (index-atom $matrice 6) (index-atom $row6 0)) Empty) (if (>= (- $rows 8) 0) (let $row7 (index-atom $matrice 7) (index-atom $row7 0)) Empty))))
+                    Empty                    
+                    )
+                    (if (>= (- $columns 2) 0)
+                    (collapse(superpose((if (>= (- $rows 1) 0) (let $row0 (index-atom $matrice 0) (index-atom $row0 1)) Empty) (if (>= (- $rows 2) 0) (let $row1 (index-atom $matrice 1) (index-atom $row1 1)) Empty) (if (>= (- $rows 3) 0) (let $row2 (index-atom $matrice 2) (index-atom $row2 1)) Empty) (if (>= (- $rows 4) 0) (let $row3 (index-atom $matrice 3) (index-atom $row3 1)) Empty) (if (>= (- $rows 5) 0) (let $row4 (index-atom $matrice 4) (index-atom $row4 1)) Empty) (if (>= (- $rows 6) 0) (let $row5 (index-atom $matrice 5) (index-atom $row5 1)) Empty) (if (>= (- $rows 7) 0) (let $row6 (index-atom $matrice 6) (index-atom $row6 1)) Empty) (if (>= (- $rows 8) 0) (let $row7 (index-atom $matrice 7) (index-atom $row7 1)) Empty))))
+                    Empty                    
+                    )
+                    (if (>= (- $columns 3) 0)
+                    (collapse(superpose((if (>= (- $rows 1) 0) (let $row0 (index-atom $matrice 0) (index-atom $row0 2)) Empty) (if (>= (- $rows 2) 0) (let $row1 (index-atom $matrice 1) (index-atom $row1 2)) Empty) (if (>= (- $rows 3) 0) (let $row2 (index-atom $matrice 2) (index-atom $row2 2)) Empty) (if (>= (- $rows 4) 0) (let $row3 (index-atom $matrice 3) (index-atom $row3 2)) Empty) (if (>= (- $rows 5) 0) (let $row4 (index-atom $matrice 4) (index-atom $row4 2)) Empty) (if (>= (- $rows 6) 0) (let $row5 (index-atom $matrice 5) (index-atom $row5 2)) Empty) (if (>= (- $rows 7) 0) (let $row6 (index-atom $matrice 6) (index-atom $row6 2)) Empty) (if (>= (- $rows 8) 0) (let $row7 (index-atom $matrice 7) (index-atom $row7 2)) Empty))))
+                    Empty                    
+                    )
+                    (if (>= (- $columns 4) 0)
+                    (collapse(superpose((if (>= (- $rows 1) 0) (let $row0 (index-atom $matrice 0) (index-atom $row0 3)) Empty) (if (>= (- $rows 2) 0) (let $row1 (index-atom $matrice 1) (index-atom $row1 3)) Empty) (if (>= (- $rows 3) 0) (let $row2 (index-atom $matrice 2) (index-atom $row2 3)) Empty) (if (>= (- $rows 4) 0) (let $row3 (index-atom $matrice 3) (index-atom $row3 3)) Empty) (if (>= (- $rows 5) 0) (let $row4 (index-atom $matrice 4) (index-atom $row4 3)) Empty) (if (>= (- $rows 6) 0) (let $row5 (index-atom $matrice 5) (index-atom $row5 3)) Empty) (if (>= (- $rows 7) 0) (let $row6 (index-atom $matrice 6) (index-atom $row6 3)) Empty) (if (>= (- $rows 8) 0) (let $row7 (index-atom $matrice 7) (index-atom $row7 3)) Empty))))
+                    Empty                    
+                    )
+                    (if (>= (- $columns 5) 0)
+                    (collapse(superpose((if (>= (- $rows 1) 0) (let $row0 (index-atom $matrice 0) (index-atom $row0 4)) Empty) (if (>= (- $rows 2) 0) (let $row1 (index-atom $matrice 1) (index-atom $row1 4)) Empty) (if (>= (- $rows 3) 0) (let $row2 (index-atom $matrice 2) (index-atom $row2 4)) Empty) (if (>= (- $rows 4) 0) (let $row3 (index-atom $matrice 3) (index-atom $row3 4)) Empty) (if (>= (- $rows 5) 0) (let $row4 (index-atom $matrice 4) (index-atom $row4 4)) Empty) (if (>= (- $rows 6) 0) (let $row5 (index-atom $matrice 5) (index-atom $row5 4)) Empty) (if (>= (- $rows 7) 0) (let $row6 (index-atom $matrice 6) (index-atom $row6 4)) Empty) (if (>= (- $rows 8) 0) (let $row7 (index-atom $matrice 7) (index-atom $row7 4)) Empty))))
+                    Empty                    
+                    )
+                    (if (>= (- $columns 6) 0)
+                    (collapse(superpose((if (>= (- $rows 1) 0) (let $row0 (index-atom $matrice 0) (index-atom $row0 5)) Empty) (if (>= (- $rows 2) 0) (let $row1 (index-atom $matrice 1) (index-atom $row1 5)) Empty) (if (>= (- $rows 3) 0) (let $row2 (index-atom $matrice 2) (index-atom $row2 5)) Empty) (if (>= (- $rows 4) 0) (let $row3 (index-atom $matrice 3) (index-atom $row3 5)) Empty) (if (>= (- $rows 5) 0) (let $row4 (index-atom $matrice 4) (index-atom $row4 5)) Empty) (if (>= (- $rows 6) 0) (let $row5 (index-atom $matrice 5) (index-atom $row5 5)) Empty) (if (>= (- $rows 7) 0) (let $row6 (index-atom $matrice 6) (index-atom $row6 5)) Empty) (if (>= (- $rows 8) 0) (let $row7 (index-atom $matrice 7) (index-atom $row7 5)) Empty))))
+                    Empty                    
+                    )
+                    (if (>= (- $columns 7) 0)
+                    (collapse(superpose((if (>= (- $rows 1) 0) (let $row0 (index-atom $matrice 0) (index-atom $row0 6)) Empty) (if (>= (- $rows 2) 0) (let $row1 (index-atom $matrice 1) (index-atom $row1 6)) Empty) (if (>= (- $rows 3) 0) (let $row2 (index-atom $matrice 2) (index-atom $row2 6)) Empty) (if (>= (- $rows 4) 0) (let $row3 (index-atom $matrice 3) (index-atom $row3 6)) Empty) (if (>= (- $rows 5) 0) (let $row4 (index-atom $matrice 4) (index-atom $row4 6)) Empty) (if (>= (- $rows 6) 0) (let $row5 (index-atom $matrice 5) (index-atom $row5 6)) Empty) (if (>= (- $rows 7) 0) (let $row6 (index-atom $matrice 6) (index-atom $row6 6)) Empty) (if (>= (- $rows 8) 0) (let $row7 (index-atom $matrice 7) (index-atom $row7 6)) Empty))))
+                    Empty                    
+                    )
+                    (if (>= (- $columns 8) 0)
+                    (collapse(superpose((if (>= (- $rows 1) 0) (let $row0 (index-atom $matrice 0) (index-atom $row0 7)) Empty) (if (>= (- $rows 2) 0) (let $row1 (index-atom $matrice 1) (index-atom $row1 7)) Empty) (if (>= (- $rows 3) 0) (let $row2 (index-atom $matrice 2) (index-atom $row2 7)) Empty) (if (>= (- $rows 4) 0) (let $row3 (index-atom $matrice 3) (index-atom $row3 7)) Empty) (if (>= (- $rows 5) 0) (let $row4 (index-atom $matrice 4) (index-atom $row4 7)) Empty) (if (>= (- $rows 6) 0) (let $row5 (index-atom $matrice 5) (index-atom $row5 7)) Empty) (if (>= (- $rows 7) 0) (let $row6 (index-atom $matrice 6) (index-atom $row6 7)) Empty) (if (>= (- $rows 8) 0) (let $row7 (index-atom $matrice 7) (index-atom $row7 7)) Empty))))
+                    Empty                    
+                    )
+                )
+            )
+        )
+    )
+)
+
+; !(chol-decomp ((1 0 0 0 0 0 0 0) (0 1 0 0 0 0 0 0) (0 0 1 0 0 0 0 0) (0 0 0 1 0 0 0 0) (0 0 0 0 1 0 0 0) (0 0 0 0 0 1 0 0) (0 0 0 0 0 0 1 0) (0 0 0 0 0 0 0 1)))
+; !(get-atoms &lspace)
+; !(match &lspace (cell $x $y) (remove-atom &lspace (cell $x $y)))
+; !(get-atoms &lspace)
+; !(inverse-lmatrice ((1.0 0 0 0 0 0 0 0) (0.0 1.0 0 0 0 0 0 0) (0.0 0.0 1.0 0 0 0 0 0) (0.0 0.0 0.0 1.0 0 0 0 0) (0.0 0.0 0.0 0.0 1.0 0 0 0) (0.0 0.0 0.0 0.0 0.0 1.0 0 0) (0.0 0.0 0.0 0.0 0.0 0.0 1.0 0) (0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0)))
+; !(transpose-matrice ((1.0 0 0 0 0 0 0 0) (0.0 1.0 0 0 0 0 0 0) (0.0 0.0 1.0 0 0 0 0 0) (0.0 0.0 0.0 1.0 0 0 0 0) (0.0 0.0 0.0 0.0 1.0 0 0 0) (0.0 0.0 0.0 0.0 0.0 1.0 0 0) (0.0 0.0 0.0 0.0 0.0 0.0 1.0 0) (0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0)))
+; !(transpose-matrice (inverse-lmatrice (chol-decomp ((1.0 0 0 0 0 0 0 0) (0.0 1.0 0 0 0 0 0 0) (0.0 0.0 1.0 0 0 0 0 0) (0.0 0.0 0.0 1.0 0 0 0 0) (0.0 0.0 0.0 0.0 1.0 0 0 0) (0.0 0.0 0.0 0.0 0.0 1.0 0 0) (0.0 0.0 0.0 0.0 0.0 0.0 1.0 0) (0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0)))))
 ; !(match &mspace (cell m22 $x) $x)
 ; !(match &mspace (cell m32 $x) $x)
 ; !(chol-decomp ((6 2 3 2 1 1 1 1)
@@ -1452,9 +1495,7 @@
 
 (= (mat-vec-mul $matrice $vector)
     (let ($mat-rows $mat-dim $vec-dim $lambda_) (collapse(superpose((size-atom $matrice) (let $mat-row0 (index-atom $matrice 0) (size-atom $mat-row0)) (let $vec-row0 (index-atom $vector 0) (size-atom $vec-row0)) (size-atom $vector))))
-        (
-            if (and (not (== $mat-dim $vec-dim)) (not (== $mat-dim $mat-rows)))
-            (Error ($mat-dim $vec-dim) DimensionMismatch)
+        (if (== $mat-dim $vec-dim)
             (collapse
                 (superpose
                     (
@@ -1591,10 +1632,13 @@
                     )
                 )
             )
+            (Error ($mat-dim $vec-dim) DimensionMismatch)
         )
     )
 )
 
+!(mat-vec-mul ((1.0 0 0 0.0 0.0 0.0 0.0 0.0) (0 1.0 0 0.0 0.0 0.0 0.0 0.0) (0 0 1.0 0.0 0.0 0.0 0.0 0.0) (0 0 0 1.0 0.0 0.0 0.0 0.0)) ((2 2 3 4 2 2 3 3) (2 2 3 4 2 2 3 3)))
+; !(size-atom 2)
 (= (random-multivariate $mean $cov-matrice $lambda_)
     (let ($decomp-cov-matrice $standard-normals) (collapse(superpose((chol-decomp $cov-matrice) (standard-normal (size-atom $mean) $lambda_))))
         (let $transformed-standard-normals (mat-vec-mul $decomp-cov-matrice $standard-normals)

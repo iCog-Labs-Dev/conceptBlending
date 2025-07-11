@@ -73,7 +73,7 @@
 (=(decimal $number)
     (+ $number 0.0)
 )
-!(decimal 1)
+; !(decimal 1)
 ; Output [1.0]
 
 ; ###################### Calculate Probability ##############################
