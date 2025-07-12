@@ -1,4 +1,4 @@
-! (import! &self libs)
+; ! (import! &self libs)
 ! (import! &self utils:cma-utils)
 
 
@@ -43,6 +43,15 @@
     )
 )
 
+; !(cholesky-decomposition ((6 2 3 2 1 1 1 1)
+;  (2 6 3 2 1 1 1 1)
+;  (3 3 6 2 1 1 1 1)
+;  (2 2 2 6 1 1 1 1)
+;  (1 1 1 1 6 1 1 1)
+;  (1 1 1 1 1 6 1 1)
+;  (1 1 1 1 1 1 6 1)
+;  (1 1 1 1 1 1 1 6))
+; )
 
 (= (sum-product $L $I $i $j $k $i_max)
    (if (< $k $i_max)
@@ -145,7 +154,7 @@
  ()
    (let* (($row (car-atom $matrix))
           ($rest (cdr-atom $matrix)))
-     (if (> (size-atom $row) 0)
+     (if (> (size-atom $row) 0) 
         (let* (($dot (dot $row $vec))
           ($next (matvec-mul $rest $vec))
           )
@@ -156,6 +165,7 @@
  )
 )
 
+; !(matvec-mul ((1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0) (0 1.0 0.0 0.0 0.0 0.0 0.0 0.0) (0 0 1.0 0.0 0.0 0.0 0.0 0.0) (0 0 0 1.0 0.0 0.0 0.0 0.0) (0 0 0 0 1.0 0.0 0.0 0.0) (0 0 0 0 0 1.0 0.0 0.0) (0 0 0 0 0 0 1.0 0.0) (0 0 0 0 0 0 0 1.0)) (2 3 3 4 3 2 3 4))
 
 (= (new-p-sigma $c_sigma $p_sigma $mu_eff $c_inv_sqrt $y)
        (let* (

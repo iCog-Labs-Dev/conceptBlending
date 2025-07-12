@@ -61,7 +61,7 @@
         (params are not equal)
     )
    )
-   )
+  )
    
 
 (= (identity-matrix $n)
@@ -158,3 +158,4 @@
    )
      (cons-atom $x $updated-tail)))
 
+; !(make-matrix 8 8)

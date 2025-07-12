@@ -1,5 +1,7 @@
 ! (register-module! ../../an_infotheoretic_approach)
 ! (import! &self an_infotheoretic_approach:utils:list-op-utils)
+! (import! &self an_infotheoretic_approach:utils:random-list-utils)
+
 
 ; Test tuple-multiply
 ! (assertEqual
@@ -146,4 +148,20 @@
 !(assertEqual
     (merge-list () (1 2 3 4))
     (1 2 3 4)
+)
+
+;;;; random-list-utils ;;;;
+
+; Test random-list-utils to create 2 lists each containing 2 elements with value between 0 and 1.
+
+!(assertEqual
+    (let $x (random-list 2 2 0 1) (collapse(superpose((size-atom $x)(let $y (car-atom $x) (size-atom $y))))))
+    (2 2)
+)
+
+; Test random-list-utils to create 4 lists each containing 3 elements with value between 0 and 1.
+
+!(assertEqual
+    (let $x (random-list 4 3 0 1) (collapse(superpose((size-atom $x)(let $y (car-atom $x) (size-atom $y))))))
+    (4 3)
 )
