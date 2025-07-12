@@ -122,19 +122,19 @@
 
 ; ======== LEARNING RATE CALCULATIONS ========
 ;; Calculate c_sigma
-(= c_sigma (/ (+ mu_eff 2) (+ dim mu_eff 5)))
+; (= c_sigma (/ (+ mu_eff 2) (+ dim mu_eff 5)))
 
-;; Calculate d_sigma
-(= d_sigma (+ (+ 1 (* 2 (max-atom (0 (- (sqrt-math (/ (- mu_eff 1) (+ dim 1)) 1)))) c_sigma))))
+; ;; Calculate d_sigma
+; (= d_sigma (+ (+ 1 (* 2 (max-atom (0 (- (sqrt-math (/ (- mu_eff 1) (+ dim 1)) 1)))) c_sigma))))
 
-;; Calculate c_c
-(= c_c (/ (+ 4 (/ mu_eff dim)) (+ dim 4 (* 2 (/ mu_eff dim)))))
+; ;; Calculate c_c
+; (= c_c (/ (+ 4 (/ mu_eff dim)) (+ dim 4 (* 2 (/ mu_eff dim)))))
 
-;; Calculate c1
-(= c1 (/ 2 (+ (pow-math (+ dim 1.3) 2) mu_eff)))
+; ;; Calculate c1
+; (= c1 (/ 2 (+ (pow-math (+ dim 1.3) 2) mu_eff)))
 
-;; Calculate c_mu
-(= c_mu (min-atom ((- 1 c1) (/ (* 2 (+ (- mu_eff 2) (/ 1 mu_eff))) (+ (pow-math (+ dim 2) 2) mu_eff)))))
+; ;; Calculate c_mu
+; (= c_mu (min-atom ((- 1 c1) (/ (* 2 (+ (- mu_eff 2) (/ 1 mu_eff))) (+ (pow-math (+ dim 2) 2) mu_eff)))))
 
 
 ; !(compute-learning-rates (dim) (mu_eff))
@@ -279,6 +279,21 @@
   (let $mean-diff (vector-op $new-mean $old-mean -) (scalar-op $mean-diff $step-size /))
 )
 
+(= (new-p-sigma $c-sigma $p-sigma $mu-eff $c_inv_sqrt $y)
+       (let* (
+            (($m1-sigma $b2 $vec-mul) (collapse(superpose((- 1 $c-sigma) (sqrt-math (* (* $c-sigma (- 2 $c-sigma)) $mu-eff)) (let $mat-vec-prod (mat-vec-mul $c_inv_sqrt $y) (car-atom $mat-vec-prod))))))
+            (($m1-sigma-p-sigma $vec-mul-b2) (collapse(superpose((map-atom $p-sigma $ps (* $ps $m1-sigma)) (map-atom $vec-mul $vm (* $vm $b2))))))
+            )
+            (vector-op $m1-sigma-p-sigma $vec-mul-b2 +)
+        )
+)
+
+;;;; STEP SIZE ADAPTATION ;;;;
+
+(= (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma)
+    (let $adaptingfactor (pow-math (e) (* (/ $c-sigma $d-sigma) (- (/ (l2-norm $p-sigma) (sqrt-math $dim)) 1))) (* $step-size $adaptingfactor))
+)
+
 !(let*
     (
         ($samples (mat-clip (random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) (lambda_)) 0 1))
@@ -288,7 +303,9 @@
         ($new-mean (update-mean (normalized_weights) $selected))
         ($y (y $new-mean (mean) (step_size)))
         ($C-inv-sqrt (transpose-matrice (inverse-lmatrice (chol-decomp (cov)))))
+        (($c-sigma $d-sigma $p-sigma) (collapse(superpose((c_sigma) (d_sigma) (p_sigma)))))
+        ($new-p-sigma (new-p-sigma $c-sigma $p-sigma (mu_eff) $C-inv-sqrt ($y)))
+        ($new-step-size (new-step-size (step_size) $c-sigma $d-sigma (dim) $new-p-sigma))
     )
-    $C-inv-sqrt
+    $new-step-size
 )
-; !(cov)
