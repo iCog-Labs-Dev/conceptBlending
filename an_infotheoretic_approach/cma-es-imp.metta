@@ -2,9 +2,8 @@
 
 !(import! &self utils:random-list-utils)
 !(import! &self utils:cma-es-utils)
-; !(import! &self utils:list-op-utils)
 !(import! &self info-theoretic)
-; !(import! &self step-5)
+
 ;;;; INPUT CONCEPTS ;;;;
 (= (concept1) 
     (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
@@ -13,6 +12,7 @@
     (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
 )
 
+;;;; NOT USED LEARNING RATE COMPUTING METHODS ;;;;
 (: lambda-calc (Number Number -> Number))
 (= (lambda-calc $population_size $dim)
    (if (== $population_size 0)                                      
@@ -66,20 +66,17 @@
          )
          ($lambda $mu $weights $mu_eff)))
 
-; !(cma-strategy 0 6)
 
 ;;;; PARAMETERS ;;;;
 
 ;;;; DIMENSION, INITIAL MEAN, COVARIANCE, AND STEP SIZE
-
 (= (dim) 8)
 (= (mean)(let $x (random-list 1 (dim) 0 1) (car-atom $x)))
 (= (cov) (identity-matrice (dim)))
-(= (step_size) 0.2)
+(= (step_size) 20)
 (= (e) 2.71828)
 
 ;;;; STRATEGY PARAMETERS ;;;;
-
 (= (lambda_) (+ 4 (round-math (* 3 (log-math (e) (dim))))))
 (= (mu) (/ (lambda_) 2))
 (= (weights) (let ($mu-logged $range-logged)  ((log-math (e) (+ (mu) 0.5)) (let $range (range 1 (+ (mu) 1)) (apply-log $range (e)))) (rev-scalar-op $mu-logged $range-logged -)))
@@ -97,48 +94,10 @@
 (= (p_c) (zeros-vec (dim)))
 (= (p_sigma) (zeros-vec (dim)))
 
-; !(mean)
-; !(cov)
-; !(lambda_)
-; !(mu)
-; !(weights)
-; !(normalized_weights)
-; !(mu_eff)
-; !(c_sigma)
-; !(d_sigma)
-; !(c_c)
-; !(c1)
-; !(c_mu)
-; !(p_c)
-; !(p_sigma)
-
 ;;;; POPULATION FITNESS SCORE CALCULATION ;;;;
 (= (population-fitness-score $population) 
     (map-atom $population $x (mu-hqblend $x (concept1) (concept2)))
 )
-
-; !(mat-clip (random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) 10) 0 1)
-
-
-; ======== LEARNING RATE CALCULATIONS ========
-;; Calculate c_sigma
-; (= c_sigma (/ (+ mu_eff 2) (+ dim mu_eff 5)))
-
-; ;; Calculate d_sigma
-; (= d_sigma (+ (+ 1 (* 2 (max-atom (0 (- (sqrt-math (/ (- mu_eff 1) (+ dim 1)) 1)))) c_sigma))))
-
-; ;; Calculate c_c
-; (= c_c (/ (+ 4 (/ mu_eff dim)) (+ dim 4 (* 2 (/ mu_eff dim)))))
-
-; ;; Calculate c1
-; (= c1 (/ 2 (+ (pow-math (+ dim 1.3) 2) mu_eff)))
-
-; ;; Calculate c_mu
-; (= c_mu (min-atom ((- 1 c1) (/ (* 2 (+ (- mu_eff 2) (/ 1 mu_eff))) (+ (pow-math (+ dim 2) 2) mu_eff)))))
-
-
-; !(compute-learning-rates (dim) (mu_eff))
-
 
 ;;;; RECOMBINATION(UPDATE MEAN) ;;;;
 
@@ -149,7 +108,6 @@
      ($i (index-atom $fits $i))
    )
 )
-; ! (pair-index-fitness (make-indices (10 30 20)) (10 30 20)) ; [((0 10) (1 30) (2 20))]
 
 ; find-max-helper: helper to find index of max fitness
 (: find-max-helper (List Number Number Number -> Number))
@@ -158,8 +116,8 @@
        $max-idx
        (let*
          (
-           ($pair (index-atom $pairs $i))   ; (idx fitness)
-           ($val  (index-atom $pair 1))     ; fitness
+           ($pair (index-atom $pairs $i))   
+           ($val  (index-atom $pair 1))     
          )
          (if (> $val $maxval)
              (find-max-helper $pairs (+ $i 1) $i   $val)
@@ -180,7 +138,6 @@
      (find-max-helper $pairs 1 0 $start)
    )
 )
-; ! (max-index ((0 10) (1 30) (2 20)))  ; [1]
 
 ; sort-pairs-desc
 (: sort-pairs-desc (List -> List))
@@ -197,7 +154,6 @@
        )
    )
 )
-; ! (sort-pairs-desc ((0 10) (1 30) (2 20)))  ; [((1 30) (2 20) (0 10))]
 
 ; extract-indices: take top mu indices
 (: extract-indices (List Number -> List))
@@ -215,7 +171,6 @@
        )
    )
 )
-; ! (extract-indices ((1 30) (2 20) (0 10)) 2) ; [(1 2)]
 
 ; select-by-indices: pick samples by indices
 (: select-by-indices (List List -> List))
@@ -231,21 +186,6 @@
        )
    )
 )
-; ! (select-by-indices (5 6 7) (1 2))  
-
-; Full pipeline test with literals
-; (= (fitnesses) (10 30 20))
-; (= (samples)   (4  5  6))
-; (= (mu)        2)
-
-(= (fitnesses) (0.0675 0.0475 0.045  0.1175 0.0625 0.085  0.0225 0.035 0.0325 0.0725))
-(= (samples) ((1 0 0 0 0 1 1 1) (1 0 0 1 1 1 1 0) (1 0 0 1 0 0 1 1) (0 0 0 1 1 1 0 1) (1 0 0 1 1 1 1 1) (1 0 0 1 1 0 1 0) (1 0 0 1 1 1 1 1) (1 0 0 1 1 1 0 1) (1 0 0 1 0 0 0 1) (1 0 0 1 0 1 0 1)))
-; (= (mu)        6)
-
-; ! (pair-index-fitness (make-indices (fitnesses)) (fitnesses))
-; ! (sort-pairs-desc (pair-index-fitness  (make-indices (fitnesses)) (fitnesses)))
-; ! (extract-indices (sort-pairs-desc (pair-index-fitness (make-indices (fitnesses)) (fitnesses))) (mu))
-; ! (select-by-indices (samples) (extract-indices(sort-pairs-desc (pair-index-fitness(make-indices (fitnesses)) (fitnesses)))(mu)))
 
 (: update-mean (List List -> List))
 (= (update-mean $w $sel)
@@ -268,10 +208,6 @@
        )
    )
 )
-; ! (update-mean (1)        ((5)))           ; Expected -> [(5)]
-(= (old_mean) (0.97539962 0.2234363  0.51327389 0.73508769 0.51021857 0.26006022 0.54089707 0.32556931))
-(= (new-mean) (update-mean (normalized_weights) (select-by-indices (samples) (extract-indices(sort-pairs-desc (pair-index-fitness(make-indices (fitnesses)) (fitnesses)))(mu)))))         
-; !(new-mean)
 
 ;;;; STEP SIZE EVOLUTION PATH ADAPTATION ;;;;
 
@@ -281,7 +217,7 @@
 
 (= (new-p-sigma $c-sigma $p-sigma $mu-eff $c_inv_sqrt $y)
        (let* (
-            (($m1-sigma $b2 $vec-mul) (collapse(superpose((- 1 $c-sigma) (sqrt-math (* (* $c-sigma (- 2 $c-sigma)) $mu-eff)) (let $mat-vec-prod (mat-vec-mul $c_inv_sqrt $y) (car-atom $mat-vec-prod))))))
+            (($m1-sigma $b2 $vec-mul) (collapse(superpose((- 1 $c-sigma) (sqrt-math (* (* $c-sigma (- 2 $c-sigma)) $mu-eff)) (let $mat-vec-prod (mat-mat-mul $c_inv_sqrt $y) (car-atom $mat-vec-prod))))))
             (($m1-sigma-p-sigma $vec-mul-b2) (collapse(superpose((map-atom $p-sigma $ps (* $ps $m1-sigma)) (map-atom $vec-mul $vm (* $vm $b2))))))
             )
             (vector-op $m1-sigma-p-sigma $vec-mul-b2 +)
@@ -294,18 +230,54 @@
     (let $adaptingfactor (pow-math (e) (* (/ $c-sigma $d-sigma) (- (/ (l2-norm $p-sigma) (sqrt-math $dim)) 1))) (* $step-size $adaptingfactor))
 )
 
+;;;; COVARIANCE EVOLUTION PATH ADAPTATION ;;;;
+(= (h-sigma $p-sigma $c-sigma $gen)
+    (1or0 (< (/ (l2-norm $p-sigma) (sqrt-math (- 1 (pow-math (- 1 $c-sigma) (* 2 (+ $gen 1)))))) (+ 1.4 (/ 2 (+ (dim) 1)))))
+)
+
+(= (p-c $prev-p-c $h-sigma $y)
+    (let $c-c (c_c) (vector-op (rev-scalar-op (- 1 $c-c) $prev-p-c *) (rev-scalar-op (* $h-sigma (sqrt-math (* $c-c (* (- 2 $c-c) (mu_eff))))) $y *) +))
+)
+
+;;;; COVARIANCE MATRIX ADAPTATION ;;;;
+
+(= (delta $selected $old-mean)
+ (mat-mat-eles-op $selected ($old-mean) -)
+)
+
+(= (rank-mu $weights $delta)
+    (let $zipped (zip-list $weights $delta)
+        (let $wmoutp (map-atom $zipped $x (mat-scalar-op (outer-product (index-atom $x 1) (index-atom $x 1)) (index-atom $x 0) *))
+            (foldl-atom $wmoutp 0 $acc $x (mat-mat-eles-op $x $acc +))
+        )
+    )
+)
+
+(= (new-cov $prev-cov $p-c $rank-mu)
+    (let ($c1 $c-mu) ((c1) (c_mu))
+        (let $upd-mats (collapse(superpose((mat-scalar-op $prev-cov (- (- 1 $c1) $c-mu) *) (mat-scalar-op (outer-product $p-c $p-c) $c1 *) (mat-scalar-op $rank-mu $c-mu *))))
+            (foldl-atom $upd-mats 0 $acc $x (mat-mat-eles-op $x $acc +))
+        )
+    )
+)
+
 !(let*
     (
-        ($samples (mat-clip (random-multivariate (mean) (mat-scalar-op (cov) (pow-math (step_size) 2) *) (lambda_)) 0 1))
+        (($normalized-weights $old-mean $old-cov $old-step-size) (collapse(superpose((normalized_weights) (mean) (cov) (step_size)))))
+        ($samples (mat-clip (random-multivariate $old-mean (mat-scalar-op $old-cov (pow-math $old-step-size 2) *) (lambda_)) 0 1))
         ($fitness-score (population-fitness-score $samples))
         ($fitness-idx-pair (pair-index-fitness (make-indices $fitness-score) $fitness-score))
         ($selected (select-by-indices $samples (extract-indices (sort-pairs-desc $fitness-idx-pair) (mu))))
-        ($new-mean (update-mean (normalized_weights) $selected))
-        ($y (y $new-mean (mean) (step_size)))
-        ($C-inv-sqrt (transpose-matrice (inverse-lmatrice (chol-decomp (cov)))))
+        ($new-mean (update-mean $normalized-weights $selected))
+        (($y $C-inv-sqrt) ((y $new-mean $old-mean $old-step-size) (transpose-matrice (inverse-lmatrice (chol-decomp $old-cov)))))
         (($c-sigma $d-sigma $p-sigma) (collapse(superpose((c_sigma) (d_sigma) (p_sigma)))))
         ($new-p-sigma (new-p-sigma $c-sigma $p-sigma (mu_eff) $C-inv-sqrt ($y)))
-        ($new-step-size (new-step-size (step_size) $c-sigma $d-sigma (dim) $new-p-sigma))
+        ($new-step-size (new-step-size $old-step-size $c-sigma $d-sigma (dim) $new-p-sigma))
+        ($h-sigma (h-sigma $new-p-sigma $c-sigma 0))
+        (($new-p-c $delta) ((p-c (p_c) $h-sigma $y) (delta $selected $old-mean)))
+        ($rank-mu (rank-mu $normalized-weights $delta))
+        ($new-cov (new-cov $old-cov $new-p-c $rank-mu))
+
     )
-    $new-step-size
+    (Old-mean $old-mean | New-mean $new-mean ||| Old-cov $old-cov | New-cov $new-cov ||| Old-step-size $old-step-size | New-step-size $new-step-size ||| Selected-individuals $selected)
 )

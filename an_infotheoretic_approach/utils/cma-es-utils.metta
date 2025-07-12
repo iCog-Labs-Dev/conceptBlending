@@ -21,6 +21,10 @@
     )
 )
 
+(= (1or0 $bool)
+    (if (== $bool True) 1 0)
+)
+
 (= (identity-matrice $dim)
     (collapse
         (superpose
@@ -195,6 +199,104 @@
     )
 )
 
+(= (mat-mat-eles-op $mat1 $mat2 $op)
+    (if (== (get-type $mat2) Number)
+    $mat1
+    (if (== (size-atom $mat2) 1)
+        (let $vec1 (car-atom $mat2) (map-atom $mat1 $x (vector-op $x $vec1 $op)))
+        (if (== (size-atom $mat1) (size-atom $mat2))
+            (let $rows (size-atom $mat1)
+                (collapse
+                    (superpose
+                        (
+                            (if (>= (- $rows 1) 0)
+                            (vector-op (index-atom $mat1 0) (index-atom $mat2 0) $op)
+                            Empty
+                            )
+                            (if (>= (- $rows 2) 0)
+                            (vector-op (index-atom $mat1 1) (index-atom $mat2 1) $op)
+                            Empty
+                            )
+                            (if (>= (- $rows 3) 0)
+                            (vector-op (index-atom $mat1 2) (index-atom $mat2 2) $op)
+                            Empty
+                            )
+                            (if (>= (- $rows 4) 0)
+                            (vector-op (index-atom $mat1 3) (index-atom $mat2 3) $op)
+                            Empty
+                            )
+                            (if (>= (- $rows 5) 0)
+                            (vector-op (index-atom $mat1 4) (index-atom $mat2 4) $op)
+                            Empty
+                            )
+                            (if (>= (- $rows 6) 0)
+                            (vector-op (index-atom $mat1 5) (index-atom $mat2 5) $op)
+                            Empty
+                            )
+                            (if (>= (- $rows 7) 0)
+                            (vector-op (index-atom $mat1 6) (index-atom $mat2 6) $op)
+                            Empty
+                            )
+                            (if (>= (- $rows 8) 0)
+                            (vector-op (index-atom $mat1 7) (index-atom $mat2 7) $op)
+                            Empty
+                            )
+                        )
+                    )
+                )
+            )
+            (Error ($mat1 $mat2) ShapesNotBroadcastable)
+        )
+    )
+    )
+)
+
+; !(mat-mat-eles-op ((2 3 4 5) (3 4 5 5) (6 7 8 5)) ((2 3 4 5) (3 4 5 5) (6 5 4 5)) +)
+
+(= (outer-product $vector1 $vector2)
+    (let ($vec1-size $vec2-size) ((size-atom $vector1) (size-atom $vector2))
+        (collapse
+            (superpose
+                (
+                    (if (>= (- $vec1-size 1) 0) 
+                    (let $vec1-ele0 (index-atom $vector1 0) (collapse(superpose((* $vec1-ele0 (index-atom $vector2 0)) (* $vec1-ele0 (index-atom $vector2 1))(* $vec1-ele0 (index-atom $vector2 2))(* $vec1-ele0 (index-atom $vector2 3))(* $vec1-ele0 (index-atom $vector2 4))(* $vec1-ele0 (index-atom $vector2 5))(* $vec1-ele0 (index-atom $vector2 6))(* $vec1-ele0 (index-atom $vector2 7))))))
+                    Empty
+                    )
+                    (if (>= (- $vec1-size 2) 0) 
+                    (let $vec1-ele1 (index-atom $vector1 1) (collapse(superpose((* $vec1-ele1 (index-atom $vector2 0)) (* $vec1-ele1 (index-atom $vector2 1))(* $vec1-ele1 (index-atom $vector2 2))(* $vec1-ele1 (index-atom $vector2 3))(* $vec1-ele1 (index-atom $vector2 4))(* $vec1-ele1 (index-atom $vector2 5))(* $vec1-ele1 (index-atom $vector2 6))(* $vec1-ele1 (index-atom $vector2 7))))))
+                    Empty
+                    )
+                    (if (>= (- $vec1-size 3) 0) 
+                    (let $vec1-ele2 (index-atom $vector1 2) (collapse(superpose((* $vec1-ele2 (index-atom $vector2 0)) (* $vec1-ele2 (index-atom $vector2 1))(* $vec1-ele2 (index-atom $vector2 2))(* $vec1-ele2 (index-atom $vector2 3))(* $vec1-ele2 (index-atom $vector2 4))(* $vec1-ele2 (index-atom $vector2 5))(* $vec1-ele2 (index-atom $vector2 6))(* $vec1-ele2 (index-atom $vector2 7))))))
+                    Empty
+                    )
+                    (if (>= (- $vec1-size 4) 0) 
+                    (let $vec1-ele3 (index-atom $vector1 3) (collapse(superpose((* $vec1-ele3 (index-atom $vector2 0)) (* $vec1-ele3 (index-atom $vector2 1))(* $vec1-ele3 (index-atom $vector2 2))(* $vec1-ele3 (index-atom $vector2 3))(* $vec1-ele3 (index-atom $vector2 4))(* $vec1-ele3 (index-atom $vector2 5))(* $vec1-ele3 (index-atom $vector2 6))(* $vec1-ele3 (index-atom $vector2 7))))))
+                    Empty
+                    )
+                    (if (>= (- $vec1-size 5) 0) 
+                    (let $vec1-ele4 (index-atom $vector1 4) (collapse(superpose((* $vec1-ele4 (index-atom $vector2 0)) (* $vec1-ele4 (index-atom $vector2 1))(* $vec1-ele4 (index-atom $vector2 2))(* $vec1-ele4 (index-atom $vector2 3))(* $vec1-ele4 (index-atom $vector2 4))(* $vec1-ele4 (index-atom $vector2 5))(* $vec1-ele4 (index-atom $vector2 6))(* $vec1-ele4 (index-atom $vector2 7))))))
+                    Empty
+                    )
+                    (if (>= (- $vec1-size 6) 0) 
+                    (let $vec1-ele5 (index-atom $vector1 5) (collapse(superpose((* $vec1-ele5 (index-atom $vector2 0)) (* $vec1-ele5 (index-atom $vector2 1))(* $vec1-ele5 (index-atom $vector2 2))(* $vec1-ele5 (index-atom $vector2 3))(* $vec1-ele5 (index-atom $vector2 4))(* $vec1-ele5 (index-atom $vector2 5))(* $vec1-ele5 (index-atom $vector2 6))(* $vec1-ele5 (index-atom $vector2 7))))))
+                    Empty
+                    )
+                    (if (>= (- $vec1-size 7) 0) 
+                    (let $vec1-ele6 (index-atom $vector1 6) (collapse(superpose((* $vec1-ele6 (index-atom $vector2 0)) (* $vec1-ele6 (index-atom $vector2 1))(* $vec1-ele6 (index-atom $vector2 2))(* $vec1-ele6 (index-atom $vector2 3))(* $vec1-ele6 (index-atom $vector2 4))(* $vec1-ele6 (index-atom $vector2 5))(* $vec1-ele6 (index-atom $vector2 6))(* $vec1-ele6 (index-atom $vector2 7))))))
+                    Empty
+                    )
+                    (if (>= (- $vec1-size 8) 0) 
+                    (let $vec1-ele7 (index-atom $vector1 7) (collapse(superpose((* $vec1-ele7 (index-atom $vector2 0)) (* $vec1-ele7 (index-atom $vector2 1))(* $vec1-ele7 (index-atom $vector2 2))(* $vec1-ele7 (index-atom $vector2 3))(* $vec1-ele7 (index-atom $vector2 4))(* $vec1-ele7 (index-atom $vector2 5))(* $vec1-ele7 (index-atom $vector2 6))(* $vec1-ele7 (index-atom $vector2 7))))))
+                    Empty
+                    )
+                )
+            )
+        )
+    )
+)
+
+; !(outer-product (1.0 -0.5 0.0 0.2) (1.0 -0.5 0.0))
 ; !(vector-op (1 2 3 4 5 6 5 4) (2 3 4 5 6 4 3 2) +)
 
 (= (mat-scalar-op $matrice $num $op)
@@ -1316,7 +1418,7 @@
     )
 )
 
-(= (mat-vec-mul $matrice $vector)
+(= (mat-mat-mul $matrice $vector)
     (let ($mat-rows $mat-dim $vec-dim $lambda_) (collapse(superpose((size-atom $matrice) (let $mat-row0 (index-atom $matrice 0) (size-atom $mat-row0)) (let $vec-row0 (index-atom $vector 0) (size-atom $vec-row0)) (size-atom $vector))))
         (if (== $mat-dim $vec-dim)
             (collapse
@@ -1460,11 +1562,11 @@
     )
 )
 ; (= (vector)(1 2 3 4 5 4 5 6))
-; !(mat-vec-mul ((1.0 0 0 0.0 0.0 0.0 0.0 0.0) (0 1.0 0 0.0 0.0 0.0 0.0 0.0) (0 0 1.0 0.0 0.0 0.0 0.0 0.0) (0 0 0 1.0 0.0 0.0 0.0 0.0) (0 0 0 1.0 0.0 0.0 0.0 0.0) (0 0 0 1.0 0.0 0.0 0.0 0.0) (0 0 0 1.0 0.0 0.0 0.0 0.0)(0 0 0 1.0 0.0 0.0 0.0 0.0)) ((vector)))
+; !(mat-mat-mul ((1.0 0 0 0.0 0.0 0.0 0.0 0.0) (0 1.0 0 0.0 0.0 0.0 0.0 0.0) (0 0 1.0 0.0 0.0 0.0 0.0 0.0) (0 0 0 1.0 0.0 0.0 0.0 0.0) (0 0 0 1.0 0.0 0.0 0.0 0.0) (0 0 0 1.0 0.0 0.0 0.0 0.0) (0 0 0 1.0 0.0 0.0 0.0 0.0)(0 0 0 1.0 0.0 0.0 0.0 0.0)) ((vector)))
 ; !(size-atom 2)
 (= (random-multivariate $mean $cov-matrice $lambda_)
     (let ($decomp-cov-matrice $standard-normals) (collapse(superpose((chol-decomp $cov-matrice) (standard-normal (size-atom $mean) $lambda_))))
-        (let $transformed-standard-normals (mat-vec-mul $decomp-cov-matrice $standard-normals)
+        (let $transformed-standard-normals (mat-mat-mul $decomp-cov-matrice $standard-normals)
             (collapse
                 (superpose
                     (
