@@ -1,5 +1,6 @@
 ! (register-module! ../../an_infotheoretic_approach)
 !(import! &self an_infotheoretic_approach:utils:cma-es-utils)
+!(import! &self an_infotheoretic_approach:utils:cma-utils)
 
 ;;;; apply-log ;;;;
 
