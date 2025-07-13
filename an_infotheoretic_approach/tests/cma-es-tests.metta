@@ -2,6 +2,8 @@
 !(import! &self an_infotheoretic_approach:utils:cma-es-utils)
 !(import! &self an_infotheoretic_approach:utils:cma-utils)
 
+
+
 ;;;; apply-log ;;;;
 
 !(assertEqual (apply-log (1.0) 2.71828) (0.0))
@@ -77,6 +79,14 @@
 (assert-equal (rev-scalar-op 2 () *)          (()))
 
 
+;;; LEARNING RATES ;;;
+!(assertEqual (mu_eff) 3.1672992814107017)
+!(assertEqual (dim) 8)
+!(assertEqual (c_sigma) 0.3196142529106334)
+!(assertEqual (d_sigma) 1.3196142529106334)
+!(assertEqual (c_c)      0.34365014154838464)
+!(assertEqual (c1)       0.022307163120344784)
+!(assertEqual (c_mu)     0.028749917692721543)
 
 
 
