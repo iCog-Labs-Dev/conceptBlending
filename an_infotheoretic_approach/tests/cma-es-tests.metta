@@ -1,6 +1,6 @@
 ! (register-module! ../../an_infotheoretic_approach)
-!(import! &self an_infotheoretic_approach:utils:cma-es-utils)
-!(import! &self an_infotheoretic_approach:utils:cma-utils)
+; !(import! &self an_infotheoretic_approach:utils:cma-es-utils)
+!(import! &self an_infotheoretic_approach:cma-es-imp)
 
 
 
@@ -80,15 +80,16 @@
 
 
 ;;; LEARNING RATES ;;;
-!(assertEqual (mu_eff) 3.1672992814107017)
+!(assertEqual (mu_eff) 3.1672992814107035)
 !(assertEqual (dim) 8)
-!(assertEqual (c_sigma) 0.3196142529106334)
+!(assertEqual (c_sigma) 0.3196142529106335)
 !(assertEqual (d_sigma) 1.3196142529106334)
-!(assertEqual (c_c)      0.34365014154838464)
+!(assertEqual (c_c)      0.34365014154838475)
 !(assertEqual (c1)       0.022307163120344784)
-!(assertEqual (c_mu)     0.028749917692721543)
+!(assertEqual (c_mu)     0.028749917692721574)
 
-
-
-
-
+;;; MAIN LOOP ;;;
+!(assertEqual 
+    (let $x (cma-es-main-loop (mean) (cov) (step_size) (p_sigma) (p_c) () 0) ((size-atom $x) (let $y (car-atom $x) (size-atom $y))))
+    (10 8)
+)

@@ -177,24 +177,53 @@
 )
 
 (= (vector-op $vector1 $vector2 $op)
-    (let ($length1 $length2) ((size-atom $vector1) (size-atom $vector2))
-        (
-            if (not (== $length1 $length2))
-            (Error ($length1 $length2) LengthMismatch)
-            (collapse
-                (superpose
-                    (
-                        (if (>= (- $length1 1) 0) ($op (index-atom $vector1 0) (index-atom $vector2 0)) Empty)
-                        (if (>= (- $length1 2) 0) ($op (index-atom $vector1 1) (index-atom $vector2 1)) Empty)
-                        (if (>= (- $length1 3) 0) ($op (index-atom $vector1 2) (index-atom $vector2 2)) Empty)
-                        (if (>= (- $length1 4) 0) ($op (index-atom $vector1 3) (index-atom $vector2 3)) Empty)
-                        (if (>= (- $length1 5) 0) ($op (index-atom $vector1 4) (index-atom $vector2 4)) Empty)
-                        (if (>= (- $length1 6) 0) ($op (index-atom $vector1 5) (index-atom $vector2 5)) Empty)
-                        (if (>= (- $length1 7) 0) ($op (index-atom $vector1 6) (index-atom $vector2 6)) Empty)
-                        (if (>= (- $length1 8) 0) ($op (index-atom $vector1 7) (index-atom $vector2 7)) Empty)
+    (
+        if (== (get-type $vector2) Number)
+        $vector1
+        (let ($length1 $length2) ((size-atom $vector1) (size-atom $vector2))
+            (
+                if (not (== $length1 $length2))
+                (Error ($length1 $length2) LengthMismatch)
+                (collapse
+                    (superpose
+                        (
+                            (if (>= (- $length1 1) 0) ($op (index-atom $vector1 0) (index-atom $vector2 0)) Empty)
+                            (if (>= (- $length1 2) 0) ($op (index-atom $vector1 1) (index-atom $vector2 1)) Empty)
+                            (if (>= (- $length1 3) 0) ($op (index-atom $vector1 2) (index-atom $vector2 2)) Empty)
+                            (if (>= (- $length1 4) 0) ($op (index-atom $vector1 3) (index-atom $vector2 3)) Empty)
+                            (if (>= (- $length1 5) 0) ($op (index-atom $vector1 4) (index-atom $vector2 4)) Empty)
+                            (if (>= (- $length1 6) 0) ($op (index-atom $vector1 5) (index-atom $vector2 5)) Empty)
+                            (if (>= (- $length1 7) 0) ($op (index-atom $vector1 6) (index-atom $vector2 6)) Empty)
+                            (if (>= (- $length1 8) 0) ($op (index-atom $vector1 7) (index-atom $vector2 7)) Empty)
+                        )
                     )
                 )
             )
+        )
+    )
+)
+
+
+(= (mat-vec-op $matrice $vector $op)
+    (let ($length1 $length2) ((size-atom $matrice) (size-atom $vector))
+        (if (not (== $length1 $length2))
+        (Error ($length1 $length2) DimensionMismatch)
+        (collapse
+            (superpose
+                (
+                    (if (>= (- $length1 1) 0) (scalar-op (index-atom $matrice 0) (index-atom $vector 0) $op) Empty)
+                    (if (>= (- $length1 2) 0) (scalar-op (index-atom $matrice 1) (index-atom $vector 1) $op) Empty)
+                    (if (>= (- $length1 3) 0) (scalar-op (index-atom $matrice 2) (index-atom $vector 2) $op) Empty)
+                    (if (>= (- $length1 4) 0) (scalar-op (index-atom $matrice 3) (index-atom $vector 3) $op) Empty)
+                    (if (>= (- $length1 5) 0) (scalar-op (index-atom $matrice 4) (index-atom $vector 4) $op) Empty)
+                    (if (>= (- $length1 6) 0) (scalar-op (index-atom $matrice 5) (index-atom $vector 5) $op) Empty)
+                    (if (>= (- $length1 7) 0) (scalar-op (index-atom $matrice 6) (index-atom $vector 6) $op) Empty)
+                    (if (>= (- $length1 8) 0) (scalar-op (index-atom $matrice 7) (index-atom $vector 7) $op) Empty)
+                    (if (>= (- $length1 9) 0) (scalar-op (index-atom $matrice 8) (index-atom $vector 8) $op) Empty)
+                    (if (>= (- $length1 10) 0) (scalar-op (index-atom $matrice 9) (index-atom $vector 9) $op) Empty)
+                )
+            )
+        )
         )
     )
 )
@@ -1766,4 +1795,3 @@
        )
    )
 )
-; ! (vec-add (1 2 3 4 5 6 7 8) (4 5 6 6 7 6 7 8))          ; Expected -> [(5 7 9)]
