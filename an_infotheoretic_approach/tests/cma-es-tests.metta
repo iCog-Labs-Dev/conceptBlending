@@ -93,3 +93,65 @@
     (let $x (cma-es-main-loop (mean) (cov) (step_size) (p_sigma) (p_c) () 0) ((size-atom $x) (let $y (car-atom $x) (size-atom $y))))
     (10 8)
 )
+
+; zip idx & fitness
+!(assertEqual
+   (pair-index-fitness (0 1 2) (10 30 20))
+   ((0 10) (1 30) (2 20)))
+
+; max-index
+!(assertEqual
+   (max-index ((0 10) (1 30) (2 20)))
+   1) ; fitness 30 is max
+
+; sort-pairs-desc
+!(assertEqual
+   (sort-pairs-desc ((0 10) (1 30) (2 20)))
+   ((1 30) (2 20) (0 10)))
+
+; extract-indices (top mu)
+!(assertEqual
+   (extract-indices ((1 30) (2 20) (0 10)) 2)
+   (1 2))
+
+; elect-by-indices
+!(assertEqual
+   (select-by-indices (100 200 300) (1 2))
+   (200 300))
+
+; update-mean
+!(assertEqual
+   (update-mean (0.6 0.4) ((1 2 3) (7 5 1)))
+   (3.4000000000000004 3.2 2.1999999999999997))
+
+; fitness -> elite idxs -> elite samples
+!(assertEqual (select-by-indices  (samples) (extract-indices (sort-pairs-desc (pair-index-fitness (make-indices (fitnesses)) (fitnesses))) (mu)))
+((1 0 0 1 1 1 1 1) (1 0 0 1 1 0 1 0) (0 0 0 1 1 1 0 1) (1 0 0 1 1 1 0 1) (1 0 0 1 1 1 1 1) (1 0 0 1 1 1 1 0)))
+
+
+; returns () on empty
+!(assertEqual (pair-index-fitness () ()) ())
+!(assertEqual (sort-pairs-desc ()) ())
+!(assertEqual (extract-indices () 3) ())
+!(assertEqual (select-by-indices () ()) ())
+!(assertEqual (update-mean () ()) ())   
+
+
+; mu = 0  (nothing selected)
+(= (pairsSmall) ((0 10) (1 20)))
+!(assertEqual (extract-indices (pairsSmall) 0) ())
+!(assertEqual (select-by-indices (1 20) ()) ())
+
+; duplicate fitnesses  – first tie kept first
+!(assertEqual
+   (sort-pairs-desc ((0 10) (1 10) (2 5)))
+   ((0 10) (1 10) (2 5)))   
+
+; update-mean
+(= (w3)  (0.5 0.3 0.2))
+(= (sel3) ((2 0) (4 4) (8 2)))
+!(assertEqual
+   (update-mean (w3) (sel3)) 
+   (3.8 1.6))   
+
+
