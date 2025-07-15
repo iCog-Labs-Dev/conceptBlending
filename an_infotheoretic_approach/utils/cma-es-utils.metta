@@ -280,8 +280,6 @@
     )
 )
 
-; !(mat-mat-eles-op ((2 3 4 5) (3 4 5 5) (6 7 8 5)) ((2 3 4 5) (3 4 5 5) (6 5 4 5)) +)
-
 (= (outer-product $vector1 $vector2)
     (let ($vec1-size $vec2-size) ((size-atom $vector1) (size-atom $vector2))
         (collapse
@@ -325,9 +323,6 @@
     )
 )
 
-; !(outer-product (1.0 -0.5 0.0 0.2) (1.0 -0.5 0.0))
-; !(vector-op (1 2 3 4 5 6 5 4) (2 3 4 5 6 4 3 2) +)
-
 (= (mat-scalar-op $matrice $num $op)
     (map-atom $matrice $x (scalar-op $x $num $op))    
 )
@@ -357,9 +352,6 @@
 
 !(bind! &lspace (new-space))
 !(bind! &mspace (new-space))
-; !(bind! &mlspace (new-space))
-; !(add-atom &lspace (l00 56))
-; !(let $x (collapse(get-atoms &lspace)) (size-atom $x))
 
 (= (add-lmat-to-lspace $mat)
     (let ($l0 $l1 $l2 $l3 $l4 $l5 $l6 $l7) (collapse(superpose((index-atom $mat 0) (index-atom $mat 1) (index-atom $mat 2) (index-atom $mat 3) (index-atom $mat 4) (index-atom $mat 5) (index-atom $mat 6) (index-atom $mat 7))))
@@ -379,8 +371,6 @@
         )               
     )
 )
-
-; !(get-atoms &lspace)
 
 (= (call-lik $i $k)
     (
@@ -812,7 +802,7 @@
 ;  (1 1 1 1 1 1 1 6))) (match &lspace $x $x))
 
 (= (chol-decomp $cov-matrice)
-    (let ($rows $columns $clean) ((size-atom $cov-matrice) (let $row1 (index-atom $cov-matrice 0) (size-atom $row1)) (collapse(match &lspace (cell $x $y) (remove-atom &lspace (cell $x $y)))))
+    (let ($rows $columns $clean) (collapse(superpose((size-atom $cov-matrice) (let $row1 (index-atom $cov-matrice 0) (size-atom $row1)) (collapse(match &lspace (cell $x $y) (remove-atom &lspace (cell $x $y)))))))
     (collapse
         (superpose
             (
@@ -918,7 +908,6 @@
 (=(to-float $number)
     (- (+ $number 0.1) 0.1)
 )
-; !(to-float 1)
 
 (: div (-> Number Number Number))
 (= (div $num $denom)
@@ -1233,7 +1222,7 @@
 ; !(m20)
 
 (= (inverse-lmatrice $lmatrice)
-    (let ($add $rows $columns) (collapse(superpose((let $atoms (collapse(get-atoms &lspace)) (if (== (size-atom $atoms) 0) (add-lmat-to-lspace $lmatrice) ())) (size-atom $lmatrice) (let $row0 (index-atom $lmatrice 0) (size-atom $row0)))))
+    (let ($add $rows $columns $clean) (collapse(superpose((let $atoms (collapse(get-atoms &lspace)) (if (== (size-atom $atoms) 0) (add-lmat-to-lspace $lmatrice) ())) (size-atom $lmatrice) (let $row0 (index-atom $lmatrice 0) (size-atom $row0)) (collapse(match &mspace (cell $x $y) (remove-atom &mspace (cell $x $y)))))))
     (collapse
         (superpose
             (

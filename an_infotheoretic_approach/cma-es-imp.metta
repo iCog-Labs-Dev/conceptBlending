@@ -12,61 +12,6 @@
     (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
 )
 
-;;;; NOT USED LEARNING RATE COMPUTING METHODS ;;;;
-(: lambda-calc (Number Number -> Number))
-(= (lambda-calc $population_size $dim)
-   (if (== $population_size 0)                                      
-       (+ 4
-          (floor-math (* 3 (log-math 2.718281828459045 $dim))))     
-       $population_size))    
-; !(lambda-calc 0 6)
-
-(: mu-calc (Number -> Number))
-(= (mu-calc $lambda) (floor-math (/ $lambda 2)))
-; !(mu-calc (lambda-calc 0 6))
-
-; !(range 1 7 1) 
-
-(: raw-weights (Number -> List))
-(= (raw-weights $mu)
-   (let* (
-          ($idxs  (range 1 $mu 1))                             
-          ($const (log-math 2.718281828459045 (+ $mu 0.5)))
-         )
-         (map-atom $idxs $i
-                   (- $const (log-math 2.718281828459045 $i)))))    
-; !(raw-weights (mu-calc (lambda-calc 0 6)))
-
-(: norm-weights (List -> List))
-(= (norm-weights $w_raw)
-   (let* (
-          ($sum_w  (foldl-atom $w_raw 0 $acc $x (+ $acc $x)))
-         )
-         (map-atom $w_raw $w (/ $w $sum_w))))
-; (= (weights)(norm-weights (raw-weights (mu-calc (lambda-calc 0 6)))))
-
-(: mu-eff (List -> Number))
-(= (mu-eff $weights)
-   (let* (
-           ($squares (map-atom $weights $w (* $w $w)))
-           ($sum_sq (foldl-atom $squares 0 $acc $x (+ $acc $x)))
-         )
-         (/ 1 $sum_sq)))
-; !(mu-eff(norm-weights (raw-weights (mu-calc (lambda-calc 0 6)))))
-
-
-(: cma-strategy (Number Number -> Tuple))
-(= (cma-strategy $population_size $dim)
-   (let* (
-          ($lambda  (lambda-calc $population_size $dim))
-          ($mu      (mu-calc      $lambda))
-          ($w_raw   (raw-weights  $mu))
-          ($weights (norm-weights $w_raw))
-          ($mu_eff  (mu-eff       $weights))
-         )
-         ($lambda $mu $weights $mu_eff)))
-
-
 ;;;; PARAMETERS ;;;;
 
 ;;;; DIMENSION, INITIAL MEAN, COVARIANCE, AND STEP SIZE
@@ -78,7 +23,8 @@
 
 ;;;; STRATEGY PARAMETERS ;;;;
 (= (GENERATIONS) 30)
-(= (lambda_) (+ 4 (round-math (* 3 (log-math (e) (dim))))))
+(= (POPULATION_SIZE) 0)
+(= (lambda_) (if (<= (POPULATION_SIZE) 0) (+ 4 (round-math (* 3 (log-math (e) (dim))))) (POPULATION_SIZE)))
 (= (mu) (/ (lambda_) 2))
 (= (weights) (let ($mu-logged $range-logged)  ((log-math (e) (+ (mu) 0.5)) (let $range (range 1 (+ (mu) 1)) (apply-log $range (e)))) (rev-scalar-op $mu-logged $range-logged -)))
 (= (normalized_weights)(scalar-op (weights) (sum (weights)) /))
@@ -266,8 +212,6 @@
     )
 )
 
-;;;; COVARIANCE MATRIX ADAPTATION ;;;;
-
 (= (delta $selected $old-mean)
  (mat-mat-eles-op $selected ($old-mean) -)
 )
@@ -280,7 +224,6 @@
             )
         )
     )
-    
 )
 
 (= (new-cov $prev-cov $prev-p-c $new-p-sigma $c-sigma $gen $y $weights $selected $old-mean)
@@ -292,26 +235,31 @@
         )
     )
 )
-    
 
-(= (cma-es-main-loop $mean $cov $step-size $p-sigma $p-c $best-pop $gen)
-    (if (<= (- (GENERATIONS) $gen) 0)
-    $best-pop
-    (let*
-        (
-            (($normalized-weights $c-sigma $d-sigma $mu $mu-eff $dim) (collapse(superpose((normalized_weights) (c_sigma) (d_sigma) (mu) (mu_eff) (dim)))))
-            ($samples (mat-clip (random-multivariate $mean (mat-scalar-op $cov (pow-math $step-size 2) *) (lambda_)) 0 1))
-            (($new-mean $selected $fitness-score) (update-mean $samples $mu $normalized-weights))
-            (($y $C-inv-sqrt) ((y $new-mean $mean $step-size) (transpose-matrice (inverse-lmatrice (chol-decomp $cov)))))
-            (($new-step-size $new-p-sigma) (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma $mu-eff $C-inv-sqrt ($y)))
-            (($new-cov $new-p-c) (new-cov $cov $p-c $new-p-sigma $c-sigma 0 $y $normalized-weights $selected $mean))
-            (() (println! (GENERATION $gen | Max Fitness (max-atom $fitness-score))))
-            ($next-generation (cma-es-main-loop $new-mean $new-cov $new-step-size $new-p-sigma $new-p-c $selected (+ $gen 1)))
+!(bind! &inputspace (new-space))
+!(add-reduct &inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0)))
+
+(= (cma-es-single-iteration)
+    (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen) (match &inputspace (Inputs $x) $x)
+        (let*
+            (
+                (($normalized-weights $c-sigma $d-sigma $mu $mu-eff $dim) (collapse(superpose((normalized_weights) (c_sigma) (d_sigma) (mu) (mu_eff) (dim)))))
+                ($samples (mat-clip (random-multivariate $mean (mat-scalar-op $cov (pow-math $step-size 2) *) (lambda_)) 0 1))
+                (($new-mean $selected $fitness-score) (update-mean $samples $mu $normalized-weights))
+                (($new-best-fitness $new-best-pop) (let $gen-best-fitness (max-atom $fitness-score) (if (>= $gen-best-fitness $best-fitness) ($gen-best-fitness $selected) ($best-fitness $best-pop))))
+                (($y $C-inv-sqrt) ((y $new-mean $mean $step-size) (transpose-matrice (inverse-lmatrice (chol-decomp $cov)))))
+                (($new-step-size $new-p-sigma) (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma $mu-eff $C-inv-sqrt ($y)))
+                (($new-cov $new-p-c) (new-cov $cov $p-c $new-p-sigma $c-sigma $gen $y $normalized-weights $selected $mean))
+                ($clean (collapse(match &inputspace (Inputs $params) (remove-atom &inputspace (Inputs $params)))))
+                (() (println! (GENERATION $gen | Max Fitness $new-best-fitness)))
+            )
+            (let $added (add-reduct &inputspace (Inputs ($new-mean $new-cov $new-step-size $new-p-sigma $new-p-c $new-best-pop $new-best-fitness (+ 1 $gen)))) $new-best-pop)
         )
-        ; (Old-mean $old-mean | New-mean $new-mean ||| Old-cov $old-cov | New-cov $new-cov ||| Old-step-size $old-step-size | New-step-size $new-step-size ||| Selected-individuals $selected)
-        $next-generation
-    )
     )
 )
 
-; !(cma-es-main-loop (mean) (cov) (step_size) (p_sigma) (p_c) () 0)
+(= (cma-es-main-loop)
+    (let $iters (generate-toy-list (GENERATIONS))  (map-atom $iters $iter (cma-es-single-iteration)))
+)
+
+; !(cma-es-main-loop)
