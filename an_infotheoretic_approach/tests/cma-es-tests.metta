@@ -94,6 +94,16 @@
     (10 8)
 )
 
+; make-indices edge cases
+!(assertEqual (make-indices ()) ())
+!(assertEqual (make-indices (0.075)) (0))
+
+; remove-index
+!(assertEqual (remove-index (0 0.075 0.4) 0) (0.075 0.4))
+!(assertEqual (remove-index ((0 0.075) (1 0.015)) 0) ((1 0.015)))
+!(assertEqual (remove-index (3 4 5) 1) (3 5))
+!(assertEqual (remove-index (6 7 8) 2) (6 7))
+
 ; zip idx & fitness
 !(assertEqual
    (pair-index-fitness (0 1 2) (10 30 20))
@@ -113,8 +123,10 @@
 !(assertEqual
    (extract-indices ((1 30) (2 20) (0 10)) 2)
    (1 2))
+; extract-indices with mu > length
+!(assertEqual (extract-indices ((1 10) (2 5)) 5) (1 2))
 
-; elect-by-indices
+; select-by-indices
 !(assertEqual
    (select-by-indices (100 200 300) (1 2))
    (200 300))
@@ -154,4 +166,10 @@
    (update-mean (w3) (sel3)) 
    (3.8 1.6))   
 
+; weights with tiny floats (still sum to 1)
+(= (wTiny) (0.999999 0.000001))
+(= (selTiny) ((2 2) (2000 2000)))
+!(assertEqual
+   (update-mean (wTiny) (selTiny))
+   (2.001998 2.001998))   ; essentially the first vector
 
