@@ -1365,6 +1365,18 @@
     )
 )
 
+(= (C-inv-sqrt $matrice)
+    (transpose-matrice (inverse-lmatrice (chol-decomp $matrice)))
+)
+
+; !(C-inv-sqrt ((6 2 3 2 1 1 1 1)
+;  (2 6 3 2 1 1 1 1)
+;  (3 3 6 2 1 1 1 1)
+;  (2 2 2 6 1 1 1 1)
+;  (1 1 1 1 6 1 1 1)
+;  (1 1 1 1 1 6 1 1)
+;  (1 1 1 1 1 1 6 1)
+;  (1 1 1 1 1 1 1 6)))
 ; !(chol-decomp ((1 0 0 0 0 0 0 0) (0 1 0 0 0 0 0 0) (0 0 1 0 0 0 0 0) (0 0 0 1 0 0 0 0) (0 0 0 0 1 0 0 0) (0 0 0 0 0 1 0 0) (0 0 0 0 0 0 1 0) (0 0 0 0 0 0 0 1)))
 ; !(get-atoms &lspace)
 ; !(match &lspace (cell $x $y) (remove-atom &lspace (cell $x $y)))

@@ -247,7 +247,7 @@
                 ($samples (mat-clip (random-multivariate $mean (mat-scalar-op $cov (pow-math $step-size 2) *) (lambda_)) 0 1))
                 (($new-mean $selected $fitness-score) (update-mean $samples $mu $normalized-weights))
                 (($new-best-fitness $new-best-pop) (let $gen-best-fitness (max-atom $fitness-score) (if (>= $gen-best-fitness $best-fitness) ($gen-best-fitness $selected) ($best-fitness $best-pop))))
-                (($y $C-inv-sqrt) ((y $new-mean $mean $step-size) (transpose-matrice (inverse-lmatrice (chol-decomp $cov)))))
+                (($y $C-inv-sqrt) ((y $new-mean $mean $step-size) (C-inv-sqrt $cov)))
                 (($new-step-size $new-p-sigma) (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma $mu-eff $C-inv-sqrt ($y)))
                 (($new-cov $new-p-c) (new-cov $cov $p-c $new-p-sigma $c-sigma $gen $y $normalized-weights $selected $mean))
                 ($clean (collapse(match &inputspace (Inputs $params) (remove-atom &inputspace (Inputs $params)))))
