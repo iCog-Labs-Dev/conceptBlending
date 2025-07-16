@@ -90,7 +90,7 @@
 
 ;;; MAIN LOOP ;;;
 !(assertEqual 
-    (let $x (cma-es-main-loop (mean) (cov) (step_size) (p_sigma) (p_c) () 0) ((size-atom $x) (let $y (car-atom $x) (size-atom $y))))
+    (let $x (cma-es-main-loop) ((size-atom $x) (let $y (car-atom $x) (size-atom $y))))
     (5 8)
 )
 
@@ -136,9 +136,11 @@
    (let $res (update-mean ((1 2 3) (7 5 1)) 3 (0.6 0.4)) (car-atom $res))
    (4.6000000000000005 3.8 1.8000000000000003))
 
+(= (samples)((1 1 0 0 0 0 1 1) (1 1 1 0 0 1 1 1) (0 0 0 0 0 1 1 1) (1 1 0 1 1 1 1 1) (1 1 0 0 0 0 0 0) (1 1 0 0 0 1 1 1) (1 1 1 0 0 1 1 1) (1 1 1 1 0 1 1 1) (1 1 0 0 0 1 1 1) (1 1 0 0 0 1 1 1)))
+(= (fitnesses) (0.046250000000000006 0.05125 0.03875000000000001 0.061250000000000006 0.012499999999999997 0.05125 0.05125 0.058750000000000004 0.05125 0.05125))
 ; fitness -> elite idxs -> elite samples
-; !(assertEqual (select-by-indices  (samples) (extract-indices (sort-pairs-desc (pair-index-fitness (make-indices (fitnesses)) (fitnesses))) (mu)))
-; ((1 0 0 1 1 1 1 1) (1 0 0 1 1 0 1 0) (0 0 0 1 1 1 0 1) (1 0 0 1 1 1 0 1) (1 0 0 1 1 1 1 1) (1 0 0 1 1 1 1 0)))
+!(assertEqual (select-by-indices  (samples) (extract-indices (sort-pairs-desc (pair-index-fitness (make-indices (fitnesses)) (fitnesses))) (mu)))
+((1 1 0 1 1 1 1 1) (1 1 1 1 0 1 1 1) (1 1 1 0 0 1 1 1) (1 1 0 0 0 1 1 1) (1 1 1 0 0 1 1 1)))
 
 
 ; returns () on empty
