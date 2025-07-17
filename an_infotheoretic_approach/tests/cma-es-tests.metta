@@ -78,6 +78,19 @@
 (assert-equal (rev-scalar-op 10 (1 2 3) +)     ((11 12 13)))
 (assert-equal (rev-scalar-op 2 () *)          (()))
 
+;;;; STRATEGY PARAMETERS ;;;;
+; lambda_ and mu 
+!(assertEqual (lambda_) 10)    
+!(assertEqual (mu) 5)
+; weights vector length = mu
+!(assertEqual (let $w (weights)(size-atom $w))  (mu))
+; ; normalized_weights sum to -> 1
+!(assertEqual (let $s (sum (normalized_weights)) (round-math $s)) 1.0)
+; ; mu_eff value (rounded to 6 dp)
+!(assertEqual(let $m (mu_eff)(/ (round-math (* $m 1000000)) 1000000)) 3.167299)
+; exact weights check
+!(assertEqual (let $ws (normalized_weights) (map-atom $ws $w(/ (round-math (* $w 1000000)) 1000000)))
+   (0.456273 0.270753 0.162231 0.085234 0.025510))
 
 ;;; LEARNING RATES ;;;
 !(assertEqual (mu_eff) 3.1672992814107035)
