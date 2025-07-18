@@ -169,11 +169,19 @@
 )
 
 (= (scalar-op $vector $num $op)
-    (map-atom $vector $x ($op $x $num))
+    (
+        if (== (size-atom $vector) 0)
+        (Error $vector EmptyList)
+        (map-atom $vector $x ($op $x $num))
+    )
 )
 
 (= (rev-scalar-op $num $vector $op)
-    (map-atom $vector $x ($op $num $x))
+    (
+        if (== (size-atom $vector) 0)
+        (Error $vector EmptyList)
+        (map-atom $vector $x ($op $num $x))
+    )
 )
 
 (= (vector-op $vector1 $vector2 $op)
@@ -282,40 +290,44 @@
 
 (= (outer-product $vector1 $vector2)
     (let ($vec1-size $vec2-size) ((size-atom $vector1) (size-atom $vector2))
-        (collapse
-            (superpose
-                (
-                    (if (>= (- $vec1-size 1) 0) 
-                    (let $vec1-ele0 (index-atom $vector1 0) (collapse(superpose((* $vec1-ele0 (index-atom $vector2 0)) (* $vec1-ele0 (index-atom $vector2 1))(* $vec1-ele0 (index-atom $vector2 2))(* $vec1-ele0 (index-atom $vector2 3))(* $vec1-ele0 (index-atom $vector2 4))(* $vec1-ele0 (index-atom $vector2 5))(* $vec1-ele0 (index-atom $vector2 6))(* $vec1-ele0 (index-atom $vector2 7))))))
-                    Empty
-                    )
-                    (if (>= (- $vec1-size 2) 0) 
-                    (let $vec1-ele1 (index-atom $vector1 1) (collapse(superpose((* $vec1-ele1 (index-atom $vector2 0)) (* $vec1-ele1 (index-atom $vector2 1))(* $vec1-ele1 (index-atom $vector2 2))(* $vec1-ele1 (index-atom $vector2 3))(* $vec1-ele1 (index-atom $vector2 4))(* $vec1-ele1 (index-atom $vector2 5))(* $vec1-ele1 (index-atom $vector2 6))(* $vec1-ele1 (index-atom $vector2 7))))))
-                    Empty
-                    )
-                    (if (>= (- $vec1-size 3) 0) 
-                    (let $vec1-ele2 (index-atom $vector1 2) (collapse(superpose((* $vec1-ele2 (index-atom $vector2 0)) (* $vec1-ele2 (index-atom $vector2 1))(* $vec1-ele2 (index-atom $vector2 2))(* $vec1-ele2 (index-atom $vector2 3))(* $vec1-ele2 (index-atom $vector2 4))(* $vec1-ele2 (index-atom $vector2 5))(* $vec1-ele2 (index-atom $vector2 6))(* $vec1-ele2 (index-atom $vector2 7))))))
-                    Empty
-                    )
-                    (if (>= (- $vec1-size 4) 0) 
-                    (let $vec1-ele3 (index-atom $vector1 3) (collapse(superpose((* $vec1-ele3 (index-atom $vector2 0)) (* $vec1-ele3 (index-atom $vector2 1))(* $vec1-ele3 (index-atom $vector2 2))(* $vec1-ele3 (index-atom $vector2 3))(* $vec1-ele3 (index-atom $vector2 4))(* $vec1-ele3 (index-atom $vector2 5))(* $vec1-ele3 (index-atom $vector2 6))(* $vec1-ele3 (index-atom $vector2 7))))))
-                    Empty
-                    )
-                    (if (>= (- $vec1-size 5) 0) 
-                    (let $vec1-ele4 (index-atom $vector1 4) (collapse(superpose((* $vec1-ele4 (index-atom $vector2 0)) (* $vec1-ele4 (index-atom $vector2 1))(* $vec1-ele4 (index-atom $vector2 2))(* $vec1-ele4 (index-atom $vector2 3))(* $vec1-ele4 (index-atom $vector2 4))(* $vec1-ele4 (index-atom $vector2 5))(* $vec1-ele4 (index-atom $vector2 6))(* $vec1-ele4 (index-atom $vector2 7))))))
-                    Empty
-                    )
-                    (if (>= (- $vec1-size 6) 0) 
-                    (let $vec1-ele5 (index-atom $vector1 5) (collapse(superpose((* $vec1-ele5 (index-atom $vector2 0)) (* $vec1-ele5 (index-atom $vector2 1))(* $vec1-ele5 (index-atom $vector2 2))(* $vec1-ele5 (index-atom $vector2 3))(* $vec1-ele5 (index-atom $vector2 4))(* $vec1-ele5 (index-atom $vector2 5))(* $vec1-ele5 (index-atom $vector2 6))(* $vec1-ele5 (index-atom $vector2 7))))))
-                    Empty
-                    )
-                    (if (>= (- $vec1-size 7) 0) 
-                    (let $vec1-ele6 (index-atom $vector1 6) (collapse(superpose((* $vec1-ele6 (index-atom $vector2 0)) (* $vec1-ele6 (index-atom $vector2 1))(* $vec1-ele6 (index-atom $vector2 2))(* $vec1-ele6 (index-atom $vector2 3))(* $vec1-ele6 (index-atom $vector2 4))(* $vec1-ele6 (index-atom $vector2 5))(* $vec1-ele6 (index-atom $vector2 6))(* $vec1-ele6 (index-atom $vector2 7))))))
-                    Empty
-                    )
-                    (if (>= (- $vec1-size 8) 0) 
-                    (let $vec1-ele7 (index-atom $vector1 7) (collapse(superpose((* $vec1-ele7 (index-atom $vector2 0)) (* $vec1-ele7 (index-atom $vector2 1))(* $vec1-ele7 (index-atom $vector2 2))(* $vec1-ele7 (index-atom $vector2 3))(* $vec1-ele7 (index-atom $vector2 4))(* $vec1-ele7 (index-atom $vector2 5))(* $vec1-ele7 (index-atom $vector2 6))(* $vec1-ele7 (index-atom $vector2 7))))))
-                    Empty
+        (
+            if (or (== $vec2-size 0) (== $vec1-size 0))
+            (Error ($vector1 $vector2) EmptyList)
+            (collapse
+                (superpose
+                    (
+                        (if (>= (- $vec1-size 1) 0) 
+                        (let $vec1-ele0 (index-atom $vector1 0) (collapse(superpose((* $vec1-ele0 (index-atom $vector2 0)) (* $vec1-ele0 (index-atom $vector2 1))(* $vec1-ele0 (index-atom $vector2 2))(* $vec1-ele0 (index-atom $vector2 3))(* $vec1-ele0 (index-atom $vector2 4))(* $vec1-ele0 (index-atom $vector2 5))(* $vec1-ele0 (index-atom $vector2 6))(* $vec1-ele0 (index-atom $vector2 7))))))
+                        Empty
+                        )
+                        (if (>= (- $vec1-size 2) 0) 
+                        (let $vec1-ele1 (index-atom $vector1 1) (collapse(superpose((* $vec1-ele1 (index-atom $vector2 0)) (* $vec1-ele1 (index-atom $vector2 1))(* $vec1-ele1 (index-atom $vector2 2))(* $vec1-ele1 (index-atom $vector2 3))(* $vec1-ele1 (index-atom $vector2 4))(* $vec1-ele1 (index-atom $vector2 5))(* $vec1-ele1 (index-atom $vector2 6))(* $vec1-ele1 (index-atom $vector2 7))))))
+                        Empty
+                        )
+                        (if (>= (- $vec1-size 3) 0) 
+                        (let $vec1-ele2 (index-atom $vector1 2) (collapse(superpose((* $vec1-ele2 (index-atom $vector2 0)) (* $vec1-ele2 (index-atom $vector2 1))(* $vec1-ele2 (index-atom $vector2 2))(* $vec1-ele2 (index-atom $vector2 3))(* $vec1-ele2 (index-atom $vector2 4))(* $vec1-ele2 (index-atom $vector2 5))(* $vec1-ele2 (index-atom $vector2 6))(* $vec1-ele2 (index-atom $vector2 7))))))
+                        Empty
+                        )
+                        (if (>= (- $vec1-size 4) 0) 
+                        (let $vec1-ele3 (index-atom $vector1 3) (collapse(superpose((* $vec1-ele3 (index-atom $vector2 0)) (* $vec1-ele3 (index-atom $vector2 1))(* $vec1-ele3 (index-atom $vector2 2))(* $vec1-ele3 (index-atom $vector2 3))(* $vec1-ele3 (index-atom $vector2 4))(* $vec1-ele3 (index-atom $vector2 5))(* $vec1-ele3 (index-atom $vector2 6))(* $vec1-ele3 (index-atom $vector2 7))))))
+                        Empty
+                        )
+                        (if (>= (- $vec1-size 5) 0) 
+                        (let $vec1-ele4 (index-atom $vector1 4) (collapse(superpose((* $vec1-ele4 (index-atom $vector2 0)) (* $vec1-ele4 (index-atom $vector2 1))(* $vec1-ele4 (index-atom $vector2 2))(* $vec1-ele4 (index-atom $vector2 3))(* $vec1-ele4 (index-atom $vector2 4))(* $vec1-ele4 (index-atom $vector2 5))(* $vec1-ele4 (index-atom $vector2 6))(* $vec1-ele4 (index-atom $vector2 7))))))
+                        Empty
+                        )
+                        (if (>= (- $vec1-size 6) 0) 
+                        (let $vec1-ele5 (index-atom $vector1 5) (collapse(superpose((* $vec1-ele5 (index-atom $vector2 0)) (* $vec1-ele5 (index-atom $vector2 1))(* $vec1-ele5 (index-atom $vector2 2))(* $vec1-ele5 (index-atom $vector2 3))(* $vec1-ele5 (index-atom $vector2 4))(* $vec1-ele5 (index-atom $vector2 5))(* $vec1-ele5 (index-atom $vector2 6))(* $vec1-ele5 (index-atom $vector2 7))))))
+                        Empty
+                        )
+                        (if (>= (- $vec1-size 7) 0) 
+                        (let $vec1-ele6 (index-atom $vector1 6) (collapse(superpose((* $vec1-ele6 (index-atom $vector2 0)) (* $vec1-ele6 (index-atom $vector2 1))(* $vec1-ele6 (index-atom $vector2 2))(* $vec1-ele6 (index-atom $vector2 3))(* $vec1-ele6 (index-atom $vector2 4))(* $vec1-ele6 (index-atom $vector2 5))(* $vec1-ele6 (index-atom $vector2 6))(* $vec1-ele6 (index-atom $vector2 7))))))
+                        Empty
+                        )
+                        (if (>= (- $vec1-size 8) 0) 
+                        (let $vec1-ele7 (index-atom $vector1 7) (collapse(superpose((* $vec1-ele7 (index-atom $vector2 0)) (* $vec1-ele7 (index-atom $vector2 1))(* $vec1-ele7 (index-atom $vector2 2))(* $vec1-ele7 (index-atom $vector2 3))(* $vec1-ele7 (index-atom $vector2 4))(* $vec1-ele7 (index-atom $vector2 5))(* $vec1-ele7 (index-atom $vector2 6))(* $vec1-ele7 (index-atom $vector2 7))))))
+                        Empty
+                        )
                     )
                 )
             )
@@ -324,7 +336,11 @@
 )
 
 (= (mat-scalar-op $matrice $num $op)
-    (map-atom $matrice $x (scalar-op $x $num $op))    
+    (
+        if (== (size-atom $matrice) 0)
+        (Error $matrice EmptyMatrice)
+        (map-atom $matrice $x (scalar-op $x $num $op))
+    )
 )
 
 (= (num-clip $x $lb $ub)
@@ -336,13 +352,9 @@
     )
 )
 
-; !(num-clip 5 0 1)
-
 (= (vec-clip $vec $lb $ub)
     (map-atom $vec $x (num-clip $x $lb $ub))
 )
-
-; !(vec-clip (2 1 0.5 -0.5 -4 1.1 53 4 1 2 -77 4 53 -43 -3 44 565 32 56 67 43 -54 -67 -8 -8 9 2 34 56 0 1) 0 1)
 
 (= (mat-clip $matrice $lb $ub)
     (map-atom $matrice $x (vec-clip $x $lb $ub))

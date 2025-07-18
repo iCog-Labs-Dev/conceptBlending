@@ -46,37 +46,37 @@
 !(assertEqual (identity-matrice 0) ())
 ;;;; zeros-vec ;;;;
 
-(assert-equal (zeros-vec 0)     (()))
-(assert-equal (zeros-vec 1)     ((0)))
-(assert-equal (zeros-vec 3)     ((0 0 0)))
-(assert-equal (zeros-vec 5)     ((0 0 0 0 0)))
-(assert-equal (zeros-vec 10)    ((0 0 0 0 0 0 0 0 0 0)))
+!(assertEqual (zeros-vec 0)     ())
+!(assertEequal (zeros-vec 1)     (0))
+!(assertEqual (zeros-vec 3)     (0 0 0))
+!(assertEqual (zeros-vec 5)     (0 0 0 0 0))
+!(assertEqual (zeros-vec 10)    (0 0 0 0 0 0 0 0 0 0))
 
 
 ;;;; range ;;;;
 
-(assert-equal (range 1 4)     ((1 2 3)))
-(assert-equal (range 1 10)    ((1 2 3 4 5 6 7 8 9)))
-(assert-equal (range 5 5)     (()))
-(assert-equal (range 5 3)     (()))
-(assert-equal (range 0 2)     ((1)))
+!(assertEqual (range 1 4)     (1 2 3))
+!(assertEqual (range 1 10)    (1 2 3 4 5 6 7 8 9))
+!(assertEqual (range 5 5)     ())
+!(assertEqual (range 5 3)     ())
+!(assertEqual (range 0 2)     (1 2))
 
 
 ;;;; scalar-op ;;;;
 
-(assert-equal (scalar-op (1 2 3) 2 *)         ((2 4 6)))
-(assert-equal (scalar-op (2 3 4) 1 -)         ((1 2 3)))
-(assert-equal (scalar-op (2.0 4.0 6.0) 2 /)   ((1.0 2.0 3.0)))
-(assert-equal (scalar-op (1 2 3 4) 5 +)       ((6 7 8 9)))
-(assert-equal (scalar-op () 3 +)             (()))
+!(assertEqual (scalar-op (1 2 3) 2 *)         (2 4 6))
+!(assertEqual (scalar-op (2 3 4) 1 -)         (1 2 3))
+!(assertEqual (scalar-op (2.0 4.0 6.0) 2 /)   (1.0 2.0 3.0))
+!(assertEqual (scalar-op (1 2 3 4) 5 +)       (6 7 8 9))
+!(assertEqual (scalar-op () 3 +)             (Error () EmptyList))
 
 ;;;; rev-scalar-op ;;;;
 
-(assert-equal (rev-scalar-op 10 (1 2 3) -)     ((9 8 7)))
-(assert-equal (rev-scalar-op 100 (2 4 5) /)    ((50.0 25.0 20.0)))
-(assert-equal (rev-scalar-op 2 (3 4 5) *)      ((6 8 10)))
-(assert-equal (rev-scalar-op 10 (1 2 3) +)     ((11 12 13)))
-(assert-equal (rev-scalar-op 2 () *)          (()))
+!(assertEqual (rev-scalar-op 10 (1 2 3) -)     (9 8 7))
+!(assertEqual (rev-scalar-op 100 (2 4 5) /)    (50.0 25.0 20.0))
+!(assertEqual (rev-scalar-op 2 (3 4 5) *)      (6 8 10))
+!(assertEqual (rev-scalar-op 10 (1 2 3) +)     (11 12 13))
+!(assertEqual (rev-scalar-op 2 () *)          (Error () EmptyList))
 
 ;;;; STRATEGY PARAMETERS ;;;;
 ; lambda_ and mu 
@@ -101,7 +101,7 @@
 !(assertEqual (c1)       0.022307163120344784)
 !(assertEqual (c_mu)     0.028749917692721574)
 
-;;; MAIN LOOP ;;;
+;;;; cma-es-main-loop ;;;;
 !(assertEqual 
     (let $x (cma-es-main-loop) ((size-atom $x) (let $y (car-atom $x) (size-atom $y)) (let $z (car-atom $x) (let $s (car-atom $z) (size-atom $s)))))
     (30 5 8)
@@ -247,4 +247,139 @@
 !(assertEqual
    (vector-op (1 2 3 4 5) (4 5 6 7) +)
    (Error (5 4) LengthMismatch)   
+)
+
+;;;; mat-vec-op ;;;;
+
+;;;; Test mat-vec-op(matrice vector operation) with a matrice with n rows, a vector with n elements, and the four operations(+, -, *, /)
+; Output = a matrice with n rows whose each row is a result of the input operation applied on each rows of the input matrice and the corresponding elements of the vector
+
+!(assertEqual
+   (let*
+      (
+         ($addition (mat-vec-op ((1 2 3) (2 3 4) (3 4 5) (4 5 6) (5 6 7)) (1 2 3 4 5) +))
+         ($substraction (mat-vec-op ((1 2 3) (2 3 4) (3 4 5) (4 5 6) (5 6 7)) (1 2 3 4 5) -))
+         ($multiplication (mat-vec-op ((1 2 3) (2 3 4) (3 4 5) (4 5 6) (5 6 7)) (1 2 3 4 5) *))
+         ($division (mat-vec-op ((1.0 2.0 3.0) (2.0 3.0 4.0) (3.0 4.0 5.0) (4.0 5.0 6.0) (5.0 6.0 7.0)) (1 2 3 4 5) /))
+      )
+      (Addition-result $addition Substraction-result $substraction Multiplication-result $multiplication Division-result $division)
+   )
+   (Addition-result ((2 3 4) (4 5 6) (6 7 8) (8 9 10) (10 11 12)) Substraction-result ((0 1 2) (0 1 2) (0 1 2) (0 1 2) (0 1 2)) 
+   Multiplication-result ((1 2 3) (4 6 8) (9 12 15) (16 20 24) (25 30 35)) Division-result ((1.0 2.0 3.0) (1.0 1.5 2.0) (1.0 1.3333333333333333 1.6666666666666667) (1.0 1.25 1.5) (1.0 1.2 1.4)))
+)
+
+;;;; Test mat-vec-op(matrice vector operation) with a matrice with n rows, a vector with m elements, and any operation ;;;;
+; Output = (Error (n m) DimensionMismatch)
+
+!(assertEqual
+   (mat-vec-op ((1 2 3) (2 3 4) (3 4 5) (4 5 6) (5 6 7)) (1 2 3 4) +)
+   (Error (5 4) DimensionMismatch)
+)
+
+;;;; mat-mat-eles-op ;;;;
+
+;;;; Test mat-mat-eles-op(matrice matrice element-wise operation) with two same shape matrices, and the four operations(+, -, *, /) ;;;;
+; Output = a matrice of the same shape as the input matrice, and whose elements are the result on the input operation applied on the corresponding elements of the two input matrices
+
+!(assertEqual
+   (let*
+      (
+         ($addition (mat-mat-eles-op ((1 2 3) (2 3 4) (3 4 5)) ((4 5 6) (5 6 7) (6 7 8)) +))
+         ($substraction (mat-mat-eles-op ((1 2 3) (2 3 4) (3 4 5)) ((4 5 6) (5 6 7) (6 7 8)) -))
+         ($multiplication (mat-mat-eles-op ((1 2 3) (2 3 4) (3 4 5)) ((4 5 6) (5 6 7) (6 7 8)) *))
+         ($division (mat-mat-eles-op ((1.0 2.0 3.0) (2.0 3.0 4.0) (3.0 4.0 5.0)) ((4 5 6) (5 6 7) (6 7 8)) /))
+      )
+      (Addition-result $addition Substraction-result $substraction Multiplication-result $multiplication Division-result $division)
+   )
+   (Addition-result ((5 7 9) (7 9 11) (9 11 13)) Substraction-result ((-3 -3 -3) (-3 -3 -3) (-3 -3 -3)) 
+   Multiplication-result ((4 10 18) (10 18 28) (18 28 40)) Division-result ((0.25 0.4 0.5) (0.4 0.5 0.5714285714285714) (0.5 0.5714285714285714 0.625)))
+)
+
+;;;; Test mat-mat-eles-op (matrice matrice element-wise operation) with two different, but broadcasteable, shape matrices, and any operation ;;;;
+; Output = a matrice of the non-broadcasted shape, and whose elements are the result of the input operation applied on the corresponding elements of the two input matrices(after broadcasting is applied over the matrice that needs to be broadcasted)
+
+!(assertEqual
+   (let*
+      (
+         ($addition (mat-mat-eles-op ((1 2 3) (2 3 4) (3 4 5)) ((4 5 6)) +))
+         ($substraction (mat-mat-eles-op ((1 2 3) (2 3 4) (3 4 5)) ((4 5 6)) -))
+         ($multiplication (mat-mat-eles-op ((1 2 3) (2 3 4) (3 4 5)) ((4 5 6)) *))
+         ($division (mat-mat-eles-op ((1.0 2.0 3.0) (2.0 3.0 4.0) (3.0 4.0 5.0)) ((4 5 6)) /))
+      )
+      (Addition-result $addition Substraction-result $substraction Multiplication-result $multiplication Division-result $division)
+   )
+   (Addition-result ((5 7 9) (6 8 10) (7 9 11)) Substraction-result ((-3 -3 -3) (-2 -2 -2) (-1 -1 -1)) 
+   Multiplication-result ((4 10 18) (8 15 24) (12 20 30)) Division-result ((0.25 0.4 0.5) (0.5 0.6 0.6666666666666666) (0.75 0.8 0.8333333333333334)))
+)
+
+;;;; outer-product ;;;;
+
+;;;; Test outer-product with 2 vectors with equal length(n) ;;;;
+; Output = The outer product result of the two vectors which will be a matrice of shape (n, n)
+
+!(assertEqual
+   (outer-product (1 2 3) (2 3 4))
+   ((2 3 4) (4 6 8) (6 9 12))
+)
+
+;;;; Test outer-product with a vector of length n and another vector with a length of m ;;;;
+; Output = The outer-product result of the two vectors which will be a matrice of shape (n, m)
+
+!(assertEqual
+   (outer-product (1 2 3 4) (2 3 4))
+   ((2 3 4) (4 6 8) (6 9 12) (8 12 16))
+)
+
+;;;; Test outer-product with one of the two(which will be the same if both vectors are empty as well) vectors being empty ;;;;
+; Output = (Error (first-vector second-vector) EmptyList)
+
+!(assertEqual
+   (outer-product () (1 2 3))
+   (Error (() (1 2 3)) EmptyList)
+)
+
+;;;; mat-scalar-op ;;;;
+
+;;;; Test mat-scalar-op(matrice scalar operations) with a matrice of shape (n, m), a scalar value k, and the four operations(+, -, *, /) ;;;;
+; Output = a matrice 0f shape (n, m) whose each element are the result of the input operation applied over each element of the input matrice and the scalar input
+
+!(assertEqual
+   (let*
+      (
+         ($addition (mat-scalar-op ((1 2 3) (2 3 4) (3 4 5)) 5 +))
+         ($substraction (mat-scalar-op ((1 2 3) (2 3 4) (3 4 5)) 5 -))
+         ($multiplication (mat-scalar-op ((1 2 3) (2 3 4) (3 4 5)) 5 *))
+         ($division (mat-scalar-op ((1.0 2.0 3.0) (2.0 3.0 4.0) (3.0 4.0 5.0)) 5 /))
+      )
+   (Addition-result $addition Substraction-result $substraction Multiplication-result $multiplication Division-result $division)
+   )
+   (Addition-result ((6 7 8) (7 8 9) (8 9 10)) Substraction-result ((-4 -3 -2) (-3 -2 -1) (-2 -1 0)) 
+   Multiplication-result ((5 10 15) (10 15 20) (15 20 25)) Division-result ((0.2 0.4 0.6) (0.4 0.6 0.8) (0.6 0.8 1.0)))
+)
+
+;;;; Test mat-scalar-op(matrice scalar operations) with an empty matrice, a scalar value k, and any of the four operations ;;;;
+; Output = (Error the-empty-matrice EmptyMatrice)
+
+!(assertEqual
+   (mat-scalar-op () 5 +)
+   (Error () EmptyMatrice)
+)
+
+;;;; clipping functions ;;;;
+
+;;;; Test num-clip with a number, vec-clip with a vector, and mat-clip with a matrice, and lower boundary, and upper boundary arguments ;;;;
+; Output = for the num-clip, the input num clipped to the lower or upper boundary if it's out the boundaries
+; Output = for the vec-clip, the elements of the input vec clipped to the lower or upper boundary if they are out of the boundaries
+; Output = for the mat-clip, the elements of the input matrice clipped to the lower or upper boundary if they are out of the boundaries
+
+!(assertEqual
+   (let*
+      (
+         ($clipped-num (num-clip 3 0 1))
+         ($clipped-vec (vec-clip (0.4 3 1) 0 1))
+         ($clipped-matrice (mat-clip ((0.3 4 -3) (0.2 3 -2) (0.1 2 -1)) 0 1))
+      )
+      (Clipped-num $clipped-num Clipped-vector $clipped-vec Clipped-matrice $clipped-matrice)
+   )
+   (Clipped-num 1 Clipped-vector (0.4 1 1) Clipped-matrice ((0.3 1 0) (0.2 1 0) (0.1 1 0)))
 )
