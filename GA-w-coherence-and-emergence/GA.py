@@ -39,6 +39,53 @@ def coherence_interval(candidate):
             norm  += weight
     return total / norm
 
+def shannon_entropy(p: float) -> float:
+    """H(p) = –p log p – (1–p) log(1–p), with 0·log0→0."""
+    if p <= 0 or p >= 1:
+        return 0.0
+    return -p*math.log(p) - (1-p)*math.log(1-p)
+
+def joint_entropy_pairwise(p_i: float, p_j: float) -> float:
+    """
+    Approximate H(X_i,X_j) by assuming P(1,1)=min(p_i,p_j),
+    then P(1,0)=p_i–P11, P(0,1)=p_j–P11, P(0,0)=rest.
+    """
+    p11 = min(p_i, p_j)
+    p10 = p_i - p11
+    p01 = p_j - p11
+    p00 = 1 - p_i - p_j + p11
+    H = 0.0
+    for p in (p00, p01, p10, p11):
+        if p > 0:
+            H -= p * math.log(p)
+    return H
+
+def coherence_entropy(candidate: list[float]) -> float:
+    """
+    Entropy-based coherence ≈ [∑ H(p_i) – H_joint] / ∑ H(p_i),
+    where H_joint ≈ average of all pairwise joint entropies.
+    """
+    n = len(candidate)
+    # 1) individual entropies
+    Hs = [shannon_entropy(p) for p in candidate]
+    sum_H = sum(Hs)
+    if sum_H == 0:
+        return 0.0
+
+    # 2) approximate joint entropy via averaging pairwise H
+    pair_H = []
+    for i in range(n):
+        for j in range(i+1, n):
+            pair_H.append(joint_entropy_pairwise(candidate[i], candidate[j]))
+    # average pairwise H
+    H_joint_approx = sum(pair_H) * 2 / (n * (n-1))
+
+    # 3) total correlation ≈ sum_H – H_joint_approx
+    TC = sum_H - H_joint_approx
+
+    # 4) normalized coherence in [0,1]
+    return TC / sum_H
+
 def fitness(candidate):
     INPUT_A = [0.9, 0.9, 0.0, 0.8, 0.2, 0.9, 0.7, 0.7]
     INPUT_B = [0.8, 0.2, 1.0, 0.3, 0.9, 0.4, 0.6, 0.3]
