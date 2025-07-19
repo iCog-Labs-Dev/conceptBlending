@@ -155,7 +155,6 @@
 !(assertEqual (select-by-indices  (samples) (extract-indices (sort-pairs-desc (pair-index-fitness (make-indices (fitnesses)) (fitnesses))) (mu)))
 ((1 1 0 1 1 1 1 1) (1 1 1 1 0 1 1 1) (1 1 1 0 0 1 1 1) (1 1 0 0 0 1 1 1) (1 1 1 0 0 1 1 1)))
 
-
 ; returns () on empty
 !(assertEqual (pair-index-fitness () ()) ())
 !(assertEqual (sort-pairs-desc ()) ())
@@ -172,21 +171,24 @@
 ; duplicate fitnesses  – first tie kept first
 !(assertEqual
    (sort-pairs-desc ((0 10) (1 10) (2 5)))
-   ((0 10) (1 10) (2 5)))   
+   ((0 10) (1 10) (2 5))
+)   
 
 ; update-mean
 (= (w3)  (0.5 0.3 0.2))
 (= (sel3) ((2 0) (4 4) (8 2)))
 !(assertEqual
    (let $res (update-mean (sel3) 3 (w3)) (car-atom $res)) 
-   (4.800000000000001 2.6))   
+   (4.800000000000001 2.6)
+)
 
 ; weights with tiny floats (still sum to 1)
 (= (wTiny) (0.999999 0.000001))
 (= (selTiny) ((2 2) (2000 2000)))
 !(assertEqual
    (let $res (update-mean (selTiny) 2 (wTiny)) (car-atom $res))
-   (1999.998002 1999.998002))   ; essentially the first vector
+   (1999.998002 1999.998002)
+)   ; essentially the first vector
 
 ;;; Test Parameters for the process new-p-sigma to new-cov computings;;;;
 (= (test-new-mean) (0.3 0.4 0.6 0.2 0.8 0.1 0.5 0.8))
@@ -382,4 +384,104 @@
       (Clipped-num $clipped-num Clipped-vector $clipped-vec Clipped-matrice $clipped-matrice)
    )
    (Clipped-num 1 Clipped-vector (0.4 1 1) Clipped-matrice ((0.3 1 0) (0.2 1 0) (0.1 1 0)))
+)
+
+;;; chol-decomp (cholesky-decomposition function) ;;;;
+
+;;; Test chol-decomp (cholesky decomposition) with a symmetric, positive definite matrice of shape n by n ;;;;
+; Output = cholesky decomposed lower triangular matrice L of the same shape as the input matrice
+
+!(assertEqual
+    (let*
+        (
+            ($2by2lmat (chol-decomp ((2 1)(1 2))))
+            ($3by3lmat (chol-decomp ((4 1 1) (1 3 0) (1 0 2))))
+            ($8by8lmat (chol-decomp ((8 1 0 0 0 0 0 0)
+                                    (1 8 1 0 0 0 0 0)
+                                    (0 1 8 1 0 0 0 0)
+                                    (0 0 1 8 1 0 0 0)
+                                    (0 0 0 1 8 1 0 0)
+                                    (0 0 0 0 1 8 1 0)
+                                    (0 0 0 0 0 1 8 1)
+                                    (0 0 0 0 0 0 1 8))))
+        )
+        (Chol-decomposed-2by2-lmatrice $2by2lmat Chol-decomposed-3by3-lmatrice $3by3lmat Chol-decomposed-8by8-lmatrice $8by8lmat)
+    )
+    (Chol-decomposed-2by2-lmatrice ((1.4142135623730951 0) (0.7071067811865475 1.224744871391589)) Chol-decomposed-3by3-lmatrice ((2.0 0 0) (0.5 1.6583123951777 0) (0.5 -0.15075567228888181 1.3142574813455419)) 
+    Chol-decomposed-8by8-lmatrice ((2.8284271247461903 0 0 0 0 0 0 0) (0.35355339059327373 2.806243040080456 0 0 0 0 0 0) (0.0 0.3563483225498992 2.8058894976488067 0 0 0 0 0) (0.0 0.0 0.3563932224836186 2.805883794986482 0 0 0 0) (0.0 0.0 0.0 0.3563939468151844 2.805883702984408 0 0 0) (0.0 0.0 0.0 0.0 0.35639395850097955 2.8058837015001177 0 0) (0.0 0.0 0.0 0.0 0.0 0.3563939586895092 2.8058837014761715 0) (0.0 0.0 0.0 0.0 0.0 0.0 0.35639395869255075 2.805883701475785)))
+)
+
+;;;; Test chol-decomp (cholesky-decomposition) with a symmetric, non positive definite matrice of any shape.
+; Output = an incomplete matrice of shape different from the input matrice since cholesky decomposition deosn't work for non positive definite matrices.
+
+!(assertEqual
+    (chol-decomp ((1 2 3 4 5 6)
+                    (2 1 2 3 4 5)
+                    (3 2 1 2 3 4)
+                    (4 3 2 1 2 3)
+                    (5 4 3 2 1 2)
+                    (6 5 4 3 2 1))
+    )   
+    ((1.0 0 0 0 0 0) (2.0 0 0 0 0) (3.0 0 0 0) (4.0 0 0) (5.0 0) (6.0))
+)
+
+;;; inverse-lmatrice ;;;;
+
+;;;; Test inverse-lmatrice with a lower triangular matrice of shape n by n ;;;;
+; Output = the inverse of the input lower triangular matrices
+
+!(assertEqual
+    (let*
+        (
+            ($2by2invdlmat (inverse-lmatrice ((2 0 0) (1 3 0) (1 1 4))))
+            ($3by3invdlmat (inverse-lmatrice ((2 0 0) (3 1 0) (4 5 6))))
+            ($8by8invdlmat (inverse-lmatrice ((1 0 0 0 0 0 0 0)
+                                             (2 3 0 0 0 0 0 0)
+                                             (4 5 6 0 0 0 0 0)
+                                             (7 8 9 10 0 0 0 0)
+                                             (11 12 13 14 15 0 0 0)
+                                             (16 17 18 19 20 21 0 0)
+                                             (22 23 24 25 26 27 28 0)
+                                             (29 30 31 32 33 34 35 36))))
+        )
+        (Inversed-2by2-lmat $2by2invdlmat Inversed-3by3-lmat $3by3invdlmat Inversed-8by8-lmat $8by8invdlmat)
+    )
+    (Inversed-2by2-lmat ((0.5 0 0) (-0.16666666666666666 0.3333333333333333 0) (-0.08333333333333334 -0.08333333333333333 0.25)) Inversed-3by3-lmat ((0.5 0 0) (-1.5 1.0 0) (0.9166666666666666 -0.8333333333333334 0.16666666666666666))
+     Inversed-8by8-lmat ((1.0 0 0 0 0 0 0 0) (-0.6666666666666666 0.3333333333333333 0 0 0 0 0 0) (-0.11111111111111116 -0.2777777777777778 0.16666666666666666 0 0 0 0 0) (-0.06666666666666665 -0.01666666666666665 -0.15 0.1 0 0 0 0) (-0.04148148148148145 -0.010370370370370384 -0.004444444444444429 -0.09333333333333334 0.06666666666666667 0 0 0) (-0.02716049382716055 -0.006790123456790099 -0.002910052910052921 -0.0015873015873015923 -0.06349206349206349 0.047619047619047616 0 0) (-0.01862433862433862 -0.004656084656084648 -0.0019954648526077138 -0.0010884353741496525 -0.0006802721088435429 -0.04591836734693878 0.03571428571428571 0) (-0.013278463648833956 -0.0033196159122085497 -0.001422692533803634 -0.0007760141093474478 -0.00048500881834215455 -0.00033068783068782953 -0.034722222222222224 0.027777777777777776)))
+)
+
+;;;; transpose-matrice ;;;;
+
+;;;; Test transpose-matrice with matrices of different shapes
+; Output = the transpose of the input matrices
+
+!(assertEqual
+    (let*
+        (
+            ($2by2matran (transpose-matrice ((1 3) (2 4))))
+            ($3by3matran (transpose-matrice ((1 3 2) (3 2 4) (3 4 5))))
+            ($8by8matran (transpose-matrice ((1 2 3 4 5 6 7 8) (2 3 4 5 6 7 8 9) (3 4 5 6 7 8 9 10) (4 5 6 7 8 9 10 11) (5 6 7 8 9 10 11 12) (6 7 8 9 10 11 12 13) (7 8 9 10 11 12 13 14) (8 9 10 11 12 13 14 15))))
+        )
+        (Transposed-2by2 $2by2matran Transposed-3by3 $3by3matran Transposed-8by8 $8by8matran)
+    )
+    (Transposed-2by2 ((1 2) (3 4)) Transposed-3by3 ((1 3 3) (3 2 4) (2 4 5)) 
+    Transposed-8by8 ((1 2 3 4 5 6 7 8) (2 3 4 5 6 7 8 9) (3 4 5 6 7 8 9 10) (4 5 6 7 8 9 10 11) (5 6 7 8 9 10 11 12) (6 7 8 9 10 11 12 13) (7 8 9 10 11 12 13 14) (8 9 10 11 12 13 14 15)))
+)
+
+;;;; standard-normal ;;;;
+
+;;;; Test standard-normal with n and m arguments as dimension, and amount of the random vectors needed to be generated ;;;;
+; Output = m amount vectors each containing n amounts of elements each sample from normal distribution
+
+!(assertEqual
+    (let*
+        (
+            ($2dim3poprvec (standard-normal 2 3))
+            ($3dim5poprvec (standard-normal 3 5))
+            ($8dim10poprvec (standard-normal 8 10))
+        )
+        (first-random-vec (collapse(superpose((size-atom $2dim3poprvec) (let $vec (index-atom $2dim3poprvec 0) (size-atom $vec))))) second-random-vec (collapse(superpose((size-atom $3dim5poprvec) (let $vec (index-atom $3dim5poprvec 0) (size-atom $vec)))))
+        third-random-vec (collapse(superpose((size-atom $8dim10poprvec) (let $vec (index-atom $8dim10poprvec 0) (size-atom $vec))))))
+    )
+    (first-random-vec (3 2) second-random-vec (5 3) third-random-vec (10 8))
 )

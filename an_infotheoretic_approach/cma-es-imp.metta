@@ -262,4 +262,4 @@
     (let $iters (generate-toy-list (GENERATIONS))  (map-atom $iters $iter (cma-es-single-iteration)))
 )
 
-; !(cma-es-main-loop)
+!(cma-es-main-loop)
