@@ -57,6 +57,15 @@ def roulette_stochastic_acceptance(population, fitnesses):
         i = random.randint(0, len(population) - 1)
         if random.random() < fitnesses[i] / w_max:
             return population[i]
+        
+def roulette_wheel(population, fitnesses):
+    total_f = sum(fitnesses)
+    r = random.uniform(0, total_f)
+    cum = 0.0
+    for individual, fit in zip(population, fitnesses):
+        cum += fit
+        if cum >= r:
+            return individual
 
 # === Crossover: Simulated Binary Crossover (Adaptive Eta) ===
 def sbx_crossover(p1, p2, eta):
