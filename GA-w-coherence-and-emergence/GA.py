@@ -24,6 +24,21 @@ INPUT_B = [0.8, 0.2, 1.0, 0.3, 0.9, 0.4, 0.6, 0.3]
 # # Random Parent B
 # INPUT_B = [0.10, 0.72, 0.38, 0.66, 0.89, 0.05, 0.77, 0.48]
 
+def coherence_interval(candidate):
+    total, norm = 0.0, 0.0
+    for i in range(GENES):
+        for j in range(i+1, GENES):
+            low  = min(INPUT_A[i], INPUT_B[i], INPUT_A[j], INPUT_B[j])
+            high = max(INPUT_A[i], INPUT_B[i], INPUT_A[j], INPUT_B[j])
+            # distance outside [low, high]
+            dist_i = max(0, low - candidate[i], candidate[i] - high)
+            dist_j = max(0, low - candidate[j], candidate[j] - high)
+            penalty = dist_i + dist_j
+            weight  = 1.0  # or any scheme
+            total += weight * (1 - penalty)
+            norm  += weight
+    return total / norm
+
 def fitness(candidate):
     INPUT_A = [0.9, 0.9, 0.0, 0.8, 0.2, 0.9, 0.7, 0.7]
     INPUT_B = [0.8, 0.2, 1.0, 0.3, 0.9, 0.4, 0.6, 0.3]
