@@ -1,6 +1,6 @@
 # Python virtual environment
 .venv/
-
+.nvenv/
 # Coverage data
 .coverage
 htmlcov/
