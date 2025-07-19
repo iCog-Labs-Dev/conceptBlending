@@ -99,11 +99,11 @@ def fitness(candidate):
     contributions = [min(a, b) * e for a, b, e in zip(INPUT_A, INPUT_B, emergence)]
     total = sum(contributions)
     norm_total=min(total / GENES, 1.0)
-    # coh=coherence_entropy(candidate)
+    coh=coherence_entropy(candidate)
     # coh=coherence_interval(candidate)
     
-    # fit=(EMERGENCE_IMPORTANCE*norm_total )+ ((1-EMERGENCE_IMPORTANCE) * coh)
-    fit=norm_total
+    fit=(EMERGENCE_IMPORTANCE*norm_total )+ ((1-EMERGENCE_IMPORTANCE) * coh)
+    # fit=norm_total
 
     return fit
 
