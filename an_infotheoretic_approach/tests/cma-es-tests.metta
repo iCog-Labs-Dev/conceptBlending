@@ -2,8 +2,6 @@
 ; !(import! &self an_infotheoretic_approach:utils:cma-es-utils)
 !(import! &self an_infotheoretic_approach:cma-es-imp)
 
-
-
 ;;;; apply-log ;;;;
 
 !(assertEqual (apply-log (1.0) 2.71828) (0.0))
@@ -202,9 +200,9 @@
          ;;;; y (Mean difference computer) ;;;;
          ($y  (y (test-new-mean) (test-old-mean) (test-step-size)))
          ;;;; C-inv-sqrt (inverse square root of a matrice) ;;;;
-         ($c-inv-sqrt (C-inv-sqrt (cov)))
+         ($c-inv-sqrt (C-inv-sqrt (cov) (get-space) (get-space) (get-space)))
          ;;;; new-p-sigma (step-size evolution path) and new-step-size ;;;;
-         (($new-step-size $new-p-sigma) (new-step-size (test-step-size) (c_sigma) (d_sigma) (dim) (p_sigma) (mu_eff) $c-inv-sqrt ($y)))
+         (($new-step-size $new-p-sigma) (new-step-size (test-step-size) (c_sigma) (d_sigma) (dim) (p_sigma) (mu_eff) $c-inv-sqrt $y))
          ;;;; h-sigma (covariance evolution path parameter controller) ;;;;
          ($h-sigma (h-sigma $new-p-sigma (c_sigma) 0))
          ;;;; p-c (covariance evolution path) ;;;;
@@ -394,8 +392,8 @@
 !(assertEqual
     (let*
         (
-            ($2by2lmat (chol-decomp ((2 1)(1 2))))
-            ($3by3lmat (chol-decomp ((4 1 1) (1 3 0) (1 0 2))))
+            ($2by2lmat (chol-decomp ((2 1)(1 2)) (get-space)))
+            ($3by3lmat (chol-decomp ((4 1 1) (1 3 0) (1 0 2)) (get-space)))
             ($8by8lmat (chol-decomp ((8 1 0 0 0 0 0 0)
                                     (1 8 1 0 0 0 0 0)
                                     (0 1 8 1 0 0 0 0)
@@ -403,7 +401,7 @@
                                     (0 0 0 1 8 1 0 0)
                                     (0 0 0 0 1 8 1 0)
                                     (0 0 0 0 0 1 8 1)
-                                    (0 0 0 0 0 0 1 8))))
+                                    (0 0 0 0 0 0 1 8)) (get-space)))
         )
         (Chol-decomposed-2by2-lmatrice $2by2lmat Chol-decomposed-3by3-lmatrice $3by3lmat Chol-decomposed-8by8-lmatrice $8by8lmat)
     )
@@ -412,19 +410,48 @@
 )
 
 ;;;; Test chol-decomp (cholesky-decomposition) with a symmetric, non positive definite matrice of any shape.
-; Output = an incomplete matrice of shape different from the input matrice since cholesky decomposition deosn't work for non positive definite matrices.
+; Output = an incomplete matrice of same shape as the input matrice containing NaN, and inf values since cholesky decomposition deosn't work for non positive definite matrices (Pos-deinitness-checker function is used here to better format the result, so the result that will be displayed is False).
 
 !(assertEqual
-    (chol-decomp ((1 2 3 4 5 6)
+    (Pos-definitness-checker (chol-decomp ((1 2 3 4 5 6)
                     (2 1 2 3 4 5)
                     (3 2 1 2 3 4)
                     (4 3 2 1 2 3)
                     (5 4 3 2 1 2)
-                    (6 5 4 3 2 1))
+                    (6 5 4 3 2 1)) (get-space))
     )   
-    ((1.0 0 0 0 0 0) (2.0 0 0 0 0) (3.0 0 0 0) (4.0 0 0) (5.0 0) (6.0))
+    False
 )
 
+;;;; Pos-definitness checker (positive definitness of a matrice checker) ;;;;
+
+;;;; Test Pos-definitness-checker with a symmetric, positive definite matrice.
+; Output = True
+
+!(assertEqual
+   (Pos-definitness-checker (chol-decomp ((8 1 0 0 0 0 0 0)
+                                    (1 8 1 0 0 0 0 0)
+                                    (0 1 8 1 0 0 0 0)
+                                    (0 0 1 8 1 0 0 0)
+                                    (0 0 0 1 8 1 0 0)
+                                    (0 0 0 0 1 8 1 0)
+                                    (0 0 0 0 0 1 8 1)
+                                    (0 0 0 0 0 0 1 8)) (get-space)))
+   True
+)
+
+;;;; Test Pos-definitness-checker with a symmetric, not positive definite matrice.
+; Output = False
+
+!(assertEqual
+   (Pos-definitness-checker (chol-decomp ((1 2 3 4 5 6)
+                    (2 1 2 3 4 5)
+                    (3 2 1 2 3 4)
+                    (4 3 2 1 2 3)
+                    (5 4 3 2 1 2)
+                    (6 5 4 3 2 1)) (get-space)))
+   False
+)
 ;;; inverse-lmatrice ;;;;
 
 ;;;; Test inverse-lmatrice with a lower triangular matrice of shape n by n ;;;;
@@ -433,8 +460,8 @@
 !(assertEqual
     (let*
         (
-            ($2by2invdlmat (inverse-lmatrice ((2 0 0) (1 3 0) (1 1 4))))
-            ($3by3invdlmat (inverse-lmatrice ((2 0 0) (3 1 0) (4 5 6))))
+            ($2by2invdlmat (inverse-lmatrice ((2 0 0) (1 3 0)) (get-space) (get-space)))
+            ($3by3invdlmat (inverse-lmatrice ((2 0 0) (3 1 0) (4 5 6)) (get-space) (get-space)))
             ($8by8invdlmat (inverse-lmatrice ((1 0 0 0 0 0 0 0)
                                              (2 3 0 0 0 0 0 0)
                                              (4 5 6 0 0 0 0 0)
@@ -442,11 +469,11 @@
                                              (11 12 13 14 15 0 0 0)
                                              (16 17 18 19 20 21 0 0)
                                              (22 23 24 25 26 27 28 0)
-                                             (29 30 31 32 33 34 35 36))))
+                                             (29 30 31 32 33 34 35 36)) (get-space) (get-space)))
         )
         (Inversed-2by2-lmat $2by2invdlmat Inversed-3by3-lmat $3by3invdlmat Inversed-8by8-lmat $8by8invdlmat)
     )
-    (Inversed-2by2-lmat ((0.5 0 0) (-0.16666666666666666 0.3333333333333333 0) (-0.08333333333333334 -0.08333333333333333 0.25)) Inversed-3by3-lmat ((0.5 0 0) (-1.5 1.0 0) (0.9166666666666666 -0.8333333333333334 0.16666666666666666))
+    (Inversed-2by2-lmat ((0.5 0 0) (-0.16666666666666666 0.3333333333333333 0)) Inversed-3by3-lmat ((0.5 0 0) (-1.5 1.0 0) (0.9166666666666666 -0.8333333333333334 0.16666666666666666))
      Inversed-8by8-lmat ((1.0 0 0 0 0 0 0 0) (-0.6666666666666666 0.3333333333333333 0 0 0 0 0 0) (-0.11111111111111116 -0.2777777777777778 0.16666666666666666 0 0 0 0 0) (-0.06666666666666665 -0.01666666666666665 -0.15 0.1 0 0 0 0) (-0.04148148148148145 -0.010370370370370384 -0.004444444444444429 -0.09333333333333334 0.06666666666666667 0 0 0) (-0.02716049382716055 -0.006790123456790099 -0.002910052910052921 -0.0015873015873015923 -0.06349206349206349 0.047619047619047616 0 0) (-0.01862433862433862 -0.004656084656084648 -0.0019954648526077138 -0.0010884353741496525 -0.0006802721088435429 -0.04591836734693878 0.03571428571428571 0) (-0.013278463648833956 -0.0033196159122085497 -0.001422692533803634 -0.0007760141093474478 -0.00048500881834215455 -0.00033068783068782953 -0.034722222222222224 0.027777777777777776)))
 )
 
@@ -484,4 +511,75 @@
         third-random-vec (collapse(superpose((size-atom $8dim10poprvec) (let $vec (index-atom $8dim10poprvec 0) (size-atom $vec))))))
     )
     (first-random-vec (3 2) second-random-vec (5 3) third-random-vec (10 8))
+)
+
+; ;;;; mat-mat-mul (matrice-matrice multiplication(can handle matrice-vector multiplication too)) ;;;;
+
+; ;;;; Test mat-mat-mul (matrice-matrice multiplication) with matrices with shape (n m), and (m k) ;;;;
+; ; Output = a matrice multiplication result of the two matrices having a shape (n k)
+
+!(assertEqual
+    (let*
+        (
+            ($firstmatmul (mat-mat-mul ((2 3 4 5) (5 4 3 2)) ((1) (2) (3) (4))))
+            ($secondmatmul (mat-mat-mul ((2 3 4) (3 4 5) (4 5 6)) ((4 3 2) (5 4 3) (6 5 4))))
+            ($thirdmatmul (mat-mat-mul ((2 3 4 5 6 7 8 9) 
+                                        (5 4 3 2 3 6 5 4) 
+                                        (4 3 5 6 2 5 6 3) 
+                                        (2 5 8 6 4 3 2 1) 
+                                        (1 2 3 4 2 1 5 8) 
+                                        (2 1 3 4 2 1 3 4) 
+                                        (4 5 3 2 3 4 5 6) 
+                                        (2 3 4 5 6 7 6 5)
+                                        (3 2 4 5 7 6 4 2)
+                                        (3 2 4 6 6 2 3 4)) 
+                                        ((5 4 3 2 3 6 5 4) 
+                                        (4 3 5 6 2 5 6 3) 
+                                        (2 5 8 6 4 3 2 1) 
+                                        (1 2 3 4 2 1 5 8) 
+                                        (2 1 3 4 2 1 3 4) 
+                                        (4 5 3 2 3 4 5 6) 
+                                        (2 3 4 5 6 7 6 5)
+                                        (3 2 4 5 7 6 4 2))))
+        )
+        (Firstmatmul-result $firstmatmul Secondmatmul-result $secondmatmul Thirdmatmul-result $thirdmatmul)
+    )
+    (Firstmatmul-result ((40) (30)) Secondmatmul-result ((47 38 29) (62 50 38) (77 62 47)) Thirdmatmul-result ((118 130 175 189 182 188 198 185) (101 107 128 129 121 147 150 132) (93 113 142 143 126 142 157 152) (79 102 146 143 96 103 129 125) (65 71 110 123 120 118 116 100) (50 58 84 89 81 81 87 83) (98 100 132 139 128 150 149 123) (102 116 151 159 142 150 170 167) (88 101 129 132 109 116 143 150) (75 83 121 129 105 105 127 129)))
+)
+
+;;;; Test mat-mat-mul (matrice-matrice-multiplication) with two matrices that are incompatible in shape(i.e one with shape (n m), and the other (k l))
+; Output = (Error (m k) DimensionMismatch)
+
+;;;; Test mat-mat-mul (matrice-matrice-multiplication) with a matrice of shape (n m), and a vector (1 m)
+; Output = a vector with shape (1 m) which is the result of the matrice-vector multiplication of the input matrice and vector
+
+!(assertEqual
+    (mat-mat-mul ((1 2 3 4 5 6 7 8) (2 3 4 5 6 7 8 9) (3 4 5 6 7 8 9 10) (4 5 6 7 8 9 10 11) (5 6 7 8 9 10 11 12) (6 7 8 9 10 11 12 13) (7 8 9 10 11 12 13 14) (8 9 10 11 12 13 14 15)) ((1 2 3 4 5 6 7 8)))
+    (204 240 276 312 348 384 420 456)
+)
+
+;;;; random-multivariate ;;;;
+
+;;;; Test random-multivariate with mean vector(mean) of shape (8), covarinace matrice(cov) of shape (n n), number of smaples(lambda_), and new-space
+; Output = lambda_ amount of sample vectors, each having a shape (8), drawn from a multi variable normal distribution
+
+(= (rmtest-mean) (0.37454012 0.95071431 0.73199394 0.59865848 0.15601864 0.15599452
+ 0.05808361 0.86617615))
+
+(= (rmtest-cov) (cov))
+
+!(assertEqual
+    (let*
+        (
+            ($firstrms  (random-multivariate (rmtest-mean) (rmtest-cov) 1 (get-space)))
+            ($secondrms  (random-multivariate (rmtest-mean) (rmtest-cov) 5 (get-space)))
+            ($thirdrms  (random-multivariate (rmtest-mean) (rmtest-cov) 10 (get-space)))
+        )
+        (First-sample-shape ((size-atom $firstrms) (let $ffsample (car-atom $firstrms) (size-atom $ffsample)))
+         Second-rand-mul-samp ((size-atom $secondrms) (let $sfsample (car-atom $secondrms) (size-atom $sfsample))) 
+         Third-rand-mul-samp ((size-atom $thirdrms) (let $tfsample (car-atom $thirdrms) (size-atom $tfsample))))
+    )
+    (First-sample-shape (1 8)
+    Second-rand-mul-samp (5 8) 
+    Third-rand-mul-samp (10 8))
 )
