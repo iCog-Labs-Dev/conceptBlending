@@ -99,10 +99,10 @@
 !(assertEqual (c1)       0.022307163120344784)
 !(assertEqual (c_mu)     0.028749917692721574)
 
-;;;; cma-es-main-loop ;;;;
+;;;; cma-es-blend (encompasses a test for cma-es-main-loop) ;;;;
 !(assertEqual 
-    (let $x (cma-es-main-loop) ((size-atom $x) (let $y (car-atom $x) (size-atom $y)) (let $z (car-atom $x) (let $s (car-atom $z) (size-atom $s)))))
-    (30 5 8)
+   (cma-es-blend)
+   (doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))
 )
 
 ; make-indices edge cases

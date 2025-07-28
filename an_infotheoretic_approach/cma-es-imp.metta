@@ -1,5 +1,6 @@
 ;;;; CMA-ES(Convolution Matrix Adaptation Evolution Strategy) Implementation.
 
+!(import! &self libs)
 !(import! &self utils:random-list-utils)
 !(import! &self utils:cma-es-utils)
 !(import! &self info-theoretic)
@@ -7,11 +8,35 @@
 (= (get-space) (new-space))
 
 ;;;; INPUT CONCEPTS ;;;;
-(= (concept1) 
-    (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+; (= (concept1) 
+;     (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+; )
+; (= (concept2) 
+;     (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+; )
+
+(= (Input1) "Bat")
+(= (Input2) "Man")
+
+;;;; Vital Relation Extraction ;;;;
+(= (vit-rel-extraction $input1 $input2)
+    (let ($vital-relation-1 $vital-relation-2) (gpt_vital_relation $input1 $input2)
+        (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))
+    )
 )
-(= (concept2) 
-    (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+
+;;;; Vector Extraction ;;;;
+(= (vec-extraction $input1 $input2)
+    (let $vital-relations (vit-rel-extraction $input1 $input2)
+        (let $vec-concepts (gpt_vector $input1 $input2 $vital-relations) $vec-concepts)
+    )
+)
+
+;;;; Add vectorized concepts to self space ;;;;
+(= (add-concepts)
+    (let ($concept1 $concept2) (vec-extraction (Input1) (Input2))
+        (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
+    )
 )
 
 ;;;; PARAMETERS ;;;;
@@ -44,7 +69,7 @@
 (= (p_sigma) (zeros-vec (dim)))
 
 ;;;; POPULATION FITNESS SCORE CALCULATION ;;;;
-(= (population-fitness-score $population) 
+(= (population-fitness-score $population)
     (map-atom $population $x (mu-hqblend $x (concept1) (concept2)))
 )
 
@@ -138,31 +163,6 @@
     )
 )
 
-(: update-mean (List List -> List))
-(= (update-mean1 $samples $fitness $mu $weights)
-    (let $selected (select-by-indices $samples $fitness $mu)
-       (
-            if (== (size-atom $weights) 0)             
-            ()                                  
-            (let* (
-                    ($scaled                 
-                        (vec-scale
-                        (index-atom $weights   0)
-                        (index-atom $selected 0)))
-                    ($rest                     
-                        (update-mean
-                        (cdr-atom $weights)
-                        (cdr-atom $selected)))
-                    )
-                (if (== (size-atom $rest) 0)
-                    $scaled 
-                    (vector-op $scaled $rest +)
-                )      
-            )
-        )
-    )
-)
-
 (= (update-mean $samples $mu $weights)
   (let $fitness-score (population-fitness-score $samples)
     (let $fit-ind-pairs (pair-index-fitness (make-indices $fitness-score) $fitness-score)
@@ -240,6 +240,7 @@
 
 !(bind! &inputspace (get-space))
 !(add-reduct &inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0)))
+!(add-concepts)
 
 (= (cma-es-single-iteration)
     (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen) (match &inputspace (Inputs $x) $x)
@@ -255,7 +256,7 @@
                 ($clean (collapse(match &inputspace (Inputs $params) (remove-atom &inputspace (Inputs $params)))))
                 (() (println! (GENERATION $gen | Max Fitness $new-best-fitness)))
             )
-            (let $added (add-reduct &inputspace (Inputs ($new-mean $new-cov $new-step-size $new-p-sigma $new-p-c $new-best-pop $new-best-fitness (+ 1 $gen)))) $new-best-pop)
+            (let $added (add-reduct &inputspace (Inputs ($new-mean $new-cov $new-step-size $new-p-sigma $new-p-c $new-best-pop $new-best-fitness (+ 1 $gen)))) ($new-best-pop $new-best-fitness))
         )
     )
 )
@@ -264,4 +265,29 @@
     (let $iters (generate-toy-list (GENERATIONS))  (map-atom $iters $iter (cma-es-single-iteration)))
 )
 
+(= (cma-es-blend)
+    (let $final-pop (cma-es-main-loop)
+        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
+            (let $best-fitness (index-atom $best-sample-with-fitness 1)
+                (if (>= $best-fitness 0)
+                    (let $concept-pair (let (Concept $x $y) (concept1) $x)
+                        (let $network (gpt_network_selector $concept-pair)
+                            (if (not (== $network None))
+                                (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
+                                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
+                                        ($network $concept-pair $best-cand-mu-emergence)
+                                    )
+                                )
+                                (Error $newtwork NoNetworkSelected)
+                            )
+                        )
+                    )
+                    (Error $best-fitness NegativeMu-hqblendValue)
+                )
+            )
+        )
+    )
+)
+
 ; !(cma-es-main-loop)
+; !(cma-es-blend)
