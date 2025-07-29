@@ -46,7 +46,7 @@
 ;;;; zeros-vec ;;;;
 
 !(assertEqual (zeros-vec 0)     ())
-!(assertEequal (zeros-vec 1)     (0))
+!(assertEqual (zeros-vec 1)     (0))
 !(assertEqual (zeros-vec 3)     (0 0 0))
 !(assertEqual (zeros-vec 5)     (0 0 0 0 0))
 !(assertEqual (zeros-vec 10)    (0 0 0 0 0 0 0 0 0 0))
@@ -100,12 +100,6 @@
 !(assertEqual (c1)       0.022307163120344784)
 !(assertEqual (c_mu)     0.028749917692721574)
 
-;;;; cma-es-blend (encompasses a test for cma-es-main-loop) ;;;;
-!(assertEqual 
-   (let $space &self (metta (cma-es-blend) %Undefined% $space))
-   (doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))
-)
-
 ; make-indices edge cases
 !(assertEqual (make-indices ()) ())
 !(assertEqual (make-indices (0.075)) (0))
@@ -143,10 +137,11 @@
    (select-by-indices (100 200 300) (1 2))
    (200 300))
 
-; update-mean
+; update-mean-test
 !(assertEqual
-   (let $res (update-mean ((1 2 3) (7 5 1)) 3 (0.6 0.4)) (car-atom $res))
-   (4.6000000000000005 3.8 1.8000000000000003))
+   (let $res (update-mean-test ((1 2 3) (7 5 1)) 3 (0.6 0.4)) (car-atom $res))
+   (4.6000000000000005 3.8 1.8000000000000003)
+)
 
 (= (samples)((1 1 0 0 0 0 1 1) (1 1 1 0 0 1 1 1) (0 0 0 0 0 1 1 1) (1 1 0 1 1 1 1 1) (1 1 0 0 0 0 0 0) (1 1 0 0 0 1 1 1) (1 1 1 0 0 1 1 1) (1 1 1 1 0 1 1 1) (1 1 0 0 0 1 1 1) (1 1 0 0 0 1 1 1)))
 (= (fitnesses) (0.046250000000000006 0.05125 0.03875000000000001 0.061250000000000006 0.012499999999999997 0.05125 0.05125 0.058750000000000004 0.05125 0.05125))
@@ -159,7 +154,7 @@
 !(assertEqual (sort-pairs-desc ()) ())
 !(assertEqual (extract-indices () 3) ())
 !(assertEqual (select-by-indices () ()) ())
-!(assertEqual (update-mean () 3 ()) (0.0 () ()))   
+!(assertEqual (update-mean-test () 3 ()) (0.0 () ()))   
 
 
 ; mu = 0  (nothing selected)
@@ -173,11 +168,11 @@
    ((0 10) (1 10) (2 5))
 )   
 
-; update-mean
+; update-mean-test
 (= (w3)  (0.5 0.3 0.2))
 (= (sel3) ((2 0) (4 4) (8 2)))
 !(assertEqual
-   (let $res (update-mean (sel3) 3 (w3)) (car-atom $res)) 
+   (let $res (update-mean-test (sel3) 3 (w3)) (car-atom $res)) 
    (4.800000000000001 2.6)
 )
 
@@ -185,7 +180,7 @@
 (= (wTiny) (0.999999 0.000001))
 (= (selTiny) ((2 2) (2000 2000)))
 !(assertEqual
-   (let $res (update-mean (selTiny) 2 (wTiny)) (car-atom $res))
+   (let $res (update-mean-test (selTiny) 2 (wTiny)) (car-atom $res))
    (1999.998002 1999.998002)
 )   ; essentially the first vector
 
@@ -583,4 +578,10 @@
     (First-sample-shape (1 8)
     Second-rand-mul-samp (5 8) 
     Third-rand-mul-samp (10 8))
+)
+
+;;;; cma-es-blend (encompasses a test for cma-es-main-loop) ;;;;
+!(assertEqual 
+   (let $space &self (metta (cma-es-blend) %Undefined% $space))
+   (doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))
 )

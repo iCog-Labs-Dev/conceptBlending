@@ -8,12 +8,12 @@
 (= (get-space) (new-space))
 
 ;;;; INPUT CONCEPTS ;;;;
-; (= (concept1) 
-;     (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
-; )
-; (= (concept2) 
-;     (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
-; )
+(= (testconcept1) 
+    (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+)
+(= (testconcept2) 
+    (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+)
 
 (= (Input1) "Bat")
 (= (Input2) "Man")
@@ -49,7 +49,7 @@
 (= (e) 2.71828)
 
 ;;;; STRATEGY PARAMETERS ;;;;
-(= (GENERATIONS) 3)
+(= (GENERATIONS) 30)
 (= (POPULATION_SIZE) 0)
 (= (lambda_) (if (<= (POPULATION_SIZE) 0) (+ 4 (round-math (* 3 (log-math (e) (dim))))) (POPULATION_SIZE)))
 (= (mu) (/ (lambda_) 2))
@@ -71,6 +71,11 @@
 ;;;; POPULATION FITNESS SCORE CALCULATION ;;;;
 (= (population-fitness-score $population)
     (map-atom $population $x (mu-hqblend $x (concept1) (concept2)))
+)
+
+;;;; POPULATION FITNESS SCORE CALCULATION FOR TESTING ;;;;
+(= (population-fitness-score-test $population)
+    (map-atom $population $x (mu-hqblend $x (testconcept1) (testconcept2)))
 )
 
 ;;;; RECOMBINATION(UPDATE MEAN) ;;;;
@@ -165,6 +170,23 @@
 
 (= (update-mean $samples $mu $weights)
   (let $fitness-score (population-fitness-score $samples)
+    (let $fit-ind-pairs (pair-index-fitness (make-indices $fitness-score) $fitness-score)
+        (let $desc-sorted-pairs (sort-pairs-desc $fit-ind-pairs)
+            (let $extracted-indices (extract-indices $desc-sorted-pairs $mu)
+                (let $selected (select-by-indices $samples $extracted-indices)
+                    (let $weighted-indiv (mat-vec-op $selected $weights *)
+                        ((foldl-atom $weighted-indiv 0 $acc $x (vector-op $x $acc +)) $selected $fitness-score)
+                    )
+                )
+            )
+        )
+    )
+  )
+)
+
+
+(= (update-mean-test $samples $mu $weights)
+  (let $fitness-score (population-fitness-score-test $samples)
     (let $fit-ind-pairs (pair-index-fitness (make-indices $fitness-score) $fitness-score)
         (let $desc-sorted-pairs (sort-pairs-desc $fit-ind-pairs)
             (let $extracted-indices (extract-indices $desc-sorted-pairs $mu)
@@ -291,13 +313,3 @@
 
 ; !(cma-es-main-loop)
 ; !(cma-es-blend)
-
-; !(chain (context-space) $space $space)
-; !(let $space (context-space)
-;     (metta (gpt_vital_relation "Bat" "Man") %Undefined% $space)
-    
-; )
-
-; !(let $space (context-space) (metta (+ 1 2) %Undefined% $space))
-; !(let $context (bind! &space (new-space)) (metta (+ 3 1) %Undefined% &space))
-
