@@ -1,6 +1,7 @@
 ! (register-module! ../../an_infotheoretic_approach)
 ; !(import! &self an_infotheoretic_approach:utils:cma-es-utils)
 !(import! &self an_infotheoretic_approach:cma-es-imp)
+!(import! &self libs)
 
 ;;;; apply-log ;;;;
 
@@ -101,8 +102,8 @@
 
 ;;;; cma-es-blend (encompasses a test for cma-es-main-loop) ;;;;
 !(assertEqual 
-   (cma-es-blend)
-   (doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))
+   (let $space &self (metta (cma-es-blend) %Undefined% $space))
+   (doubleScope (expand Bat Man) BatMan (extended NocturnalGuardian))
 )
 
 ; make-indices edge cases

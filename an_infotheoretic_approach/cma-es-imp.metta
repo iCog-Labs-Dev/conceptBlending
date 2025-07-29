@@ -49,7 +49,7 @@
 (= (e) 2.71828)
 
 ;;;; STRATEGY PARAMETERS ;;;;
-(= (GENERATIONS) 30)
+(= (GENERATIONS) 3)
 (= (POPULATION_SIZE) 0)
 (= (lambda_) (if (<= (POPULATION_SIZE) 0) (+ 4 (round-math (* 3 (log-math (e) (dim))))) (POPULATION_SIZE)))
 (= (mu) (/ (lambda_) 2))
@@ -291,3 +291,13 @@
 
 ; !(cma-es-main-loop)
 ; !(cma-es-blend)
+
+; !(chain (context-space) $space $space)
+; !(let $space (context-space)
+;     (metta (gpt_vital_relation "Bat" "Man") %Undefined% $space)
+    
+; )
+
+; !(let $space (context-space) (metta (+ 1 2) %Undefined% $space))
+; !(let $context (bind! &space (new-space)) (metta (+ 3 1) %Undefined% &space))
+
