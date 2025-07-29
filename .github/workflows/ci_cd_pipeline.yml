@@ -27,8 +27,12 @@ jobs:
         cd ../conceptBlending/an_infotheoretic_approach
         pip install -r requirements.txt
 
+    - name: Create .env file with OpenAI Key
+      run: echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > ../conceptBlending/an_infotheoretic_approach/.env
 
     - name: Run Tests
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         cd ../conceptBlending/an_infotheoretic_approach
         python scripts/run-tests.py

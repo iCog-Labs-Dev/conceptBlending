@@ -103,7 +103,7 @@
 ;;;; cma-es-blend (encompasses a test for cma-es-main-loop) ;;;;
 !(assertEqual 
    (let $space &self (metta (cma-es-blend) %Undefined% $space))
-   (doubleScope (expand Bat Man) BatMan (extended NocturnalGuardian))
+   (doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))
 )
 
 ; make-indices edge cases
