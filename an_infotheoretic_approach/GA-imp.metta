@@ -1,6 +1,7 @@
-! (import! &self utils:random-list-utils)
-! (import! &self info-theoretic)
-! (import! &self utils:GA-utils)
+!(import! &self utils:random-list-utils)
+!(import! &self info-theoretic)
+!(import! &self utils:GA-utils)
+!(import! &self libs)
 
 ;; ==== SEED FOR REPRODUCIBILITY ====
 ! (bind! np-rnd (py-atom numpy.random))
@@ -8,10 +9,13 @@
 ;;;; SPACES ;;;;
 !(bind! &individuals (new-space))
 
+;;;; SPACE GETTER METHOD ;;;;
+(= (get-space) (new-space))
+
 ;;;; PARAMETERS ;;;;
-(= (POP_SIZE) 20)
+(= (POP_SIZE) 50)
 (= (GENES) 8)
-(= (GENERATIONS) 10)
+(= (GENERATIONS) 30)
 (= (ELITE_COUNT) 3)
 (= (CROSSOVER_RATE) 0.9)
 ;; Initial_Mutation_STD, and Mutation_Decay respectively
@@ -23,11 +27,35 @@
 (= (ETA_PARAM) (2 1.05))
 
 ;;;; INPUT CONCEPTS ;;;;
-(= (concept1) 
+(= (testconcept1) 
     (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
 )
-(= (concept2) 
+(= (testconcept2) 
     (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+)
+
+(= (Input1) "Bat")
+(= (Input2) "Man")
+
+;;;; Vital Relation Extraction ;;;;
+(= (vit-rel-extraction $input1 $input2)
+    (let ($vital-relation-1 $vital-relation-2) (gpt_vital_relation $input1 $input2)
+        (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))
+    )
+)
+
+;;;; Vector Extraction ;;;;
+(= (vec-extraction $input1 $input2)
+    (let $vital-relations (vit-rel-extraction $input1 $input2)
+        (let $vec-concepts (gpt_vector $input1 $input2 $vital-relations) $vec-concepts)
+    )
+)
+
+;;;; Add vectorized concepts to self space ;;;;
+(= (add-concepts)
+    (let ($concept1 $concept2) (vec-extraction (Input1) (Input2))
+        (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
+    )
 )
 
 ;;;; POPULATION INITIALIZER FUNCTION ;;;;
@@ -153,24 +181,58 @@
     )
 )
 
-(= (main-loop $population ($init-eta $eta-growth) ($init-mut-std $mut-decay) $generation-number)
-    (
-        if (<= $generation-number 0)
-        $population
+!(bind! &inputspace (get-space))
+!(add-reduct &inputspace (Inputs ((initialize-population) (ETA_PARAM) (MUTATION_PARAM) 0)))
+!(add-concepts)
+
+(= (GA-single-iteration)
+    (let ($population ($init-eta $eta-growth) ($init-mut-std $mut-decay) $generation-number) (match &inputspace (Inputs $x) $x)
         (let* (
             ($popfitness (population-fitness-score $population))
-            (() (println! (GENERATION: (- (GENERATIONS) (- $generation-number 1)) | BEST-FITNESS: (max-atom $popfitness))))
             ($zippedpopfit (zip-list $population $popfitness))
             ($add (add-list-to-space $zippedpopfit &individuals))
             ($elites (elite-individuals $popfitness &individuals (ELITE_COUNT)))
             ($new-population (populate-new-population $population $popfitness $elites $init-eta $init-mut-std))
             ($new-population-clipped (if (== (size-atom $new-population) (POP_SIZE)) $new-population (cdr-atom $new-population)))
             (($upd-eta $upd-mut-std) (collapse(superpose((* $init-eta $eta-growth) (* $init-mut-std $mut-decay)))))
-            ($next-generation (main-loop $new-population-clipped ($upd-eta $eta-growth) ($upd-mut-std $mut-decay) (- $generation-number 1)))
+            ($clean (collapse(match &inputspace (Inputs $params) (remove-atom &inputspace (Inputs $params)))))
+            (() (println! (GENERATION: $generation-number | BEST-FITNESS: (max-atom $popfitness))))
         )
-        $next-generation
+        (let $added (add-reduct &inputspace (Inputs ($new-population-clipped ($upd-eta $eta-growth) ($upd-mut-std $mut-decay) (+ 1 $generation-number)))) ($new-population (max-atom $popfitness)))
         )
     )
 )
 
+(= (GA-main-loop)
+    (let $iters (generate-toy-list (GENERATIONS)) (map-atom $iters $iter (GA-single-iteration)))
+)
+
+; !(GA-main-loop)
+; !(match &inputspace (Inputs $x) $x)
 ; !(main-loop (initialize-population) (ETA_PARAM) (MUTATION_PARAM) (GENERATIONS))
+
+(= (GA-blend)
+    (let $final-pop (GA-main-loop)
+        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
+            (let $best-fitness (index-atom $best-sample-with-fitness 1)
+                (if (>= $best-fitness 0)
+                    (let $concept-pair (let (Concept $x $y) (concept1) $x)
+                        (let $network (gpt_network_selector $concept-pair)
+                            (if (not (== $network None))
+                                (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
+                                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
+                                        ($network $concept-pair $best-cand-mu-emergence)
+                                    )
+                                )
+                                (Error $newtwork NoNetworkSelected)
+                            )
+                        )
+                    )
+                    (Error $best-fitness NegativeMu-hqblendValue)
+                )
+            )
+        )
+    )
+)
+
+; !(GA-blend)

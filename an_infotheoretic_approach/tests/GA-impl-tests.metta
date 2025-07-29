@@ -1,5 +1,6 @@
 ! (register-module! ../../an_infotheoretic_approach)
 !(import! &self an_infotheoretic_approach:GA-imp)
+!(import! &self libs)
 
 ;;;; SPACE BINDING AND POPULATING ;;;;
 !(bind! &testspace (new-space))
@@ -113,13 +114,13 @@
 )
 
 
-;;;; main-loop ;;;;
-;; INFO: The testing of this function applies for populate-two-child, and populate-new-population too as it's(the main loop depends on the proper functioning of the two functions)
+;;;; GA-blend ;;;;
+;; INFO: The testing of this function applies for populate-two-child, populate-new-population, GA-single-iteration, and GA-main-loop too as it's(the main loop depends on the proper functioning of the two functions)
 
-; Test main-loop with 20 initial population size, ETA parameters, Mutation parameters, and 10 generations
-; Output: 20 best fit individuals each having 8 genes.
+; Test GA-blend with two input concepts,  50 population size, ETA parameters, Mutation parameters, and 30 generations
+; Output: The blend concept of the two input concepts.
 
-; !(assertEqual
-;     (let $x (main-loop (initialize-population) (ETA_PARAM) (MUTATION_PARAM) (GENERATIONS)) (collapse(superpose((size-atom $x) (let $y (car-atom $x) (size-atom $y))))))
-;     (20 8)
-; )
+!(assertEqual 
+   (let $space &self (metta (GA-blend) %Undefined% $space))
+   (doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))
+)

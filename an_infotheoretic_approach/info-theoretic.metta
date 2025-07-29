@@ -1,5 +1,4 @@
 ! (import! &self utils:list-op-utils)
-
 (: Concept Concept)
 
 ; ###################### Helper functions ##########################

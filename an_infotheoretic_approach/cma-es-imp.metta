@@ -5,6 +5,7 @@
 !(import! &self utils:cma-es-utils)
 !(import! &self info-theoretic)
 
+;;;; SPACE GETTER METHOD ;;;;
 (= (get-space) (new-space))
 
 ;;;; INPUT CONCEPTS ;;;;
