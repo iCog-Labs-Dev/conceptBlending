@@ -1,5 +1,5 @@
 ! (register-module! ../../an_infotheoretic_approach)
-! (import! &self an_infotheoretic_approach:step-5)
+! (import! &self an_infotheoretic_approach:rec-step-size-adapt-imp)
 
 ; Test y (mean-diff-step)
 ! (assertEqual

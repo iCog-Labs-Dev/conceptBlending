@@ -1,4 +1,6 @@
 ! (import! &self utils:list-op-utils)
+!(import! &self libs)
+
 (: Concept Concept)
 
 ; ###################### Helper functions ##########################
@@ -154,5 +156,50 @@
         ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
     )
         (min-atom ($1-over-prop-summation 1))
+    )
+)
+
+;;;; Vital Relation Extraction ;;;;
+(= (vit-rel-extraction $input1 $input2)
+    (let ($vital-relation-1 $vital-relation-2) (gpt_vital_relation $input1 $input2)
+        (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))
+    )
+)
+
+;;;; Vector Extraction ;;;;
+(= (vec-extraction $input1 $input2)
+    (let $vital-relations (vit-rel-extraction $input1 $input2)
+        (let $vec-concepts (gpt_vector $input1 $input2 $vital-relations) $vec-concepts)
+    )
+)
+
+;;;; Add vectorized concepts to self space ;;;;
+(= (add-concepts)
+    (let ($concept1 $concept2) (vec-extraction (Input1) (Input2))
+        (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
+    )
+)
+
+(= (blend $GAorCMA)
+    (let $final-pop ($GAorCMA)
+        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
+            (let $best-fitness (index-atom $best-sample-with-fitness 1)
+                (if (>= $best-fitness 0)
+                    (let $concept-pair (let (Concept $x $y) (concept1) $x)
+                        (let $network (gpt_network_selector $concept-pair)
+                            (if (not (== $network None))
+                                (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
+                                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
+                                        ($network $concept-pair $best-cand-mu-emergence)
+                                    )
+                                )
+                                (Error $newtwork NoNetworkSelected)
+                            )
+                        )
+                    )
+                    (Error $best-fitness NegativeMu-hqblendValue)
+                )
+            )
+        )
     )
 )

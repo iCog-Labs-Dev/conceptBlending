@@ -19,27 +19,6 @@
 (= (Input1) "Bat")
 (= (Input2) "Man")
 
-;;;; Vital Relation Extraction ;;;;
-(= (vit-rel-extraction $input1 $input2)
-    (let ($vital-relation-1 $vital-relation-2) (gpt_vital_relation $input1 $input2)
-        (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))
-    )
-)
-
-;;;; Vector Extraction ;;;;
-(= (vec-extraction $input1 $input2)
-    (let $vital-relations (vit-rel-extraction $input1 $input2)
-        (let $vec-concepts (gpt_vector $input1 $input2 $vital-relations) $vec-concepts)
-    )
-)
-
-;;;; Add vectorized concepts to self space ;;;;
-(= (add-concepts)
-    (let ($concept1 $concept2) (vec-extraction (Input1) (Input2))
-        (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
-    )
-)
-
 ;;;; PARAMETERS ;;;;
 
 ;;;; DIMENSION, INITIAL MEAN, COVARIANCE, AND STEP SIZE
@@ -50,7 +29,7 @@
 (= (e) 2.71828)
 
 ;;;; STRATEGY PARAMETERS ;;;;
-(= (GENERATIONS) 30)
+(= (GENERATIONS) 3)
 (= (POPULATION_SIZE) 0)
 (= (lambda_) (if (<= (POPULATION_SIZE) 0) (+ 4 (round-math (* 3 (log-math (e) (dim))))) (POPULATION_SIZE)))
 (= (mu) (/ (lambda_) 2))
@@ -288,29 +267,4 @@
     (let $iters (generate-toy-list (GENERATIONS))  (map-atom $iters $iter (cma-es-single-iteration)))
 )
 
-(= (cma-es-blend)
-    (let $final-pop (cma-es-main-loop)
-        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
-            (let $best-fitness (index-atom $best-sample-with-fitness 1)
-                (if (>= $best-fitness 0)
-                    (let $concept-pair (let (Concept $x $y) (concept1) $x)
-                        (let $network (gpt_network_selector $concept-pair)
-                            (if (not (== $network None))
-                                (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
-                                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
-                                        ($network $concept-pair $best-cand-mu-emergence)
-                                    )
-                                )
-                                (Error $newtwork NoNetworkSelected)
-                            )
-                        )
-                    )
-                    (Error $best-fitness NegativeMu-hqblendValue)
-                )
-            )
-        )
-    )
-)
-
-; !(cma-es-main-loop)
-; !(cma-es-blend)
+; !(blend cma-es-main-loop)

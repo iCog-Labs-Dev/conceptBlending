@@ -121,6 +121,6 @@
 ; Output: The blend concept of the two input concepts.
 
 !(assertEqual 
-   (let $space &self (metta (GA-blend) %Undefined% $space))
-   (doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))
+    (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (blend GA-main-loop) %Undefined% $space)) ($net-type $blend))
+    (doubleScope BatMan)
 )
