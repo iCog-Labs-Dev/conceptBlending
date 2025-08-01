@@ -6,10 +6,7 @@
 (= (check-against-predefined-list $item $item2 $terms_antonymity $list)
     (if (== (size-atom $list) 0 )
         0
-        (if (or 
-        (== ($item $item2) (car-atom $list)) 
-        (or 
-            (== ($item2 $item) (car-atom $list)) 
+        (if (or (== ($item $item2) (car-atom $list)) (or (== ($item2 $item) (car-atom $list)) 
             $terms_antonymity
         )
             )    1 ; Item found
@@ -17,6 +14,7 @@
         )
     )
 )
+;!(check-against-predefined-list hot cold False (predefined-conflicts))
 
 (= (count-trues-from-head-with-tail $head $tail_list $predefined-conflicts)
   (if (< (size-atom $tail_list) 1)
@@ -31,6 +29,7 @@
         )
     )
 )
+
 (= (conflict-check-loop $items $predefined-conflicts)
   (if (< (size-atom $items) 2)
       0
@@ -51,6 +50,7 @@
         ($prop_names (map-atom $prop-list $x (car-atom $x)))
         ($conflicts (conflict-check-loop $prop_names (predefined-conflicts)))
         ($conflict_ratio (/ $conflicts (pow-math (size-atom $prop_names) 0.5)))
+        (() (println! (Conflict Ratio $conflict_ratio)))
     )
         (
             max-atom (0.0 (- 1.0 $conflict_ratio))
