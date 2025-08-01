@@ -11,7 +11,9 @@ from .agents.optimality_principles.main.data_sources.llm_integration import LLMI
 NETWORKS = ["simplex", "mirror", "single", "double", "vector", "network_selector", "vital_relation"]
 
 def load_config():
-    with open("../libs/agents/optimality_principles/config/constraints.yaml") as f:
+    base_dir = os.path.dirname(__file__)
+    config_path = os.path.join(base_dir, "agents", "optimality_principles", "config", "constraints.yaml")
+    with open(config_path) as f:
         config = yaml.safe_load(f)
     if "llm" in config and "api_key" in config["llm"]:
         config["llm"]["api_key"] = os.path.expandvars(config["llm"]["api_key"])
