@@ -60,4 +60,8 @@ an_infotheoretic_approach/
 ├── requirements.txt             # Python dependencies (if using Python bindings)
 └── .env.example                 # Example configuration for environment variables
 ```
+### GA-imp.metta
+
+Implements a Genetic Algorithm (GA) for exploring the blend space.
+
 
