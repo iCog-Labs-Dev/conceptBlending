@@ -1,9 +1,9 @@
 ! (import! &self libs)
 ! (import! &self info-theoretic)
 
-;!(bind! &input-space (new-space))
-;!(bind! &generic-space (new-space))
-;!(bind! &blended-space (new-space))
+!(bind! &input-space (new-space))
+!(bind! &generic-space (new-space))
+!(bind! &blended-space (new-space))
 
 
 ; metta function to add given expressions to space and file(external file)
@@ -18,7 +18,7 @@
 
 ; --------------------------------------
 ; ;; Load the stored concepts from knowledge base
-;!(load-ascii &input-space data/kb_concepts.metta)
+!(load-ascii &input-space data/kb_concepts.metta)
 
 
 ;! (add-data (Concept Bat) &input-space "kb_concepts.metta")
@@ -88,4 +88,4 @@
         (blend_from_lists $list-of-inputs1 $list-of-inputs2)
     )
 )
-;! (blend_from_space &input-space)
+; ! (blend_from_space &input-space)

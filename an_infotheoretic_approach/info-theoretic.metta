@@ -1,5 +1,5 @@
-! (import! &self libs)
 ! (import! &self utils:list-op-utils)
+!(import! &self libs)
 
 (: Concept Concept)
 
@@ -45,7 +45,7 @@
     (let
         ($property1values $property2values $properties)
         (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1))))
-        (tuple-multiply $property1values $property2values $properties)
+        (list-multiply $property1values $property2values $properties)
     )
 )
 ;! (property-product ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)) ((mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
@@ -69,15 +69,12 @@
 ;!(get-number-of-properties (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [8]
 
-
-; ################### Convert Number to Decimal ##########################
 (: decimal (-> Number Number))
 (=(decimal $number)
     (+ $number 0.0)
 )
-;!(decimal 1)
+; !(decimal 1)
 ; Output [1.0]
-
 
 ; ###################### Calculate Probability ##############################
 (: property-probability (-> Concept Number))
@@ -133,32 +130,24 @@
 
 
 ; ###################### Calculate mu emergence ##########################
-(= (mu-emergence $property-degree $properties-max)
+(= (mu-emergence $candidate-degrees $properties-max)
     (
         let
         ($propertiesvalues $properties)
         (collapse(superpose((get-values $properties-max) (get-properties $properties-max))))
-        (tuple-substract $property-degree $propertiesvalues $properties)
+        (list-substract $candidate-degrees $propertiesvalues $properties)
     )
 )
-;! (mu-emergence 0.9030899869919434 (property-max (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))))
+;! (mu-emergence (0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434)(property-max (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))))
 ; Output [((mobility 0.0030899869919434053) (intelligence 0.0030899869919434053) (web-creation 0.0) (social-structure 0.10308998699194338) (predatory-behavior 0.0030899869919434053) (communication 0.0030899869919434053) (symbolism 0.20308998699194347) (physical-strength 0.20308998699194347))]
-
-; ! (let*(
-;         ($concept1 (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
-;         ($concept2 (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.2) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
-;         ($degree (property-degree $concept1))
-;         ($max (property-max $concept1 $concept2))
-;         ($calculated-mu-emergence (mu-emergence $degree $max))
-;     )
-;     $calculated-mu-emergence
-; )
-; Output [((web-creation 0.0) (intelligence 0.5030899869919434) (physical-strength 0.30308998699194345) (mobility 0.10308998699194338) (predatory-behavior 0.0) (social-structure 0.7030899869919434) (symbolism 0.20308998699194347) (tool-use 0.8030899869919434))]
 
 
 ; ###################### Calculate mu hq blend ##########################
-(= (mu-hqblend $mu-emer $properties-min)
+(= (mu-hqblend $candidate-degrees $concept1 $concept2)
     (let*(
+        ($properties-max (property-max $concept1 $concept2))
+        ($properties-min (property-min $concept1 $concept2))
+        ($mu-emer (mu-emergence $candidate-degrees $properties-max))
         ($product-emer-min (property-product $mu-emer $properties-min))
         ($product-emer-min-nums (get-values $product-emer-min))
         ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
@@ -169,47 +158,48 @@
         (min-atom ($1-over-prop-summation 1))
     )
 )
-; ! (let*(
-;     ($concept1 (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
-;     ($concept2 (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
-;     ($degree (property-degree $concept1))
-;     ($max (property-max $concept1 $concept2))
-;     ($min (property-min $concept1 $concept2))
-;     ($calculated-mu-emergence (mu-emergence $degree $max))
-;     ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
-; )
-; $calculated-mu-hqblend
-; )
-;Output [0.027331495447180196]
 
-
-(= (blend $input1 $input2)
-    (let*(
-        (($vital-relation-1 $vital-relation-2) (gpt_vital_relation $input1 $input2))
-        ($vital-relations (let $t (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $t)))
-        ($concepts (gpt_vector $input1 $input2 $vital-relations))
-        ($concept1 (car-atom $concepts))
-        ($wrapped-concept2 (cdr-atom $concepts))
-        ($concept2 (car-atom $wrapped-concept2))
-        ($degree (property-degree $concept1))
-        ($max (property-max $concept1 $concept2))
-        ($calculated-mu-emergence (mu-emergence $degree $max))
-        ($min (property-min $concept1 $concept2))
-        ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
-        ($concept-pair (let (Concept $x $y) $concept1 $x))
+;;;; Vital Relation Extraction ;;;;
+(= (vit-rel-extraction $input1 $input2)
+    (let ($vital-relation-1 $vital-relation-2) (gpt_vital_relation $input1 $input2)
+        (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))
     )
-        (if (> $calculated-mu-hqblend 0)
-            (let*(
-                ($network (gpt_network_selector $concept-pair))
-            )
-                (if (not (noreduce-eq $network None))
-                    ($network $concept-pair $calculated-mu-emergence)
-                    (empty)
+)
+
+;;;; Vector Extraction ;;;;
+(= (vec-extraction $input1 $input2)
+    (let $vital-relations (vit-rel-extraction $input1 $input2)
+        (let $vec-concepts (gpt_vector $input1 $input2 $vital-relations) $vec-concepts)
+    )
+)
+
+;;;; Add vectorized concepts to self space ;;;;
+(= (add-concepts)
+    (let ($concept1 $concept2) (vec-extraction (Input1) (Input2))
+        (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
+    )
+)
+
+(= (blend $GAorCMA)
+    (let $final-pop ($GAorCMA)
+        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
+            (let $best-fitness (index-atom $best-sample-with-fitness 1)
+                (if (>= $best-fitness 0)
+                    (let $concept-pair (let (Concept $x $y) (concept1) $x)
+                        (let $network (gpt_network_selector $concept-pair)
+                            (if (not (== $network None))
+                                (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
+                                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
+                                        ($network $concept-pair $best-cand-mu-emergence)
+                                    )
+                                )
+                                (Error $newtwork NoNetworkSelected)
+                            )
+                        )
+                    )
+                    (Error $best-fitness NegativeMu-hqblendValue)
                 )
             )
-            (empty)
         )
     )
 )
-! (blend "Bat" "Man")
-; [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]

@@ -110,23 +110,12 @@
 (= (blend_from_space $network $space)
     (let*
         (
-            ($knowledge_example (match $space (knowledge $y) $y))
-            ($nature_example (match $space (nature $x) $x))
+            ($knowledge-example (match $space (knowledge $y) $y))
+            ($nature-example (match $space (nature $x) $x))
         )
-        ($network $knowledge_example $nature_example)
+        ($network $knowledge-example $nature-example)
     )
 )
-
-; (= (blend_from_space $network $space)
-;     (let*
-;         (
-;             ($first_item (match $space ($y) $y))
-;             ($second_item (match $space ($x) $x))
-;         )
-;         ($network $first_item $second_item)
-;     )
-; )
-
 
 ! (import! &testSpace data)
 ! (blend_from_space gpt_simplex &testSpace)
