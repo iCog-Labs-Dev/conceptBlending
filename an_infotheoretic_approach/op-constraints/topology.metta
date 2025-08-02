@@ -1,4 +1,3 @@
-!(register-module! ../libs)
 ! (import! &self libs)
 ! (import! &self common-utils)
 
@@ -54,7 +53,7 @@
 )
 
 
-(= (topology_op $blend $concept1 $concept2 )
+(= (topology-op $blend $concept1 $concept2 )
     (let*(
        ($concept1-relations-list (relations-key-value-list $concept1))
         ($concept2-relations-list (relations-key-value-list $concept2))
@@ -74,4 +73,4 @@
     )
 )
 
-! (topology_op (good_blend) (concept1) (concept2))
+; ! (topology-op (good_blend) (concept1) (concept2))

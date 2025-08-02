@@ -1,4 +1,4 @@
-! (import! &self utils:list-op-utils)
+!(import! &self utils:list-op-utils)
 !(import! &self libs)
 
 (: Concept Concept)
@@ -89,7 +89,6 @@
 ;!(property-probability (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [0.125]
 
-
 ; ###################### Calculate Degree function ##########################
 (: property-degree (-> Concept Number))
 (=(property-degree $concept)
@@ -141,7 +140,6 @@
 ;! (mu-emergence (0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434)(property-max (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))))
 ; Output [((mobility 0.0030899869919434053) (intelligence 0.0030899869919434053) (web-creation 0.0) (social-structure 0.10308998699194338) (predatory-behavior 0.0030899869919434053) (communication 0.0030899869919434053) (symbolism 0.20308998699194347) (physical-strength 0.20308998699194347))]
 
-
 ; ###################### Calculate mu hq blend ##########################
 (= (mu-hqblend $candidate-degrees $concept1 $concept2)
     (let*(
@@ -156,6 +154,17 @@
         ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
     )
         (min-atom ($1-over-prop-summation 1))
+    )
+)
+
+(= (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend $blendproperties))
+    (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations $input1) (get-concept-relations $input2) (get-concept-relations $blend))))
+        (let ((Concept $conpair1 $propsc1) (Concept $conpair2 $propsc2)) ($concept1 $concept2)
+            (let ($formattedcon1 $formattedcon2 $formattedblend) (collapse(superpose((let $conce1rels (cons-atom Relations $con1rels) (Concept $input1 $propsc1 $conce1rels)) 
+                                                                                    (let $conce2rels (cons-atom Relations $con2rels) (Concept $input2 $propsc2 $conce2rels))   
+                                                                                    (let ($blenprops $blendrels) ((cons-atom Property $blendproperties) (cons-atom Relations $blenrels)) (Blend $blend $blenprops $blendrels))))) ($formattedcon1 $formattedcon2 $formattedblend)
+            )
+        )
     )
 )
 

@@ -83,7 +83,6 @@ class ConceptNetAdapter:
         print("Checking antonymity")
         edges = self.get_edges(term1, "Antonym")
         antonym_terms = {edge["end"]["label"].lower() for edge in edges if "end" in edge}
-        print(term2.lower() in antonym_terms)
         return term2.lower() in antonym_terms
 
     def are_terms_antonyms(self, metta: MeTTa, *args):

@@ -1,39 +1,39 @@
 
-(= (concept1)
-    (Concept car 
-    (Properties  (metal (car)) (hasWheels (car)))
+(= (op-concept1)
+    (Concept man 
+    (Properties  (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))
     (Relations (UsedFor (transportation 0.9)) (HasPart (engine 0.8)))
     )
 )
 
-(= (concept2)
-    (Concept boat 
-    (Properties  (floats (boat)) (waterproof (boat)))
+(= (op-concept2)
+    (Concept spider 
+    (Properties  (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))
     (Relations (UsedFor (transportation 0.9)) (UsedFor (recreation 0.7)))
     )
 )
 
 (= (good_blend)
-    (Blend amphibious_vehicle 
-    (Properties  (metal (car)) (floats (boat)) (waterproof))
+    (Blend spiderman 
+    (Properties  (mobility 1) (intelligence 1) (web-creation 1.0) (social-structure 1) (predatory-behavior 1) (communication 1) (symbolism 1) (physical-strength 1))
     (Relations (UsedFor (transportation 1.0)) (Short_HasPart (engine 0.8)))
     )
 )
 
-(= (blend-name ($blend_or_concept $blend_name $properties $relations)) $blend_name )
+(= (blend-name ($blend-or-concept $blend-name $properties $relations)) $blend-name)
 
 (= (get-property $prop-value-pair)
     (let ($x $y) $prop-value-pair $x)
 )
 
-(= (properties-list (Blend $blend_name $properties $relations)) (
-    let $prop_list $properties (cdr-atom $prop_list)
+(= (properties-list (Blend $blend-name $properties $relations)) (
+    let $prop-list $properties (cdr-atom $prop-list)
     )
 )
 
-(= (relations-key-value-list ($blend_or_concept $blend_name $properties $relations)) (
+(= (relations-key-value-list ($blend-or-concept $blend-name $properties $relations)) (
     (let*(
-        ($prop_list (cdr-atom $relations))
+        ($prop-list (cdr-atom $relations))
         ($relation-type (map-atom $prop_list $x ((car-atom $x) (get-property (index-atom $x 1))) ))
     )
         $relation-type
@@ -110,16 +110,14 @@
     )
 )
 
-(= (concept-relation-mapping ($relation $rel-type ($concept_a_relation $concept_b_relation) $confidence))(
-    $concept_a_relation $concept_b_relation
-)
+(= (concept-relation-mapping ($relation $rel-type ($concept-a-relation $concept-b-relation) $confidence))
+    ($concept-a-relation $concept-b-relation)
 )
 
 
-(= (sum ()) 0)
-(= (sum $lst)
-   (+ (car-atom $lst) (sum (cdr-atom $lst)))
-)
+; (= (sum $lst)
+;    (foldl-atom $lst 0 $acc $x (+ $acc $x))
+; )
 ; Expected output sum of list of numbers
 
 

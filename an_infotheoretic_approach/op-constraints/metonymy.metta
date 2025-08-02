@@ -1,4 +1,3 @@
-!(register-module! ../libs)
 ! (import! &self libs)
 ! (import! &self common-utils)
 
@@ -27,7 +26,6 @@
     )
 )
 
-
 (= (compression-indicators) (Syn Metonym Short_HasPart Abbr Contraction))
 
 (= (count-compressed-relations $relations $blend-properties $blend-name $acc)
@@ -45,11 +43,13 @@
         )
     )
 )
-(= (metonymy_op $blend)
+(= (metonymy-op $blend)
   (let* (
     ($blend-relations (relations-key-value-list $blend))
-    ($blend-relations-inner (car-atom $blend-relations))
-    ($total-relations (size-atom $blend-relations-inner))    
+    (() (println! $blend-relations))
+    ; ($blend-relations-inner (car-atom $blend-relations))
+    ($total-relations (size-atom $blend-relations))
+    (() (println! $total-relations))    
     ($blend-name (blend-name $blend))
     ($blend-properties (properties-list $blend))
     ($compressed-count (count-compressed-relations $blend-relations-inner $blend-properties $blend-name 0))
@@ -64,4 +64,4 @@
 )
 
 
-! (metonymy_op (good_blend))
+; ! (metonymy-op (good_blend))

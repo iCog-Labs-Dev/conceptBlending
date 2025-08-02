@@ -201,6 +201,25 @@
     )
 )
 
+(= (compare-concepts-prop-val ($input1 $concept1props) ($input2 $concept2props) $index)
+    (let (($prop1 $prop1val) ($prop2 $prop2val)) ((index-atom $concept1props $index) (index-atom $concept2props $index)) (if (>= $prop1val $prop2val) ($input1 $prop1 $prop1val) ($input2 $prop2 $prop2val)))
+)
+
+(= (provenance-helper ($input1 $concept1props) ($input2  $concept2props) ($blend $blendprops))
+    (collapse(
+        superpose(
+            (let (($gcn $gcp $gcpv) ($blendprop $blendpropval)) ((compare-concepts-prop-val ($input1 $concept1props) ($input2 $concept2props) 0) (index-atom $blendprops 0)) (if (>= $blendpropval $gcpv) ($blendprop) ($blendprop ($gcn))))
+            (let (($gcn $gcp $gcpv) ($blendprop $blendpropval)) ((compare-concepts-prop-val ($input1 $concept1props) ($input2 $concept2props) 1) (index-atom $blendprops 1)) (if (>= $blendpropval $gcpv) ($blendprop) ($blendprop ($gcn))))
+            (let (($gcn $gcp $gcpv) ($blendprop $blendpropval)) ((compare-concepts-prop-val ($input1 $concept1props) ($input2 $concept2props) 2) (index-atom $blendprops 2)) (if (>= $blendpropval $gcpv) ($blendprop) ($blendprop ($gcn))))
+            (let (($gcn $gcp $gcpv) ($blendprop $blendpropval)) ((compare-concepts-prop-val ($input1 $concept1props) ($input2 $concept2props) 3) (index-atom $blendprops 3)) (if (>= $blendpropval $gcpv) ($blendprop) ($blendprop ($gcn))))
+            (let (($gcn $gcp $gcpv) ($blendprop $blendpropval)) ((compare-concepts-prop-val ($input1 $concept1props) ($input2 $concept2props) 4) (index-atom $blendprops 4)) (if (>= $blendpropval $gcpv) ($blendprop) ($blendprop ($gcn))))
+            (let (($gcn $gcp $gcpv) ($blendprop $blendpropval)) ((compare-concepts-prop-val ($input1 $concept1props) ($input2 $concept2props) 5) (index-atom $blendprops 5)) (if (>= $blendpropval $gcpv) ($blendprop) ($blendprop ($gcn))))
+            (let (($gcn $gcp $gcpv) ($blendprop $blendpropval)) ((compare-concepts-prop-val ($input1 $concept1props) ($input2 $concept2props) 6) (index-atom $blendprops 6)) (if (>= $blendpropval $gcpv) ($blendprop) ($blendprop ($gcn))))
+            (let (($gcn $gcp $gcpv) ($blendprop $blendpropval)) ((compare-concepts-prop-val ($input1 $concept1props) ($input2 $concept2props) 7) (index-atom $blendprops 7)) (if (>= $blendpropval $gcpv) ($blendprop) ($blendprop ($gcn))))                
+        )
+    ))
+)
+
 (= (remove-list-element $list $val)
     (
         if (== (size-atom $list) 0)

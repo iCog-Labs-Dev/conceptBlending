@@ -4,20 +4,22 @@
 !(import! &self utils:random-list-utils)
 !(import! &self utils:cma-es-utils)
 !(import! &self info-theoretic)
+!(import! &self op-constraints:op-evaluation)
+
 
 ;;;; SPACE GETTER METHOD ;;;;
 (= (get-space) (new-space))
 
 ;;;; INPUT CONCEPTS ;;;;
 (= (testconcept1) 
-    (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+    (Concept Man@Bat (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
 )
 (= (testconcept2) 
-    (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+    (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
 )
 
-(= (Input1) "Bat")
-(= (Input2) "Man")
+(= (Input1) "Man")
+(= (Input2) "Bat")
 
 ;;;; PARAMETERS ;;;;
 
@@ -268,3 +270,12 @@
 )
 
 ; !(blend cma-es-main-loop)
+!(let (($input1 $concept1) ($input2 $concept2) ($blend $blenpropwithoutprov)) (((Input1) (concept1))
+                    ((Input2) (concept1))
+                    (SpiderMan ((mobility 0.6) (intelligence 1) (web-creation 1.0) (social-structure 1) (predatory-behavior 1) (communication 1) (symbolism 1) (physical-strength 1))))
+                    (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend $blenpropwithoutprov))
+                        (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend $blenpropwithprov))
+                            (let $integration-res (op-evaluater $formattedblend) $integration-res)
+                        )
+                    )
+)

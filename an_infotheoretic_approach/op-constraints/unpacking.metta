@@ -1,4 +1,3 @@
-!(register-module! ../libs)
 ! (import! &self libs)
 ! (import! &self common-utils)
 
@@ -61,7 +60,7 @@
 )
 
 
-(= (unpacking_op $good_blend )
+(= (unpacking-op $good_blend )
     (let*(
         ($props (properties-list $good_blend))
         ($blend-name (blend-name $good_blend))
@@ -88,4 +87,4 @@
 (= (expansion-enabled) True )
 (= (min-similarity) 0.65 )
 
-! (unpacking_op (good_blend))
+; ! (unpacking-op (good_blend))

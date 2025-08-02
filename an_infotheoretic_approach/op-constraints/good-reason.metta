@@ -1,4 +1,3 @@
-!(register-module! ../libs)
 ! (import! &self libs)
 ! (import! &self common-utils)
 
@@ -86,16 +85,17 @@
 (= (is-justified $property $blend)
    (if (conceptnet-justification $property $blend)
        True
-       (good_reason_llm (default-prompt $property (blend-name $blend) (blend-context $blend)))
+       (good-reason-llm (default-prompt $property (blend-name $blend) (blend-context $blend)))
    )
 )
 
-(= (count-justified $emergents_list $blend)
-    (if (== $emergents_list ())
+(= (count-justified $emergents-list $blend)
+    (if (== $emergents-list ())
         0
-        (let* (($head (car-atom $emergents_list))
-               ($tail (cdr-atom $emergents_list))
+        (let* (($head (car-atom $emergents-list))
+               ($tail (cdr-atom $emergents-list))
                ($is-just (is-justified (car-atom $head) $blend))
+            ;    (() (println! yes))
                ($rest-count (count-justified $tail $blend)))
             (if $is-just
                 (+ 1.0 $rest-count) ; 1.0 to ensure float
@@ -104,7 +104,7 @@
         )
     )
 )
-(= (good_reason_op $blend)
+(= (good-reason-op $blend)
   (let* (
     ($blend-properties (properties-list $blend))
     ($emergents (emergents-filter $blend-properties)) ; TODO: should be replaced by filter-atom
@@ -120,4 +120,4 @@
   )
 )
 
-! (good_reason_op (good_blend))
+; ! (good-reason-op (good_blend))

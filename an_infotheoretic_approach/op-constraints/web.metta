@@ -1,4 +1,3 @@
-!(register-module! ../libs)
 ! (import! &self libs)
 ! (import! &self common-utils)
 
@@ -73,7 +72,7 @@
    )
 )
 
-(= (web_op $cross_mappings $blend)
+(= (web-op $cross_mappings $blend)
   (let* (
     ($blend-relations (relations-key-value-list $blend))
     ($scores (map-atom $cross_mappings
@@ -98,4 +97,4 @@
 )
 
 
-! (web_op (cross_mappings) (good_blend))
+; ! (web-op (cross_mappings) (good_blend))
