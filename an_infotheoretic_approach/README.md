@@ -38,13 +38,26 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ### 5. Run the Project
 
-Execute the project using the **MeTTa script** to test the conceptual blending functionality:
+## 📁 Directory Structure
 
 ```bash
-metta run-infotheoretic-blending.metta
+an_infotheoretic_approach/
+│
+├── GA-imp.metta                  # Genetic Algorithm implementation in MeTTa
+├── cma-es-imp.metta             # CMA-ES (Covariance Matrix Adaptation Evolution Strategy)
+├── rec-step-size-adapt-imp.metta # Recombination-based step-size adaptation (for CMA-ES)
+├── info-theoretic.metta         # Core blending logic using information-theoretic measures
+├── space-info-theoretic.metta   # AtomSpace-based blend implementation
+│
+├── data/                        # Sample input concept spaces and test data
+├── libs/                        # Support libraries (MeTTa or Python bindings)
+├── op_constraints/              # Optimality constraint modules (e.g., Integration, Compression)
+├── resources/                   # Background knowledge, concept nets, or structured data
+├── scripts/                     # Script entry points for experiments or evaluation
+├── tests/                       # Unit and integration tests
+├── utils/                       # Utilities for concept processing and transformation
+│
+├── requirements.txt             # Python dependencies (if using Python bindings)
+└── .env.example                 # Example configuration for environment variables
 ```
-The output will be:
 
-```plaintext
-(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))
-```
