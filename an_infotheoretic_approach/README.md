@@ -38,7 +38,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ### 5. Run the Project
 
-## 📁 Directory Structure
+### 📁 Directory Structure
 
 ```bash
 an_infotheoretic_approach/
@@ -60,8 +60,33 @@ an_infotheoretic_approach/
 ├── requirements.txt             # Python dependencies (if using Python bindings)
 └── .env.example                 # Example configuration for environment variables
 ```
-### GA-imp.metta
 
-Implements a Genetic Algorithm (GA) for exploring the blend space.
+#### info-theoretic.metta
+Calculates entropy, emergence, and mutual information metrics to evaluate blends.
+
+#### space-info-theoretic.metta
+
+Defines the concept blend space using symbolic MeTTa atoms and relations.
+
+#### GA-imp.metta
+implements a Genetic Algorithm (GA) to search through the conceptual blend space and evolve high-quality blends over generations
+
+#### cma-es-imp.metta
+implements the Covariance Matrix Adaptation Evolution Strategy (CMA-ES), a more advanced, continuous optimization method designed for real-valued representations of blends.
+
+
+
+### Testing
+To run all test files for MeTTa implementations
+
+```bash
+python scripts/run-tests.py
+```
+This will run all MeTTa-based test suites under tests/, including:
+
+- info-theoretic-tests.metta
+- GA-impl-tests.metta
+- cma-es-tests.metta
+- and utility modules like list-op-utils-tests.metta
 
 
