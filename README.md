@@ -1,15 +1,32 @@
 # Conceptual Blending Module
 
-This project implements a set of AI-driven conceptual blending systems that integrate **symbolic reasoning (MeTTa)** and **optimization techniques** to generate creative conceptual combinations. The project contains multiple approaches including a GPT-enhanced blending system and an information-theoretic system based on **Graph Matching (GM)**.
+This project implements a set of AI-driven conceptual blending systems that integrate **symbolic reasoning (MeTTa)** and **optimization techniques** to generate creative conceptual combinations. The system supports **GPT-enhanced conceptualization**, **constraint-based scoring**, and **information-theoretic evaluation** of conceptual blends.
 
 ## 📂 Submodules
 
-### 🔹 [Naive Blending Approach (with CMA-ES and GA)](./a_naive_approach/README.md)
-A functional implementation combining MeTTa reasoning and GPT-generated concepts. It supports optimization using:
-- **CMA-ES (Covariance Matrix Adaptation Evolution Strategy)**
-- **Genetic Algorithms (GA)**
+### 🔹 [Info-Theoretic Approach with CMA-ES and GA](./an_infotheoretic_approach/README.md)
+This is the **main executable pipeline** that combines:
+- Symbolic concept representation in **MeTTa**
+- **Information-theoretic analysis** (entropy, emergence, mutual information)
+- **Optimization using CMA-ES and Genetic Algorithms**
+- Integration with **GPT** and **ConceptNet** agents
+- Evaluation through **Optimality Constraints** (e.g., topology, unpacking, good reason)
 
-This is the main executable pipeline.
 
-### 🔹 [Info-Theoretic GM-Based Approach](./an_infotheoretic_approach/README.md)
-An alternative, non-executable implementation using **graph-based information-theoretic modeling**. This is currently **not intended for direct execution**.
+### 🔹 [Naive Blending Approach (Graph-Matching-Based)](./a_naive_approach/README.md)
+A simpler conceptual blending prototype based on **graph matching and GPT**.
+
+
+
+##  What is Conceptual Blending
+
+Conceptual blending is a cognitive process of **combining elements from multiple conceptual spaces** to form novel and meaningful ideas. This project automates blending using:
+
+- **Symbolic AI (MeTTa)** to represent and manipulate concepts.
+- **Information-theoretic methods** to quantify blend quality.
+- **LLMs (like GPT)** to extract and augment conceptual features.
+- **Optimization strategies** to search for high-fitness blends.
+
+---
+
+
