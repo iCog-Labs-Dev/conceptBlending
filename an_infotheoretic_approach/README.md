@@ -38,13 +38,55 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ### 5. Run the Project
 
-Execute the project using the **MeTTa script** to test the conceptual blending functionality:
+### 📁 Directory Structure
 
 ```bash
-metta run-infotheoretic-blending.metta
+an_infotheoretic_approach/
+│
+├── GA-imp.metta                  # Genetic Algorithm implementation in MeTTa
+├── cma-es-imp.metta             # CMA-ES (Covariance Matrix Adaptation Evolution Strategy)
+├── rec-step-size-adapt-imp.metta # Recombination-based step-size adaptation (for CMA-ES)
+├── info-theoretic.metta         # Core blending logic using information-theoretic measures
+├── space-info-theoretic.metta   # AtomSpace-based blend implementation
+│
+├── data/                        # Sample input concept spaces and test data
+├── libs/                        # Support libraries (MeTTa or Python bindings)
+├── op_constraints/              # Optimality constraint modules (e.g., Integration, Compression)
+├── resources/                   # Background knowledge, concept nets, or structured data
+├── scripts/                     # Script entry points for experiments or evaluation
+├── tests/                       # Unit and integration tests
+├── utils/                       # Utilities for concept processing and transformation
+│
+├── requirements.txt             # Python dependencies (if using Python bindings)
+└── .env.example                 # Example configuration for environment variables
 ```
-The output will be:
 
-```plaintext
-(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))
+#### info-theoretic.metta
+Calculates entropy, emergence, and mutual information metrics to evaluate blends.
+
+#### space-info-theoretic.metta
+
+Defines the concept blend space using symbolic MeTTa atoms and relations.
+
+#### GA-imp.metta
+implements a Genetic Algorithm (GA) to search through the conceptual blend space and evolve high-quality blends over generations
+
+#### cma-es-imp.metta
+implements the Covariance Matrix Adaptation Evolution Strategy (CMA-ES), a more advanced, continuous optimization method designed for real-valued representations of blends.
+
+
+
+### Testing
+To run all test files for MeTTa implementations
+
+```bash
+python scripts/run-tests.py
 ```
+This will run all MeTTa-based test suites under tests/, including:
+
+- info-theoretic-tests.metta
+- GA-impl-tests.metta
+- cma-es-tests.metta
+- and utility modules like list-op-utils-tests.metta
+
+
