@@ -2,7 +2,7 @@
 
 This project implements a set of AI-driven conceptual blending systems that integrate **symbolic reasoning (MeTTa)** and **optimization techniques** to generate creative conceptual combinations. The system supports **GPT-enhanced conceptualization**, **constraint-based scoring**, and **information-theoretic evaluation** of conceptual blends.
 
-## 📂 Submodules
+## Submodules
 
 ### 🔹 [Info-Theoretic Approach with CMA-ES and GA](./an_infotheoretic_approach/README.md)
 This is the **main executable pipeline** that combines:
