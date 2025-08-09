@@ -15,9 +15,9 @@
 (= (get-space) (new-space))
 
 ;;;; PARAMETERS ;;;;
-(= (POP_SIZE) 20)
+(= (POP_SIZE) 50)
 (= (GENES) 8)
-(= (GENERATIONS) 15)
+(= (GENERATIONS) 30)
 (= (ELITE_COUNT) 3)
 (= (CROSSOVER_RATE) 0.9)
 ;; Initial_Mutation_STD, and Mutation_Decay respectively
@@ -170,7 +170,7 @@
 (= (GA-single-iteration)
     (let ($population ($init-eta $eta-growth) ($init-mut-std $mut-decay) $generation-number $best-fitness $stall) 
      (match &inputspace (Inputs $x) $x)
-     (if (>= $stall 3)
+     (if (>= $stall 5)
             ($population $best-fitness)
         (let* (
             ($popfitness (population-fitness-score $population))

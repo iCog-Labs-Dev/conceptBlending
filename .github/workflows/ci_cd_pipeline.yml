@@ -3,10 +3,10 @@ name: CI/CD Workflow
 on:
   push:
     branches:
-      - CMAbranch
+      - Finalworksbranch
   pull_request:
     branches:
-      - CMAbranch
+      - Finalworksbranch
 
 jobs:
   build:

@@ -31,7 +31,7 @@
 (= (e) 2.71828)
 
 ;;;; STRATEGY PARAMETERS ;;;;
-(= (GENERATIONS) 5)
+(= (GENERATIONS) 30)
 (= (POPULATION_SIZE) 0)
 (= (lambda_) (if (<= (POPULATION_SIZE) 0) (+ 4 (round-math (* 3 (log-math (e) (dim))))) (POPULATION_SIZE)))
 (= (mu) (/ (lambda_) 2))
@@ -248,7 +248,7 @@
 
 (= (cma-es-single-iteration)
     (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen $stall) (match &inputspace (Inputs $x) $x)
-        (if (>= $stall 3)                         ; patience = 3 gens
+        (if (>= $stall 5)                         ; patience = 5 gens
           ($best-pop $best-fitness)             
           (let*
             (
@@ -299,4 +299,4 @@
     )
 )
 
-!(blend-cma-es-with-evaluation)
+; !(blend-cma-es-with-evaluation)
