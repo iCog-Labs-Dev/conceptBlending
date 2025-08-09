@@ -5,7 +5,7 @@
 !(import! &self utils:cma-es-utils)
 !(import! &self info-theoretic)
 !(import! &self op-constraints:op-evaluation)
-
+!(import! &self space-info-theoretic)
 
 ;;;; SPACE GETTER METHOD ;;;;
 (= (get-space) (new-space))
@@ -244,7 +244,7 @@
 
 !(bind! &inputspace (get-space))
 !(add-reduct &inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
-!(add-concepts)
+; !(add-concepts)
 
 (= (cma-es-single-iteration)
     (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen $stall) (match &inputspace (Inputs $x) $x)
@@ -300,3 +300,6 @@
 )
 
 ; !(blend-cma-es-with-evaluation)
+
+; !(space-blend cma-es-main-loop)
+; !(concept1)

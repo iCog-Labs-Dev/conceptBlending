@@ -128,7 +128,7 @@
 ;;;; GA-blend with evaluation ;;;;
 ; Ouput = the formed blend, and six optimality constraints(integration, good-reason, web, unpacking, topology, metonymy) evaluation scores
 !(assertEqual
-    (blend-GA-with-evaluation)
+    (let $res (blend-GA-with-evaluation) $res)
     (Formed Blend: BatMan 
     Evaluation-Metrics: 
     Integration: 1.0 

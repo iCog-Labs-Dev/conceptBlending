@@ -1,5 +1,5 @@
 ! (import! &self libs)
-! (import! &self common-utils)
+; ! (import! &self common-utils)
 
 
 (= (relation-exists-in-blend $blend-relations $rel-pair)
@@ -36,7 +36,7 @@
   )
 )
 
-(= (semantic-threshold) 0.75)
+(= (semantic-threshold) 0.1)
 
 (= (score-cross-mapping $blend-relations $a-kv-inner $b-kv-inner)
    (let* (

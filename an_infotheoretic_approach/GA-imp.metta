@@ -3,6 +3,7 @@
 !(import! &self info-theoretic)
 !(import! &self utils:GA-utils)
 !(import! &self op-constraints:op-evaluation)
+!(import! &self space-info-theoretic)
 
 
 ;; ==== SEED FOR REPRODUCIBILITY ====
@@ -165,7 +166,7 @@
 !(bind! &inputspace (get-space))
 !(add-reduct &inputspace (Inputs ((initialize-population) (ETA_PARAM) (MUTATION_PARAM) 0 -10000 0)))
 
-!(add-concepts)
+; !(add-concepts)
 
 (= (GA-single-iteration)
     (let ($population ($init-eta $eta-growth) ($init-mut-std $mut-decay) $generation-number $best-fitness $stall) 
@@ -221,4 +222,7 @@
     )
 )
 
-!(blend-GA-with-evaluation)
+; !(blend-GA-with-evaluation)
+
+; !(space-blend GA-main-loop)
+; !(concept1)

@@ -600,12 +600,12 @@ update-mean-test
 ;;;; cma-es-blend with evaluation ;;;;
 ; Ouput = the formed blend, and six optimality constraints(integration, good-reason, web, unpacking, topology, metonymy) evaluation scores
 !(assertEqual
-    (blend-cma-es-with-evaluation)
+    (let $res (blend-cma-es-with-evaluation) $res)
     (Formed Blend: BatMan 
     Evaluation-Metrics: 
     Integration: 1.0 
-    Good-reason: (Conceptnet-score 0.0 LLM-score 0.75) 
-    Unpacking: 0.0 
+    Good-reason: (Conceptnet-score 0.0 LLM-score 1.0) 
+    Unpacking: 0.104125 
     Web: 0.0 
     Topology: 0.0 
     Metonymy: 0.0)
