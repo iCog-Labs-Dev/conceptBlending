@@ -121,6 +121,20 @@
 ; Output: The blend concept of the two input concepts.
 
 !(assertEqual 
-    (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (blend GA-main-loop) %Undefined% $space)) ($net-type $blend))
-    (doubleScope BatMan)
+   (let ($res1 $best-candid) (let $space &self (metta (blend GA-main-loop) %Undefined% $space)) (let ($net-type $exp-ver $blend $ext-ver) $res1 ($net-type $blend)))
+   (doubleScope BatMan)
+)
+
+;;;; GA-blend with evaluation ;;;;
+; Ouput = the formed blend, and six optimality constraints(integration, good-reason, web, unpacking, topology, metonymy) evaluation scores
+!(assertEqual
+    (blend-GA-with-evaluation)
+    (Formed Blend: BatMan 
+    Evaluation-Metrics: 
+    Integration: 1.0 
+    Good-reason: (Conceptnet-score 0.0 LLM-score 0.75) 
+    Unpacking: 0.0 
+    Web: 0.0 
+    Topology: 0.0 
+    Metonymy: 0.0)
 )
