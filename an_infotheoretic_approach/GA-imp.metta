@@ -17,7 +17,7 @@
 ;;;; PARAMETERS ;;;;
 (= (POP_SIZE) 20)
 (= (GENES) 8)
-(= (GENERATIONS) 3)
+(= (GENERATIONS) 15)
 (= (ELITE_COUNT) 3)
 (= (CROSSOVER_RATE) 0.9)
 ;; Initial_Mutation_STD, and Mutation_Decay respectively
@@ -163,11 +163,15 @@
 )
 
 !(bind! &inputspace (get-space))
-!(add-reduct &inputspace (Inputs ((initialize-population) (ETA_PARAM) (MUTATION_PARAM) 0)))
+!(add-reduct &inputspace (Inputs ((initialize-population) (ETA_PARAM) (MUTATION_PARAM) 0 -10000 0)))
+
 !(add-concepts)
 
 (= (GA-single-iteration)
-    (let ($population ($init-eta $eta-growth) ($init-mut-std $mut-decay) $generation-number) (match &inputspace (Inputs $x) $x)
+    (let ($population ($init-eta $eta-growth) ($init-mut-std $mut-decay) $generation-number $best-fitness $stall) 
+     (match &inputspace (Inputs $x) $x)
+     (if (>= $stall 3)
+            ($population $best-fitness)
         (let* (
             ($popfitness (population-fitness-score $population))
             ($zippedpopfit (zip-list $population $popfitness))
@@ -175,13 +179,16 @@
             ($elites (elite-individuals $popfitness &individuals (ELITE_COUNT)))
             ($new-population (populate-new-population $population $popfitness $elites $init-eta $init-mut-std))
             ($new-population-clipped (if (== (size-atom $new-population) (POP_SIZE)) $new-population (cdr-atom $new-population)))
-            (($upd-eta $upd-mut-std) (collapse(superpose((* $init-eta $eta-growth) (* $init-mut-std $mut-decay)))))
-            ($clean (collapse(match &inputspace (Inputs $params) (remove-atom &inputspace (Inputs $params)))))
-            (() (println! (GENERATION: $generation-number | BEST-FITNESS: (max-atom $popfitness))))
+            (($upd-eta $upd-mut-std)(collapse (superpose ( (* $init-eta $eta-growth) (* $init-mut-std $mut-decay) ))))
+            ($max-fitness (max-atom $popfitness))
+            ($new-best-fitness (if (> $max-fitness $best-fitness) $max-fitness $best-fitness))
+            ($new-stall (if (> $max-fitness $best-fitness) 0 (+ 1 $stall)))
+            ($clean (collapse (match &inputspace (Inputs $params) (remove-atom &inputspace (Inputs $params)))))
+            (() (println! (GENERATION $generation-number | Max Fitness $max-fitness | Stall $new-stall)))
         )
-        (let $added (add-reduct &inputspace (Inputs ($new-population-clipped ($upd-eta $eta-growth) ($upd-mut-std $mut-decay) (+ 1 $generation-number)))) ($new-population (max-atom $popfitness)))
-        )
-    )
+        (let $added (add-reduct &inputspace (Inputs ($new-population-clipped ($upd-eta $eta-growth) ($upd-mut-std $mut-decay) (+ 1 $generation-number) $new-best-fitness $new-stall))) ($new-population $max-fitness)))
+     )
+  )   
 )
 
 (= (GA-main-loop)

@@ -31,7 +31,7 @@
 (= (e) 2.71828)
 
 ;;;; STRATEGY PARAMETERS ;;;;
-(= (GENERATIONS) 2)
+(= (GENERATIONS) 5)
 (= (POPULATION_SIZE) 0)
 (= (lambda_) (if (<= (POPULATION_SIZE) 0) (+ 4 (round-math (* 3 (log-math (e) (dim))))) (POPULATION_SIZE)))
 (= (mu) (/ (lambda_) 2))
@@ -243,24 +243,28 @@
 )
 
 !(bind! &inputspace (get-space))
-!(add-reduct &inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0)))
+!(add-reduct &inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
 !(add-concepts)
 
 (= (cma-es-single-iteration)
-    (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen) (match &inputspace (Inputs $x) $x)
-        (let*
+    (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen $stall) (match &inputspace (Inputs $x) $x)
+        (if (>= $stall 3)                         ; patience = 3 gens
+          ($best-pop $best-fitness)             
+          (let*
             (
                 (($normalized-weights $c-sigma $d-sigma $mu $mu-eff $dim $rmspace $cispace1 $cispace2 $cispace3) (collapse(superpose((normalized_weights) (c_sigma) (d_sigma) (mu) (mu_eff) (dim) (get-space) (get-space) (get-space) (get-space)))))
                 ($samples (mat-clip (random-multivariate $mean (mat-scalar-op $cov (pow-math $step-size 2) *) (lambda_) $rmspace) 0 1))
                 (($new-mean $selected $fitness-score) (update-mean $samples $mu $normalized-weights))
                 (($new-best-fitness $new-best-pop) (let $gen-best-fitness (max-atom $fitness-score) (if (>= $gen-best-fitness $best-fitness) ($gen-best-fitness $selected) ($best-fitness $best-pop))))
+                ($improved?  (> $new-best-fitness $best-fitness))
+                ($new-stall  (if $improved? 0 (+ 1 $stall)))
                 (($y $C-inv-sqrt) ((y $new-mean $mean $step-size) (C-inv-sqrt $cov $cispace1 $cispace2 $cispace3)))
                 (($new-step-size $new-p-sigma) (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma $mu-eff $C-inv-sqrt $y))
                 (($new-cov $new-p-c) (new-cov $cov $p-c $new-p-sigma $c-sigma $gen $y $normalized-weights $selected $mean))
-                ($clean (collapse(match &inputspace (Inputs $params) (remove-atom &inputspace (Inputs $params)))))
-                (() (println! (GENERATION $gen | Max Fitness $new-best-fitness)))
+                ($clean (collapse (match &inputspace (Inputs $params) (remove-atom &inputspace (Inputs $params)))))
+                (() (println!(GENERATION $gen |  Max Fitness $new-best-fitness  |  Stall $new-stall)))
             )
-            (let $added (add-reduct &inputspace (Inputs ($new-mean $new-cov $new-step-size $new-p-sigma $new-p-c $new-best-pop $new-best-fitness (+ 1 $gen)))) ($new-best-pop $new-best-fitness))
+            (let $added (add-reduct &inputspace (Inputs ($new-mean $new-cov $new-step-size $new-p-sigma $new-p-c $new-best-pop $new-best-fitness (+ 1 $gen) $new-stall))) ($new-best-pop $new-best-fitness)))
         )
     )
 )
