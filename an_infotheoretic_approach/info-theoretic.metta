@@ -157,6 +157,27 @@
     )
 )
 
+(= (cons-blend-properties $concept1 $blend-prop-values)
+    (let (Concept $concpair $properties) $concept1
+        (let ($length $props) ((size-atom $blend-prop-values) (cdr-atom $properties))
+            (collapse(superpose
+                (
+                    (if (>= (- $length 1) 0) (let $prop0 (index-atom $props 0) (let ($prop0name $blendprop0val) ((car-atom $prop0) (index-atom $blend-prop-values 0)) ($prop0name $blendprop0val))) Empty)
+                    (if (>= (- $length 2) 0) (let $prop1 (index-atom $props 1) (let ($prop1name $blendprop1val) ((car-atom $prop1) (index-atom $blend-prop-values 1)) ($prop1name $blendprop1val))) Empty)
+                    (if (>= (- $length 3) 0) (let $prop2 (index-atom $props 2) (let ($prop2name $blendprop2val) ((car-atom $prop2) (index-atom $blend-prop-values 2)) ($prop2name $blendprop2val))) Empty)
+                    (if (>= (- $length 4) 0) (let $prop3 (index-atom $props 3) (let ($prop3name $blendprop3val) ((car-atom $prop3) (index-atom $blend-prop-values 3)) ($prop3name $blendprop3val))) Empty)
+                    (if (>= (- $length 5) 0) (let $prop4 (index-atom $props 4) (let ($prop4name $blendprop4val) ((car-atom $prop4) (index-atom $blend-prop-values 4)) ($prop4name $blendprop4val))) Empty)
+                    (if (>= (- $length 6) 0) (let $prop5 (index-atom $props 5) (let ($prop5name $blendprop5val) ((car-atom $prop5) (index-atom $blend-prop-values 5)) ($prop5name $blendprop5val))) Empty)
+                    (if (>= (- $length 7) 0) (let $prop6 (index-atom $props 6) (let ($prop6name $blendprop6val) ((car-atom $prop6) (index-atom $blend-prop-values 6)) ($prop6name $blendprop6val))) Empty)
+                    (if (>= (- $length 8) 0) (let $prop7 (index-atom $props 7) (let ($prop7name $blendprop7val) ((car-atom $prop7) (index-atom $blend-prop-values 7)) ($prop7name $blendprop7val))) Empty)
+                    (if (>= (- $length 9) 0) (let $prop8 (index-atom $props 8) (let ($prop8name $blendprop8val) ((car-atom $prop8) (index-atom $blend-prop-values 8)) ($prop8name $blendprop8val))) Empty)
+                    (if (>= (- $length 10) 0) (let $prop9 (index-atom $props 9) (let ($prop9name $blendprop9val) ((car-atom $prop9) (index-atom $blend-prop-values 9))($prop9name $blendprop9val))) Empty)
+                )
+            ))
+        )
+    )    
+)
+
 (= (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend $blendproperties))
     (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations $input1) (get-concept-relations $input2) (get-concept-relations $blend))))
         (let ((Concept $conpair1 $propsc1) (Concept $conpair2 $propsc2)) ($concept1 $concept2)
@@ -199,7 +220,7 @@
                             (if (not (== $network None))
                                 (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
                                     (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
-                                        ($network $concept-pair $best-cand-mu-emergence)
+                                        (($network $concept-pair $best-cand-mu-emergence) $best-candidate)
                                     )
                                 )
                                 (Error $newtwork NoNetworkSelected)

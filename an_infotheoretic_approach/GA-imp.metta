@@ -2,6 +2,8 @@
 !(import! &self utils:random-list-utils)
 !(import! &self info-theoretic)
 !(import! &self utils:GA-utils)
+!(import! &self op-constraints:op-evaluation)
+
 
 ;; ==== SEED FOR REPRODUCIBILITY ====
 ! (bind! np-rnd (py-atom numpy.random))
@@ -13,9 +15,9 @@
 (= (get-space) (new-space))
 
 ;;;; PARAMETERS ;;;;
-(= (POP_SIZE) 50)
+(= (POP_SIZE) 20)
 (= (GENES) 8)
-(= (GENERATIONS) 30)
+(= (GENERATIONS) 3)
 (= (ELITE_COUNT) 3)
 (= (CROSSOVER_RATE) 0.9)
 ;; Initial_Mutation_STD, and Mutation_Decay respectively
@@ -34,8 +36,8 @@
     (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
 )
 
-(= (Input1) "Bat")
-(= (Input2) "Man")
+(= (Input1) Bat)
+(= (Input2) Man)
 
 ;;;; POPULATION INITIALIZER FUNCTION ;;;;
 (= (initialize-population) (random-list (POP_SIZE) (GENES) 0 1))
@@ -187,3 +189,29 @@
 )
 
 ; !(blend GA-main-loop)
+
+(= (blend-GA-with-evaluation)
+    (let ($blend $best-candidate) (blend GA-main-loop)
+        (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
+            (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
+                (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
+                    (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
+                        (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                            (Formed Blend: $blend-name
+                            Evaluation-Metrics:
+                            Integration: $integration-res
+                            Good-reason: $good-reason-res
+                            Unpacking: $unpacking-res
+                            Web: $web-res
+                            Topology: $topology-res
+                            Metonymy: $metonymy-res
+                            )
+                        )
+                    )
+                )
+            )
+        )        
+    )
+)
+
+!(blend-GA-with-evaluation)

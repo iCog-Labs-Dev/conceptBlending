@@ -1,60 +1,45 @@
 ! (import! &self libs)
-! (import! &self common-utils)
-
-
-(= (emergents-filter ())
-   ())
-(= (emergents-filter $items)
-    (let* (
-        ($head (car-atom $items))
-        ($tail (cdr-atom $items))
-    )
-       (if (== (size-atom $head) 1)
-       (let* (
-            ($next-emergent (emergents-filter $tail))
-        )
-        (cons-atom $head $next-emergent)
-       )
-        (emergents-filter $tail)
-       )
-    
-    )
-)
-
+; ! (import! &self common-utils)
 
 (= (is-provenance-sources-justified $property $provenance-sources)
     (if (== $provenance-sources ())
-        False
+        0
         (let* (
             ($head (car-atom $provenance-sources))
             ($tail (cdr-atom $provenance-sources))
             )
             (
-                if(is_property_justified ($property) $head)
-                True
+                if(is-property-justified ($property) $head)
+                1
                 (is-provenance-sources-justified $property $tail)
             )
         )
     )
 )
 
+(= (conceptnet-justification-helper $prop $blend)
+    (let ($blend-name $unwrapped-prop) ((blend-name $blend) (car-atom $prop))
+        (if (is-property-justified $unwrapped-prop $blend-name)
+            1
+            (is-provenance-sources-justified $unwrapped-prop (provenance-sources (properties-list $blend)))
+        )
+    )
+)
 
-(= (conceptnet-justification $property $blend) 
-       (if(is_property_justified $property (blend-name $blend))
-        True
-        (is-provenance-sources-justified $property (provenance-sources (properties-list $blend)))
-       )
+(= (conceptnet-justification $properties $blend) 
+    (let $justfications (map-atom $properties $prop (conceptnet-justification-helper $prop $blend)) $justfications)
+)
 
+(= (llm-justification $properties $blend)
+    (let ($blend-name $blend-context) ((blend-name $blend) (blend-context $blend)) (let $default-prompt (default-prompt $properties $blend-name $blend-context) (good-reason-llm $default-prompt)))
 )
 
 (= (blend-context $blend)
         (let* (
             ($props (properties-list $blend))
             ($blend-relations (relations-key-value-list $blend))
-            ($blend-relations-inner (car-atom $blend-relations))
-
             ($property-name-list (map-atom $props $x (car-atom $x)) )
-            ($mapRelations (map-atom $blend-relations-inner $rel ((car-atom $rel) → (index-atom $rel 1))))
+            ($mapRelations (map-atom $blend-relations $rel ((car-atom $rel) → (index-atom $rel 1))))
             ($provenance-sources(provenance-sources $props))
             
             )
@@ -67,57 +52,53 @@
     
 )
 
-(= (default-prompt $property $blend $context)
+(= (default-prompt $properties $blend $context)
    (
-      Evaluate the property $property in the blend concept $blend :\n
-      $context \n\n
-      Please provide a JSON response with the following fields:\n
-      - justified: boolean (true if the property is justified in the blend)\n
-      - reason: a brief explanation supporting the justification\n\n
-      Example response:\n
-      {\n
-        \justified\: true,\n
-        \reason\: \The property logically follows from the combination of the source concepts.\\n
-      }
-   )
-)
+    Evaluate the properties $properties in the blend concept $blend . \n
+    **Context:** $context \n \n
+    **Instructions:** \n
+    Please respond only in JSON format with the following fields: \n
 
-(= (is-justified $property $blend)
-   (if (conceptnet-justification $property $blend)
-       True
-       (good-reason-llm (default-prompt $property (blend-name $blend) (blend-context $blend)))
+    result: a space-separated list of 1's and 0's enclosed in parentheses. Each position corresponds to the properties listed in the first sentence above (the $properties list), not the ones in the context. \n
+        - 1 = the property is justified in the blend. \n
+        - 0 = the property is not justified. \n
+
+    reason: a brief explanation supporting the justification pattern in result.
+    **Formatting rules:**
+    1. The result must be exactly in the form: "(1 0 1 0 ...)", No Python lists, commas, or other formats.
+    2. The number of entries in result must exactly match the number of properties in $properties .
+    3. The justification in reason must match the pattern in result.
+
+    **Example**
+    {
+        "result": "(1 0 1 0 1 1 1 0)",
+        "reason": "The first, third, fifth, sixth, and seventh properties logically follow from the combination of the source concepts, while the others do not."
+    }
    )
 )
 
 (= (count-justified $emergents-list $blend)
     (if (== $emergents-list ())
         0
-        (let* (($head (car-atom $emergents-list))
-               ($tail (cdr-atom $emergents-list))
-               ($is-just (is-justified (car-atom $head) $blend))
-            ;    (() (println! yes))
-               ($rest-count (count-justified $tail $blend)))
-            (if $is-just
-                (+ 1.0 $rest-count) ; 1.0 to ensure float
-                $rest-count
+        (let ($conc-net-justifications $llm-justifications) ((sum-op (conceptnet-justification $emergents-list $blend)) (sum-op (llm-justification $emergents-list $blend))) ($conc-net-justifications $llm-justifications))
+    )
+)
+
+(= (good-reason-op $blend)
+    (let* 
+        (
+            ($blend-properties (properties-list $blend))
+            ($emergents (custom-filter-atom $blend-properties $var (<= (Method size-atom $var) 1)))
+            ($emergent-count (size-atom $emergents))
+        )
+        (
+            if (== $emergent-count 0)
+            1.0
+            (let $justified-counts (count-justified $emergents $blend)
+                (let ($conc-net-score $llm-score) (map-atom $justified-counts $count (/ $count $emergent-count)) (Conceptnet-score $conc-net-score LLM-score $llm-score))
             )
         )
     )
-)
-(= (good-reason-op $blend)
-  (let* (
-    ($blend-properties (properties-list $blend))
-    ($emergents (emergents-filter $blend-properties)) ; TODO: should be replaced by filter-atom
-    ($emergent-count (size-atom $emergents))
-  )
-    (if (== $emergent-count 0)
-        1.0
-        (let* (($justified-count (count-justified $emergents $blend))
-               ($score (/ $justified-count $emergent-count)))
-              $score
-        )
-    )
-  )
 )
 
 ; ! (good-reason-op (good_blend))

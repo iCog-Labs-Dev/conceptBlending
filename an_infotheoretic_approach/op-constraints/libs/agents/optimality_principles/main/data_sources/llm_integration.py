@@ -58,14 +58,14 @@ class LLMIntegration:
             return result
 
     def good_reason_llm(self, metta: MeTTa, *args):
-        
+        print("Prompt being used:", str(args[0]))
         response = self.query(str(args[0]))
-
+        print("LLM Response:", response)
         try:
             if response.strip().startswith("{"):
                 data = json.loads(response)
-                if "justified" in data:
-                    return data["justified"]
+                if "result" in data:
+                    return metta.parse_all(data["result"])
                 elif all(k in data for k in ["scientific", "functional", "innovation", "commonsense"]):
                     return (data["scientific"] + data["functional"] + 
                             data["innovation"] + data["commonsense"]) >= 12  # Avg 3/5

@@ -1,5 +1,5 @@
 ! (import! &self libs)
-! (import! &self common-utils)
+; ! (import! &self common-utils)
 
 
 (= (are-conflicting $item $item2 $terms-antonymity $pre-def-confl)

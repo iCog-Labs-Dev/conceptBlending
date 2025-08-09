@@ -4,6 +4,24 @@ from urllib.parse import quote
 from functools import lru_cache
 from hyperon import *
 
+# Hardcoded English stopwords
+STOP_WORDS = {
+    'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an',
+    'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before',
+    'being', 'below', 'between', 'both', 'but', 'by', 'could', 'did', 'do',
+    'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from', 'further',
+    'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers', 'herself',
+    'him', 'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it',
+    'its', 'itself', 'let', 'me', 'more', 'most', 'my', 'myself', 'nor',
+    'of', 'on', 'once', 'only', 'or', 'other', 'ought', 'our', 'ours',
+    'ourselves', 'out', 'over', 'own', 'same', 'she', 'should', 'so', 'some',
+    'such', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves',
+    'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to',
+    'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what',
+    'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'with', 'would',
+    'you', 'your', 'yours', 'yourself', 'yourselves'
+}
+
 class ConceptNetAdapter:
     BASE_URL = "http://api.conceptnet.io"
     
@@ -29,14 +47,15 @@ class ConceptNetAdapter:
                for edge in self.get_edges(str(args[0]), "FormOf")))]
 
     def get_expand_provenance(self, metta: MeTTa, *args):
-        # (car) or (car boat)
+        print("Expanding provenance for:", args[0])
         input_expr = args[0]
 
         if not isinstance(input_expr, ExpressionAtom):
             return E(S('Error'), S('Invalid-Input-Not-An-Expression'))
-            
-        # Convert the children (which are SymbolAtoms) into a Python list of strings
+
+        # Convert children into list of strings
         provenance_list = [atom.get_name() for atom in input_expr.get_children()]
+        print("Provenance list:", provenance_list)
 
         expanded = set(provenance_list)
         for source in provenance_list:
@@ -47,24 +66,35 @@ class ConceptNetAdapter:
                         expanded.add(edge["end"]["label"].lower())
             except Exception:
                 continue
-        
-        # For each phrase in our results, create its own ExpressionAtom
+
+        print("Expanded provenance (raw):", expanded)
+
+        # Process phrases: lowercase, remove stopwords, replace spaces with underscores
+        processed_expanded = set()
+        for phrase in expanded:
+            words = [w for w in phrase.lower().split() if w not in STOP_WORDS]
+            if words:
+                processed_expanded.add("_".join(words))
+
+        print("Expanded provenance (processed):", processed_expanded)
+
+        # Create ExpressionAtoms from processed phrases
         nested_expressions = []
-        for phrase in list(expanded):
-            # Split a multi-word phrase like "a car show" into ["a", "car", "show"]
-            words = phrase.split()
-            # Convert each word into a SymbolAtom -> [S('a'), S('car'), S('show')]
-            word_atoms = [S(word) for word in words]
-            # Create an inner expression -> E(S('a'), S('car'), S('show')) which is (a car show)
+        for phrase in processed_expanded:
+            word_atoms = [S(word) for word in phrase.split()]
             inner_expr = E(*word_atoms)
             nested_expressions.append(inner_expr)
-            
+
+        print("Nested expressions:", nested_expressions)
         final_outer_expr = E(*nested_expressions)
+        print("Final outer expression:", final_outer_expr)
         return [final_outer_expr]
+
 
     @lru_cache(maxsize=1000)
     def get_similarity(self, term1, term2):
         """Returns similarity score between two terms using ConceptNet relatedness."""
+        print(f"Calculating similarity between '{term1}' and '{term2}'")
         if term1 == term2:
             return 1.0
         try:
@@ -114,20 +144,24 @@ class ConceptNetAdapter:
         return [ValueAtom(self.is_part_of(str(args[0]), str(args[1])))]
 
     def is_justified(self, property, context):
-        """Determine whether a property is justified in the context of a concept."""
+        """Determine whether a property is justified in the context of a concept."""        
+        print(f"Checking if property '{property}' is justified in context '{context}'")
         edges = self.get_edges(context)
         direct = any(
             edge.get("rel", {}).get("label") == "HasProperty" and
             edge.get("end", {}).get("label", "").lower() == property.lower()
             for edge in edges
         )
+        # print(f"Direct justification found: {direct}")
         if direct:
             return True
 
         # Try to infer justification using similar properties
         for edge in edges:
+            print(edge.get("rel", {}).get("label"))
             if edge.get("rel", {}).get("label") == "HasProperty":
                 prop = edge.get("end", {}).get("label", "").lower()
+                print(f"Checking against property: {prop}")
                 if self.get_similarity(property.lower(), prop) > 0.8:
                     return True
 
@@ -143,22 +177,24 @@ class ConceptNetAdapter:
     def get_relations(self, concept):
         """
         Returns a list of unique (relation, hyphenated-target) pairs for a concept.
-        Removes duplicates and formats multi-word targets with hyphens.
+        Removes duplicates, removes stopwords from targets, and formats multi-word targets with underscores.
         """
         concept = concept.strip('"')
         print(f"Fetching relations for concept: {concept}")
         seen = set()
         edges = self.get_edges(concept)
-        
+
         for edge in edges:
             rel = edge.get("rel", {}).get("label")
             end = edge.get("end", {}).get("label")
-            
             if rel and end:
-                # Normalize relation and target term
+                # Normalize relation
                 rel_clean = rel.strip()
-                end_clean = end.strip().lower().replace(" ", "-")
-                
+
+                # Lowercase + remove stopwords + replace spaces with underscores
+                words = [w for w in end.lower().split() if w not in STOP_WORDS]
+                end_clean = "_".join(words)
+
                 seen.add((rel_clean, end_clean))
 
         return list(seen)
