@@ -2,7 +2,7 @@
 !(import! &self utils:random-list-utils)
 !(import! &self info-theoretic)
 !(import! &self utils:GA-utils)
-!(import! &self op-constraints:op-evaluation)
+; !(import! &self op-constraints:op-evaluation)
 !(import! &self space-info-theoretic)
 
 
