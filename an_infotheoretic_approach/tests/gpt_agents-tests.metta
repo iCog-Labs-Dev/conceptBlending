@@ -18,7 +18,7 @@
 
 !(assertEqual
     (gpt_vital_relation Bat Man)
-    ()
+    (Role)
 )
 
 ; Test network selector agent
