@@ -31,7 +31,7 @@
 (= (e) 2.71828)
 
 ;;;; STRATEGY PARAMETERS ;;;;
-(= (GENERATIONS) 30)
+(= (GENERATIONS) 2)
 (= (POPULATION_SIZE) 0)
 (= (lambda_) (if (<= (POPULATION_SIZE) 0) (+ 4 (round-math (* 3 (log-math (e) (dim))))) (POPULATION_SIZE)))
 (= (mu) (/ (lambda_) 2))
@@ -244,7 +244,7 @@
 
 !(bind! &inputspace (get-space))
 !(add-reduct &inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
-; !(add-concepts)
+!(add-concepts)
 
 (= (cma-es-single-iteration)
     (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen $stall) (match &inputspace (Inputs $x) $x)
@@ -273,33 +273,9 @@
     (let $iters (generate-toy-list (GENERATIONS))  (map-atom $iters $iter (cma-es-single-iteration)))
 )
 
-; !(blend cma-es-main-loop)
+(= (Eval) True)
 
-(= (blend-cma-es-with-evaluation)
-    (let ($blend $best-candidate) (blend cma-es-main-loop)
-        (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
-            (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
-                (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
-                    (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
-                        (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                            (Formed Blend: $blend-name
-                            Evaluation-Metrics:
-                            Integration: $integration-res
-                            Good-reason: $good-reason-res
-                            Unpacking: $unpacking-res
-                            Web: $web-res
-                            Topology: $topology-res
-                            Metonymy: $metonymy-res
-                            )
-                        )
-                    )
-                )
-            )
-        )        
-    )
-)
 
-; !(blend-cma-es-with-evaluation)
+; !(blend cma-es-main-loop (Eval))
 
-; !(space-blend cma-es-main-loop)
-; !(concept1)
+; !(space-blend blend cma-es-main-loop (Eval))

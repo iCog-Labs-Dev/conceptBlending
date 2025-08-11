@@ -45,7 +45,7 @@
 
 (= (add-space-concepts)
     (let ($concept1 $concept2) (vec-extraction (space-Input1) (space-Input2))
-        (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
+        (collapse(superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2)))))
     )
 )
 
@@ -54,13 +54,13 @@
 !(load-ascii &concept-space data/kb_concepts.metta)
 
 ;;;; space based blending function ;;;;
-(= (space-blend $GAorCMA)
+(= (space-blend $blend $GAorCMA $eval)
         (let $concepts (get-concepts 2)
             (let ($concept1 $concept2) $concepts
                 (let ($input1 $input2) ((index-atom $concept1 1) (index-atom $concept2 1))
                     (let $added-inputs (add-inputs-space $input1 $input2)
                         (let $added-concepts (add-space-concepts)
-                            (blend $GAorCMA)
+                            ($blend $GAorCMA $eval)
                         )
                     )
                 )

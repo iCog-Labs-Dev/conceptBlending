@@ -591,16 +591,17 @@ update-mean-test
 )
 
 ; ;;;; cma-es-blend (encompasses a test for cma-es-main-loop) ;;;;
+; Output = The formed blend.
 
 ; !(assertEqual 
-;    (let ($res1 $best-candid) (let $space &self (metta (blend cma-es-main-loop) %Undefined% $space)) (let ($net-type $exp-ver $blend $ext-ver) $res1 ($net-type $blend)))
+;    (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (blend cma-es-main-loop False) %Undefined% $space)) ($net-type $blend))
 ;    (doubleScope BatMan)
 ; )
 
 ;;;; cma-es-blend with evaluation ;;;;
-; Ouput = the formed blend, and six optimality constraints(integration, good-reason, web, unpacking, topology, metonymy) evaluation scores
+; Output = the formed blend, and six optimality constraints(integration, good-reason, web, unpacking, topology, metonymy) evaluation scores
 !(assertEqual
-    (let $res (blend-cma-es-with-evaluation) $res)
+    (blend cma-es-main-loop True)
     (Formed Blend: BatMan 
     Evaluation-Metrics: 
     Integration: 1.0 
@@ -610,3 +611,11 @@ update-mean-test
     Topology: 0.0 
     Metonymy: 0.0)
 )
+
+;;;; space-based cma-es-blend ;;;;
+; Output = The formed blend(inputs are fetched from the space)
+
+; !(assertEqual
+;    (let ($net-type $exp-ver $blend $ext-ver) (space-blend blend cma-es-main-loop False) ($net-type $blend))
+;    (doubleScope BatMan)
+; )
