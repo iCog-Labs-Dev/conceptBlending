@@ -16,9 +16,14 @@
 ;; Output: [((Concept Spider@Man (Property (web-spinning 1.0) (intelligence 0.3) (physical-strength 0.2) (agility 0.8) (symbolism 0.7) (predatory-behavior 0.9) (social-structure 0.2) (lifespan 0.1))) (Concept Man@Spider (Property (web-spinning 0.0) (intelligence 0.9) (physical-strength 0.8) (agility 0.6) (symbolism 0.5) (predatory-behavior 0.3) (social-structure 0.9) (lifespan 0.8))))]
 
 ; Test network selector agent
-! (assertEqula
+! (assertEqual
     (gpt_network_selector "Spider@Man")
     (gpt_doubl)
+)
+
+! (assertEqual
+    (gpt_network_selector "Spider@Man")
+    (gpt_double)
 )
 ; Output: [gpt_double]
 
