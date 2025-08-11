@@ -1,7 +1,7 @@
 import requests
 import json
 
-BASE_URL = "http://api.conceptnet.io"
+BASE_URL = "https://api.conceptnet.io"
 
 term1 = "metal"
 term2 = "city"
