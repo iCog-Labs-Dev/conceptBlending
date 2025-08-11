@@ -1,7 +1,4 @@
-; !(import! &self libs)
 !(bind! &concept-space (new-space))
-; !(bind! &generic-space (new-space))
-; !(bind! &blended-space (new-space))
 
 
 (= (add-data $data $space $external-space)
@@ -55,15 +52,15 @@
 
 ;;;; space based blending function ;;;;
 (= (space-blend $blend $GAorCMA $eval)
-        (let $concepts (get-concepts 2)
-            (let ($concept1 $concept2) $concepts
-                (let ($input1 $input2) ((index-atom $concept1 1) (index-atom $concept2 1))
-                    (let $added-inputs (add-inputs-space $input1 $input2)
-                        (let $added-concepts (add-space-concepts)
-                            ($blend $GAorCMA $eval)
-                        )
+    (let $concepts (get-concepts 2)
+        (let ($concept1 $concept2) $concepts
+            (let ($input1 $input2) ((index-atom $concept1 1) (index-atom $concept2 1))
+                (let $added-inputs (add-inputs-space $input1 $input2)
+                    (let $added-concepts (add-space-concepts)
+                        ($blend $GAorCMA $eval)
                     )
                 )
             )
         )
+    )
 )

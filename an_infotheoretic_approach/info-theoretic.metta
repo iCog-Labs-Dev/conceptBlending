@@ -8,37 +8,22 @@
 (=(get-prop-value-pairs $concept)
     (let (Concept $x $y) $concept (cdr-atom $y))
 )
-;! (get-prop-value-pairs (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
-; Output [((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))]
-
 
 (= (get-property $prop-value-pair)
     (let ($x $y) $prop-value-pair $x)
 )
-;! (get-property (mobility 0.9))
-; Output [mobility]
-
 
 (= (get-properties $prop-value-pairs)
     (map-atom $prop-value-pairs $x (get-property $x))
 )
-;!(get-properties ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
-; Output [(mobility intelligence web-creation social-structure predatory-behavior communication symbolism physical-strength)]
-
 
 (= (get-value $property)
     (let ($x $y) $property $y)
 )
-;! (get-value (mobility 0.9))
-; Output [0.9]
-
 
 (= (get-values $properties)
     (map-atom $properties $x (get-value $x))
 )
-;! (get-values (get-prop-value-pairs (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))))
-; Output [(0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7)]
-
 
 ; ###################### Calculate product of two properites ##########################
 (= (property-product $properties1 $properties2)
@@ -48,9 +33,6 @@
         (list-multiply $property1values $property2values $properties)
     )
 )
-;! (property-product ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)) ((mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
-; Output [((mobility 0.7200000000000001) (intelligence 0.18000000000000002) (web-creation 0.0) (social-structure 0.24) (predatory-behavior 0.18000000000000002) (communication 0.36000000000000004) (symbolism 0.42) (physical-strength 0.21))]
-
 
 ; ###################### Calculate Number of properties #####################
 (: get-number-of-properties (-> Concept Number))
@@ -66,15 +48,11 @@
         )
     )
 )
-;!(get-number-of-properties (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
-; Output [8]
 
 (: decimal (-> Number Number))
 (=(decimal $number)
     (+ $number 0.0)
 )
-; !(decimal 1)
-; Output [1.0]
 
 ; ###################### Calculate Probability ##############################
 (: property-probability (-> Concept Number))
@@ -86,8 +64,6 @@
     $probability
     )
 )
-;!(property-probability (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
-; Output [0.125]
 
 ; ###################### Calculate Degree function ##########################
 (: property-degree (-> Concept Number))
@@ -99,9 +75,6 @@
         ((py-atom round) $degree 2)
     )
 )
-;! (property-degree (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
-; Output [0.9030899869919434]
-
 
 ; ###################### Calculate min and max for Concepts ##########################
 (=(property-min $concept1 $concept2)
@@ -112,9 +85,6 @@
         (min-elements $properties1values $properties2values $properties)
     )
 )
-;!(property-min (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
-; Output [((mobility 0.8) (intelligence 0.2) (web-creation 0.0) (social-structure 0.3) (predatory-behavior 0.2) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))]
-
 
 (=(property-max $concept1 $concept2)
     (let*(
@@ -124,9 +94,6 @@
         (max-elements $properties1values $properties2values $properties)
     )
 )
-;!(property-max (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
-; Output [((mobility 0.9) (intelligence 0.9) (web-creation 1.0) (social-structure 0.8) (predatory-behavior 0.9) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))]
-
 
 ; ###################### Calculate mu emergence ##########################
 (= (mu-emergence $candidate-degrees $properties-max)
@@ -137,8 +104,6 @@
         (list-substract $candidate-degrees $propertiesvalues $properties)
     )
 )
-;! (mu-emergence (0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434 0.9030899869919434)(property-max (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))))
-; Output [((mobility 0.0030899869919434053) (intelligence 0.0030899869919434053) (web-creation 0.0) (social-structure 0.10308998699194338) (predatory-behavior 0.0030899869919434053) (communication 0.0030899869919434053) (symbolism 0.20308998699194347) (physical-strength 0.20308998699194347))]
 
 ; ###################### Calculate mu hq blend ##########################
 (= (mu-hqblend $candidate-degrees $concept1 $concept2)

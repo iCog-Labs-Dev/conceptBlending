@@ -143,6 +143,6 @@
 ; Output = The formed blend(inputs are fetched from the space)
 
 !(assertEqual
-   (let ($net-type $exp-ver $blend $ext-ver) (space-blend blend GA-main-loop False) ($net-type $blend))
+   (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (space-blend blend GA-main-loop False) %Undefined% $space)) ($net-type $blend))
    (doubleScope BatMan)
 )
