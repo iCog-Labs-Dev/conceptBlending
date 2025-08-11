@@ -24,7 +24,7 @@ STOP_WORDS = {
 }
 
 class ConceptNetAdapter:
-    BASE_URL = "http://api.conceptnet.io"
+    BASE_URL = "https://api.conceptnet.io"
     
     def __init__(self, cache_enabled=True):
         self.cache_enabled = cache_enabled
