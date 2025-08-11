@@ -5,7 +5,7 @@
 !(import! &self utils:cma-es-utils)
 !(import! &self info-theoretic)
 ; !(import! &self op-constraints:op-evaluation)
-!(import! &self space-info-theoretic)
+; !(import! &self space-info-theoretic)
 
 ;;;; SPACE GETTER METHOD ;;;;
 (= (get-space) (new-space))

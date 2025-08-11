@@ -22,7 +22,7 @@
 )
 
 ; Test network selector agent
-! (assertEqual
+!(assertEqual
     (gpt_network_selector "Spider@Man")
     gpt_double
 )

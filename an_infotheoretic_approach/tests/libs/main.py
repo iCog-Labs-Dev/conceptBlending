@@ -63,55 +63,55 @@ def grounded_atoms(metta):
         unwrap=False
     )
 
-    registered_operations["get-expand-provenance"] = OperationAtom(
-        "get-expand-provenance",
-        lambda *args: conceptnet.get_expand_provenance(metta, *args),
-        [AtomType.ATOM, AtomType.ATOM],
-        unwrap=False
-    )
-    registered_operations["are-related"] = OperationAtom(
-        "are-related",
-        lambda *args: conceptnet.are_related(metta, *args),
-        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
-        unwrap=False
-    )
-    registered_operations["is-abbreviation"] = OperationAtom(
-        "is-abbreviation",
-        lambda *args: conceptnet.is_abbreviation(metta, *args),
-        [AtomType.ATOM, AtomType.ATOM],
-        unwrap=False
-    )
-    registered_operations["is-relation-metonymy"] = OperationAtom(
-        "is-relation-metonymy",
-        lambda *args: conceptnet.is_relation_metonymy(metta, *args),
-        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
-        unwrap=False
-    )
-    registered_operations["is-relation-part-of"] = OperationAtom(
-        "is-relation-part-of",
-        lambda *args: conceptnet.is_relation_part_of(metta, *args),
-        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
-        unwrap=False
-    )
-    registered_operations["is-property-justified"] = OperationAtom(
-        "is-property-justified",
-        lambda *args: conceptnet.is_property_justified(metta, *args),
-        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
-        unwrap=False
-    )
-    registered_operations["get-concept-properties"] = OperationAtom(
-        "get-concept-properties",
-        lambda *args: conceptnet.get_concept_properties(metta, *args),
-        [AtomType.ATOM, AtomType.ATOM],
-        unwrap=False
-    )
+    # registered_operations["get-expand-provenance"] = OperationAtom(
+    #     "get-expand-provenance",
+    #     lambda *args: conceptnet.get_expand_provenance(metta, *args),
+    #     [AtomType.ATOM, AtomType.ATOM],
+    #     unwrap=False
+    # )
+    # registered_operations["are-related"] = OperationAtom(
+    #     "are-related",
+    #     lambda *args: conceptnet.are_related(metta, *args),
+    #     [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
+    #     unwrap=False
+    # )
+    # registered_operations["is-abbreviation"] = OperationAtom(
+    #     "is-abbreviation",
+    #     lambda *args: conceptnet.is_abbreviation(metta, *args),
+    #     [AtomType.ATOM, AtomType.ATOM],
+    #     unwrap=False
+    # )
+    # registered_operations["is-relation-metonymy"] = OperationAtom(
+    #     "is-relation-metonymy",
+    #     lambda *args: conceptnet.is_relation_metonymy(metta, *args),
+    #     [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
+    #     unwrap=False
+    # )
+    # registered_operations["is-relation-part-of"] = OperationAtom(
+    #     "is-relation-part-of",
+    #     lambda *args: conceptnet.is_relation_part_of(metta, *args),
+    #     [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
+    #     unwrap=False
+    # )
+    # registered_operations["is-property-justified"] = OperationAtom(
+    #     "is-property-justified",
+    #     lambda *args: conceptnet.is_property_justified(metta, *args),
+    #     [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM],
+    #     unwrap=False
+    # )
+    # registered_operations["get-concept-properties"] = OperationAtom(
+    #     "get-concept-properties",
+    #     lambda *args: conceptnet.get_concept_properties(metta, *args),
+    #     [AtomType.ATOM, AtomType.ATOM],
+    #     unwrap=False
+    # )
 
-    registered_operations["get-concept-relations"] = OperationAtom(
-        "get-concept-relations",
-        lambda *args: conceptnet.get_concept_relations(metta, *args),
-        [AtomType.ATOM, AtomType.ATOM],
-        unwrap=False
-    )
+    # registered_operations["get-concept-relations"] = OperationAtom(
+    #     "get-concept-relations",
+    #     lambda *args: conceptnet.get_concept_relations(metta, *args),
+    #     [AtomType.ATOM, AtomType.ATOM],
+    #     unwrap=False
+    # )
 
     # config = load_config()
     # llm = LLMIntegration(config)
