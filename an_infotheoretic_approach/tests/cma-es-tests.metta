@@ -1,6 +1,6 @@
 ! (register-module! ../../an_infotheoretic_approach)
 !(import! &self an_infotheoretic_approach:cma-es-imp)
-!(import! &self libs)
+; !(import! &self libs)
 
 ; ;;;; apply-log ;;;;
 
