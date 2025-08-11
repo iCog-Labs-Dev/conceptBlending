@@ -175,7 +175,7 @@
     )
 )
 
-(= (blend $GAorCMA $eval)
+(= (blend $GAorCMA)
     (let $final-pop ($GAorCMA)
         (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
             (let $best-fitness (index-atom $best-sample-with-fitness 1)
@@ -186,28 +186,29 @@
                                 (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
                                     (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
                                         (let $blend ($network $concept-pair $best-cand-mu-emergence)
-                                            (if $eval
-                                            (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
-                                                (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
-                                                    (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
-                                                        (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
-                                                            (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                                (Formed Blend: $blend-name
-                                                                Evaluation-Metrics:
-                                                                Integration: $integration-res
-                                                                Good-reason: $good-reason-res
-                                                                Unpacking: $unpacking-res
-                                                                Web: $web-res
-                                                                Topology: $topology-res
-                                                                Metonymy: $metonymy-res
-                                                                )
-                                                            )
-                                                        )
-                                                    )
-                                                )
-                                            )
+                                            ; (if $eval
+                                            ; (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
+                                            ;     (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
+                                            ;         (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
+                                            ;             (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
+                                            ;                 (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                                            ;                     (Formed Blend: $blend-name
+                                            ;                     Evaluation-Metrics:
+                                            ;                     Integration: $integration-res
+                                            ;                     Good-reason: $good-reason-res
+                                            ;                     Unpacking: $unpacking-res
+                                            ;                     Web: $web-res
+                                            ;                     Topology: $topology-res
+                                            ;                     Metonymy: $metonymy-res
+                                            ;                     )
+                                            ;                 )
+                                            ;             )
+                                            ;         )
+                                            ;     )
+                                            ; )
+                                            ; $blend
+                                            ; )
                                             $blend
-                                            )
                                         )
                                     )
                                 )

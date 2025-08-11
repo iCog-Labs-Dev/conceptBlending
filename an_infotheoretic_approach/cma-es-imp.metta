@@ -4,7 +4,7 @@
 !(import! &self utils:random-list-utils)
 !(import! &self utils:cma-es-utils)
 !(import! &self info-theoretic)
-!(import! &self op-constraints:op-evaluation)
+; !(import! &self op-constraints:op-evaluation)
 !(import! &self space-info-theoretic)
 
 ;;;; SPACE GETTER METHOD ;;;;
