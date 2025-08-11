@@ -2,7 +2,7 @@ import os, yaml
 from hyperon import *
 from hyperon.ext import register_atoms
 from .agents import *
-# from .agents.optimality_principles.main.data_sources.conceptnet_adapter import ConceptNetAdapter
+from .agents.optimality_principles.main.data_sources.conceptnet_adapter import ConceptNetAdapter
 # from .agents.optimality_principles.main.data_sources.llm_integration import LLMIntegration
 
 
