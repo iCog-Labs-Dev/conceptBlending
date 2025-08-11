@@ -594,7 +594,7 @@
 ; Output = The formed blend.
 
 !(assertEqual 
-   (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (blend cma-es-main-loop) %Undefined% $space)) ($net-type $blend))
+   (let ($net-type $exp-ver $blend $ext-ver) (blend cma-es-main-loop) ($net-type $blend))
    (doubleScope BatMan)
 )
 
