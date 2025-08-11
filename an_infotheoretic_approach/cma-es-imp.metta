@@ -244,7 +244,7 @@
 
 !(bind! &inputspace (get-space))
 !(add-reduct &inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
-; !(add-concepts)
+!(add-concepts)
 
 (= (cma-es-single-iteration)
     (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen $stall) (match &inputspace (Inputs $x) $x)

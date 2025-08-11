@@ -165,7 +165,7 @@
 
 !(bind! &inputspace (get-space))
 !(add-reduct &inputspace (Inputs ((initialize-population) (ETA_PARAM) (MUTATION_PARAM) 0 -10000 0)))
-; !(add-concepts)
+!(add-concepts)
 
 (= (GA-single-iteration)
     (let ($population ($init-eta $eta-growth) ($init-mut-std $mut-decay) $generation-number $best-fitness $stall) 
