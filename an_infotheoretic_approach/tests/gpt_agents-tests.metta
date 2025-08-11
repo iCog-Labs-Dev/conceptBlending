@@ -18,7 +18,7 @@
 ; Test network selector agent
 ! (assertEqula
     (gpt_network_selector "Spider@Man")
-    (gpt_double)
+    (gpt_doubl)
 )
 ; Output: [gpt_double]
 
