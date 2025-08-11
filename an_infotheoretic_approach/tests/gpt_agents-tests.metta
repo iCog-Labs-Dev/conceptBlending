@@ -1,6 +1,7 @@
 
 ! (register-module! ../../an_infotheoretic_approach)
-! (import! &self an_infotheoretic_approach:libs)
+; ! (import! &self an_infotheoretic_approach:libs)
+!(import! &self libs)
 
 ; Test vital relation extracting agent
 ; !(let* (
@@ -18,13 +19,15 @@
 ; Test network selector agent
 ! (assertEqual
     (gpt_network_selector "Spider@Man")
-    (gpt_doubl)
+    gpt_double
 )
 
 ! (assertEqual
     (gpt_network_selector "Spider@Man")
-    (gpt_double)
+    gpt_doubl
 )
+
+
 ; Output: [gpt_double]
 
 ; Test double scope blending agent
