@@ -28,14 +28,14 @@ You are an expert in conceptual blending networks. Your task is to:
 ---
 
 ### Examples:
+- Input: "electricity@water"
+  Output: gpt_simplex
+  
 - Input: "river@traffic"
   Output: gpt_mirror
 
 - Input: "painting@emotion"
   Output: gpt_single
-
-- Input: "electricity@water"
-  Output: gpt_simplex
 
 - Input: "love@algorithm"
   Output: gpt_double

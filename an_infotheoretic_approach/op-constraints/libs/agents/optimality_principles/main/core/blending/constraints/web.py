@@ -21,7 +21,7 @@ class WebConstraint:
             elif self._semantically_equivalent(blend, a_rel, b_rel):
                 maintained += self.match_credit
                 
-        return min(1.0, maintained / len(cross_mappings)) 
+        return min(1.0, maintained / len(cross_mappings))
     
     def _relation_exists(self, blend: 'Concept', relation: 'Relation') -> bool:
         return any(rel.type == relation.type and rel.target == relation.target for rel in blend.relations)

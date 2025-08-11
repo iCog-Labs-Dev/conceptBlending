@@ -58,7 +58,7 @@ class LLMIntegration:
             return result
 
     def good_reason_llm(self, metta: MeTTa, *args):
-        print("Prompt being used:", str(args[0]))
+        # print("Prompt being used:", str(args[0]))
         response = self.query(str(args[0]))
         print("LLM Response:", response)
         try:

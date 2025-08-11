@@ -21,8 +21,8 @@ You are an expert in conceptual blending. Your task is to:
 
 ### Output Format:
 Return only two lines in the following format:
-`(singleScope (expand Concept1) DominantFrame1 (extended Elaboration1))`
-`(singleScope (expand Concept2) DominantFrame2 (extended Elaboration2))`
+`(singleScope (expand Concept1) BlendedConcept1 (extended Elaboration1))`
+`(singleScope (expand Concept2) BlendedConcept2 (extended Elaboration2))`
 
 ### Examples:
 (singleScope (expand warStrategy) tacticalOperations (extended strategicWarfare))  
@@ -30,5 +30,6 @@ Return only two lines in the following format:
 
 ### Output Rules:
 - DO NOT use quotes, backticks, or additional text.
+- For the BlendedConcept, consider just combining the two concepts if it gives a clearer insight, instead of trying to find a complex synthesis.
 - Return only two valid MeTTa expressions in the specified format.
 """

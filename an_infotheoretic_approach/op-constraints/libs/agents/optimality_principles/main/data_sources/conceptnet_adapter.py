@@ -4,6 +4,7 @@ from urllib.parse import quote
 from functools import lru_cache
 from hyperon import *
 
+
 # Hardcoded English stopwords
 STOP_WORDS = {
     'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an',
@@ -47,7 +48,7 @@ class ConceptNetAdapter:
                for edge in self.get_edges(str(args[0]), "FormOf")))]
 
     def get_expand_provenance(self, metta: MeTTa, *args):
-        print("Expanding provenance for:", args[0])
+        # print("Expanding provenance for:", args[0])
         input_expr = args[0]
 
         if not isinstance(input_expr, ExpressionAtom):
@@ -55,7 +56,6 @@ class ConceptNetAdapter:
 
         # Convert children into list of strings
         provenance_list = [atom.get_name() for atom in input_expr.get_children()]
-        print("Provenance list:", provenance_list)
 
         expanded = set(provenance_list)
         for source in provenance_list:
@@ -67,16 +67,14 @@ class ConceptNetAdapter:
             except Exception:
                 continue
 
-        print("Expanded provenance (raw):", expanded)
-
         # Process phrases: lowercase, remove stopwords, replace spaces with underscores
         processed_expanded = set()
         for phrase in expanded:
             words = [w for w in phrase.lower().split() if w not in STOP_WORDS]
             if words:
                 processed_expanded.add("_".join(words))
-
-        print("Expanded provenance (processed):", processed_expanded)
+            if len(processed_expanded) == 5:  # Limit to 5 elements
+                break
 
         # Create ExpressionAtoms from processed phrases
         nested_expressions = []
@@ -85,16 +83,15 @@ class ConceptNetAdapter:
             inner_expr = E(*word_atoms)
             nested_expressions.append(inner_expr)
 
-        print("Nested expressions:", nested_expressions)
         final_outer_expr = E(*nested_expressions)
-        print("Final outer expression:", final_outer_expr)
         return [final_outer_expr]
+
 
 
     @lru_cache(maxsize=1000)
     def get_similarity(self, term1, term2):
         """Returns similarity score between two terms using ConceptNet relatedness."""
-        print(f"Calculating similarity between '{term1}' and '{term2}'")
+        # print(f"Calculating similarity between '{term1}' and '{term2}'")
         if term1 == term2:
             return 1.0
         try:
@@ -110,9 +107,10 @@ class ConceptNetAdapter:
 
     def are_antonyms(self, term1, term2):
         """Check whether two terms are antonyms."""
-        print("Checking antonymity")
+        # print("Checking antonymity")
         edges = self.get_edges(term1, "Antonym")
         antonym_terms = {edge["end"]["label"].lower() for edge in edges if "end" in edge}
+        # print(term2.lower() in antonym_terms)
         return term2.lower() in antonym_terms
 
     def are_terms_antonyms(self, metta: MeTTa, *args):
@@ -144,24 +142,21 @@ class ConceptNetAdapter:
         return [ValueAtom(self.is_part_of(str(args[0]), str(args[1])))]
 
     def is_justified(self, property, context):
-        """Determine whether a property is justified in the context of a concept."""        
-        print(f"Checking if property '{property}' is justified in context '{context}'")
+        """Determine whether a property is justified in the context of a concept."""
+        # print(f"Checking if property '{property}' is justified in context '{context}'")
         edges = self.get_edges(context)
         direct = any(
             edge.get("rel", {}).get("label") == "HasProperty" and
             edge.get("end", {}).get("label", "").lower() == property.lower()
             for edge in edges
         )
-        # print(f"Direct justification found: {direct}")
         if direct:
             return True
 
         # Try to infer justification using similar properties
         for edge in edges:
-            print(edge.get("rel", {}).get("label"))
             if edge.get("rel", {}).get("label") == "HasProperty":
                 prop = edge.get("end", {}).get("label", "").lower()
-                print(f"Checking against property: {prop}")
                 if self.get_similarity(property.lower(), prop) > 0.8:
                     return True
 
@@ -176,11 +171,10 @@ class ConceptNetAdapter:
         
     def get_relations(self, concept):
         """
-        Returns a list of unique (relation, hyphenated-target) pairs for a concept.
+        Returns a list of up to three unique (relation, hyphenated-target) pairs for a concept.
         Removes duplicates, removes stopwords from targets, and formats multi-word targets with underscores.
         """
         concept = concept.strip('"')
-        print(f"Fetching relations for concept: {concept}")
         seen = set()
         edges = self.get_edges(concept)
 
@@ -188,16 +182,16 @@ class ConceptNetAdapter:
             rel = edge.get("rel", {}).get("label")
             end = edge.get("end", {}).get("label")
             if rel and end:
-                # Normalize relation
                 rel_clean = rel.strip()
-
-                # Lowercase + remove stopwords + replace spaces with underscores
                 words = [w for w in end.lower().split() if w not in STOP_WORDS]
                 end_clean = "_".join(words)
-
                 seen.add((rel_clean, end_clean))
 
-        return list(seen)
+            if len(seen) == 3:  # Stop early if we already have 3
+                break
+
+        return list(seen)[:3]  # Ensure no more than 3 are returned
+
 
 
     def get_concept_relations(self, metta: MeTTa, *args):

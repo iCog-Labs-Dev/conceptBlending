@@ -145,4 +145,3 @@ def to_file(input_tuple):
         print(f"Added {data} to \"{space}\" file.")
     except Exception as e:
         print(f"Error adding {data} to \"{space}\" file: {e}")
-
