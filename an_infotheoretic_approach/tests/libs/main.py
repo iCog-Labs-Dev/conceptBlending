@@ -2,22 +2,22 @@ import os, yaml
 from hyperon import *
 from hyperon.ext import register_atoms
 from .agents import *
-from .agents.optimality_principles.main.data_sources.conceptnet_adapter import ConceptNetAdapter
-from .agents.optimality_principles.main.data_sources.llm_integration import LLMIntegration
+# from .agents.optimality_principles.main.data_sources.conceptnet_adapter import ConceptNetAdapter
+# from .agents.optimality_principles.main.data_sources.llm_integration import LLMIntegration
 
 
 # Define networks and their corresponding function names
 
 NETWORKS = ["simplex", "mirror", "single", "double", "vector", "network_selector", "vital_relation"]
 
-def load_config():
-    base_dir = os.path.dirname(__file__)
-    config_path = os.path.join(base_dir, "agents", "optimality_principles", "config", "constraints.yaml")
-    with open(config_path) as f:
-        config = yaml.safe_load(f)
-    if "llm" in config and "api_key" in config["llm"]:
-        config["llm"]["api_key"] = os.path.expandvars(config["llm"]["api_key"])
-    return config
+# def load_config():
+#     base_dir = os.path.dirname(__file__)
+#     config_path = os.path.join(base_dir, "agents", "optimality_principles", "config", "constraints.yaml")
+#     with open(config_path) as f:
+#         config = yaml.safe_load(f)
+#     if "llm" in config and "api_key" in config["llm"]:
+#         config["llm"]["api_key"] = os.path.expandvars(config["llm"]["api_key"])
+#     return config
 
 
 @register_atoms(pass_metta=True)
@@ -113,14 +113,14 @@ def grounded_atoms(metta):
         unwrap=False
     )
 
-    config = load_config()
-    llm = LLMIntegration(config)
-    registered_operations["good-reason-llm"] = OperationAtom(
-        "good-reason-llm",
-        lambda *args: llm.good_reason_llm(metta, *args),
-        [AtomType.ATOM, AtomType.ATOM],
-        unwrap=False
-    )
+    # config = load_config()
+    # llm = LLMIntegration(config)
+    # registered_operations["good-reason-llm"] = OperationAtom(
+    #     "good-reason-llm",
+    #     lambda *args: llm.good_reason_llm(metta, *args),
+    #     [AtomType.ATOM, AtomType.ATOM],
+    #     unwrap=False
+    # )
     
 
     return registered_operations
