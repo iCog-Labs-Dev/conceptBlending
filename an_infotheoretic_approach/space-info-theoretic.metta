@@ -1,91 +1,66 @@
-! (import! &self libs)
-! (import! &self info-theoretic)
-
-!(bind! &input-space (new-space))
-!(bind! &generic-space (new-space))
-!(bind! &blended-space (new-space))
+!(bind! &concept-space (new-space))
 
 
-; metta function to add given expressions to space and file(external file)
 (= (add-data $data $space $external-space)
     (
         ((py-atom libs.to_file) (py-tuple ($external-space $data)))
-        (add-reduct $space $data)
+        (add-reduct $space (Concept $data))
     )
 )
-;!(add-data (Concept Bater) &self "kb_concepts.metta")
 
+(= (add-inputs-space $input1 $input2)
+    (collapse(superpose((add-atom &self (= (space-Input1) $input1)) (add-atom &self (= (space-Input2) $input2)))))
+)
 
-; --------------------------------------
-; ;; Load the stored concepts from knowledge base
-!(load-ascii &input-space data/kb_concepts.metta)
-
-
-;! (add-data (Concept Bat) &input-space "kb_concepts.metta")
-;! (add-data (Concept Man) &input-space "kb_concepts.metta")
-;! (add-data (Concept Spider) &input-space "kb_concepts.metta")
-; ! (add-data (Concept House) &input-space "kb_concepts.metta")
-; ! (add-data (Concept Music) &input-space "kb_concepts.metta")
-
-;! (match &input-space (Concept $x) $x)
-
-; metta function to blend given inputs and populate generic and blended spaces
-(= (blend_to_space $input1 $input2)
-    (if (not (== $input1 $input2))
-        (let*(
-            (($vital-relation-1 $vital-relation-2) (gpt_vital_relation $input1 $input2))
-            ($vital-relations (let $t (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $t)))
-            ($concepts (gpt_vector $input1 $input2 $vital-relations))
-            ($concept1 (car-atom $concepts))
-            ($wrapped-concept2 (cdr-atom $concepts))
-            ($concept2 (car-atom $wrapped-concept2))
-            ($degree (property-degree $concept1))
-            ($max (property-max $concept1 $concept2))
-            ($calculated-mu-emergence (mu-emergence $degree $max))
-            ($min (property-min $concept1 $concept2))
-            ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
-            ($unwrapped-concepts (cdr-atom $concept1))
-            ($concept-pair (car-atom $unwrapped-concepts))
-        )
-            (if (> $calculated-mu-hqblend 0)
-                (let*(
-                    ($network (gpt_network_selector $concept-pair))
-                )
-                    (if (not (noreduce-eq $network None))
-                        (let*(
-                            ($blended ($network $concept-pair $calculated-mu-emergence))
-                        )
-                            (
-                                (add-data $concept1 &generic-space "kb_generic_space.metta")
-                                (add-data $concept2 &generic-space "kb_generic_space.metta")
-                                (add-data $blended &blended-space "kb_blended_space.metta")
+(= (n-concepts $list $amount)
+    (function
+        (chain (eval (== $amount 0)) $tf
+            (unify $tf False
+                (chain (decons-atom $list) $ht
+                    (unify ($head $tail) $ht
+                        (chain (eval (- $amount 1)) $upd-amount
+                            (chain (eval (n-concepts $tail $upd-amount)) $tail-res
+                                (chain (cons-atom $head $tail-res) $res (return $res))
                             )
                         )
-                        (empty)
+                        (return ())
                     )
                 )
-                (empty)
+                (return ())
             )
         )
-        (empty)
     )
 )
-;! (blend_to_space Bat Man)
 
-
-; metta function to blend all atoms in a given lists
-(= (blend_from_lists $list1 $list2)
-    (blend_to_space $list1 $list2)
-)
-
-
-; metta function to blend all atoms in given space
-(= (blend_from_space $space)
-    (let*(
-        ($list-of-inputs1 (match $space (Concept $x) $x))
-        ($list-of-inputs2 (match $space (Concept $y) $y))
-    )
-        (blend_from_lists $list-of-inputs1 $list-of-inputs2)
+(= (get-concepts $amount)
+    (let $concepts (collapse(get-atoms &concept-space))
+        (let $uni-concepts (unique-atom $concepts)
+            (n-concepts $uni-concepts $amount)
+        )
     )
 )
-; ! (blend_from_space &input-space)
+
+(= (add-space-concepts)
+    (let ($concept1 $concept2) (vec-extraction (space-Input1) (space-Input2))
+        (collapse(superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2)))))
+    )
+)
+
+;;;; Load the stored concepts from knowledge base
+
+!(load-ascii &concept-space data/kb_concepts.metta)
+
+;;;; space based blending function ;;;;
+(= (space-blend $blend $GAorCMA $eval)
+    (let $concepts (get-concepts 2)
+        (let ($concept1 $concept2) $concepts
+            (let ($input1 $input2) ((index-atom $concept1 1) (index-atom $concept2 1))
+                (let $added-inputs (add-inputs-space $input1 $input2)
+                    (let $added-concepts (add-space-concepts)
+                        ($blend $GAorCMA $eval)
+                    )
+                )
+            )
+        )
+    )
+)

@@ -13,3 +13,7 @@
         let $individuals (collapse(match $space (Individual $x $max) $x)) (if (== (size-atom $individuals) 0) () (car-atom $individuals))
     )
 )
+
+(= (sum $list)
+    (foldl-atom $list 0 $acc $x (+ $acc $x))
+)

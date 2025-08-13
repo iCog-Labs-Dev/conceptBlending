@@ -21,14 +21,15 @@ You are an expert in conceptual blending. Your task is to:
 
 ### Output Format:
 Return only:
-`(mirroredConcept (mirror Concept1 Concept2) sharedPattern (extended deeperInterpretation))`
+`(Mirror (expand Concept1 Concept2) BlendedConcept (extended deeperInterpretation))`
 
 ### Examples:
-- `(mirroredConcept (mirror immuneSystem cybersecurity) adaptiveDefense (extended threatDetection))`
-- `(mirroredConcept (mirror neuralNetwork socialNetwork) connectivityDynamics (extended informationExchange))`
-- `(mirroredConcept (mirror river trafficFlow) fluidMovement (extended continuousNavigation))`
+- `(Mirror (expand immuneSystem cybersecurity) adaptiveDefense (extended threatDetection))`
+- `(Mirror (expand neuralNetwork socialNetwork) connectivityDynamics (extended informationExchange))`
+- `(Mirror (expand river trafficFlow) fluidMovement (extended continuousNavigation))`
 
 ### Output Rules:
 - DO NOT include quotes, backticks, or explanations.
+- For the BlendedConcept, consider just combining the two concepts if it gives a clearer insight, instead of trying to find a complex synthesis.
 - Return only one valid MeTTa expression.
 """
