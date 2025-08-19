@@ -49,7 +49,6 @@
 )
 
 ; Roulette Wheel Selection 
-(: roulette-select (List List -> Any))
 (= (roulette-select $population $fitnesses)
    (let* (
            ($popSize (size-atom $population))

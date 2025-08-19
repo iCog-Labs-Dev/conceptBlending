@@ -590,32 +590,32 @@ update-mean-test
     Third-rand-mul-samp (10 8))
 )
 
-; ;;;; cma-es-blend (encompasses a test for cma-es-main-loop) ;;;;
-; Output = The formed blend.
+;;;; cma-es-blend (encompasses a test for cma-es-main-loop) ;;;;
+Output = The formed blend.
 
-; !(assertEqual 
-;    (let ($net-type $exp-ver $blend $ext-ver) (blend cma-es-main-loop) ($net-type $blend))
-;    (doubleScope BatMan)
-; )
+!(assertEqual 
+   (let ($net-type $exp-ver $blend $ext-ver) (blend cma-es-main-loop) ($net-type $blend))
+   (doubleScope BatMan)
+)
 
-;;;; cma-es-blend with evaluation ;;;;
-; Output = the formed blend, and six optimality constraints(integration, good-reason, web, unpacking, topology, metonymy) evaluation scores
-; !(assertEqual
-;     (blend cma-es-main-loop True)
-;     (Formed Blend: BatMan 
-;     Evaluation-Metrics: 
-;     Integration: 1.0 
-;     Good-reason: (Conceptnet-score 0.0 LLM-score 1.0) 
-;     Unpacking: 0.104125 
-;     Web: 0.0 
-;     Topology: 0.0 
-;     Metonymy: 0.0)
-; )
+;;; cma-es-blend with evaluation ;;;;
+Output = the formed blend, and six optimality constraints(integration, good-reason, web, unpacking, topology, metonymy) evaluation scores
+!(assertEqual
+    (blend cma-es-main-loop True)
+    (Formed Blend: BatMan 
+    Evaluation-Metrics: 
+    Integration: 1.0 
+    Good-reason: (Conceptnet-score 0.0 LLM-score 1.0) 
+    Unpacking: 0.104125 
+    Web: 0.0 
+    Topology: 0.0 
+    Metonymy: 0.0)
+)
 
 ;;;; space-based cma-es-blend ;;;;
 ; Output = The formed blend(inputs are fetched from the space)
 
 !(assertEqual
    (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (space-blend blend cma-es-main-loop False) %Undefined% $space)) ($net-type $blend))
-   (Mirror nocturnalNavigator)
+   (doubleScope BatMan)
 )
