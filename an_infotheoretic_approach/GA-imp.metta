@@ -2,6 +2,9 @@
 !(import! &self utils:random-list-utils)
 !(import! &self info-theoretic)
 !(import! &self utils:GA-utils)
+!(import! &self op-constraints:op-evaluation)
+!(import! &self space-info-theoretic)
+
 
 ;; ==== SEED FOR REPRODUCIBILITY ====
 ! (bind! np-rnd (py-atom numpy.random))
@@ -34,8 +37,8 @@
     (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
 )
 
-(= (Input1) "Bat")
-(= (Input2) "Man")
+(= (Input1) Bat)
+(= (Input2) Man)
 
 ;;;; POPULATION INITIALIZER FUNCTION ;;;;
 (= (initialize-population) (random-list (POP_SIZE) (GENES) 0 1))
@@ -46,24 +49,20 @@
 )
 
 ; Roulette Wheel Selection 
-(: roulette-select (List List -> Number))
 (= (roulette-select $population $fitnesses)
    (let* (
            ($popSize (size-atom $population))
            ($fitSize (size-atom $fitnesses))
          )
      (if (or (== $popSize 0) (== $fitSize 0))
-         (Error (quote (roulette-select $population $fitnesses)) EmptyList)
-         
+         (Error EmptyList)
          (if (not (== $popSize $fitSize))
-             (Error (quote (roulette-select $population $fitnesses)) LengthMismatch)
-             
+             (Error LengthMismatch)
              (let* (
                      ($w-max (max-atom $fitnesses))
                    )
                (if (== $w-max 0)
-                   (Error (quote (roulette-select $population $fitnesses)) ZeroMaxFitness)
-                   
+                   (Error ZeroMaxFitness)
                    (roulette-loop $population $fitnesses $w-max $popSize)
                )
              )
@@ -72,7 +71,7 @@
    )
 )
 
- (: roulette-loop (List List Number Number -> Any))
+(: roulette-loop (List List Number Number -> Any))
     (= (roulette-loop $pop $fits $w-max $n)
     (let* (
             ($i (random-int &rng 0 $n)) 
@@ -161,11 +160,14 @@
 )
 
 !(bind! &inputspace (get-space))
-!(add-reduct &inputspace (Inputs ((initialize-population) (ETA_PARAM) (MUTATION_PARAM) 0)))
-!(add-concepts)
+!(add-reduct &inputspace (Inputs ((initialize-population) (ETA_PARAM) (MUTATION_PARAM) 0 -10000 0)))
+; !(add-concepts)
 
 (= (GA-single-iteration)
-    (let ($population ($init-eta $eta-growth) ($init-mut-std $mut-decay) $generation-number) (match &inputspace (Inputs $x) $x)
+    (let ($population ($init-eta $eta-growth) ($init-mut-std $mut-decay) $generation-number $best-fitness $stall) 
+     (match &inputspace (Inputs $x) $x)
+     (if (>= $stall 5)
+            ($population $best-fitness)
         (let* (
             ($popfitness (population-fitness-score $population))
             ($zippedpopfit (zip-list $population $popfitness))
@@ -173,17 +175,25 @@
             ($elites (elite-individuals $popfitness &individuals (ELITE_COUNT)))
             ($new-population (populate-new-population $population $popfitness $elites $init-eta $init-mut-std))
             ($new-population-clipped (if (== (size-atom $new-population) (POP_SIZE)) $new-population (cdr-atom $new-population)))
-            (($upd-eta $upd-mut-std) (collapse(superpose((* $init-eta $eta-growth) (* $init-mut-std $mut-decay)))))
-            ($clean (collapse(match &inputspace (Inputs $params) (remove-atom &inputspace (Inputs $params)))))
-            (() (println! (GENERATION: $generation-number | BEST-FITNESS: (max-atom $popfitness))))
+            (($upd-eta $upd-mut-std)(collapse (superpose ( (* $init-eta $eta-growth) (* $init-mut-std $mut-decay) ))))
+            ($max-fitness (max-atom $popfitness))
+            ($new-best-fitness (if (> $max-fitness $best-fitness) $max-fitness $best-fitness))
+            ($new-stall (if (> $max-fitness $best-fitness) 0 (+ 1 $stall)))
+            ($clean (collapse (match &inputspace (Inputs $params) (remove-atom &inputspace (Inputs $params)))))
+            (() (println! (GENERATION $generation-number | Max Fitness $max-fitness | Stall $new-stall)))
         )
-        (let $added (add-reduct &inputspace (Inputs ($new-population-clipped ($upd-eta $eta-growth) ($upd-mut-std $mut-decay) (+ 1 $generation-number)))) ($new-population (max-atom $popfitness)))
-        )
-    )
+        (let $added (add-reduct &inputspace (Inputs ($new-population-clipped ($upd-eta $eta-growth) ($upd-mut-std $mut-decay) (+ 1 $generation-number) $new-best-fitness $new-stall))) ($new-population $max-fitness)))
+     )
+  )   
 )
 
 (= (GA-main-loop)
     (let $iters (generate-toy-list (GENERATIONS)) (map-atom $iters $iter (GA-single-iteration)))
 )
 
-; !(blend GA-main-loop)
+(= (Eval) True)
+
+
+; !(blend GA-main-loop (Eval))
+
+; !(space-blend blend GA-main-loop (Eval))

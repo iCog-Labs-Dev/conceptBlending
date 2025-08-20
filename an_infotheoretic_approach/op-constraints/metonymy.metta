@@ -1,22 +1,21 @@
-!(register-module! ../libs)
 ! (import! &self libs)
-! (import! &self common-utils)
+; ! (import! &self common-utils)
 
 (= (is-characteristic-part $relation $blend-properties $bled-name) 
     (if (is-list-member (index-atom $relation 1) $blend-properties)
         True
-        (is_relation_part_of (index-atom $relation 1) $bled-name)
+        (is-relation-part-of (index-atom $relation 1) $bled-name)
     )
 )
 
 (= (is-semantically-compressed $relation $blend-properties $blend-name $detect-abbreviations $detect-characteristic-parts) 
 
     (let* (
-        ($is-abbrev (is_abbreviation (car-atom $relation)))
+        ($is-abbrev (is-abbreviation (car-atom $relation)))
         )
         (if (and $detect-abbreviations $is-abbrev)
             True
-            (if (is_relation_metonymy (car-atom $relation) (index-atom $relation 1))
+            (if (is-relation-metonymy (car-atom $relation) (index-atom $relation 1))
                 True
                 (if (and $detect-characteristic-parts (is-characteristic-part $relation $blend-properties $blend-name))
                     True
@@ -26,7 +25,6 @@
         )
     )
 )
-
 
 (= (compression-indicators) (Syn Metonym Short_HasPart Abbr Contraction))
 
@@ -45,15 +43,14 @@
         )
     )
 )
-(= (metonymy_op $blend)
+(= (metonymy-op $blend)
   (let* (
     ($blend-relations (relations-key-value-list $blend))
-    ($blend-relations-inner (car-atom $blend-relations))
-    ($total-relations (size-atom $blend-relations-inner))    
+    ($total-relations (size-atom $blend-relations))
     ($blend-name (blend-name $blend))
     ($blend-properties (properties-list $blend))
-    ($compressed-count (count-compressed-relations $blend-relations-inner $blend-properties $blend-name 0))
-    ($compressed-count-float (to-float $compressed-count))
+    ($compressed-count (count-compressed-relations $blend-relations $blend-properties $blend-name 0))
+    ($compressed-count-float (to-float-op $compressed-count))
   )
     (
         if (> $total-relations 0)
@@ -64,4 +61,4 @@
 )
 
 
-! (metonymy_op (good_blend))
+; ! (metonymy-op (good_blend))

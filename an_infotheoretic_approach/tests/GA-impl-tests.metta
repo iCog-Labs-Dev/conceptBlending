@@ -113,14 +113,79 @@
     (8 8)
 )
 
+;; GA-blend ;;;;
+; INFO: The testing of this function applies for populate-two-child, populate-new-population, GA-single-iteration, and GA-main-loop too as it's(the main loop depends on the proper functioning of the two functions)
 
-;;;; GA-blend ;;;;
-;; INFO: The testing of this function applies for populate-two-child, populate-new-population, GA-single-iteration, and GA-main-loop too as it's(the main loop depends on the proper functioning of the two functions)
-
-; Test GA-blend with two input concepts,  50 population size, ETA parameters, Mutation parameters, and 30 generations
+;;; Test GA-blend with two input concepts,  50 population size, ETA parameters, Mutation parameters, and 30 generations
 ; Output: The blend concept of the two input concepts.
 
-!(assertEqual 
-    (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (blend GA-main-loop) %Undefined% $space)) ($net-type $blend))
-    (doubleScope BatMan)
+; !(assertEqual 
+;    (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (blend GA-main-loop) %Undefined% $space)) ($net-type $blend))
+;    (doubleScope BatMan)
+; )
+
+; ;; GA-blend with evaluation ;;;;
+; ;Output = the formed blend, and six optimality constraints(integration, good-reason, web, unpacking, topology, metonymy) evaluation scores
+
+; !(assertEqual
+;     (blend GA-main-loop True)
+;     (Formed Blend: BatMan 
+;     Evaluation-Metrics: 
+;     Integration: 1.0 
+;     Good-reason: (Conceptnet-score 0.0 LLM-score 0.75) 
+;     Unpacking: 0.0 
+;     Web: 0.0 
+;     Topology: 0.0 
+;     Metonymy: 0.0)
+; )
+
+;;;; space-based GA-blend ;;;;
+; Output = The formed blend(inputs are fetched from the space)
+
+!(assertEqual
+   (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (space-blend blend GA-main-loop False) %Undefined% $space)) ($net-type $blend))
+   (doubleScope BatMan)
 )
+
+; 1. Weighted selection: This test verifies that roulette-select never picks an individual with 0 fitness.
+!(assertEqual (roulette-select
+  (
+    (0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8)
+    (0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9)
+    (0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2)
+  )
+  (0 0.5 0)
+)
+   (0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9))
+
+; 2. Single-item list should always return that item: Since it's the only option, roulette-select should always return it.
+!(assertEqual
+   (roulette-select ((0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8)) (1))
+   (0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8))
+
+; 3. Empty lists error: Here, the population list is empty while fitnesses are given.
+; The selector should detect this invalid input and return an EmptyList error.
+!(assertEqualToResult (roulette-select () (0.2 0.5 0.8)) ((Error EmptyList)))
+
+; 4. Mismatched lengths error:  Tests that when the population and fitness lists have different lengths
+; the function correctly fails with a LengthMismatch error.
+!(assertEqualToResult (roulette-select
+  (
+    (0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8)
+    (0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9)
+    (0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2)
+  )
+  (0.2 0.5)
+) ((Error LengthMismatch)))
+
+; 5. All-zero fitness list should error with ZeroMaxFitness
+!(assertEqualToResult
+   (roulette-select
+     (
+       (0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8)
+       (0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9)
+       (0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2)
+     )
+     (0 0 0)
+   )
+   ((Error ZeroMaxFitness)))

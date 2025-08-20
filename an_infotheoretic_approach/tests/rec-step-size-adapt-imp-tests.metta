@@ -24,5 +24,3 @@
     (new-step-size (step_size) (c_sigma) (d_sigma) (dim) (p_sigma))
     0.12224638563351164
 )
-
-

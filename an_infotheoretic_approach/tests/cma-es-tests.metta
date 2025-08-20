@@ -136,7 +136,7 @@
    (select-by-indices (100 200 300) (1 2))
    (200 300))
 
-; update-mean-test
+update-mean-test
 !(assertEqual
    (let $res (update-mean-test ((1 2 3) (7 5 1)) 3 (0.6 0.4)) (car-atom $res))
    (4.6000000000000005 3.8 1.8000000000000003)
@@ -553,6 +553,17 @@
     (204 240 276 312 348 384 420 456)
 )
 
+
+;;;; population-fitness-score ;;;;
+;;;; Test population-fitness-score with a list containing individuals degree distribution
+; Output = A list containing fitness value for corresponding individuals
+(= (testPopulation) ((1 0 1 0 1 0 1 0) (0 1 0 1 0 1 0 1) (1 1 0 1 1 0 1 0) (0 0 1 1 0 0 1 0) (1 0 1 1 1 1 0 1) (1 1 1 1 1 0 0 1) (0 0 0 1 1 0 1 1) (1 1 0 0 0 0 1 1)))
+
+!(assertEqual
+   (population-fitness-score-test ((1 0 1 0 1 0 1 0) (0 1 0 1 0 1 0 1) (1 1 0 1 1 0 1 0) (0 0 1 1 0 0 1 0) (1 0 1 1 1 1 0 1) (1 1 1 1 1 0 0 1) (0 0 0 1 1 0 1 1) (1 1 0 0 0 0 1 1)))
+   (0.035 0.02625 0.045 0.03 0.03625 0.033749999999999995 0.043750000000000004 0.046250000000000006)
+)
+
 ;;;; random-multivariate ;;;;
 
 ;;;; Test random-multivariate with mean vector(mean) of shape (8), covarinace matrice(cov) of shape (n n), number of smaples(lambda_), and new-space
@@ -580,7 +591,31 @@
 )
 
 ;;;; cma-es-blend (encompasses a test for cma-es-main-loop) ;;;;
-!(assertEqual 
-   (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (blend cma-es-main-loop) %Undefined% $space)) ($net-type $blend))
+; Output = The formed blend.
+
+; !(assertEqual 
+;    (let ($net-type $exp-ver $blend $ext-ver) (blend cma-es-main-loop) ($net-type $blend))
+;    (doubleScope BatMan)
+; )
+
+;;; cma-es-blend with evaluation ;;;;
+; Output = the formed blend, and six optimality constraints(integration, good-reason, web, unpacking, topology, metonymy) evaluation scores
+; !(assertEqual
+;     (blend cma-es-main-loop True)
+;     (Formed Blend: BatMan 
+;     Evaluation-Metrics: 
+;     Integration: 1.0 
+;     Good-reason: (Conceptnet-score 0.0 LLM-score 1.0) 
+;     Unpacking: 0.104125 
+;     Web: 0.0 
+;     Topology: 0.0 
+;     Metonymy: 0.0)
+; )
+
+;;;; space-based cma-es-blend ;;;;
+; Output = The formed blend(inputs are fetched from the space)
+
+!(assertEqual
+   (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (space-blend blend cma-es-main-loop False) %Undefined% $space)) ($net-type $blend))
    (doubleScope BatMan)
 )

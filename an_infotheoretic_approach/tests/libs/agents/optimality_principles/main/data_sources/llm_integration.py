@@ -3,6 +3,8 @@ import json
 from cachetools import TTLCache
 from openai import OpenAI
 from dotenv import load_dotenv
+from hyperon import *
+import re
 
 # Load environment variables from .env file (make sure .env is in your project root)
 load_dotenv()
@@ -54,6 +56,32 @@ class LLMIntegration:
             result = self._fallback_response(prompt)
             self.cache[prompt] = result
             return result
+
+    def good_reason_llm(self, metta: MeTTa, *args):
+        # print("Prompt being used:", str(args[0]))
+        response = self.query(str(args[0]))
+        print("LLM Response:", response)
+        try:
+            if response.strip().startswith("{"):
+                data = json.loads(response)
+                if "result" in data:
+                    return metta.parse_all(data["result"])
+                elif all(k in data for k in ["scientific", "functional", "innovation", "commonsense"]):
+                    return (data["scientific"] + data["functional"] + 
+                            data["innovation"] + data["commonsense"]) >= 12  # Avg 3/5
+        except json.JSONDecodeError:
+            pass
+        
+        if re.search(r'\byes\b|\btrue\b|\bjustified\b', response, re.IGNORECASE):
+            return [ValueAtom(True)]
+        if re.search(r'\bno\b|\bfalse\b|\bnot justified\b', response, re.IGNORECASE):
+            return [ValueAtom(False)]
+            
+        match = re.search(r"confidence:?\s*(\d+)%", response, re.IGNORECASE)
+        if match:
+            return int(match.group(1)) >= 70
+            
+        return [ValueAtom(False)] 
 
     def _fallback_response(self, prompt: str) -> str:
         if self.fallback_strategy == "accept_all":
