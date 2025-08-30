@@ -9,3 +9,5 @@ colorama
 tqdm==4.67.1
 pyyaml
 cachetools>=5.0.0
+sentence-transformers
+scikit-learn

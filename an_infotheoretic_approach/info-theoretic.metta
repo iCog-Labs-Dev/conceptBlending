@@ -1,5 +1,5 @@
-!(import! &self utils:list-op-utils)
-!(import! &self libs)
+; !(import! &self utils:list-op-utils)
+; !(import! &self libs)
 
 (: Concept Concept)
 
@@ -99,8 +99,7 @@
 
 ; ###################### Calculate mu emergence ##########################
 (= (mu-emergence $candidate-degrees $properties-max)
-    (
-        let
+    (let
         ($propertiesvalues $properties)
         (collapse(superpose((get-values $properties-max) (get-properties $properties-max))))
         (list-substract $candidate-degrees $propertiesvalues $properties)
@@ -123,6 +122,107 @@
         (min-atom ($1-over-prop-summation 1))
     )
 )
+
+(= (sum-list $list)
+    (foldl-atom $list 0 $acc $x (+ $acc $x))
+)
+
+(= (log2 $num) (log-math 2 $num))
+
+(= (-vee $num) (- 0.0 $num))
+
+(= (shannon-entropy $p)
+    (if (or (<= $p 0) (>= $p 1))
+    0
+    (* $p (log2 $p))
+    )
+)
+
+(= (binary-shannon-entropy $p)
+    (if (or (<= $p 0) (>= $p 1))
+    0
+    (- (* (-vee $p) (log2 $p)) (* (- 1 $p) (log2 (- 1 $p))))
+    )
+)
+
+(= (custom-cons-atom $elem $list)
+    (cons-atom $elem $list)
+)
+
+(= (compute-entropy $list)
+    (foldl-atom $list 0 $acc $x (- $acc (shannon-entropy $x)))
+)
+
+(= (joint-entropy-pairwise $pi $pj $mode)
+    (function
+        (chain (unify $mode min (chain (min-atom($pi $pj)) $pp11 $pp11) (chain (* $pi $pj) $pp11 $pp11)) $p11
+            (chain (collapse(superpose(
+                (chain (- $pi $p11) $p10 $p10)
+                (chain (- $pj $p11) $p01 $p01)
+                (chain (+ $p11 (- (- 1 $pi) $pj)) $p00 $p00)
+                ))) $list
+                (chain (custom-cons-atom $p11 $list) $flist
+                    (chain (compute-entropy $flist) $H
+                        (return $H)
+                    )
+                )
+            )
+        )
+    )
+)
+
+(= (joint-entropy-compute-helper $i $list $mode)
+    (collapse(joint-entropy-pairwise $i (superpose $list) $mode))
+)
+
+(= (custom-union-atom $exp1 $exp2)
+    (union-atom $exp1 $exp2)
+)
+
+(= (joint-entropy-compute $candidate $mode)
+    (function
+        (chain (decons-atom $candidate) $ht
+            (unify ($head $tail) $ht
+                (chain (unify $tail () () (joint-entropy-compute-helper $head $tail $mode)) $jentropy
+                    (chain (eval (joint-entropy-compute $tail $mode)) $tentropy
+                        (chain (custom-union-atom $jentropy $tentropy) $result (return $result))
+                    )
+                )
+                (return ())
+            )
+        )
+    )
+)
+; !(joint-entropy-compute-helper 0.9 (0.9 0.0 0.8 0.2 0.9 0.7 0.7))
+; !(joint-entropy-pairwise 0.9 0.9 min)
+; !(joint-entropy-compute (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
+; !(union-atom (42) ())
+; !(list-entropy-compute-helper 3 (2 3 4 5 6 7))
+; !(joint-entropy-pairwise 0.7 0.5 independent)
+
+(= (total-correlation-entropy $candidate $mode)
+    (function
+        (chain (map-atom $candidate $elem (binary-shannon-entropy $elem)) $indiv-entropy
+            (chain (sum-list $indiv-entropy) $indiv-entropy-sum
+                (unify $indiv-entropy-sum 0 (return 0.0)
+                    (chain (joint-entropy-compute $candidate $mode) $pairwise-joint-entropy
+                        (chain (sum-list $pairwise-joint-entropy) $pairwise-joint-entropy-sum
+                            (chain (size-atom $candidate) $len
+                                (chain (/ (* $pairwise-joint-entropy-sum 2) (* $len (- $len 1))) $average-joint-entropy
+                                    (chain (- $indiv-entropy-sum $average-joint-entropy) $total-correlation 
+                                        (chain (/ $total-correlation $indiv-entropy-sum) $normalized-correlation (return $normalized-correlation))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+)
+
+; !(total-correlation-entropy (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1
