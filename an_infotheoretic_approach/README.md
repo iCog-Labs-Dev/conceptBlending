@@ -10,6 +10,10 @@ The **Information-Theoretic Conceptual** Blending system enhances concept synthe
 
 ## Setup and Run
 
+### Prerequisities
+
+- **For Windows Users**: The hyperon package version (0.2.4) required by this project doesn't have pre-compiled binaries for Windows. Therefore,you must use the Windows Subsystem for Linux(WSL) 2 to run this project.
+- **Python Version**: This project requires Python 3.8 or newer (compatible up to Python 3.13).
 ### 1. Clone the repository and navigate to the folder
 ```bash
 git clone https://github.com/iCog-Labs-Dev/conceptBlending.git
