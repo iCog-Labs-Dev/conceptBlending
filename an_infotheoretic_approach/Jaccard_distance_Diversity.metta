@@ -5,7 +5,7 @@
 (= (head $list) (car-atom $list))
 
 (: toFloat (-> Number Number))
-(= (toFloat $x) (* 1.0 $x))
+(= (toFloat $x) (- (+ $x 0.1) 0.1))
 
 (= (sum ()) 0.0)
 (= (sum $lst) (+ (head $lst) (sum (cdr-atom $lst))))
@@ -16,12 +16,14 @@
 (= (jaccard-distance $set1 $set2)
    (let* (
            ($inter  (length (intersection-atom $set1 $set2)))
+           (() (println! $inter))
            ($union1 (length (union-atom $set1 $set2)))
            ($union2 (- $union1 $inter))
+           (() (println! $union2))
          )
          (if (== $union2 0)
              0.0
-             (- 1.0 (/ $inter (+ $union2 0.000000001))))))
+             (- 1.0 (/ (toFloat $inter) $union2)))))
 
 
 ;; map-jaccard: for a given individual, return its Jaccard distance to each item in the list
