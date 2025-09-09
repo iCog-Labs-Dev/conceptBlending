@@ -155,7 +155,15 @@
         )
     )
 )
-
+;;;;Define Shanon Entropy Metric  H(p)=−[plog2​(p)+(1−p)log2​(1−p)]
+(: entropy (Number -> Number))
+(= (entropy $candidate-degree)
+   (let ($q (- 1 $candidate-degree))
+     (+ (if (== $candidate-degree 0) 0 (* -1 $candidate-degree (log-math 10 $candidate-degree)))
+        (if (== $q 0) 0 (* -1 $q (log-math 10 $q)))
+     )
+   )
+)
 ;;;; Vital Relation Extraction ;;;;
 (= (vit-rel-extraction $input1 $input2)
     (let ($vital-relation-1 $vital-relation-2) (gpt_vital_relation $input1 $input2)
