@@ -1,5 +1,5 @@
-; !(import! &self utils:list-op-utils)
-; !(import! &self libs)
+!(import! &self utils:list-op-utils)
+!(import! &self libs)
 
 (: Concept Concept)
 
@@ -179,6 +179,8 @@
     (union-atom $exp1 $exp2)
 )
 
+; !(semantic-correlation (color shape texture function size weight material purpose) (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7))
+; !(test-function "test")
 (= (joint-entropy-compute $candidate $mode)
     (function
         (chain (decons-atom $candidate) $ht
@@ -222,6 +224,15 @@
     )
 )
 
+(= (Alpha) 0.3)
+
+(= (coherence $props $degrees)
+    (let $tc (total-correlation-entropy $degrees min)
+        (let $sim (semantic-correlation $props $degrees) (+ (* (Alpha) $tc) (* (- 1 (Alpha)) $sim)))
+    )
+)
+
+!(coherence (color shape texture function size weight material purpose) (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7))
 ; !(total-correlation-entropy (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
 
 (= (cons-blend-properties $concept1 $blend-prop-values)

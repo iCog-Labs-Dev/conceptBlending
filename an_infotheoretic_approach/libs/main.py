@@ -113,6 +113,13 @@ def grounded_atoms(metta):
         unwrap=False
     )
 
+    registered_operations["semantic-correlation"] = OperationAtom(
+        "semantic-correlation",
+        lambda *args: semantic_similarity(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, "Expression"],
+        unwrap=False
+    )
+
     config = load_config()
     llm = LLMIntegration(config)
     registered_operations["good-reason-llm"] = OperationAtom(
