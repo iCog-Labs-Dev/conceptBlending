@@ -220,6 +220,14 @@
     ))
 )
 
+(= (check-equality $val1 $val2) (if (== $val1 $val2) Empty $val2))
+
+(= (filter-list $list $val)
+    (collapse
+        (check-equality $val (superpose $list))
+    )
+)
+
 (= (remove-list-element $list $val)
     (
         if (== (size-atom $list) 0)
@@ -653,6 +661,63 @@
                     (index-atom $list2 47)
                     (index-atom $list2 48)
                     (index-atom $list2 49)
+                )
+            )
+        )
+    )
+)
+
+(= (all-true $list)
+    (function
+        (chain (decons-atom $list) $ht
+            (unify ($head $tail) $ht
+                (unify $head True
+                    (chain (eval (all-true $tail)) $tail-result
+                        (chain $tail-result $result (return $result))
+                    )
+                    (return False)
+                )
+                (return True)
+            )
+        )
+    )
+)
+
+(= (any-true $list)
+    (function
+        (chain (decons-atom $list) $ht
+            (unify ($head $tail) $ht
+                (unify $head True
+                    (return True)
+                    (chain (eval (any-true $tail)) $tail-result
+                        (chain $tail-result $result (return $result))
+                    )
+                )
+                (return False)
+            )
+        )
+    )
+)
+
+; !(cons-atom False False)
+
+; !(any-true ())
+
+
+(= (compare-lists $list1 $list2 $sign)
+    (function
+        (chain (decons-atom $list1) $ht1
+            (chain (decons-atom $list2) $ht2
+                (unify ($head1 $tail1) $ht1
+                    (unify ($head2 $tail2) $ht2
+                        (chain ($sign $head1 $head2) $head-res
+                            (chain (eval (compare-lists $tail1 $tail2 $sign)) $tail-res
+                                (chain (cons-atom $head-res $tail-res) $result (return $result))
+                            )
+                        )
+                        (return ())
+                    )
+                    (return ())
                 )
             )
         )

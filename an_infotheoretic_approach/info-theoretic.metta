@@ -1,5 +1,5 @@
 !(import! &self utils:list-op-utils)
-!(import! &self libs)
+; !(import! &self libs)
 
 (: Concept Concept)
 
@@ -232,8 +232,90 @@
     )
 )
 
-!(coherence (color shape texture function size weight material purpose) (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7))
+; !(coherence (color shape texture function size weight material purpose) (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7))
 ; !(total-correlation-entropy (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
+
+
+(= (dominates $u $v)
+    (and (all-true (compare-lists $u $v >=)) (any-true (compare-lists $u $v >)))
+)
+
+(= (custom-unify $var1 $var2 $op1 $op2)
+    (function
+        (chain (unify $var1 $var2 $op1 $op2) $result (return $result))
+    )
+)
+
+(= (check-cross-dominance $obj1 $obj2)
+    (if (dominates $obj1 $obj2) True (if (dominates $obj2 $obj1) False True))
+)
+
+(= (non-deter-non-dominated-helper $obj $obj-tail)
+    (all-true (collapse
+        (check-cross-dominance $obj (superpose $obj-tail))
+    ))
+)
+
+; !(non-deter-non-dominated-helper (8 9) ((1 2) (3 4) (5 6) (6 9) (4 5) (1 6) (8 9)))
+
+(= (non-dominated-helper $obj $obj-tail)
+    (function
+        (chain (decons-atom $obj-tail) $ht
+            (unify ($head $tail) $ht
+                (chain (eval (dominates $obj $head)) $head-res
+                    (return (custom-unify $head-res True
+                        (chain (eval (non-dominated-helper $obj $tail)) $tail-res
+                            $tail-res
+                        )
+                        (chain (eval (dominates $head $obj)) $head-res2
+                            (custom-unify $head-res2 True
+                                False
+                                (eval (non-dominated-helper $obj $tail))
+                            )
+                        )
+                    ))
+                )
+                (return True)
+            )
+        )
+    )
+)
+
+(= (non-dominated-sort $objs-list $objs-tail $index $accum)
+    (function
+        (chain (decons-atom $objs-tail) $ht
+            (unify ($fhead $ftail) $ht
+                (chain (index-atom $objs-list $index) $head      
+                    (chain (filter-list $objs-list $head) $filtered-objs-list
+                        (chain (non-deter-non-dominated-helper $head $filtered-objs-list) $head-res
+                            (return (chain (custom-unify $head-res True (custom-cons-atom $head $accum) $accum) $new-accum
+                                    (chain (+ 1 $index) $new-index
+                                        (chain (eval (non-dominated-sort $objs-list $ftail $new-index $new-accum)) $tail-res
+                                            $tail-res
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+                (return $accum)
+            )
+        )
+    )
+)
+
+(= (non-deter-non-dominated-sort-helper $var $objs-list)
+    (let $filtered-objs (filter-list $objs-list $var) (if (non-deter-non-dominated-helper $var $filtered-objs) $var Empty))
+)
+
+(= (non-deter-non-dominated-sort $objs-list)
+    (collapse
+        (non-deter-non-dominated-sort-helper (superpose $objs-list) $objs-list)
+    )
+)
+; !(non-dominated-sort ((7 9.1) (2 3) (6 8) (2 3) (4 6) (8 9) (3 5) (4 6)) ((7 9.1) (2 3) (6 8) (2 3) (4 6) (8 9) (3 5) (4 6)) 0 ())
+; !(non-deter-non-dominated-sort ((7 9.1) (2 3) (6 8) (2 3) (4 6) (8 9) (3 5) (4 6)))
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1
