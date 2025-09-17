@@ -281,25 +281,39 @@
     )
 )
 
-(= (non-dominated-sort $objs-list $objs-tail $index $accum)
+(= (non-dominated-sort-helper $objs-list $objs-tail $index)
     (function
         (chain (decons-atom $objs-tail) $ht
             (unify ($fhead $ftail) $ht
                 (chain (index-atom $objs-list $index) $head      
                     (chain (filter-list $objs-list $head) $filtered-objs-list
-                        (chain (non-deter-non-dominated-helper $head $filtered-objs-list) $head-res
-                            (return (chain (custom-unify $head-res True (custom-cons-atom $head $accum) $accum) $new-accum
-                                    (chain (+ 1 $index) $new-index
-                                        (chain (eval (non-dominated-sort $objs-list $ftail $new-index $new-accum)) $tail-res
-                                            $tail-res
-                                        )
-                                    )
+                        (chain (non-dominated-helper $head $filtered-objs-list) $head-res
+                            (chain (+ 1 $index) $new-index
+                                (chain (eval (non-dominated-sort-helper $objs-list $ftail $new-index)) $tail-res
+                                    (chain (custom-cons-atom $head-res $tail-res) $result (return $result))
                                 )
                             )
                         )
                     )
                 )
-                (return $accum)
+                (return ())
+            )
+        )
+    )
+)
+
+(= (non-dominated-sort $objs-list $objs-tv-list $index $accum)
+    (function
+        (chain (decons-atom $objs-tv-list) $ht
+            (chain (index-atom $objs-list $index) $index-obj
+                (unify ($head $tail) $ht
+                    (chain (unify $head True (custom-cons-atom $index-obj $accum) $accum) $new-accum
+                        (chain (+ 1 $index) $new-index
+                            (chain (eval (non-dominated-sort $objs-list $tail $new-index $new-accum)) $tail-res (return $tail-res))
+                        )
+                    )
+                    (return $accum)
+                )
             )
         )
     )
@@ -314,8 +328,26 @@
         (non-deter-non-dominated-sort-helper (superpose $objs-list) $objs-list)
     )
 )
-; !(non-dominated-sort ((7 9.1) (2 3) (6 8) (2 3) (4 6) (8 9) (3 5) (4 6)) ((7 9.1) (2 3) (6 8) (2 3) (4 6) (8 9) (3 5) (4 6)) 0 ())
-; !(non-deter-non-dominated-sort ((7 9.1) (2 3) (6 8) (2 3) (4 6) (8 9) (3 5) (4 6)))
+
+(= (objs-list) ((7 9.1) (2 3) (6 8) (2 3) (4 6) (8 9) (3 5) (4 6)))
+; !(non-dominated-sort-helper (objs-list) (objs-list) 0)
+; !(non-dominated-sort (objs-list) (non-dominated-sort-helper (objs-list) (objs-list) 0) 0 ())
+
+; !(non-deter-non-dominated-sort (objs-list))
+
+(= (check-non-dominated $indiv $candidates)
+    (let ($indiv-obj $candis-objs) ((index-atom $indiv 1) (let $unzipped-candis (unzip-list $candidates) (index-atom $unzipped-candis 1))) (let $filtered-candis-objs (filter-list $candis-objs $indiv-obj) (if (non-deter-non-dominated-helper $indiv-obj $filtered-candis-objs) $indiv Empty)))
+)
+
+(= (filter-non-dominated $candidates)
+    (collapse
+        (check-non-dominated (superpose $candidates) $candidates)
+    )
+)
+
+(= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
+
+; !(filter-non-dominated (candidates-list))
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1
