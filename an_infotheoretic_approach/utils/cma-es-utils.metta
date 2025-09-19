@@ -21,6 +21,8 @@
     )
 )
 
+; !(l2-norm (0.2 0.8))
+
 (= (1or0 $bool)
     (if (== $bool True) 1 0)
 )
@@ -210,6 +212,16 @@
         )
     )
 )
+
+(= (inner-product $vec1 $vec2)
+    (function
+        (chain (vector-op $vec1 $vec2 *) $product
+            (return (sum $product))
+        )
+    )
+)
+
+; !(inner-product (1 2 3) (2 3 4))
 
 
 (= (mat-vec-op $matrice $vector $op)

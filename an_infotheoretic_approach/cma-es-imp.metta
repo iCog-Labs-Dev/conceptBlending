@@ -166,7 +166,6 @@
   )
 )
 
-
 (= (update-mean-test $samples $mu $weights)
   (let $fitness-score (population-fitness-score-test $samples)
     (let $fit-ind-pairs (pair-index-fitness (make-indices $fitness-score) $fitness-score)
@@ -242,8 +241,29 @@
     )
 )
 
-!(bind! &inputspace (get-space))
-!(add-reduct &inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
+(= (Thetha) 5.0)
+
+(= (pbi-scalarization $objs $ref $weight)
+    (function
+        (chain (+ (l2-norm $weight) 0.000000000001) $proc-l2
+            (chain (scalar-op $weight $proc-l2 /) $norm-weight
+                (chain (vector-op $objs $ref -) $diff
+                    (chain (inner-product $diff $norm-weight) $d1
+                        (chain (scalar-op $norm-weight $d1 *) $proj
+                            (chain (l2-norm (vector-op $diff $proj -)) $d2
+                                (return (+ $d1 (* (Thetha) $d2)))
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+)
+
+!(pbi-scalarization (1 2) (0 0) (0.2 0.8))
+; !(bind! &inputspace (get-space))
+; !(add-reduct &inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
 ; !(add-concepts)
 
 (= (cma-es-single-iteration)
@@ -273,6 +293,7 @@
     (let $iters (generate-toy-list (GENERATIONS))  (map-atom $iters $iter (cma-es-single-iteration)))
 )
 
+(= (moedd-cma ))
 
 
 (= (Eval) True)

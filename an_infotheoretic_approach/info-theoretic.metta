@@ -1,5 +1,5 @@
 !(import! &self utils:list-op-utils)
-; !(import! &self libs)
+!(import! &self libs)
 
 (: Concept Concept)
 
@@ -232,6 +232,16 @@
     )
 )
 
+(= (objectives $concept1 $concept2 $candidate-degree)
+    (function
+        (chain (get-prop-value-pairs $concept1) $prop-val-pairs
+            (chain (get-proprties $prop-val-pairs) $props
+                (return (collapse(superpose((mu-hqblend $candidate-degree $concept1 $concept2) (coherence $props $candidate-degree)))))
+            )
+        )
+    )
+)
+
 ; !(coherence (color shape texture function size weight material purpose) (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7))
 ; !(total-correlation-entropy (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
 
@@ -348,6 +358,9 @@
 (= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
 
 ; !(filter-non-dominated (candidates-list))
+
+; !(np-dirichlet (1 1 1) 8)
+; !(np-zeros 5)
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1
