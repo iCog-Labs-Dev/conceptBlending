@@ -297,9 +297,7 @@
         (+ $d1 (* (Thetha) $d2))
     )
 )
-; !(objectives (testconcept1) (testconcept2) (0.5 0.3 0.5 0.8 0.9 0.8 0.6 0.7))
 
-; !(pbi-scalarization (1 2) (0 0) (0.2 0.8))
 !(bind! &single-cma-es-inputspace (get-space))
 !(add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
 ; !(add-concepts)
@@ -342,8 +340,12 @@
 )
 
 (= (cma-es-main-loop)
-    (let $iters (generate-toy-list (GENERATIONS))  (map-atom $iters $iter (cma-es-single-iteration)))
+    (let $iters (generate-toy-list (GENERATIONS))  (map-atom $iters $iter (cma-es-single-iteration population-fitness-score)))
 )
+
+; !(blend cma-es-main-loop (Eval))
+
+; !(space-blend blend cma-es-main-loop (Eval))
 
 ;;;; Multi-Objective CMA-ES ;;;;
 
@@ -368,33 +370,5 @@
 )
 
 (= (Eval) True)
-; !(Num-subproblems)
-; !(let $weights (Weight) (size-atom $weights))
-; !(size-atom ((0.31247887579454564 0.6875211242054544) (0.47462328840984463 0.5253767115901555) (0.15799291871198115 0.8420070812880187) (0.4237102329119665 0.5762897670880335) (0.3323584032102398 0.6676415967897602) (0.5883317397280938 0.4116682602719063) (0.3620184466597465 0.6379815533402535) (0.12796389105305644 0.8720361089469436)))
-; !(np-dirichlet (1 1) 8)
+
 !(moedd-cma (Weight))
-
-; !(zeros-vec 2)
-; !(blend cma-es-main-loop (Eval))
-
-; !(space-blend blend cma-es-main-loop (Eval))
-
-
-; (= (test-function $x $list)
-;     (if (== (size-atom $list) 0)
-;         ()
-;         (let* (
-;                 ($tail (cdr-atom $list))
-;                 (($z $y) ((+ $x 1) (* $x 5)))
-;                 ($add (add-atom &self (= (test2-function $t) (+ $t (+ $z $y)))))
-;                 ($res (map-function test2-function $list))
-;                 ($remove (remove-atom &self (= (test2-function $t) (+ $t (+ $z $y)))))
-;                 ($upd-x (+ 1 $x))
-;                 ($tail-res (test-function $upd-x $tail))
-;             )
-;             (cons-atom $res $tail-res)
-;         )
-;     )
-; )
-
-; !(test-function 5 (1 2 3 4))

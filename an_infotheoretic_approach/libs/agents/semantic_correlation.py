@@ -32,7 +32,7 @@ def semantic_similarity(metta: MeTTa, *args):
     # if model is None:
     model = SentenceTransformer('all-MiniLM-L6-v2')
     threshold = 0.5
-    print("Args:", args)
+    # print("Args:", args)
     properties, degrees = parse_to_list(str(args[0])), parse_to_list(str(args[1]))
     # print("Properties:", properties)
     # print("Degrees:", degrees)
@@ -55,6 +55,6 @@ def semantic_similarity(metta: MeTTa, *args):
             weighted_sims.append(weight * sim_matrix[i, j])
 
     res = np.mean(weighted_sims) if weighted_sims else 0.0
-    print("res:", res)
+    # print("res:", res)
 
     return [ValueAtom(float(res)) if res else ValueAtom(0.0)]
