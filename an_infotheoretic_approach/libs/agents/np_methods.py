@@ -4,7 +4,7 @@ import numpy as np
 def parse_to_list(s: str):
         # remove surrounding parentheses
         s = s.strip("()")
-        print("Parsing string to list:", s)
+        # print("Parsing string to list:", s)
         # split by whitespace
         elements = s.split()
         
@@ -32,7 +32,6 @@ def list_to_parse(lst: list) -> str:
 
 def np_dirichlet_sample(metta: MeTTa, *args):
     """Sample from a Dirichlet distribution given concentration parameters."""
-    print("Dirichlet sample args:", args)
     conc_param, num_samples = args[0], args[1]
 
     conc_param = parse_to_list(str(conc_param))
@@ -41,10 +40,8 @@ def np_dirichlet_sample(metta: MeTTa, *args):
     samples = np.random.dirichlet(conc_param, num_samples)
 
     samples = list_to_parse(samples.tolist())
-
     samples = metta.parse_all(samples)
-
-    return [ValueAtom(samples)]
+    return samples
 
 def np_zeros(metta: MeTTa, *args):
     """Create a numpy array of zeros with the specified shape."""

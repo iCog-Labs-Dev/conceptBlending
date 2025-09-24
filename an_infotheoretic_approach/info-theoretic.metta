@@ -235,7 +235,7 @@
 (= (objectives $concept1 $concept2 $candidate-degree)
     (function
         (chain (get-prop-value-pairs $concept1) $prop-val-pairs
-            (chain (get-proprties $prop-val-pairs) $props
+            (chain (get-properties $prop-val-pairs) $props
                 (return (collapse(superpose((mu-hqblend $candidate-degree $concept1 $concept2) (coherence $props $candidate-degree)))))
             )
         )
@@ -360,7 +360,6 @@
 ; !(filter-non-dominated (candidates-list))
 
 ; !(np-dirichlet (1 1 1) 8)
-; !(np-zeros 5)
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1

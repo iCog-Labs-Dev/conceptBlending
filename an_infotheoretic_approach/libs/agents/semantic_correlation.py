@@ -8,7 +8,7 @@ from hyperon import *
 def parse_to_list(s: str):
         # remove surrounding parentheses
         s = s.strip("()")
-        print("Parsing string to list:", s)
+        # print("Parsing string to list:", s)
         # split by whitespace
         elements = s.split()
         
@@ -34,8 +34,8 @@ def semantic_similarity(metta: MeTTa, *args):
     threshold = 0.5
     print("Args:", args)
     properties, degrees = parse_to_list(str(args[0])), parse_to_list(str(args[1]))
-    print("Properties:", properties)
-    print("Degrees:", degrees)
+    # print("Properties:", properties)
+    # print("Degrees:", degrees)
     # filter properties and degrees by threshold
     filtered = [(p, d) for p, d in zip(properties, degrees) if d >= threshold]
     if not filtered:  # if nothing passes the threshold
@@ -55,5 +55,6 @@ def semantic_similarity(metta: MeTTa, *args):
             weighted_sims.append(weight * sim_matrix[i, j])
 
     res = np.mean(weighted_sims) if weighted_sims else 0.0
+    print("res:", res)
 
-    return [ValueAtom(float(res))]
+    return [ValueAtom(float(res)) if res else ValueAtom(0.0)]
