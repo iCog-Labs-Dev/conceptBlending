@@ -34,12 +34,12 @@ def semantic_similarity(metta: MeTTa, *args):
     threshold = 0.5
     # print("Args:", args)
     properties, degrees = parse_to_list(str(args[0])), parse_to_list(str(args[1]))
-    # print("Properties:", properties)
-    # print("Degrees:", degrees)
+    properties_clean = [prop.replace('-', ' ') for prop in properties]
+ 
     # filter properties and degrees by threshold
-    filtered = [(p, d) for p, d in zip(properties, degrees) if d >= threshold]
+    filtered = [(p, d) for p, d in zip(properties_clean, degrees) if d >= threshold]
     if not filtered:  # if nothing passes the threshold
-        return 0.0
+        return [ValueAtom(0.0)]
     
     filtered_props, filtered_degrees = zip(*filtered)
     

@@ -1748,3 +1748,59 @@
        )
    )
 )
+
+(= (cleaner-helper $list $index)
+    (index-atom $list $index)
+)
+
+(= (cleaner $lists $index)
+    (collapse
+        (cleaner-helper (superpose $lists) $index)
+    )
+)
+
+; !(cleaner (((5 4) 2)) 0)
+
+(= (match-val-best-nd $val $best-nd)
+    (let $obj (index-atom $best-nd 1) (if (== $val $obj) $best-nd Empty))
+)
+
+(= (max-best-nd-helper $val $best-nds)
+    (let $res (collapse
+        (match-val-best-nd $val (superpose $best-nds))
+    )
+    (cleaner $res 0)
+    )
+)
+
+(= (custom-union-atom $list1 $list2)
+    (union-atom $list1 $list2)
+)
+
+(= (custom-unique-atom $list)
+    (unique-atom $list)
+)
+
+(= (unionize $list $acc)
+    (function
+        (chain (decons-atom $list) $ht
+            (unify ($head $tail) $ht
+                (chain (size-atom $head) $head-length
+                    (unify $head-length 1
+                        (chain (cons-atom $head $acc) $new-acc
+                            (chain (eval (unionize $tail $new-acc)) $tail-res
+                                (chain (custom-unique-atom $tail-res) $result (return $result))
+                            )
+                        )
+                        (chain (custom-union-atom $head $acc) $new-acc
+                            (chain (eval (unionize $tail $new-acc)) $tail-res
+                                (chain (custom-unique-atom $tail-res) $result (return $result))
+                            )
+                        )
+                    )
+                )
+                (return $acc)
+            )
+        )
+    )
+)

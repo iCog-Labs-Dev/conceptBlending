@@ -118,6 +118,7 @@
         ($num-properties (size-atom $product-emer-min))
         ($1-over-prop (/ 1.0 (decimal $num-properties)))
         ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
+        (() (println! $1-over-prop-summation))
     )
         (min-atom ($1-over-prop-summation 1))
     )
@@ -175,7 +176,7 @@
     (collapse(joint-entropy-pairwise $i (superpose $list) $mode))
 )
 
-(= (custom-union-atom $exp1 $exp2)
+(= (custom-union-atom1 $exp1 $exp2)
     (union-atom $exp1 $exp2)
 )
 
@@ -187,7 +188,7 @@
             (unify ($head $tail) $ht
                 (chain (unify $tail () () (joint-entropy-compute-helper $head $tail $mode)) $jentropy
                     (chain (eval (joint-entropy-compute $tail $mode)) $tentropy
-                        (chain (custom-union-atom $jentropy $tentropy) $result (return $result))
+                        (chain (custom-union-atom1 $jentropy $tentropy) $result (return $result))
                     )
                 )
                 (return ())
@@ -198,7 +199,6 @@
 ; !(joint-entropy-compute-helper 0.9 (0.9 0.0 0.8 0.2 0.9 0.7 0.7))
 ; !(joint-entropy-pairwise 0.9 0.9 min)
 ; !(joint-entropy-compute (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
-; !(union-atom (42) ())
 ; !(list-entropy-compute-helper 3 (2 3 4 5 6 7))
 ; !(joint-entropy-pairwise 0.7 0.5 independent)
 
@@ -211,8 +211,9 @@
                         (chain (sum-list $pairwise-joint-entropy) $pairwise-joint-entropy-sum
                             (chain (size-atom $candidate) $len
                                 (chain (/ (* $pairwise-joint-entropy-sum 2) (* $len (- $len 1))) $average-joint-entropy
-                                    (chain (- $indiv-entropy-sum $average-joint-entropy) $total-correlation 
-                                        (chain (/ $total-correlation $indiv-entropy-sum) $normalized-correlation (return $normalized-correlation))
+                                    (chain (- $indiv-entropy-sum $average-joint-entropy) $total-correlation
+                                            (chain (/ $total-correlation $indiv-entropy-sum) $normalized-correlation (return $normalized-correlation)                                       
+                                        )
                                     )
                                 )
                             )
@@ -228,7 +229,11 @@
 
 (= (coherence $props $degrees)
     (let $tc (total-correlation-entropy $degrees min)
-        (let $sim (semantic-correlation $props $degrees) (+ (* (Alpha) $tc) (* (- 1 (Alpha)) $sim)))
+        (let $tv (isnan-math $tc)
+            (let $ftc (if $tv 0 $tc)
+                (let $sim (semantic-correlation $props $degrees) (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim)))        
+            )        
+        )
     )
 )
 
@@ -241,10 +246,6 @@
         )
     )
 )
-
-; !(coherence (color shape texture function size weight material purpose) (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7))
-; !(total-correlation-entropy (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
-
 
 (= (dominates $u $v)
     (and (all-true (compare-lists $u $v >=)) (any-true (compare-lists $u $v >)))
@@ -265,8 +266,6 @@
         (check-cross-dominance $obj (superpose $obj-tail))
     ))
 )
-
-; !(non-deter-non-dominated-helper (8 9) ((1 2) (3 4) (5 6) (6 9) (4 5) (1 6) (8 9)))
 
 (= (non-dominated-helper $obj $obj-tail)
     (function
@@ -339,7 +338,7 @@
     )
 )
 
-(= (objs-list) ((7 9.1) (2 3) (6 8) (2 3) (4 6) (8 9) (3 5) (4 6)))
+; (= (objs-list) ((7 9.1) (2 3) (6 8) (2 3) (4 6) (8 9) (3 5) (4 6)))
 ; !(non-dominated-sort-helper (objs-list) (objs-list) 0)
 ; !(non-dominated-sort (objs-list) (non-dominated-sort-helper (objs-list) (objs-list) 0) 0 ())
 
@@ -355,11 +354,9 @@
     )
 )
 
-(= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
+; (= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
 
 ; !(filter-non-dominated (candidates-list))
-
-; !(np-dirichlet (1 1 1) 8)
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1

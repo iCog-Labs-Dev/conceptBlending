@@ -421,78 +421,30 @@
     )
 )
 
+(= (unzip-helper-left $list)
+    (index-atom $list 0)
+)
+
+(= (unzip-helper-right $list)
+    (index-atom $list 1)
+)
+
 (= (unzip-list $list)
-    (
-        if (== (size-atom $list) 0)
-        (Error $list EmptyList)
-        (collapse(
-            superpose(
-                (collapse(
-                    superpose(
-                        (let $x (index-atom $list 0) (index-atom $x 0))
-                        (let $x (index-atom $list 1) (index-atom $x 0))
-                        (let $x (index-atom $list 2) (index-atom $x 0))
-                        (let $x (index-atom $list 3) (index-atom $x 0))
-                        (let $x (index-atom $list 4) (index-atom $x 0))
-                        (let $x (index-atom $list 5) (index-atom $x 0))
-                        (let $x (index-atom $list 6) (index-atom $x 0))
-                        (let $x (index-atom $list 7) (index-atom $x 0))
-                        (let $x (index-atom $list 8) (index-atom $x 0))
-                        (let $x (index-atom $list 9) (index-atom $x 0))
-                        (let $x (index-atom $list 10) (index-atom $x 0))
-                        (let $x (index-atom $list 11) (index-atom $x 0))
-                        (let $x (index-atom $list 12) (index-atom $x 0))
-                        (let $x (index-atom $list 13) (index-atom $x 0))
-                        (let $x (index-atom $list 14) (index-atom $x 0))
-                        (let $x (index-atom $list 15) (index-atom $x 0))
-                        (let $x (index-atom $list 16) (index-atom $x 0))
-                        (let $x (index-atom $list 17) (index-atom $x 0))
-                        (let $x (index-atom $list 18) (index-atom $x 0))
-                        (let $x (index-atom $list 19) (index-atom $x 0))
-                        (let $x (index-atom $list 20) (index-atom $x 0))
-                        (let $x (index-atom $list 21) (index-atom $x 0))
-                        (let $x (index-atom $list 22) (index-atom $x 0))
-                        (let $x (index-atom $list 23) (index-atom $x 0))
-                        (let $x (index-atom $list 24) (index-atom $x 0))
-                        (let $x (index-atom $list 25) (index-atom $x 0))
-                        )
-                    )
-                )
-                (collapse(
-                    superpose(
-                        (let $x (index-atom $list 0) (index-atom $x 1))
-                        (let $x (index-atom $list 1) (index-atom $x 1))
-                        (let $x (index-atom $list 2) (index-atom $x 1))
-                        (let $x (index-atom $list 3) (index-atom $x 1))
-                        (let $x (index-atom $list 4) (index-atom $x 1))
-                        (let $x (index-atom $list 5) (index-atom $x 1))
-                        (let $x (index-atom $list 6) (index-atom $x 1))
-                        (let $x (index-atom $list 7) (index-atom $x 1))
-                        (let $x (index-atom $list 8) (index-atom $x 1))
-                        (let $x (index-atom $list 9) (index-atom $x 1))
-                        (let $x (index-atom $list 10) (index-atom $x 1))
-                        (let $x (index-atom $list 11) (index-atom $x 1))
-                        (let $x (index-atom $list 12) (index-atom $x 1))
-                        (let $x (index-atom $list 13) (index-atom $x 1))
-                        (let $x (index-atom $list 14) (index-atom $x 1))
-                        (let $x (index-atom $list 15) (index-atom $x 1))
-                        (let $x (index-atom $list 16) (index-atom $x 1))
-                        (let $x (index-atom $list 17) (index-atom $x 1))
-                        (let $x (index-atom $list 18) (index-atom $x 1))
-                        (let $x (index-atom $list 19) (index-atom $x 1))
-                        (let $x (index-atom $list 20) (index-atom $x 1))
-                        (let $x (index-atom $list 21) (index-atom $x 1))
-                        (let $x (index-atom $list 22) (index-atom $x 1))
-                        (let $x (index-atom $list 23) (index-atom $x 1))
-                        (let $x (index-atom $list 24) (index-atom $x 1))
-                        (let $x (index-atom $list 25) (index-atom $x 1))
-                        )
-                    )
-                )
-            )
-            )
+    (let ($list1 $list2) (
+        (collapse
+            (unzip-helper-left (superpose $list))
         )
+        (collapse
+            (unzip-helper-right (superpose $list))
+        )
+        )
+        ((reverse-list $list1) (reverse-list $list2))
     )
+)
+
+(= (reverse-list-helper $x) $x)
+(= (reverse-list $list)
+    (collapse(reverse-list-helper (superpose $list)))
 )
 
 (= (generate-toy-list $n)
@@ -698,11 +650,6 @@
         )
     )
 )
-
-; !(cons-atom False False)
-
-; !(any-true ())
-
 
 (= (compare-lists $list1 $list2 $sign)
     (function
