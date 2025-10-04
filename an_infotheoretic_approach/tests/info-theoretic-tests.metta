@@ -101,3 +101,7 @@
 !(assertEqual (coherence (color shape size) (0.5 0.25 0.75)) 0.3295405403204763)
 !(assertEqual (coherence (a b c) (0.5 0.5 0.5)) 0.43552176654338837)
 !(assertEqual (coherence (a b c) (0.1 0.8 0.9)) 0.5640286632357537)
+
+;Test filter-non-dominated 
+(= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
+!(assertEqual (filter-non-dominated (candidates-list)) (((1 1 1 1 1 0) (8 9)) ((1 1 1 1 1 1) (7 9.1))))
