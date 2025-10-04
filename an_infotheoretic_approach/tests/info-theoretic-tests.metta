@@ -90,3 +90,12 @@
    (joint-entropy-compute (0.5 1 0.25 4 5) min)
    (0.5 0.5 1.5 1.0 0.0 0.0 0.8112781244591328 0.5 0.5 0.0))
 
+;Test total correlation entopy
+!(assertEqual
+   (total-correlation-entropy (0.5 0.5 0.5) min)
+   0.6666666666666666)
+!(assertEqual 
+   (total-correlation-entropy (0.5 0.5 0.5) max)
+   0.3333333333333333)
+
+
