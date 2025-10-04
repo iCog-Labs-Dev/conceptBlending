@@ -84,3 +84,9 @@
 ; Test binary-shannon-entropy
 ! (assertEqual (binary-shannon-entropy 0) 0)
 ! (assertEqual (binary-shannon-entropy 0.5) 1)
+
+; Test joint-entropy-compute
+!(assertEqual
+   (joint-entropy-compute (0.5 1 0.25 4 5) min)
+   (0.5 0.5 1.5 1.0 0.0 0.0 0.8112781244591328 0.5 0.5 0.0))
+
