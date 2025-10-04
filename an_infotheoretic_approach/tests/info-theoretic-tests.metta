@@ -97,5 +97,7 @@
 !(assertEqual 
    (total-correlation-entropy (0.5 0.5 0.5) max)
    0.3333333333333333)
-
-
+; Test coherence
+!(assertEqual (coherence (color shape size) (0.5 0.25 0.75)) 0.3295405403204763)
+!(assertEqual (coherence (a b c) (0.5 0.5 0.5)) 0.43552176654338837)
+!(assertEqual (coherence (a b c) (0.1 0.8 0.9)) 0.5640286632357537)
