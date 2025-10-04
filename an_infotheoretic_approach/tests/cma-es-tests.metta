@@ -1,5 +1,6 @@
 ! (register-module! ../../an_infotheoretic_approach)
 !(import! &self an_infotheoretic_approach:cma-es-imp)
+!(import! &self an_infotheoretic_approach:utils:cma-es-utils)
 !(import! &self libs)
 
 ;;;; apply-log ;;;;
@@ -619,3 +620,8 @@ update-mean-test
    (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (space-blend blend cma-es-main-loop False) %Undefined% $space)) ($net-type $blend))
    (doubleScope BatMan)
 )
+
+; Test Unionize
+!(assertEqual
+    (unionize ((1 2) (2 3) (4)) ())
+      (4 2 3 1))
