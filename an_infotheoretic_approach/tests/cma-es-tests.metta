@@ -660,3 +660,13 @@ update-mean-test
 ;;;; Test moedd-update-mean with mock samples, mu = 5, randomly initialized weights, custom fitness function,    
 
 
+; Mock fitness function returns (unscalarized-list scalarized-list)
+(= (mock-moedd-fitness $samples $iter)
+    ((10 20 30) (0.1 0.2 0.3))
+)
+
+; Test moedd-update-mean selection behavior
+!(assertEqual
+    (moedd-update-mean ((1 2) (3 4) (5 6)) 2 (0.6 0.4) mock-moedd-fitness 0)
+    ((5 6) 30)
+)
