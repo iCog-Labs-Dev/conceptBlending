@@ -619,3 +619,54 @@ update-mean-test
    (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (space-blend blend cma-es-main-loop False) %Undefined% $space)) ($net-type $blend))
    (doubleScope BatMan)
 )
+
+;;;; Multi-objectvie cma-es tests ;;;;
+
+;;;; pbi-scalarization ;;;;
+;;;; Test pbi-scalarization with fitness, reference point, and weight vector each containing two elements
+; Output = a scalarized value of the fitness values
+
+!(assertEqual
+   (pbi-scalarization (0.3 0.6) (0 0) (0.3 0.7))
+   0.8666224568732893
+)
+
+;;;; Test pbi-scalarization with fitness vector with length different from 2
+; Output = IncorrectLength Error
+
+!(assertEqual
+   (pbi-scalarization (0.3 0.4 0.5) (0 0) (0.3 0.7))
+   (Error ((0.3 0.4 0.5) (0 0) (0.3 0.7)) IncorrectLength)
+)
+
+;;;; Test pbi-scalarization with reference point vector with length different from 2
+; Output = IncorrectLength Error
+
+!(assertEqual
+   (pbi-scalarization (0.3 0.6) (0 0 0) (0.3 0.7))
+   (Error ((0.3 0.6) (0 0 0) (0.3 0.7)) IncorrectLength)
+)
+
+;;;; Test pbi-scalarization with weight vector with length different from 2
+; Output = IncorrectLength Error
+
+!(assertEqual
+   (pbi-scalarization (0.3 0.6) (0 0) (0.2 0.4 0.4))
+   (Error ((0.3 0.6) (0 0) (0.2 0.4 0.4)) IncorrectLength)
+)
+
+;;;; moedd-update-mean ;;;;
+
+;;;; Test moedd-update-mean with mock samples, mu = 5, randomly initialized weights, custom fitness function,    
+
+
+; Mock fitness function returns (unscalarized-list scalarized-list)
+(= (mock-moedd-fitness $samples $iter)
+    ((10 20 30) (0.1 0.2 0.3))
+)
+
+; Test moedd-update-mean selection behavior
+!(assertEqual
+    (moedd-update-mean ((1 2) (3 4) (5 6)) 2 (0.6 0.4) mock-moedd-fitness 0)
+    ((5 6) 30)
+)

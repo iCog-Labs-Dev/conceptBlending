@@ -105,3 +105,24 @@
 ;Test filter-non-dominated 
 (= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
 !(assertEqual (filter-non-dominated (candidates-list)) (((1 1 1 1 1 0) (8 9)) ((1 1 1 1 1 1) (7 9.1))))
+
+;;;; objectives ;;;;
+;;;; Test objectives with a list containing candidate's degree values, and two input concepts 
+; Ouput = mu-hqblend and coherence value for the candidate
+
+(= (testconcept1) 
+    (Concept Man@Bat (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+)
+
+(= (testconcept2) 
+    (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+)
+
+(= (testcandidatedegrees)
+    (0.4 0.5 0.6 0.3 0.6 0.7 0.8 0.9)
+)
+
+!(assertEqual
+    (objectives (testconcept1) (testconcept2) (testcandidatedegrees))
+    (0.01500000000000001 0.3332029122275585)
+)

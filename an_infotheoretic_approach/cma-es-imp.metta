@@ -276,17 +276,19 @@
 ; )
 
 (= (pbi-scalarization $obj $ref $weight)
-    (let*
-        (
-            ; (() (println! $weight))
-            ($proc-l2 (+ (l2-norm $weight) 0.000000000001))
-            ($norm-weight (scalar-op $weight $proc-l2 /))
-            ($diff (vector-op $obj $ref -))
-            ($d1 (inner-product $diff $norm-weight))
-            ($proj (scalar-op $norm-weight $d1 *))
-            ($d2 (l2-norm (vector-op $diff $proj -)))
+    (if (and (== (size-atom $obj) 2) (and (== (size-atom $ref) 2) (== (size-atom $weight) 2)))
+        (let*
+            (
+                ($proc-l2 (+ (l2-norm $weight) 0.000000000001))
+                ($norm-weight (scalar-op $weight $proc-l2 /))
+                ($diff (vector-op $obj $ref -))
+                ($d1 (inner-product $diff $norm-weight))
+                ($proj (scalar-op $norm-weight $d1 *))
+                ($d2 (l2-norm (vector-op $diff $proj -)))
+            )
+            (+ $d1 (* (Thetha) $d2))
         )
-        (+ $d1 (* (Thetha) $d2))
+        (Error ($obj $ref $weight) IncorrectLength)
     )
 )
 
@@ -347,7 +349,7 @@
 
 ;;;; Multi-Objective CMA-ES ;;;;
 
-(= (Num-subproblems) 3)
+(= (Num-subproblems) 6)
 (= (Num-objectives) 2)
 (= (Weight) (let $nos (Num-subproblems) (np-dirichlet (1 1) $nos)))
 (= (Moedd-cma-gen) 5)
@@ -367,13 +369,13 @@
             ($clean (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params)))))
             ($add (add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0))))
             (($new-ref-point $sub-candidates) ((np-max $ref-point $fit-score 0) (zip-list $sol $fit-score)))
-            ; (() (println! (Sub candidates $sub-candidates)))
+            (() (println! (Sub candidates $sub-candidates)))
             ($best-non-dominated (filter-non-dominated $sub-candidates))
-            ; (() (println! (Non dominated $best-non-dominated)))
+            (() (println! (Non dominated $best-non-dominated)))
             ($survivors (let $length (size-atom $best-non-dominated) (if (== $length 1) ($best-non-dominated) (map-atom $iters $iter (max-best-nd $best-non-dominated $new-ref-point $iter $weights)))))
-            ; (() (println! (Survivors $survivors)))
+            (() (println! (Survivors $survivors)))
             ($filtered-surv (unionize $survivors ()))
-            ; (() (println! (Filtered survivors $filtered-surv)))
+            (() (println! (Filtered survivors $filtered-surv)))
             ($new-pop (union-atom $filtered-surv $pop))
             ($filtered-pop (filter-non-dominated $new-pop))
             (() (println! (Generation $gen | Population $filtered-pop)))
@@ -394,4 +396,4 @@
     (let $weights (Weight) (let $iterations (range 0 (- (Moedd-cma-gen) 1) 1) (map-atom $iterations $iteration (moedd-cma-es-single-iteration $weights))))
 )
 
-!(moedd-cma-es-main-loop)
+; !(moedd-cma-es-main-loop)
