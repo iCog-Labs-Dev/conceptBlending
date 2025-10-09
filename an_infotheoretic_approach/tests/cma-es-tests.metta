@@ -1,5 +1,6 @@
 ! (register-module! ../../an_infotheoretic_approach)
 !(import! &self an_infotheoretic_approach:cma-es-imp)
+!(import! &self an_infotheoretic_approach:utils:cma-es-utils)
 !(import! &self libs)
 
 ;;;; apply-log ;;;;
@@ -620,6 +621,23 @@ update-mean-test
    (doubleScope BatMan)
 )
 
+; Test Unionize
+!(assertEqual
+    (unionize ((1 2) (2 3) (4)) ())
+      (4 2 3 1))
+; single atom
+!(assertEqual 
+   (unionize ((1 2 3)) () ) (1 2 3))
+
+!(assertEqual
+   (max-best-nd (
+      ((b) (0.4 0.6))
+      ((c) (0.6 0.4))
+      ((d) (0.8 0.2)))
+
+   (0 0)
+   1
+   ((0.2 0.8) (0.5 0.5) (0.8 0.2))) (((d) (0.8 0.2))))
 ;;;; Multi-objectvie cma-es tests ;;;;
 
 ;;;; pbi-scalarization ;;;;
