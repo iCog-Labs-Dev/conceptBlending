@@ -397,5 +397,3 @@
 )
 
 ; !(moedd-cma-es-main-loop)
-!(concept1)
-!(concept2)
