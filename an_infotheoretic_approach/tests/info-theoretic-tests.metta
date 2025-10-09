@@ -81,6 +81,30 @@
     ((web-creation 1.0) (intelligence 0.4) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))
 )
 
+; Test binary-shannon-entropy
+! (assertEqual (binary-shannon-entropy 0) 0)
+! (assertEqual (binary-shannon-entropy 0.5) 1)
+
+; Test joint-entropy-compute
+!(assertEqual
+   (joint-entropy-compute (0.5 1 0.25 4 5) min)
+   (0.5 0.5 1.5 1.0 0.0 0.0 0.8112781244591328 0.5 0.5 0.0))
+
+;Test total correlation entopy
+!(assertEqual
+   (total-correlation-entropy (0.5 0.5 0.5) min)
+   0.6666666666666666)
+!(assertEqual 
+   (total-correlation-entropy (0.5 0.5 0.5) max)
+   0.3333333333333333)
+; Test coherence
+!(assertEqual (coherence (color shape size) (0.5 0.25 0.75)) 0.3295405403204763)
+!(assertEqual (coherence (a b c) (0.5 0.5 0.5)) 0.43552176654338837)
+!(assertEqual (coherence (a b c) (0.1 0.8 0.9)) 0.5640286632357537)
+
+;Test filter-non-dominated 
+(= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
+!(assertEqual (filter-non-dominated (candidates-list)) (((1 1 1 1 1 0) (8 9)) ((1 1 1 1 1 1) (7 9.1))))
 
 ;;;; objectives ;;;;
 ;;;; Test objectives with a list containing candidate's degree values, and two input concepts 
