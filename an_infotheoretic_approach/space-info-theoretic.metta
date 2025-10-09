@@ -48,7 +48,7 @@
 
 ;;;; Load the stored concepts from knowledge base
 
-!(load-ascii &concept-space data/kb_concepts.metta)
+; !(load-ascii &concept-space data/kb_concepts.metta)
 
 ;;;; space based blending function ;;;;
 (= (space-blend $blend $GAorCMA $eval)
