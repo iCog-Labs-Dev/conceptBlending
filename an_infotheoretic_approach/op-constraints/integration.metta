@@ -13,11 +13,19 @@
     (min-atom ((sum (map-atom $pre-def-confl $x (are-conflicting $prop-name-i $prop-name-j $props-antonymity $x))) 1))
 )
 
+(=(are-antonyms-check $term1 $term2)
+    (let* (
+        ($m (match &self (Antonym $term1 $term2) True))
+        ($n (if (== $m True) 1 0))
+    )
+    $n)
+)
+
 (= (check-props-conflict $props $predefined-conflicts)
     (function 
         (chain (decons-atom $props) $ht
             (unify ($head $tail) $ht
-                (chain (eval (map-atom $tail $x (check-i-j-conflict $head $x (are-terms-antonyms $head $x) $predefined-conflicts))) $map-res
+                (chain (eval (map-atom $tail $x (check-i-j-conflict $head $x (are-antonyms-check $head $x) $predefined-conflicts))) $map-res
                     (chain (sum $map-res) $res
                             (chain (eval (check-props-conflict $tail $predefined-conflicts)) $tail-res
                                 (chain (+ $res $tail-res) $result (return $result))
