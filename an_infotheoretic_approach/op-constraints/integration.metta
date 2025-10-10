@@ -38,6 +38,12 @@
     )
 )
 
+(=(properties $blend) (let* (
+    ($props (match &self (HasProperty $blend $x) $x))
+)
+$props
+))
+
 (= (integration-op $blend)
     (let $prop-list (properties-list $blend)
         (let $prop-names (map-atom $prop-list $x (car-atom $x))
