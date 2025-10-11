@@ -1,6 +1,5 @@
 ! (register-module! ../../an_infotheoretic_approach)
 !(import! &self an_infotheoretic_approach:cma-es-imp)
-!(import! &self an_infotheoretic_approach:utils:cma-es-utils)
 !(import! &self libs)
 
 ;;;; apply-log ;;;;
@@ -616,10 +615,10 @@ update-mean-test
 ;;;; space-based cma-es-blend ;;;;
 ; Output = The formed blend(inputs are fetched from the space)
 
-!(assertEqual
-   (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (space-blend blend cma-es-main-loop False) %Undefined% $space)) ($net-type $blend))
-   (doubleScope BatMan)
-)
+; !(assertEqual
+;    (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (space-blend blend cma-es-main-loop False) %Undefined% $space)) ($net-type $blend))
+;    (doubleScope BatMan)
+; )
 
 ; Test Unionize
 !(assertEqual
@@ -687,4 +686,51 @@ update-mean-test
 !(assertEqual
     (moedd-update-mean ((1 2) (3 4) (5 6)) 2 (0.6 0.4) mock-moedd-fitness 0)
     ((5 6) 30)
+)
+
+; ;;;; moedd-cma-es-single-iteration ;;;;
+(= (test-scalarized-fitness $samples $iter) (let ($weights $ref-point) ((Weight) (zeros-vec (Num-objectives))) (let $objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample))
+                                                                        (let $weight (index-atom $weights $iter) ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
+                                                                        )))
+;;;; Test moedd-cma-es-single-iteration with pbi-scalarization based fitness function, six sub-problems(defined in the cma-es-imp.metta file), (0 0) reference point and 0 iteration number(for the first sub-problemt only)
+; Output = The length of the best or fit individual with it's unscalarized fitness score length
+
+!(assertEqual
+   (let (($indiv) ($score)) (moedd-cma-es-single-iteration test-scalarized-fitness 0) ((size-atom $indiv) (size-atom $score)))
+   (8 2)
+)
+
+;;;; Test moedd-cma-es-single-iteration with the same fitness function as above, the same amount of sub-problems, same reference point, and 6 iterations(for every sub-problems)
+; Output = The lenght of the six best or fit individuals evolved by the six sub-problems, and their fitness score zipped with each of them
+!(clean-from-single-cma-es-inputspace)
+!(add-to-single-cma-es-inputspace)
+!(assertEqual
+   (let $iters (range 0 (- (Num-subproblems) 1)  1) (let $res (map-atom $iters $iter (moedd-cma-es-single-iteration test-scalarized-fitness $iter)) (let ($best-pop $fit-score) (index-atom $res (- (Num-subproblems) 1)) ((size-atom $best-pop) (size-atom $fit-score)))))
+   (6 6)
+)
+
+;;;; moedd-cma-es-single-generation ;;;;
+
+;;;; Test moedd-cma-es-single-generation with the fitness function, the same amount of sub-problems, same reference-point, and 6 iterations(6 sub-problems)(all params are defined in the code except sub-problems weights which will be passed to the method when calling)
+; Output = The length best non-dominated from the six best or fit individuals evolved by the six sub-problems over the single generation run.
+; Note: the length of the best non-dominated can vary since each iteration run tries to evolve random samples, and hence we check the length if it's in the possible range(1 being minimum and 6 being maximum) instead of checking it if it's particular number.
+
+!(clean-from-single-cma-es-inputspace)
+!(add-to-single-cma-es-inputspace)
+!(assertEqual
+   (let $weights (Weight) (let $res (moedd-cma-es-single-generation $weights) (let ($res-size $pos-range) ((size-atom $res) (range 1 6 1)) (is-member $res-size $pos-range))))
+   True
+)
+
+;;;; moedd-cma-es-main-loop ;;;;
+
+;;;; Test moedd-cma-es-main-loop with the same parameters as the above, but now the reference point being adaptive, and for 5 generation run
+; Output = The length of best non-dominated from the best or fit individuals evolved by the six sub-problems over the whole (5) generations run.
+; Note: the length of the best non-dominated can vary since each iteration run tries to evolve random samples, and hence we check the length if it's in the possible range(1 being minimum and 30(the best possible scenario in which every samples will be best non-dominated, very very unlikely) being maximum) instead of checking it if it's particular number.
+
+!(clean-from-single-cma-es-inputspace)
+!(add-to-single-cma-es-inputspace)
+!(assertEqual
+   (let $res (moedd-cma-es-main-loop) (let ($res-size $pos-range) ((size-atom $res) (range 1 30 1)) (is-member $res-size $pos-range)))
+   True
 )

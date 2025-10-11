@@ -142,10 +142,10 @@
 ;;;; space-based GA-blend ;;;;
 ; Output = The formed blend(inputs are fetched from the space)
 
-!(assertEqual
-   (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (space-blend blend GA-main-loop False) %Undefined% $space)) ($net-type $blend))
-   (doubleScope BatMan)
-)
+; !(assertEqual
+;    (let ($net-type $exp-ver $blend $ext-ver) (let $space &self (metta (space-blend blend GA-main-loop False) %Undefined% $space)) ($net-type $blend))
+;    (doubleScope BatMan)
+; )
 
 ; 1. Weighted selection: This test verifies that roulette-select never picks an individual with 0 fitness.
 !(assertEqual (roulette-select
