@@ -83,6 +83,14 @@
     )
 )
 
+(=(relations-key-value-list $blend)
+  (let* (
+      ($props (match &self ($Relation $blend $property) ($Relation $property)))
+  )
+  $props
+  ))
+
+  
 (= (topology-op $blend $concept1 $concept2)
     (let*(
        ($concept1-relations-list (relations-key-value-list $concept1))
@@ -100,4 +108,4 @@
     )
 )
 
-; ! (topology-op (good_blend) (op-concept1) (op-concept2))
+ ! (topology-op (good_blend) (op-concept1) (op-concept2))
