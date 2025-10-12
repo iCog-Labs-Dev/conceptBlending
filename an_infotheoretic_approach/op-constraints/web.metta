@@ -1,6 +1,7 @@
 ! (import! &self libs)
 ; ! (import! &self common-utils)
-
+!(bind! &concept-space (new-space))
+!(load-ascii &concept-space data/kb_concepts.metta)
 
 (= (relation-exists-in-blend $blend-relations $rel-pair)
     (is-list-member $rel-pair $blend-relations)
@@ -68,9 +69,9 @@
   )
 )
 
-(=(relations-key-value-list $blend)
+(=(relations-key-value-lists $blend)
   (let* (
-      ($props (match &self ($Relation $blend $property) ($Relation $property)))
+      ($props (match &concept-space ($Relation $blend $property) ($Relation $property)))
   )
   $props
   ))
@@ -79,7 +80,7 @@
 (= (web-op $cross-mappings $blend)
   (let* 
     (
-        ($blend-relations (relations-key-value-list $blend))
+        ($blend-relations (relations-key-value-lists $blend))
         ($scores (map-atom $cross-mappings $mapping (calc-score-cross-mapping $mapping $blend-relations)))
         ($sum (sum-op $scores))
         ($count (size-atom $scores))

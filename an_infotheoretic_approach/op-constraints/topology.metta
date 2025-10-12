@@ -1,5 +1,7 @@
 ! (import! &self libs)
 ; ! (import! &self common-utils)
+!(bind! &concept-space (new-space))
+!(load-ascii &concept-space data/kb_concepts.metta)
 
 (= (similarity_threshold) 0.15)
 
@@ -83,22 +85,22 @@
     )
 )
 
-(=(relations-key-value-list $blend)
+(=(relations-key-value-lists $blend)
   (let* (
-      ($props (match &self ($Relation $blend $property) ($Relation $property)))
+      ($props (match &concept-space ($Relation $blend $property) ($Relation $property)))
   )
   $props
   ))
 
-  
+
 (= (topology-op $blend $concept1 $concept2)
     (let*(
-       ($concept1-relations-list (relations-key-value-list $concept1))
-        ($concept2-relations-list (relations-key-value-list $concept2))
+       ($concept1-relations-list (relations-key-value-lists $concept1))
+        ($concept2-relations-list (relations-key-value-lists $concept2))
         ($un-norm-source-relations (union-atom $concept1-relations-list $concept2-relations-list))
         (($source-relations $knowns) (let $result (source-relations-normalizer $un-norm-source-relations ()) (let ($source-relations-res $knowns-res) ((indexed-cdr-atom $result (- (size-atom $result) 1)) (index-atom $result (- (size-atom $result) 1))) ((unique-atom $source-relations-res) $knowns-res))))
         ($source-relations-size (size-atom $source-relations))
-        ($blend-relations-list (relations-key-value-list $blend))
+        ($blend-relations-list (relations-key-value-lists $blend))
         ($preserved-count (count-preserved-loop $blend-relations-list $source-relations $knowns))
 
         ($source-relations-size-decimal (to-float-op $source-relations-size))
@@ -108,4 +110,4 @@
     )
 )
 
- ! (topology-op (good_blend) (op-concept1) (op-concept2))
+;  ! (topology-op (good_blend) (op-concept1) (op-concept2))
