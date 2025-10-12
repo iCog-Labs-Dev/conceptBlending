@@ -68,6 +68,14 @@
   )
 )
 
+(=(relations-key-value-list $blend)
+  (let* (
+      ($props (match &self ($Relation $blend $property) ($Relation $property)))
+  )
+  $props
+  ))
+
+
 (= (web-op $cross-mappings $blend)
   (let* 
     (
