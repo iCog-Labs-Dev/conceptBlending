@@ -1,5 +1,8 @@
 ! (import! &self libs)
 ; ! (import! &self common-utils)
+!(bind! &concept-space (new-space))
+!(load-ascii &concept-space data/kb_concepts.metta)
+
 
 
 (= (are-conflicting $item $item2 $terms-antonymity $pre-def-confl)
@@ -15,11 +18,13 @@
 
 (=(are-antonyms-check $term1 $term2)
     (let* (
-        ($m (match &self (Antonym $term1 $term2) True))
-        ($n (if (== $m True) 1 0))
+        ($m (match &concept-space (Antonym $term1 $term2) True))
+        ($n (if (== True $m) 1 0))
     )
-    $n)
+    $n
 )
+)
+
 
 (= (check-props-conflict $props $predefined-conflicts)
     (function 
@@ -39,13 +44,13 @@
 )
 
 (=(properties $blend) (let* (
-    ($props (match &self (HasProperty $blend $x) $x))
+    ($props (match &concept-space (HasProperty $blend $x) $x))
 )
 $props
 ))
 
 (= (integration-op $blend)
-    (let $prop-list (properties-list $blend)
+    (let $prop-list (properties $blend)
         (let $prop-names (map-atom $prop-list $x (car-atom $x))
             (let $conflicts (check-props-conflict $prop-names (predefined-conflicts))
                 (let $conflict-ratio (/ $conflicts (pow-math (size-atom $prop-names) 0.5)) (max-atom (0.0 (- 1.0 $conflict-ratio))))
@@ -54,4 +59,4 @@ $props
     )
 )
 
-; ! (integration-op (good_blend))
+; ! (integration-op cat)
