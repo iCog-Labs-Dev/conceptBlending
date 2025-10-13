@@ -430,7 +430,9 @@
 )
 
 (= (unzip-list $list)
-    (let ($list1 $list2) (
+    (if (== (size-atom $list) 0)
+        (Error $list EmptyList)
+        (let ($list1 $list2) (
         (collapse
             (unzip-helper-left (superpose $list))
         )
@@ -439,6 +441,7 @@
         )
         )
         ((reverse-list $list1) (reverse-list $list2))
+    )
     )
 )
 

@@ -1,5 +1,6 @@
 ! (register-module! ../../an_infotheoretic_approach)
 ! (import! &self an_infotheoretic_approach:info-theoretic)
+!(import! &self libs)
 
 
 ; Test get-prop-value-pairs
