@@ -673,3 +673,19 @@
         )
     )
 )
+
+(= (truncate $num $decimalpoints)
+    (function
+        (chain (pow-math 10 $decimalpoints) $roundingnum
+            (chain (* $num $roundingnum) $multinum
+                (chain (trunc-math $multinum) $truncednum
+                    (chain (- $multinum $truncednum) $decipart
+                        (chain (- $multinum $decipart) $intigerpart
+                            (chain (/ $intigerpart $roundingnum) $res (return $res))
+                        )
+                    )
+                )
+            )
+        )
+    )
+)
