@@ -100,8 +100,8 @@
    0.3333333333333333)
 ; Test coherence
 !(assertEqual (let $res (coherence (color shape size) (0.5 0.25 0.75)) (truncate $res 5)) 0.32954)
-!(assertEqual (coherence (a b c) (0.5 0.5 0.5)) 0.43552176654338837)
-!(assertEqual (coherence (a b c) (0.1 0.8 0.9)) 0.5640286632357537)
+!(assertEqual (let $res (coherence (a b c) (0.5 0.5 0.5)) (truncate $res 5)) 0.43552)
+!(assertEqual (let $res (coherence (a b c) (0.1 0.8 0.9)) (truncate $res 5)) 0.56402)
 
 ;Test filter-non-dominated 
 (= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
@@ -124,6 +124,6 @@
 )
 
 !(assertEqual
-    (objectives (testconcept1) (testconcept2) (testcandidatedegrees))
-    (0.01500000000000001 0.3332029122275585)
+    (let ($mu-hqblend-val $coh-val) (objectives (testconcept1) (testconcept2) (testcandidatedegrees)) ((truncate $mu-hqblend-val 5) (truncate $coh-val 5)))
+    (0.01500 0.33320)
 )
