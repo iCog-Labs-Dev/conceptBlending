@@ -17,6 +17,9 @@
     )
 )
 
+(=(are-related $term1 $term2) (or (match &concept-space ($relations $term1 $term2) True) False))
+
+
 (= (calculate-source-strength $prop-name $source-expr $blend-name)
     (let $source-word (car-atom $source-expr)
         (if (== $source-word $blend-name) 1
@@ -27,8 +30,14 @@
     )
 )
 
+(=(propertiesList $blend) (let* (
+    ($props (match &concept-space (HasProperty $blend $x) $x))
+)
+$props
+))
+
 (= (unpacking-op $good-blend )
-    (let ($props $blend-name) ((properties-list $good-blend) (blend-name $good-blend))
+    (let ($props $blend-name) ((propertiesList $good-blend) (blend-name $good-blend))
         (let $mapped-props (map-atom $props $prop  (if (> (size-atom $prop) 1) $prop ((car-atom $prop) ())))
             (let $scores (map-atom $mapped-props $p (evaluate-property $p $blend-name))
                 (let $prop-size (size-atom $props) (if (> $prop-size 0) (/ (sum-op $scores) $prop-size) 0.0))
