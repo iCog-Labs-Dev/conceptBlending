@@ -1,10 +1,19 @@
 ! (import! &self libs)
 ; ! (import! &self common-utils)
 
+(= (is-relation-PartOf $term $context)
+    (let* (
+        ($res (match &self (PartOf $term $context) ($term $context)))
+        )
+        (if (> (size-atom $res) 0) True False)
+    )
+)
+
+
 (= (is-characteristic-part $relation $blend-properties $bled-name) 
     (if (is-list-member (index-atom $relation 1) $blend-properties)
         True
-        (is-relation-part-of (index-atom $relation 1) $bled-name)
+        (is-relation-PartOf (index-atom $relation 1) $bled-name)
     )
 )
 
@@ -43,12 +52,26 @@
         )
     )
 )
+
+(=(propertiesList $blend) (let* (
+    ($props (match &self (HasProperty $blend $x) $x))
+)
+$props
+))
+
+(=(relations-key-value-lists $blend)
+  (let* (
+      ($props (match &self ($Relation $blend $property) ($Relation $property)))
+  )
+  $props
+  ))
+
 (= (metonymy-op $blend)
   (let* (
-    ($blend-relations (relations-key-value-list $blend))
+    ($blend-relations (relations-key-value-lists $blend))
     ($total-relations (size-atom $blend-relations))
     ($blend-name (blend-name $blend))
-    ($blend-properties (properties-list $blend))
+    ($blend-properties (propertiesList $blend))
     ($compressed-count (count-compressed-relations $blend-relations $blend-properties $blend-name 0))
     ($compressed-count-float (to-float-op $compressed-count))
   )
