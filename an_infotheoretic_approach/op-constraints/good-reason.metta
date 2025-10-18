@@ -35,14 +35,14 @@
 )
 
 (=(propertiesList $blend) (let* (
-    ($props (match &concept-space (HasProperty $blend $x) $x))
+    ($props (match &self (HasProperty $blend $x) $x))
 )
 $props
 ))
 
 (=(relations-key-value-lists $blend)
   (let* (
-      ($props (match &concept-space ($Relation $blend $property) ($Relation $property)))
+      ($props (match &self ($Relation $blend $property) ($Relation $property)))
   )
   $props
   ))
