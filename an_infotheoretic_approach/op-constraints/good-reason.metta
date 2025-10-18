@@ -21,7 +21,7 @@
     (let ($blend-name $unwrapped-prop) ((blend-name $blend) (car-atom $prop))
         (if (is-property-justified $unwrapped-prop $blend-name)
             1
-            (is-provenance-sources-justified $unwrapped-prop (provenance-sources (properties-list $blend)))
+            (is-provenance-sources-justified $unwrapped-prop (provenance-sources (propertiesList $blend)))
         )
     )
 )
@@ -34,10 +34,24 @@
     (let ($blend-name $blend-context) ((blend-name $blend) (blend-context $blend)) (let $default-prompt (default-prompt $properties $blend-name $blend-context) (good-reason-llm $default-prompt)))
 )
 
+(=(propertiesList $blend) (let* (
+    ($props (match &concept-space (HasProperty $blend $x) $x))
+)
+$props
+))
+
+(=(relations-key-value-lists $blend)
+  (let* (
+      ($props (match &concept-space ($Relation $blend $property) ($Relation $property)))
+  )
+  $props
+  ))
+
+
 (= (blend-context $blend)
         (let* (
-            ($props (properties-list $blend))
-            ($blend-relations (relations-key-value-list $blend))
+            ($props (propertiesList $blend))
+            ($blend-relations (relations-key-value-lists $blend))
             ($property-name-list (map-atom $props $x (car-atom $x)) )
             ($mapRelations (map-atom $blend-relations $rel ((car-atom $rel) → (index-atom $rel 1))))
             ($provenance-sources(provenance-sources $props))
@@ -87,7 +101,7 @@
 (= (good-reason-op $blend)
     (let* 
         (
-            ($blend-properties (properties-list $blend))
+            ($blend-properties (propertiesList $blend))
             ($emergents (custom-filter-atom $blend-properties $var (<= (Method size-atom $var) 1)))
             ($emergent-count (size-atom $emergents))
         )
