@@ -1,6 +1,55 @@
 ! (import! &self libs)
 ; ! (import! &self common-utils)
 
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/antonym-0_-atlocation-0t-capableof-cs-causes-cs-causesdesire-ky-createdby-az-definedby-0b.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/derivedfrom-ag.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/derivedfrom-gp.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/derivedfrom-pu.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/derivedfrom-uy-distinctfrom-em-desires-pp-etymologicallyrelatedto-ad.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/formof-bg.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/formof-gi.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/formof-ps.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/formof-t_-hasa-1u-hascontext-aa.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/hascontext-de.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/hascontext-pp.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/hasprerequisite-sw-hasproperty-as-hassubevent-bw-isa-ad.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/isa-dp.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/isa-py.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/partof-ft-receivesaction-nz-relatedto-0a.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-ab.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-bb.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-cc.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-dd.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-ef.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-ff.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-hh.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-jk.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-mm.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-nn.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-pp.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-pp2.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-rr.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-ss.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-st.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-uu.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/relatedto-wy.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/synonym-de.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/synonym-py-usedfor-br.metta)
+ !(load-ascii &self an_infotheoretic_approach/concept-atomspace/usedfor-rt-dbpedia-go.metta)
+
+
+(=(is-property-justified $concept $property)
+    (let* (
+        ($justified (is-justified $concept $property))
+        (() (println! ("Justified match result: " $justified)))
+        ($direct (collapse(superpose(match &self (Triplet (HasProperty $concept $property)) True))))
+        (()(println! ("Direct match result: " $direct)))
+        ($result (if (or $justified $direct) True False))
+    )
+    $result
+    )
+)
+
 (= (is-provenance-sources-justified $property $provenance-sources)
     (if (== $provenance-sources ())
         0
@@ -17,11 +66,12 @@
     )
 )
 
+
 (= (conceptnet-justification-helper $prop $blend)
     (let ($blend-name $unwrapped-prop) ((blend-name $blend) (car-atom $prop))
         (if (is-property-justified $unwrapped-prop $blend-name)
             1
-            (is-provenance-sources-justified $unwrapped-prop (provenance-sources (propertiesList $blend)))
+            (is-provenance-sources-justified $unwrapped-prop (provenance-sources (properties-list $blend)))
         )
     )
 )
@@ -34,24 +84,15 @@
     (let ($blend-name $blend-context) ((blend-name $blend) (blend-context $blend)) (let $default-prompt (default-prompt $properties $blend-name $blend-context) (good-reason-llm $default-prompt)))
 )
 
-(=(propertiesList $blend) (let* (
-    ($props (match &self (HasProperty $blend $x) $x))
-)
-$props
-))
 
-(=(relations-key-value-lists $blend)
-  (let* (
-      ($props (match &self ($Relation $blend $property) ($Relation $property)))
-  )
-  $props
-  ))
+
+
 
 
 (= (blend-context $blend)
         (let* (
-            ($props (propertiesList $blend))
-            ($blend-relations (relations-key-value-lists $blend))
+            ($props (properties-list $blend))
+            ($blend-relations (relations-key-value-list $blend))
             ($property-name-list (map-atom $props $x (car-atom $x)) )
             ($mapRelations (map-atom $blend-relations $rel ((car-atom $rel) → (index-atom $rel 1))))
             ($provenance-sources(provenance-sources $props))
@@ -101,7 +142,7 @@ $props
 (= (good-reason-op $blend)
     (let* 
         (
-            ($blend-properties (propertiesList $blend))
+            ($blend-properties (properties-list $blend))
             ($emergents (custom-filter-atom $blend-properties $var (<= (Method size-atom $var) 1)))
             ($emergent-count (size-atom $emergents))
         )
