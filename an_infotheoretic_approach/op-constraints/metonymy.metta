@@ -39,7 +39,7 @@
 
 
 
-(= (is-relation-PartOf $term $context)
+(= (is-relation-part-of $term $context)
     (let* (
         ($res (collapse(match &self (Triplet (PartOf $term $context)) ($term $context))))
         )
@@ -77,13 +77,9 @@
 (=(is-relation-metonymy $term1 $term2)
     (let* (
         ($partof (is-relation-part-of $term1 $term2))
-        (()(println! ("PartOf: " $partof)))
         ($HasA (rel-exists-HasA $term1 $term2))
-        (()(println! ("HasA: " $HasA)))
         ($LocatedNear (rel-exists-LocatedNear $term1 $term2))
-        (()(println! ("LocatedNear: " $LocatedNear)))
         ($SymbolOf (rel-exists-SymbolOf $term1 $term2))
-        (()(println! ("SymbolOf: " $SymbolOf)))
         ($result (if (or $partof (or $HasA (or $LocatedNear $SymbolOf))) True False))
     )
     $result
@@ -93,7 +89,16 @@
 (= (is-characteristic-part $relation $blend-properties $bled-name) 
     (if (is-list-member (index-atom $relation 1) $blend-properties)
         True
-        (is-relation-PartOf (index-atom $relation 1) $bled-name)
+        (is-relation-part-of (index-atom $relation 1) $bled-name)
+    )
+)
+
+(=(is-abbreivation $term1 $term2)
+    (let* (
+        ($rel (collapse (match &self (Triplet (FormOf $term1 $term2)) ($term1 $term2))))
+        ($result (if (> (size-atom $rel) 0) True False))
+    )
+    $result
     )
 )
 
