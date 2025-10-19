@@ -69,24 +69,18 @@
   )
 )
 
-(=(relations-key-value-lists $blend)
-  (let* (
-      ($props (match &concept-space ($Relation $blend $property) ($Relation $property)))
-  )
-  $props
-  ))
+
 
 
 (= (web-op $cross-mappings $blend)
   (let* 
     (
-        ($blend-relations (relations-key-value-lists $blend))
+        ($blend-relations (relations-key-value-list $blend))
         ($scores (map-atom $cross-mappings $mapping (calc-score-cross-mapping $mapping $blend-relations)))
         ($sum (sum-op $scores))
         ($count (size-atom $scores))
         ($average (/ $sum $count))
         ($result (min-atom (1.0 $average)))
-        
     )
     $result
   )
