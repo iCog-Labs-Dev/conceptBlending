@@ -17,27 +17,28 @@
     )
 )
 
-(=(are-related $term1 $term2) (or (match &concept-space ($relations $term1 $term2) True) False))
-
+(=(are-related $term1 $term2) 
+    (let* (
+        ($relation (collapse (match &self (Triplet ($rel $term1 $term2)) ($term1 $term2))))
+        ($result (if (> (size-atom $relation) 0) True False))
+    )
+    $result
+    )
+)
 
 (= (calculate-source-strength $prop-name $source-expr $blend-name)
     (let $source-word (car-atom $source-expr)
         (if (== $source-word $blend-name) 1
             (let ($similarity $is-related) ((get-similarity-score $prop-name $source-word) (are-related $prop-name $source-word)) 
-                (if $is-related (max-aton ($similarity 0.8)) $similarity)
+                (if $is-related (max-atom ($similarity 0.8)) $similarity)
             )
         )
     )
 )
 
-(=(propertiesList $blend) (let* (
-    ($props (match &concept-space (HasProperty $blend $x) $x))
-)
-$props
-))
 
 (= (unpacking-op $good-blend )
-    (let ($props $blend-name) ((propertiesList $good-blend) (blend-name $good-blend))
+    (let ($props $blend-name) ((properties-list $good-blend) (blend-name $good-blend))
         (let $mapped-props (map-atom $props $prop  (if (> (size-atom $prop) 1) $prop ((car-atom $prop) ())))
             (let $scores (map-atom $mapped-props $p (evaluate-property $p $blend-name))
                 (let $prop-size (size-atom $props) (if (> $prop-size 0) (/ (sum-op $scores) $prop-size) 0.0))
