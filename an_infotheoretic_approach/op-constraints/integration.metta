@@ -17,8 +17,8 @@
 
 (=(are-antonyms-check $term1 $term2)
     (let* (
-        ($m (match &self (Antonym $term1 $term2) True))
-        ($n (if (== True $m) 1 0))
+        ($m (collapse (match &self (Antonym $term1 $term2) True)))
+        ($n (if (> (size-atom $m) 0) 1 0))
     )
     $n
 )
@@ -42,14 +42,10 @@
     )
 )
 
-(=(propertiesList $blend) (let* (
-    ($props (match &self (HasProperty $blend $x) $x))
-)
-$props
-))
+
 
 (= (integration-op $blend)
-    (let $prop-list (propertiesList $blend)
+    (let $prop-list (properties-list $blend)
         (let $prop-names (map-atom $prop-list $x (car-atom $x))
             (let $conflicts (check-props-conflict $prop-names (predefined-conflicts))
                 (let $conflict-ratio (/ $conflicts (pow-math (size-atom $prop-names) 0.5)) (max-atom (0.0 (- 1.0 $conflict-ratio))))
