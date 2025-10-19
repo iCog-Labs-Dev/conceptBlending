@@ -85,22 +85,16 @@
     )
 )
 
-(=(relations-key-value-lists $blend)
-  (let* (
-      ($props (match &concept-space ($Relation $blend $property) ($Relation $property)))
-  )
-  $props
-  ))
 
 
 (= (topology-op $blend $concept1 $concept2)
     (let*(
-       ($concept1-relations-list (relations-key-value-lists $concept1))
-        ($concept2-relations-list (relations-key-value-lists $concept2))
+       ($concept1-relations-list (relations-key-value-list $concept1))
+        ($concept2-relations-list (relations-key-value-list $concept2))
         ($un-norm-source-relations (union-atom $concept1-relations-list $concept2-relations-list))
         (($source-relations $knowns) (let $result (source-relations-normalizer $un-norm-source-relations ()) (let ($source-relations-res $knowns-res) ((indexed-cdr-atom $result (- (size-atom $result) 1)) (index-atom $result (- (size-atom $result) 1))) ((unique-atom $source-relations-res) $knowns-res))))
         ($source-relations-size (size-atom $source-relations))
-        ($blend-relations-list (relations-key-value-lists $blend))
+        ($blend-relations-list (relations-key-value-list $blend))
         ($preserved-count (count-preserved-loop $blend-relations-list $source-relations $knowns))
 
         ($source-relations-size-decimal (to-float-op $source-relations-size))
