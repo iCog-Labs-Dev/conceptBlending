@@ -96,7 +96,6 @@
         ($source-relations-size (size-atom $source-relations))
         ($blend-relations-list (relations-key-value-list $blend))
         ($preserved-count (count-preserved-loop $blend-relations-list $source-relations $knowns))
-
         ($source-relations-size-decimal (to-float-op $source-relations-size))
         ($preservation-score (/ $preserved-count $source-relations-size-decimal))
         )
