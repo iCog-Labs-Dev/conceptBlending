@@ -19,7 +19,6 @@ def load_config():
         config["llm"]["api_key"] = os.path.expandvars(config["llm"]["api_key"])
     return config
 
-
 @register_atoms(pass_metta=True)
 def grounded_atoms(metta):
     registered_operations = {}
@@ -140,7 +139,7 @@ def grounded_atoms(metta):
         [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
         unwrap=False
     )
-    
+
     config = load_config()
     llm = LLMIntegration(config)
     registered_operations["good-reason-llm"] = OperationAtom(

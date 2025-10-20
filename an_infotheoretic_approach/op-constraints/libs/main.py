@@ -19,7 +19,6 @@ def load_config():
         config["llm"]["api_key"] = os.path.expandvars(config["llm"]["api_key"])
     return config
 
-
 @register_atoms(pass_metta=True)
 def grounded_atoms(metta):
     registered_operations = {}
@@ -110,6 +109,34 @@ def grounded_atoms(metta):
         "get-concept-relations",
         lambda *args: conceptnet.get_concept_relations(metta, *args),
         [AtomType.ATOM, AtomType.ATOM],
+        unwrap=False
+    )
+
+    registered_operations["semantic-correlation"] = OperationAtom(
+        "semantic-correlation",
+        lambda *args: semantic_similarity(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, "Expression"],
+        unwrap=False
+    )
+
+    registered_operations["np-dirichlet"] = OperationAtom(
+        "np-dirichlet",
+        lambda *args: np_dirichlet_sample(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, "Expression"],
+        unwrap=False
+    )
+
+    registered_operations["np-zeros"] = OperationAtom(
+        "np-zeros",
+        lambda *args: np_zeros(metta, *args),
+        [AtomType.ATOM, "Expression"],
+        unwrap=False
+    )
+
+    registered_operations["np-max"] = OperationAtom(
+        "np-max",
+        lambda *args: np_max(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
         unwrap=False
     )
 

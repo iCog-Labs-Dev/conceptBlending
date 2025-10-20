@@ -19,7 +19,6 @@ def load_config():
         config["llm"]["api_key"] = os.path.expandvars(config["llm"]["api_key"])
     return config
 
-
 @register_atoms(pass_metta=True)
 def grounded_atoms(metta):
     registered_operations = {}
