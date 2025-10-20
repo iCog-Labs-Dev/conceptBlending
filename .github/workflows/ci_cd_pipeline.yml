@@ -27,7 +27,6 @@ jobs:
         cd ../conceptBlending/an_infotheoretic_approach
         pip install \
           hyperon==0.2.4 \
-          
           python-dotenv==1.0.1 \
           requests \
           argparse \
