@@ -430,7 +430,9 @@
 )
 
 (= (unzip-list $list)
-    (let ($list1 $list2) (
+    (if (== (size-atom $list) 0)
+        (Error $list EmptyList)
+        (let ($list1 $list2) (
         (collapse
             (unzip-helper-left (superpose $list))
         )
@@ -439,6 +441,7 @@
         )
         )
         ((reverse-list $list1) (reverse-list $list2))
+    )
     )
 )
 
@@ -665,6 +668,22 @@
                         (return ())
                     )
                     (return ())
+                )
+            )
+        )
+    )
+)
+
+(= (truncate $num $decimalpoints)
+    (function
+        (chain (pow-math 10 $decimalpoints) $roundingnum
+            (chain (* $num $roundingnum) $multinum
+                (chain (trunc-math $multinum) $truncednum
+                    (chain (- $multinum $truncednum) $decipart
+                        (chain (- $multinum $decipart) $intigerpart
+                            (chain (/ $intigerpart $roundingnum) $res (return $res))
+                        )
+                    )
                 )
             )
         )
