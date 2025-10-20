@@ -31,12 +31,11 @@ jobs:
           python-dotenv==1.0.1 \
           requests \
           argparse \
-          
-          
           colorama \
           tqdm==4.67.1 \
           pyyaml \
           "cachetools>=5.0.0"
+    
 
     - name: Create .env file with API Keys
       run: |
