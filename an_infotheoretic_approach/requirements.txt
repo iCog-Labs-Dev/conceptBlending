@@ -11,3 +11,4 @@ pyyaml
 cachetools>=5.0.0
 sentence-transformers
 scikit-learn
+google-genai

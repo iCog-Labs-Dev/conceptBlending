@@ -1804,3 +1804,13 @@
         )
     )
 )
+
+; Check if item is in source list
+(= (is-member $item ())
+   False)
+(= (is-member $item $source)
+   (if (let $curr-item (car-atom $source) (== $item $curr-item))
+       True
+       (is-member $item (cdr-atom $source))
+   )
+)
