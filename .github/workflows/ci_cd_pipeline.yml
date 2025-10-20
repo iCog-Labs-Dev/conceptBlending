@@ -47,4 +47,4 @@ jobs:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: |
         cd ../conceptBlending/an_infotheoretic_approach
-        python scripts/concept-preprocessing.py
+        python scripts/run-tests.py
