@@ -21,22 +21,22 @@ jobs:
       with:
         python-version: '3.11.6'
 
-   - name: Install Python Dependencies
-    run: |
-      python -m pip install --upgrade pip==23.1.2
-      cd ../conceptBlending/an_infotheoretic_approach
-      pip install \
-        hyperon==0.2.4 \
-        openai==1.60.1 \
-        python-dotenv==1.0.1 \
-        requests \
-        argparse \
-        
-        
-        colorama \
-        tqdm==4.67.1 \
-        pyyaml \
-        "cachetools>=5.0.0"
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip==23.1.2
+        cd ../conceptBlending/an_infotheoretic_approach
+        pip install \
+          hyperon==0.2.4 \
+          openai==1.60.1 \
+          python-dotenv==1.0.1 \
+          requests \
+          argparse \
+          
+          
+          colorama \
+          tqdm==4.67.1 \
+          pyyaml \
+          "cachetools>=5.0.0"
 
     - name: Create .env file with API Keys
       run: |
