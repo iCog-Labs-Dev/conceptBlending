@@ -34,9 +34,10 @@ class ConceptNetAdapter:
         """Fetch edges for a node optionally filtered by relation type."""
         try:
             node = quote(node.lower().replace(" ", "_"))
-            url = f"{self.BASE_URL}/c/en/{node}"
+            url = f"{self.BASE_URL}/query?start=/c/en/{node}"
+            print("rel_type :", rel_type)
             if rel_type:
-                url += f"?rel=/r/{rel_type}"
+                url += f"&rel=/r/{rel_type}"
             response = requests.get(url, timeout=3)
             data = response.json()
             return data.get("edges", [])
@@ -44,8 +45,9 @@ class ConceptNetAdapter:
             return []
 
     def is_abbreviation(self, metta: MeTTa, *args):
-        return [ValueAtom(any(edge["rel"]["label"] in ["Abbreviation", "Acronym"]
-               for edge in self.get_edges(str(args[0]), "FormOf")))]
+        return [ValueAtom(any(edge["end"]["label"].split(" ")[1].capitalize() in ["Abbreviation", "Acronym"]
+               for edge in self.get_edges(str(args[0]), "IsA")))]
+
 
     def get_expand_provenance(self, metta: MeTTa, *args):
         # print("Expanding provenance for:", args[0])

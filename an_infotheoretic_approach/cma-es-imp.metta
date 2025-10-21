@@ -299,7 +299,7 @@
 
 !(bind! &single-cma-es-inputspace (get-space))
 !(add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
-!(add-concepts)
+; !(add-concepts)
 
 (= (cma-es-single-iteration $fitness-fn)
     (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen $stall) (match &single-cma-es-inputspace (Inputs $x) $x)
@@ -397,3 +397,4 @@
 )
 
 ; !(moedd-cma-es-main-loop)
+!(are-terms-antonyms hot cold)
