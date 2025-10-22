@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
-"""
 
-Cleans and normalizes .metta concept files by:
-  Removing (Triplet (...)) wrappers
-  Cleaning brackets ([[x]] -> x)
-  Normalizing decimal weights (2.0 -> 2)
-  Extracting 'weight' from dataset/target and appending (weight …) lines
+"""
+Clean and normalize .metta concept files by:
+  - Removing (Triplet (...)) wrappers
+  - Cleaning bracket structures ([[x]] → x)
+  - Normalizing decimal weights (2.0 → 2)
+  - Extracting 'weight' from dataset/target and appending (weight …) lines
+  - Transforming target expressions where multi-word targets are wrapped in parentheses
 """
 
 import os
@@ -15,141 +15,154 @@ import tempfile
 import argparse
 from typing import TextIO
 
-# --- Precompiled regex patterns ---
-TRIPLET_WRAPPER = re.compile(r"\(Triplet\s+(\([^()]*\))\)")
-DOUBLE_BRACKET = re.compile(r"\[\[([^\]]+)\]\]")
-SINGLE_BRACKET = re.compile(r"\[([^\]]+)\]")
-WEIGHT_TOKEN = re.compile(r"(?:_)?'weight':_?(-?\d+(?:\.\d+)?)")
+# ---------------------- Precompiled Patterns ----------------------
 
-# ---------------------- Helpers ----------------------
+PAT_TRIPLET_WRAPPER = re.compile(r"\(Triplet\s+(\([^()]*\))\)")
+PAT_DOUBLE_BRACKET = re.compile(r"\[\[([^\]]+)\]\]")
+PAT_SINGLE_BRACKET = re.compile(r"\[([^\]]+)\]")
+PAT_WEIGHT_TOKEN = re.compile(r"(?:_)?'weight':_?(-?\d+(?:\.\d+)?)")
+
+# Match general (target (<relation> arg1 arg2) target_term)
+PAT_TARGET_EXPR = re.compile(r"\(target\s+\((\S+)\s+(\S+)\s+(\S+)\)\s+(\S+)\)")
+
+# Remove unwanted special characters
+PAT_CLEAN_SYMBOLS = re.compile(r'[#;\\"*]')
+
+# ---------------------- Core Transformation Functions ----------------------
+
+def transform_target_expression(text: str) -> str:
+    """
+    Transform (target ...) lines where the final argument is a sentence-like phrase.
+    If the target term has >=2 underscores, replace them with spaces and wrap in parentheses.
+    """
+    match = PAT_TARGET_EXPR.match(text)
+    if not match:
+        return text
+
+    relation, arg1, arg2, target_term = match.groups()
+
+    if target_term.count('_') >= 2:
+        pretty_target = ' '.join(target_term.split('_'))
+        return f"(target ({relation} {arg1} {arg2}) ({pretty_target}))"
+
+    return text
+
 
 def remove_triplet_wrappers(text: str) -> str:
-    """Remove (Triplet (...)) wrappers recursively."""
+    """
+    Recursively remove (Triplet (...)) wrappers and clean up symbols.
+    Also applies target transformation.
+    """
     previous = None
     while previous != text:
         previous = text
-        text = TRIPLET_WRAPPER.sub(r"\1", text)
-        patern=r'[#;\\"*]'
-        text = re.sub(patern, '', text)
-        
-        
-        
+        text = PAT_TRIPLET_WRAPPER.sub(r"\1", text)
+        text = PAT_CLEAN_SYMBOLS.sub('', text)
+        text = transform_target_expression(text)
     return text
 
 
 def fix_brackets(text: str, mode: str) -> str:
-    """Adjust brackets based on mode: 'none', 'single', or 'remove'."""
+    """
+    Adjust brackets based on selected mode:
+      - none: leave unchanged
+      - single: convert [[x]] → [x]
+      - remove: remove all [x] brackets
+    """
     if mode == 'none':
         return text
     if mode == 'single':
-        return DOUBLE_BRACKET.sub(r"[\1]", text)
+        return PAT_DOUBLE_BRACKET.sub(r"[\1]", text)
     if mode == 'remove':
-        text = DOUBLE_BRACKET.sub(r"\1", text)
-        text = SINGLE_BRACKET.sub(r"\1", text)
-        return text
+        text = PAT_DOUBLE_BRACKET.sub(r"\1", text)
+        return PAT_SINGLE_BRACKET.sub(r"\1", text)
     raise ValueError(f"Unknown bracket mode: {mode}")
 
 
 def clean_decimal(value: str) -> str:
-    """Normalize decimal strings like '2.0' -> '2'."""
-    if value.endswith('.0'):
-        return value[:-2]
-    return value
+    """Normalize decimal strings like '2.0' → '2'."""
+    return value[:-2] if value.endswith('.0') else value
 
-
-# ---------------------- Core Transformer ----------------------
 
 def transform_block(block: str, brackets_mode: str = 'remove', fix_weight: bool = True) -> str:
     """
-    Processes one block of MeTTa code.
-    - Removes URLs
-    - Unwraps Triplets
-    - Extracts and reattaches (weight …) lines
-    Works for both (target …) and (dataset …)
+    Processes one block of MeTTa code:
+      - Removes Triplets
+      - Fixes brackets
+      - Extracts weights from dataset/target
+      - Adds (weight …) line if found
     """
-    lines = block.splitlines()
+    lines = [ln.strip() for ln in block.splitlines() if ln.strip()]
     if not lines:
         return ''
 
     final_lines = []
 
     for line in lines:
-        stripped = line.strip()
-        if not stripped or stripped.startswith('(URL '):
-            continue
-
-        # Unwrap Triplet first
+        # Remove wrappers and clean
         line = remove_triplet_wrappers(line)
 
-        # Clean brackets unless line has metadata sources
-        has_source_metadata = "'sources':_" in line and any(
-            m in line for m in ["'contributor':", "'process':"]
-        )
-        if not has_source_metadata:
+        # Skip URL lines
+        if line.startswith('(URL '):
+            continue
+
+        # Handle brackets unless metadata present
+        if not ("'sources':_" in line and any(k in line for k in ["'contributor':", "'process':"])):
             line = fix_brackets(line, brackets_mode)
 
-        # Identify if line starts with (dataset or (target
-        if stripped.startswith('(dataset ') or stripped.startswith('(target '):
-            weight_match = WEIGHT_TOKEN.search(line)
+        # Process dataset/target lines for weights
+        if line.startswith('(dataset ') or line.startswith('(target '):
             weight_value = None
 
-            if weight_match:
-                weight_value = clean_decimal(weight_match.group(1))
-                line = WEIGHT_TOKEN.sub('', line)  # remove weight part
+            match = PAT_WEIGHT_TOKEN.search(line)
+            if match:
+                weight_value = clean_decimal(match.group(1))
+                line = PAT_WEIGHT_TOKEN.sub('', line)
                 line = re.sub(r"_+", "_", line)
                 line = re.sub(r"\s+", " ", line).strip()
 
-            # Add cleaned dataset/target line
             final_lines.append(line.rstrip())
 
-            # If there was a weight, add separate (weight …)
             if weight_value:
-                # Extract the subject inside parentheses
                 subject_match = re.match(r'\((?:dataset|target)\s+(\([^)]+\))', line)
                 if subject_match:
                     subject = subject_match.group(1)
                     final_lines.append(f"(weight {subject} {weight_value})")
 
         else:
-            # Non-dataset/target line, just append
             final_lines.append(line.rstrip())
 
     return '\n'.join(final_lines)
 
 
-# ---------------------- Streamed File Transformer ----------------------
+# ---------------------- File and Folder Processing ----------------------
 
 def stream_transform(input_path: str, output_stream: TextIO,
                      brackets_mode: str = 'remove', fix_weight: bool = True) -> None:
-    """Process a file block by block."""
+    """Stream through the file block by block and transform each."""
     with open(input_path, 'r', encoding='utf-8') as file:
-        current_block = []
+        block_lines = []
         for line in file:
-            if line.strip() == '':
-                if current_block:
-                    block_text = ''.join(current_block).rstrip('\n')
-                    transformed = transform_block(block_text, brackets_mode, fix_weight)
+            if not line.strip():
+                if block_lines:
+                    transformed = transform_block(''.join(block_lines), brackets_mode, fix_weight)
                     if transformed:
                         output_stream.write(transformed + '\n\n')
-                    current_block = []
+                    block_lines = []
             else:
-                current_block.append(line)
+                block_lines.append(line)
 
-        # Process last block
-        if current_block:
-            block_text = ''.join(current_block).rstrip('\n')
-            transformed = transform_block(block_text, brackets_mode, fix_weight)
+        # Handle last block
+        if block_lines:
+            transformed = transform_block(''.join(block_lines), brackets_mode, fix_weight)
             if transformed:
                 output_stream.write(transformed + '\n')
 
 
-# ---------------------- Folder Processor ----------------------
-
 def process_folder(folder: str, brackets_mode: str, fix_weight: bool) -> None:
-    """Process all .metta files in the folder."""
+    """Process all .metta files in a folder and overwrite them with cleaned output."""
     if not os.path.exists(folder):
-        print(f"❌ Error: Folder not found: {folder}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(f"❌ Error: Folder not found: {folder}")
 
     files = sorted(f for f in os.listdir(folder) if f.endswith('.metta'))
     if not files:
@@ -172,15 +185,17 @@ def process_folder(folder: str, brackets_mode: str, fix_weight: bool) -> None:
             print(f"❌ Failed: {e}")
             if 'temp_path' in locals() and os.path.exists(temp_path):
                 os.unlink(temp_path)
+
     print("\nAll done!")
 
 
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Preprocess .metta concept files.")
-    parser.add_argument('--folder', '-f', default='concept-atomspace',
-                        help='Folder with .metta files (default: concept-atomspace)')
+    parser = argparse.ArgumentParser(description="Preprocess and clean .metta concept files.")
+    parser.add_argument('--folder', '-f',
+                        default='an_infotheoretic_approach/concept-atomspace',
+                        help='Folder with .metta files (default: an_infotheoretic_approach/concept-atomspace)')
     parser.add_argument('--brackets', '-b', choices=['none', 'single', 'remove'],
                         default='remove', help='Bracket cleanup mode (default: remove)')
     parser.add_argument('--fix-weight', '-w', type=lambda x: x.lower() in ['true', '1', 'yes'],
