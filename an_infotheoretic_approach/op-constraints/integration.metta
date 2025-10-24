@@ -30,6 +30,16 @@
     $n)
 )
 
+
+(=(are-terms-antonyms $term1 $term2)
+    (let* (
+        ($m (collapse(match &self (Antonym $term1 $term2) $term1)))
+        ($n (if (> (size-atom $m) 0) True False))
+    )
+    $n
+)
+)
+
 (= (check-props-conflict $props $predefined-conflicts)
     (function 
         (chain (decons-atom $props) $ht
