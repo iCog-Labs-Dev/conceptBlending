@@ -50,3 +50,19 @@
 
 ; !(property-probability (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
 
+(= (py-round $number $digits)
+   (py-call (round $number $digits))
+)
+
+ !(py-round 3.112 2)
+
+(=(property-degree $concept)
+    (let*(
+        ($probability (property-probability $concept))
+        ($degree (* -1 (log 10 $probability)))
+    )
+        (py-round $degree)
+    )
+)
+
+; !(property-degree (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
