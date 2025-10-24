@@ -188,13 +188,10 @@ def process_folder(folder: str, brackets_mode: str, fix_weight: bool) -> None:
 
     print("\nAll done!")
 
-
-
-
 def main():
-    parser = argparse.ArgumentParser(description="Preprocess and clean .metta concept files.")
-    parser.add_argument('--folder', '-f',
-                        default='an_infotheoretic_approach/concept-atomspace',
+
+    parser = argparse.ArgumentParser(description="Preprocess .metta concept files.")
+    parser.add_argument('--folder', '-f', default='an_infotheoretic_approach/concept-atomspace',
                         help='Folder with .metta files (default: an_infotheoretic_approach/concept-atomspace)')
     parser.add_argument('--brackets', '-b', choices=['none', 'single', 'remove'],
                         default='remove', help='Bracket cleanup mode (default: remove)')
