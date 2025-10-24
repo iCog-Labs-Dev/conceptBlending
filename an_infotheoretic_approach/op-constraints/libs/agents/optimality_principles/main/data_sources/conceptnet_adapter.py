@@ -35,7 +35,6 @@ class ConceptNetAdapter:
         try:
             node = quote(node.lower().replace(" ", "_"))
             url = f"{self.BASE_URL}/query?start=/c/en/{node}"
-            print("rel_type :", rel_type)
             if rel_type:
                 url += f"&rel=/r/{rel_type}"
             response = requests.get(url, timeout=3)
