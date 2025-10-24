@@ -39,3 +39,14 @@
     (+ $number 0.0)
 )
 
+(=(property-probability $concept)
+    (let*(
+        ($numberofprops (get-number-of-properties $concept))
+        ($probability (/ 1.0 (decimal $numberofprops)))
+    )
+    $probability
+    )
+)
+
+; !(property-probability (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
+
