@@ -55,10 +55,10 @@
     )
 )
 
-(=(is-abbreivation $term1 $term2)
+(=(is-abbreivation $term) 
     (let* (
-        ($rel (collapse (match &self (Triplet (FormOf $term1 $term2)) ($term1 $term2))))
-        ($result (if (> (size-atom $rel) 0) True False))
+        ($relation (collapse(match &self (target (IsA $term $fullformed) (abbreviation for $x1 $x2 $x3)) ($x1 $x2 $x3))))
+        ($result (if (> (size-atom $relation) 0) True False))
     )
     $result
     )
