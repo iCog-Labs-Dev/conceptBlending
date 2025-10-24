@@ -113,6 +113,34 @@ def grounded_atoms(metta):
         unwrap=False
     )
 
+    registered_operations["semantic-correlation"] = OperationAtom(
+        "semantic-correlation",
+        lambda *args: semantic_similarity(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, "Expression"],
+        unwrap=False
+    )
+
+    registered_operations["np-dirichlet"] = OperationAtom(
+        "np-dirichlet",
+        lambda *args: np_dirichlet_sample(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, "Expression"],
+        unwrap=False
+    )
+
+    registered_operations["np-zeros"] = OperationAtom(
+        "np-zeros",
+        lambda *args: np_zeros(metta, *args),
+        [AtomType.ATOM, "Expression"],
+        unwrap=False
+    )
+
+    registered_operations["np-max"] = OperationAtom(
+        "np-max",
+        lambda *args: np_max(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
+        unwrap=False
+    )
+    
     config = load_config()
     llm = LLMIntegration(config)
     registered_operations["good-reason-llm"] = OperationAtom(

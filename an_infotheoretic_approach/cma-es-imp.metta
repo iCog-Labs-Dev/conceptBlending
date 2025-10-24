@@ -298,7 +298,14 @@
 
 
 !(bind! &single-cma-es-inputspace (get-space))
-!(add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
+(= (add-to-single-cma-es-inputspace)
+    (add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
+)
+
+(= (clean-from-single-cma-es-inputspace)
+    (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params))))
+)
+!(add-to-single-cma-es-inputspace)
 ; !(add-concepts)
 
 (= (cma-es-single-iteration $fitness-fn)
@@ -354,10 +361,10 @@
 (= (Weight) (let $nos (Num-subproblems) (np-dirichlet (1 1) $nos)))
 (= (Moedd-cma-gen) 5)
 
-; !(bind! &multi-cma-es-inputspace (get-space))
-; !(add-reduct &multi-cma-es-inputspace (Inputs ((zeros-vec (Num-objectives)) () 0)))
+!(bind! &multi-cma-es-inputspace (get-space))
+!(add-reduct &multi-cma-es-inputspace (Inputs ((zeros-vec (Num-objectives)) () 0)))
 
-(= (moedd-cma-es-single-iteration $weights)
+(= (moedd-cma-es-single-generation $weights)
     (let*
         (
             (($ref-point $pop $gen) (match &multi-cma-es-inputspace (Inputs $x) $x))
@@ -393,7 +400,7 @@
 (= (Eval) True)
 
 (= (moedd-cma-es-main-loop)
-    (let $weights (Weight) (let $iterations (range 0 (- (Moedd-cma-gen) 1) 1) (map-atom $iterations $iteration (moedd-cma-es-single-iteration $weights))))
+    (let $weights (Weight) (let $iterations (range 0 (- (Moedd-cma-gen) 1) 1) (map-atom $iterations $iteration (moedd-cma-es-single-generation $weights))))
 )
 
 ; !(moedd-cma-es-main-loop)

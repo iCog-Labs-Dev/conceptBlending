@@ -22,6 +22,14 @@
     )
 )
 
+(=(are-antonyms-check $term1 $term2)
+    (let* (
+        ($m (match &self (Antonym $term1 $term2) True))
+        ($n (if (== $m True) 1 0))
+    )
+    $n)
+)
+
 (= (check-props-conflict $props $predefined-conflicts)
     (function 
         (chain (decons-atom $props) $ht
@@ -38,7 +46,6 @@
         )
     )
 )
-
 
 
 (= (integration-op $blend)
