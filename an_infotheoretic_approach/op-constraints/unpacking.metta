@@ -18,8 +18,8 @@
 
 (=(are-related $term1 $term2) 
     (let* (
-        ($relation (collapse (match &self (Triplet (RelatedTo $term1 $term2)) ($term1 $term2))))
-        ($result (if (> (size-atom $relation) 0) True False))
+        ($rel (collapse (match &self (relation ($related $term1 $term2) $related) ($term1 $term2))))
+        ($result (if (> (size-atom $rel) 0) True False))
     )
     $result
     )

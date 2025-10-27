@@ -5,7 +5,7 @@
     (let* (
         ($justified (is-justified $concept $property))
         (() (println! ("Justified match result: " $justified)))
-        ($direct (collapse(superpose(match &self (Triplet (HasProperty $concept $property)) True))))
+        ($direct (collapse(superpose(match &self (relation (HasProperty $concept $property) HasProperty) True))))
         (()(println! ("Direct match result: " $direct)))
         ($result (if (or $justified $direct) True False))
     )

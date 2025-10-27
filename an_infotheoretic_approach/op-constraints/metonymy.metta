@@ -3,7 +3,7 @@
 
 (= (is-relation-part-of $term $context)
     (let* (
-        ($res (collapse(match &self (Triplet (PartOf $term $context)) ($term $context))))
+        ($res (collapse(match &self (relation (PartOf $term $context) PartOf) ($term $context))))
         )
         (if (> (size-atom $res) 0) True False)
     )
@@ -13,7 +13,7 @@
 
 (= (rel-exists-HasA $term $context)
     (let* (
-        ($res (collapse(match &self (HasA $context $term) ($context $term))))
+        ($res (collapse(match &self (relation (HasA $context $term) HasA) ($context $term))))
         )
         (if (> (size-atom $res) 0) True False)
     )
@@ -23,14 +23,14 @@
 
 (= (rel-exists-LocatedNear $term $context)
     (let* (
-        ($res (collapse(match &self (LocatedNear $term $context) ($term $context))))
+        ($res (collapse(match &self (relation (LocatedNear $term $context) LocatedNear) ($term $context))))
         )
         (if (> (size-atom $res) 0) True False)
     )
 )
 (=(rel-exists-SymbolOf $term $context)
     (let* (
-        ($res (collapse(match &self (SymbolOf $term $context) ($term $context))))
+        ($res (collapse(match &self (relation (SymbolOf $term $context) SymbolOf) ($term $context))))
         )
         (if (> (size-atom $res) 0) True False)
     )

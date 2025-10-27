@@ -15,29 +15,11 @@
 
 (=(are-terms-antonyms $term1 $term2)
     (let* (
-        ($m (collapse (match &self (Triplet (Antonym $term1 $term2)) $term1)))
+        ($m (collapse (match &self (relation (Antonym $term1 $term2) Antonym) $relation)))
         ($n (if (> (size-atom $m) 0) True False))
     )
     $n
     )
-)
-
-(=(are-antonyms-check $term1 $term2)
-    (let* (
-        ($m (match &self (Antonym $term1 $term2) True))
-        ($n (if (== $m True) 1 0))
-    )
-    $n)
-)
-
-
-(=(are-terms-antonyms $term1 $term2)
-    (let* (
-        ($m (collapse(match &self (Antonym $term1 $term2) $term1)))
-        ($n (if (> (size-atom $m) 0) True False))
-    )
-    $n
-)
 )
 
 (= (check-props-conflict $props $predefined-conflicts)
