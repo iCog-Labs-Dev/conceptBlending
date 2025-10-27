@@ -65,4 +65,40 @@
     )
 )
 
+(=(sum-list $list)
+    (fold-flat $list 0 $acc $x (+ $acc $x))
+)
+
+(=(log2 $num) (log 2 $num))
+
+(=(-vee $num) (- 0.0 $num))
+
+(=(shannon-entropy $p) (if (or (<= $p 0) (>= $p 1))
+    0
+    (* $p (log2 $p))
+
+))
+
+(=(binary-shannon-entropy $p)
+    (if (or (<= $p 0) (>= $p 1))
+    0
+    (- (* (-vee $p) (log2 $p)) (* (- 1 $p) (log2 (- 1 $p)))
+    )
+)
+)
+
+(=(custom-cons-atom $elem $list)
+    (cons-atom $elem $list)
+)
+
+(=(compute-entropy $list)
+    (fold-flat $list 0 $acc $x (- $acc (shannon-entropy $x))
+)
+)
+
+
+
+
+
+
 ; !(property-degree (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
