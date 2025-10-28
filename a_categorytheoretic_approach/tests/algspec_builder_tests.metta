@@ -1,6 +1,5 @@
 !(import! &self libs)
 
-!(load-ascii &self atom/a.metta)
 
 
 
@@ -11,7 +10,7 @@
     )     
 )
 
-; Fetch RelatedTo atoms for a concept
+; Fetch IsA atoms for a concept
 (=(fetch-atom-IsA $concept)
   (let $pairs (collapse
                 (match &self 
@@ -22,7 +21,7 @@
                            ($target $text))))
     (if (== $pairs ()) $concept $pairs)))
 
-
+; Fetch RelatedTo atoms for a concept
 (=(fetch-atom-RelatedTo $concept)
   (let $pairs (collapse
                 (match &self 
@@ -33,7 +32,7 @@
                            ($target $text))))
     (if (== $pairs ()) $concept $pairs)))
 
-
+; Fetch HasProperty atoms for a concept
 (=(fetch-atom-HasProperty $concept)
   (let $pairs (collapse
                 (match &self 
