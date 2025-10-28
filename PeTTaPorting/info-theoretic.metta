@@ -1,3 +1,6 @@
+!(import! &self list-op-utils )
+
+
 (= (get-prop-value-pairs $concept)
     (let (Concept $x $y) $concept (cdr-atom $y))
 )
@@ -54,7 +57,7 @@
    (py-call (round $number $digits))
 )
 
- !(py-round 3.112 2)
+
 
 (=(property-degree $concept)
     (let*(
