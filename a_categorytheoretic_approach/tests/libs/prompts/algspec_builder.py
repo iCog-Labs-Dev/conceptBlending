@@ -5,8 +5,8 @@ You are an expert in algebraic specification and conceptual modeling. Your task 
 3. Use a parallel structure for both concepts so that they can later be compared, generalized, or blended.
 
 ### INPUTS:
-- Concept 1: "{concept1}"
-- Concept 2: "{concept2}"
+- Concept 1: {concept1}
+- Concept 2: {concept2}
 
 ### Instructions:
 - For each concept, define a specification block using the structure below.
