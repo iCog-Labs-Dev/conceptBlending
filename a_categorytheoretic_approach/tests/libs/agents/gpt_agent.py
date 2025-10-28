@@ -2,6 +2,21 @@ from hyperon import *
 from .llmagent import ChatGPTAgent, GeminiAgent
 import threading
 from libs.prompts.algspec_builder import SPEC_PROMPT
+import re
+
+def format_concept(raw_string: str) -> str:
+    
+
+    cleaned = re.sub(r'[()]|"', '', raw_string).strip()
+    words = cleaned.split()
+    concept = words[0]
+    context = ' '.join(words[1:])
+    
+    return f"{concept}\n- {concept}_Context: [{context}]"
+
+
+
+
 
 def get_prompt(network: str) -> str:
     """Returns the appropriate prompt based on the network type."""
@@ -29,8 +44,9 @@ def prompt_agent(metta: MeTTa, agent: str, *args):
     
     prompt = get_prompt(agent)
     if agent == "algspec_builder":
-      concept1 = str(args[0])
-      concept2 = str(args[1])
+      concept1 =format_concept(str(args[0]))
+      concept2 = format_concept(str(args[1]))
+      
       formatted_prompt = prompt.format(concept1=concept1, concept2=concept2)
 
     elif agent == "generalization_helper":
