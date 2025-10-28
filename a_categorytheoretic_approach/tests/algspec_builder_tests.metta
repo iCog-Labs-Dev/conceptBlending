@@ -6,35 +6,46 @@
 
 ; Helper to reorder triplet
 (= (reorder-triplet $triplet)
-   (let ($rel $sub $obj) $triplet
-        ($sub $rel $obj)
+   (let (HasProperty $sub $obj) $triplet
+        ($sub HasProperty $obj)
     )     
 )
 
 ; Fetch RelatedTo atoms for a concept
-(=(fetch-atom-RelatedTo $concept) 
-     (match &self (, (RelatedTo $concept $target) (surfaceText (RelatedTo $concept $target) $text))
-     (if (== N/A $text) (reorder-triplet (RelatedTo $concept $target)) 
-     ($target $text))) 
-)
+(=(fetch-atom-IsA $concept)
+  (let $pairs (collapse
+                (match &self 
+                       (, (IsA $concept $target) 
+                          (surfaceText (IsA $concept $target) $text))
+                       (if (== N/A $text)
+                           (reorder-triplet (IsA $concept $target))
+                           ($target $text))))
+    (if (== $pairs ()) $concept $pairs)))
 
 
-; Fetch HasProperty atoms for a concept
-(=(fetch-atom-HasProperty $concept) 
-     (match &self (, (HasProperty $concept $target) (surfaceText (HasProperty $concept $target) $text)) 
-     
-     (if (== N/A $text) (reorder-triplet (HasProperty $concept $target)) 
-     ($target $text))
-)
-)
+(=(fetch-atom-RelatedTo $concept)
+  (let $pairs (collapse
+                (match &self 
+                       (, (RelatedTo $concept $target) 
+                          (surfaceText (RelatedTo $concept $target) $text))
+                       (if (== N/A $text)
+                           (reorder-triplet (RelatedTo $concept $target))
+                           ($target $text))))
+    (if (== $pairs ()) $concept $pairs)))
 
 
-; Fetch IsA atoms for a concept
-(=(fetch-atom-IsA $concept) 
-     (match &self (, (IsA $concept $target) (surfaceText (IsA $concept $target) $text)) 
-     
-     (if (== N/A $text) (reorder-triplet (IsA $concept $target)) ($target $text)))
-)
+(=(fetch-atom-HasProperty $concept)
+  (let $pairs (collapse
+                (match &self 
+                       (, (HasProperty $concept $target) 
+                          (surfaceText (HasProperty $concept $target) $text))
+                       (if (== N/A $text)
+                           (reorder-triplet (HasProperty $concept $target))
+                           ($target $text))))
+    (if (== $pairs ()) $concept $pairs)))
+
+
+
 
 
 ; Main fetch function to get all relevant atoms for a concept
