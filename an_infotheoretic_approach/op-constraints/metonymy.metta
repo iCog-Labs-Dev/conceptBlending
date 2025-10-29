@@ -55,10 +55,11 @@
     )
 )
 
+
 (=(is-abbreivation $term) 
     (let* (
-        ($relation (collapse(match &self (target (IsA $term $fullformed) (abbreviation for $x1 $x2 $x3)) ($x1 $x2 $x3))))
-        ($result (if (> (size-atom $relation) 0) True False))
+        ($relation (collapse(match &self (target (IsA $term $fullformed) $abbriv) (car-atom $abbriv))))
+        ($result (if (== (abbreviation) $relation) True False))
     )
     $result
     )
