@@ -102,21 +102,21 @@
     )
 )
 
-; (= (spiderman)
-;    (Concept Spider@Man
-;      (Property
-;        (web-creation 0.1)
-;        (intelligence 0.3)
-;        (strength 0.6)
-;        (mobility 0.8))))
+(= (spiderman)
+   (Concept Spider@Man
+     (Property
+       (web-creation 0.1)
+       (intelligence 0.3)
+       (strength 0.6)
+       (mobility 0.8))))
 
-; (= (batman)
-;    (Concept Bat@Man
-;      (Property
-;        (web-creation 0.2)
-;        (intelligence 0.4)
-;        (strength 0.5)
-;        (mobility 0.9))))
+(= (batman)
+   (Concept Bat@Man
+     (Property
+       (web-creation 0.2)
+       (intelligence 0.4)
+       (strength 0.5)
+       (mobility 0.9))))
 
 ; !(property-max (spiderman) (batman))
 
@@ -128,26 +128,51 @@
     )
 )
 
-(= (mu-hqblend $candidate-degrees $concept1 $concept2)
-    (let*(
-        ($properties-max (property-max $concept1 $concept2))
-        ($properties-min (property-min $concept1 $concept2))
-        ($mu-emer (mu-emergence $candidate-degrees $properties-max))
-        ($product-emer-min (property-product $mu-emer $properties-min))
-        ($product-emer-min-nums (get-values $product-emer-min))
-        ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
-        ($num-properties (size-atom $product-emer-min))
-        ($1-over-prop (/ 1.0 (decimal $num-properties)))
-        ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
-        (() (println! $1-over-prop-summation))
-    )
-        (min-atom ($1-over-prop-summation 1))
-    )
-)
+; ; ! (mu-emergence (0.5 0.3 0.2 0.9) (Concept Bat@Man
+; ;       (Property
+; ;         (web-creation 0.2)
+; ;         (intelligence 0.4)
+; ;         (strength 0.5)
+; ;         (mobility 0.9)))
+; ; )
 
-(=(sum-list $list)
-    (fold-flat $list 0 $acc $x (+ $acc $x))
-)
+
+
+; (= (mu-hqblend $candidate-degrees $concept1 $concept2)
+;     (let*(
+;         ($properties-max (property-max $concept1 $concept2))
+;         ($properties-min (property-min $concept1 $concept2))
+;         ($mu-emer (mu-emergence $candidate-degrees $properties-max))
+;         ($product-emer-min (property-product $mu-emer $properties-min))
+;         ($product-emer-min-nums (get-values $product-emer-min))
+;         ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
+;         ($num-properties (size-atom $product-emer-min))
+;         ($1-over-prop (/ 1.0 (decimal $num-properties)))
+;         ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
+;         (() (println! ('Printing over'$1-over-prop-summation)))
+;     )
+;         (min-atom ($1-over-prop-summation 1))
+;     )
+; )
+
+; !(mu-hqblend (0.5 0.3 0.2 0.9)
+;     (Concept Spider@Man
+;       (Property
+;         (web-creation 0.1)
+;         (intelligence 0.3)
+;         (strength 0.6)
+;         (mobility 0.8)))
+;     (Concept Bat@Man
+;       (Property
+;         (web-creation 0.2)
+;         (intelligence 0.4)
+;         (strength 0.5)
+;         (mobility 0.9)))
+; )
+
+; (=(sum-list $list)
+;     (fold-flat $list 0 $acc $x (+ $acc $x))
+; )
 
 
 ; (=(log2 $num) (log 2 $num))
