@@ -1,5 +1,3 @@
-!(import! &self ../prompts/double_scope_network)
-
 ;Empty Python dictionary
 (= (emptydict)
    (py-call (dict)))
@@ -23,7 +21,6 @@
    (let* (
           ; Import google.genai
           ($genai (py-call (importlib.import_module "google.genai")))
-          ($_ (println! $genai))
 
           ; Get the Client class
           ($Client (py-call (getattr $genai "Client")))
@@ -35,23 +32,18 @@
 
           ; Instantiate the client → client = genai.Client(api_key=...)
           ($client (py-call (builtins.apply_kwargs $Client $confargs)))
-          ($_ (println! $client))
 
           ; Prepare model & prompt arguments
           ($kwargs (py-call (eval (py-str ("{'model': 'gemini-2.5-flash', 'contents':\"" $prompt "\"}"))
                                   (emptydict)
                                   (emptydict))))
-         ($_ (println! $kwargs))
           ; Call client.models.generate_text(**kwargs)
           ($models (py-call (getattr $client "models")))
           ($generate (py-call (getattr $models "generate_content")))
-          ($_ (println! $generate))
           ($resp (py-call (builtins.apply_kwargs $generate $kwargs)))
 
           ; Extract text
           ($text (py-call (getattr $resp "text"))))
          $text))
 
-!(useGenAI (py-str (double-scope-prompt bat@man (1 1 1 1 1 1 1 1))))
-
-; !(fo)
+; !(useGenAI (py-str (double-scope-prompt bat@man (1 1 1 1 1 1 1 1))))
