@@ -1,13 +1,16 @@
 !(import! &self libs)
+!(load-ascii &self atom/.metta)
 
 
 
 
 ; Helper to reorder triplet
 (= (reorder-triplet $triplet)
-   (let (HasProperty $sub $obj) $triplet
-        ($sub HasProperty $obj)
-    )     
+   (match $triplet
+      ((IsA $sub $obj) ($sub IsA $obj))
+      ((RelatedTo $sub $obj) ($sub RelatedTo $obj))
+      ((HasProperty $sub $obj) ($sub HasProperty $obj))
+      ($triplet))
 )
 
 ; Fetch IsA atoms for a concept
@@ -16,7 +19,7 @@
                 (match &self 
                        (, (IsA $concept $target) 
                           (surfaceText (IsA $concept $target) $text))
-                       (if (== N/A $text)
+                       (if (== NA $text)
                            (reorder-triplet (IsA $concept $target))
                            ($target $text))))
     (if (== $pairs ()) $concept $pairs)))
@@ -27,7 +30,7 @@
                 (match &self 
                        (, (RelatedTo $concept $target) 
                           (surfaceText (RelatedTo $concept $target) $text))
-                       (if (== N/A $text)
+                       (if (== NA $text)
                            (reorder-triplet (RelatedTo $concept $target))
                            ($target $text))))
     (if (== $pairs ()) $concept $pairs)))
@@ -38,7 +41,7 @@
                 (match &self 
                        (, (HasProperty $concept $target) 
                           (surfaceText (HasProperty $concept $target) $text))
-                       (if (== N/A $text)
+                       (if (== NA $text)
                            (reorder-triplet (HasProperty $concept $target))
                            ($target $text))))
     (if (== $pairs ()) $concept $pairs)))
@@ -54,17 +57,16 @@
 )
 
 ; GPT-based Algspec Builder
+
 (=(algspec_builder $concept1 $concept2)
      (let ($context1 $context2) ((main-fetch $concept1) (main-fetch $concept2))
-
-     (gpt_algspec_builder ($concept1 ($context1)) ($concept2 ($context2))))
-    
-
-     
+        (let ($x $y) (collapse (context_preprocessing ($concept1 $context1) ($concept2 $context2)))
+           (gpt_algspec_builder $x $y)))
 )
 
 
 
 
-!(algspec_builder House Boat)
+
+!(algspec_builder Car Plane)
 
