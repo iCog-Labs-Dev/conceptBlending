@@ -1,5 +1,5 @@
 !(import! &self libs)
-!(load-ascii &self atom/.metta)
+
 
 
 
@@ -68,5 +68,5 @@
 
 
 
-!(algspec_builder Car Plane)
+!(algspec_builder yacht ark)
 
