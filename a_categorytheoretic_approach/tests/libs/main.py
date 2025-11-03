@@ -1,13 +1,28 @@
-import os, yaml
+import os
 from hyperon import *
 from hyperon.ext import register_atoms
-from .agents import *
+from .agents import context_preprocessing_agent, prompt_agent
 
-
-
-# Define networks and their corresponding function names
-
+# Configuration
 AGENTS = ["algspec_builder"]
+
+
+@register_atoms(pass_metta=True)
+def context_preprocessing_helper(metta):
+    """
+    Register the context_preprocessing operation atom.
+    
+    This operation takes two concept atoms and generates Concept atoms with
+    Context information using LLM preprocessing.
+    """
+    processed_context = OperationAtom(
+        'context_preprocessing',
+        lambda *args: context_preprocessing_agent(metta, *args),
+        [AtomType.ATOM, AtomType.ATOM, "Expression"],
+        unwrap=False
+    )
+    return {'context_preprocessing': processed_context}
+
 
 @register_atoms(pass_metta=True)
 def grounded_atoms(metta):
