@@ -6,9 +6,9 @@ You are an expert in algebraic specification and conceptual modeling. Your task 
 
 ## INPUT CONCEPTS:
 - Concept 1: {concept1} (This is the concept name)
-- Context 1: {context1} (This is a seed phrase to guide disambiguation)
+- Context 1: {context1} (This is a seed context phrase of {concept1} to guide disambiguation)
 - Concept 2: {concept2} (This is the concept name)
-- Context 2: {context2} (This is a seed phrase to guide disambiguation)
+- Context 2: {context2} (This is a seed context phrase of {concept2} to guide disambiguation)
 ### Instructions:
 - For each concept, define a specification block using the structure below. 
 - Use concise and meaningful names for sorts, operations, and predicates relevant to the concept based on the context provided.
@@ -66,7 +66,7 @@ Expected Output:
 
 ### Output Rules:
 - DO NOT include quotes, backticks, explanations, or markdown.
-- Return only the two (Concept ...) expressions.
+- Return strictly only the two (Concept ...) expressions.
 """
 
 Context_AGENT_PROMPT="""
@@ -81,14 +81,14 @@ For `Concept 1: Man` (Context: 'a complex individual') and `Concept 2: Bat` (Con
 
 ## INPUT CONCEPTS:
 - Concept 1: {concept1} (This is the concept name)
-- Context 1: {context1} (This is a seed phrase to guide disambiguation)
+- Context 1: {context1} (This is a seed context phrase of {concept1} to guide disambiguation)
 - Concept 2: {concept2} (This is the concept name)
-- Context 2: {context2} (This is a seed phrase to guide disambiguation)
+- Context 2: {context2} (This is a seed context phrase of {concept2} to guide disambiguation)
 
 ## REQUIREMENTS:
-1.  **Analyze Context:** Use the provided Contexts: `{context1}` and `{context2}` to disambiguate `{concept1}` and `{concept2}` and select the most semantically coherent interpretation.
+1.  **Analyze Context:** Use the provided Contexts: `{context1}` and `{context2}` to disambiguate `{concept1}` and `{concept2}` and select the most semantically coherent interpretation to each other.
 2.  **Generate Broad Contexts:** Internally generate a wide list of descriptive contexts for each concept based on the chosen interpretation.
-3.  **Select Strictly Top 8 not below or above 8:** From your internal list, select **exactly 8** diverse, meaningful, and salient context descriptions for each concept.
+3.  **Select Strictly Top 8 not below or above 8:** From your internal list, select **exactly 8** diverse, meaningful, and salient context descriptions which connects and makes the to concept coherant.
 4.  **Capture Diverse Aspects:** The 8 descriptions must capture a mix of:
     * **Essential Semantic Properties:** (e.g., 'is a mammal', 'is sentient')
     * **Functional/Semantic Roles:** (e.g., 'navigates using echolocation', 'acts as a vigilante')
@@ -98,9 +98,9 @@ For `Concept 1: Man` (Context: 'a complex individual') and `Concept 2: Bat` (Con
     * **Usage/Contextual Patterns:** (e.g., 'emerges at dusk', 'operates in darkness')
 
 ## OUTPUT FORMAT:
-Return ONLY the two S-expression structures.
+Return ONLY the one S-expression structures.
 
-(Concept {concept1}
+
 (Context
   (descriptive context phrase 1)
   (descriptive context phrase 2)
@@ -111,23 +111,10 @@ Return ONLY the two S-expression structures.
   (descriptive context phrase 7)
   (descriptive context phrase 8)
 )
-)
 
-(Concept {concept2}
-(Context
-  (descriptive context phrase 1)
-  (descriptive context phrase 2)
-  (descriptive context phrase 3)
-  (descriptive context phrase 4)
-  (descriptive context phrase 5)
-  (descriptive context phrase 6)
-  (descriptive context phrase 7)
-  (descriptive context phrase 8)
-)
-)
 
 ## CRITICAL RULES:
-- You MUST return ONLY the two (Concept ...) S-expressions.
+- You MUST return ONLY the one (Context ...) S-expressions.
 - Do NOT include any explanations, apologies, or markdown formatting (like ```) in your output.
 - Each context phrase must be a complete, meaningful description.
 - Ensure the output uses valid S-expression syntax.

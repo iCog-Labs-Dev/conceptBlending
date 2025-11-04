@@ -43,14 +43,11 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     Returns:
         List of parsed Concept atoms with Context information
     """
+    
     concept1_name, context1 = _extract_concept_and_context(str(args[0]))
     concept2_name, context2 = _extract_concept_and_context(str(args[1]))
- 
-
   
   
-                
-
     formatted_prompt = Context_AGENT_PROMPT.format(
             concept1=concept1_name,
             concept2=concept2_name,
@@ -64,8 +61,6 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     
     # Parse LLM response into MeTTa atoms
     parsed_atoms = metta.parse_all(response)
-    
-    
     
     return parsed_atoms
 
@@ -96,15 +91,12 @@ def _extract_concept_name(concept_atom_str: str) -> str:
     """
     if not concept_atom_str:
         return ""
-    
-    # Try to match "Concept <name>" pattern
-    
 
-    match = re.search(r'Concept\s+(\w+)(\s+\(Context\s+(.*))?', concept_atom_str)
+    match = re.search(r'(\w+)(\s+\(Context\s+(.*))?', concept_atom_str)
 
     if match:
         name = match.group(1)  #single name
-        full_context = match.group(2)  # ' (Context (is a type of land vehicle)... everything to the end >' (or None if no context)
+        full_context = match.group(2) 
         print(f"Name: {name}")
         print(f"full Context: {full_context}")
         return name, full_context
@@ -126,6 +118,8 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
         
     Returns:
         List of parsed Concept atoms with algebraic specifications
+
+        
     """
     prompt_template = get_prompt(agent_type)
     
