@@ -225,78 +225,70 @@
 
 ; !(test (compute-entropy (0.5 0.5)) 1.0)
 
-; (=(unify $a $b $expr $fail)
-;     (if (== $a $b) $expr $fail))
-
-; !(test (unify 1 1 "matched" "failed") "matched")
 
 (= (joint-entropy-pairwise $pi $pj $mode)
-    (function
-        (chain (unify $mode min (chain (min-atom($pi $pj)) $pp11 $pp11) (chain (* $pi $pj) $pp11 $pp11)) $p11
-            (chain (collapse(superpose(
-                (chain (- $pi $p11) $p10 $p10)
-                (chain (- $pj $p11) $p01 $p01)
-                (chain (+ $p11 (- (- 1 $pi) $pj)) $p00 $p00)
-                ))) $list
-                (chain (custom-cons-atom $p11 $list) $flist
-                    (chain (compute-entropy $flist) $H
-                        (return_value $H)
+        (let $p11 (if (== $mode min) (let $pp11 (min-atom($pi $pj))  $pp11) (let $pp11 (* $pi $pj) $pp11)) 
+            (let $list (collapse(superpose(
+                (let $p10 (- $pi $p11)  $p10)
+                (let $p01 (- $pj $p11)  $p01)
+                (let $p00 (+ $p11 (- (- 1 $pi) $pj))  $p00)
+                ))) 
+                (let $flist (cons-atom $p11 $list) 
+                    (let $H (compute-entropy $flist) 
+                        $H
                     )
                 )
             )
         )
-    )
 )
 
 (= (joint-entropy-compute-helper $i $list $mode)
-    (collapse(joint-entropy-pairwise $i (superpose $list) $mode))
+    (collapse (joint-entropy-pairwise $i (superpose $list) $mode))
 )
 
 ;  !(joint-entropy-compute-helper 0.9 (0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
 ; !(joint-entropy-compute-helper 0.9 (0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
 
-(= (joint-entropy-compute $candidate $mode)
-    (function
-        (chain (decons-atom $candidate) $ht
-            (unify ($head $tail) $ht
-                (chain (unify $tail () () (joint-entropy-compute-helper $head $tail $mode)) $jentropy
-                    (chain (eval (joint-entropy-compute $tail $mode)) $tentropy
-                        (chain (custom-union-atom1 $jentropy $tentropy) $result (return_value $result))
-                    )
-                )
-                (return_value ())
-            )
-        )
+(=(joint-entropy-compute $candidate $mode)
+    (if (== $candidate ()) () (let* (
+          ($head (car-atom $candidate))
+          ($tail (cdr-atom $candidate))
+          ($jentropy (if (== $tail ()) () (joint-entropy-compute-helper $head $tail $mode)))
+          ($tentropy (eval (joint-entropy-compute $tail $mode)))
+          ($result (custom-union-atom1 $jentropy $tentropy))
     )
+    $result
+    ))
 )
 
-; (= (total-correlation-entropy $candidate $mode)
-;     (function
-;         (chain (map-atom $candidate $elem (binary-shannon-entropy $elem)) $indiv-entropy
-;             (chain (sum-list $indiv-entropy) $indiv-entropy-sum
-;                 (unify $indiv-entropy-sum 0 (return 0.0)
-;                     (chain (joint-entropy-compute $candidate $mode) $pairwise-joint-entropy
-;                         (chain (sum-list $pairwise-joint-entropy) $pairwise-joint-entropy-sum
-;                             (chain (size-atom $candidate) $len
-;                                 (chain (/ (* $pairwise-joint-entropy-sum 2) (* $len (- $len 1))) $average-joint-entropy
-;                                     (chain (- $indiv-entropy-sum $average-joint-entropy) $total-correlation
-;                                             (chain (/ $total-correlation $indiv-entropy-sum) $normalized-correlation (return $normalized-correlation)                                       
-;                                         )
-;                                     )
-;                                 )
-;                             )
-;                         )
-;                     )
-;                 )
-;             )
-;         )
-;     )
-; )
+; !(joint-entropy-compute (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
+; !(joint-entropy-pairwise 0.9 0.9 min) ; (0.46899559358928117)
+; !(joint-entropy-compute-helper 0.9 (0.9 0.0 0.8 0.2 0.9 0.7 0.7) min) ; ((0.46899559358928117 0.46899559358928117 0.9219280948873622 1.1567796494470395 0.46899559358928117 1.1567796494470395 1.1567796494470395))
 
-; !(total-correlation-entropy (0.9 0.0 0.8 0.2 0.9 0.7 ) min)
+(= (total-correlation-entropy $candidate $mode)
+        (let (map-atom $candidate $elem (binary-shannon-entropy $elem)) $indiv-entropy
+            (let $indiv-entropy-sum (sum-list $indiv-entropy)
+                (if (== $indiv-entropy-sum 0) 0.0
+                    (let $pairwise-joint-entropy (joint-entropy-compute $candidate $mode) 
+                        (let $pairwise-joint-entropy-sum (sum-list $pairwise-joint-entropy) 
+                            (let $len (size-atom $candidate) 
+                                (let $average-joint-entropy (/ (* $pairwise-joint-entropy-sum 2) (* $len (- $len 1))) 
+                                    (let $total-correlation (- $indiv-entropy-sum $average-joint-entropy) 
+                                            (let $normalized-correlation (/ $total-correlation $indiv-entropy-sum)   $normalized-correlation                                    
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+)
 
+ !(total-correlation-entropy (0.9 0.0 0.8 0.2 0.9 0.7 ) min)
 
-; (= (Alpha) 0.3)
+(= (Alpha) 0.3)
 
 ; (= (coherence $props $degrees)
 ;     (let $tc (total-correlation-entropy $degrees min)
