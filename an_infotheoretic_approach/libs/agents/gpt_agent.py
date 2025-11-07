@@ -1,29 +1,17 @@
 from hyperon import *
 from .llmagent import ChatGPTAgent, GeminiAgent
 import threading
-# from libs.prompts.network_selector import NETWORK_SELECTOR_PROMPT
-# from libs.prompts.simplex_network import SIMPLEX_PROMPT
-# from libs.prompts.mirror_network import MIRROR_PROMPT
-# from libs.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
-# from libs.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
-# from libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
-# from libs.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
-# from libs.prompts.algebric_specification import SPEC_PROMPT
-# from libs.prompts.context_preprocessing import CONTEXT_PREPROCESSING_PROMPT
-# from libs.prompts.generalization import GENERALIZATION_PROMPT
-# from libs.agents.conceptnet_adapter import get_conceptnet_edges
-
-from an_infotheoretic_approach.libs.prompts.network_selector import NETWORK_SELECTOR_PROMPT
-from an_infotheoretic_approach.libs.prompts.simplex_network import SIMPLEX_PROMPT
-from an_infotheoretic_approach.libs.prompts.mirror_network import MIRROR_PROMPT
-from an_infotheoretic_approach.libs.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
-from an_infotheoretic_approach.libs.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
-from an_infotheoretic_approach.libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
-from an_infotheoretic_approach.libs.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
-from an_infotheoretic_approach.libs.prompts.algebric_specification import SPEC_PROMPT
-from an_infotheoretic_approach.libs.prompts.context_preprocessing import CONTEXT_PREPROCESSING_PROMPT
-from an_infotheoretic_approach.libs.prompts.generalization import GENERALIZATION_PROMPT
-from an_infotheoretic_approach.libs.agents.conceptnet_adapter import get_conceptnet_edges
+from libs.prompts.network_selector import NETWORK_SELECTOR_PROMPT
+from libs.prompts.simplex_network import SIMPLEX_PROMPT
+from libs.prompts.mirror_network import MIRROR_PROMPT
+from libs.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
+from libs.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
+from libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
+from libs.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
+from libs.prompts.algebric_specification import SPEC_PROMPT
+from libs.prompts.context_preprocessing import CONTEXT_PREPROCESSING_PROMPT
+from libs.prompts.generalization import GENERALIZATION_PROMPT
+from libs.agents.conceptnet_adapter import get_conceptnet_edges
 import re
 
 def context_preprocessing_agent(metta: MeTTa, *args):
