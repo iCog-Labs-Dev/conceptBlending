@@ -93,8 +93,6 @@ def _extract_concept_name(concept_atom_str: str) -> str:
     if match:
         name = match.group(1)  #single name
         full_context = match.group(2) 
-        print(f"Name: {name}")
-        print(f"full Context: {full_context}")
         return name, full_context
     else:
         print("No match found.")

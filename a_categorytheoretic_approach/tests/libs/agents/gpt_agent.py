@@ -46,8 +46,6 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     
     concept1_name, context1 = _extract_concept_and_context(str(args[0]))
     concept2_name, context2 = _extract_concept_and_context(str(args[1]))
-    print('context1',context1)
-    print('context2',context2)
   
     
     formatted_prompt = CONTEXT_PREPROCESSING_PROMPT.format(
@@ -100,8 +98,6 @@ def _extract_concept_name(concept_atom_str: str) -> str:
     if match:
         name = match.group(1)  #single name
         full_context = match.group(2) 
-        print(f"Name: {name}")
-        print(f"full Context: {full_context}")
         return name, full_context
     else:
         print("No match found.")
@@ -131,7 +127,6 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
         concept1_name,context = _extract_concept_name(str(args[0]))
         concept2_name,_ = _extract_concept_name(str(args[1]))
 
-        print('name',concept1_name)
         
             
         formatted_prompt = prompt_template.format(
