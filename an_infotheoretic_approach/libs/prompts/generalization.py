@@ -1,4 +1,4 @@
-LCG_PROMPT = """
+GENERALIZATION_PROMPT = """
 You are an expert in algebraic specification, formal methods, and computational logic, specializing in **anti-unification (Least Common Generalization - LCG)**.
 
 Your task is to compute the precise Least Common Generalization (LCG) of two given algebraic specifications. The LCG must preserve only the structural and semantic components shared between both concepts, while generalizing all differing components as minimally as possible.
