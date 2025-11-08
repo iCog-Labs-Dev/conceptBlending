@@ -1,18 +1,44 @@
 from hyperon import *
 from .llmagent import ChatGPTAgent, GeminiAgent
 import threading
+import re
 from libs.prompts.network_selector import NETWORK_SELECTOR_PROMPT
 from libs.prompts.simplex_network import SIMPLEX_PROMPT
 from libs.prompts.mirror_network import MIRROR_PROMPT
 from libs.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
 from libs.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
-from libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
 from libs.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
-from libs.prompts.algebric_specification import SPEC_PROMPT
-from libs.prompts.context_preprocessing import CONTEXT_PREPROCESSING_PROMPT
-from libs.prompts.generalization import GENERALIZATION_PROMPT
+from libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts.context_preprocessing import CONTEXT_PREPROCESSING_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts.algspec_builder import SPEC_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts.generalization import GENERALIZATION_PROMPT
 from libs.agents.conceptnet_adapter import get_conceptnet_edges
-import re
+
+
+def _extract_concept_and_context(concept_str: str) -> tuple[str, str]:
+    """
+    Extract concept name and context from a MeTTa atom string representation.
+    
+    Args:
+        concept_str: String representation of a concept atom
+        
+    Returns:
+        Tuple of (concept_name, context_string)
+    """
+    if not concept_str:
+        return "", "no context provided"
+    
+    cleaned = re.sub(r'[()]|"', '', concept_str).strip()
+    parts = cleaned.split()
+    
+    if not parts:
+        return "", "no context provided"
+    
+    concept_name = parts[0]
+    context = ' '.join(parts[1:]) if len(parts) > 1 else "no context provided"
+    
+    return concept_name, context
+
 
 def context_preprocessing_agent(metta: MeTTa, *args):
     """
@@ -33,12 +59,13 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     concept2_name, context2 = _extract_concept_and_context(str(args[1]))
   
   
-    formatted_prompt = CONTEXT_PREPROCESSING_PROMPT.format(
+    formatted_prompt =CONTEXT_PREPROCESSING_PROMPT.format(
             concept1=concept1_name,
             concept2=concept2_name,
             context1=context1,
             context2=context2
         )
+    print(formatted_prompt)
     # Generate Concept atoms using LLM
     llm_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
@@ -48,6 +75,27 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     parsed_atoms = metta.parse_all(response)
     
     return parsed_atoms
+def _extract_concept_name(concept_atom_str: str) -> str:
+    """
+    Extract concept name from a Concept atom string representation.
+    
+    Args:
+        concept_atom_str: String representation like "(Concept name (Context ...))"
+        
+    Returns:
+        Extracted concept name
+    """
+    if not concept_atom_str:
+        return ""
+
+    match = re.search(r'(\w+)(\s+\(Context\s+(.*))?', concept_atom_str)
+
+    if match:
+        name = match.group(1)  #single name
+        full_context = match.group(2) 
+        return name, full_context
+    else:
+        print("No match found.")
 
 def get_prompt(network: str) -> str:
     """Returns the appropriate prompt based on the network type."""
@@ -59,11 +107,16 @@ def get_prompt(network: str) -> str:
         "vector": VECTOR_EXTRACTION_PROMPT,
         "vital_relation": VITAL_RELATION_EXTRACTION_PROMPT,
         "network_selector": NETWORK_SELECTOR_PROMPT,
-        "context_preprocessing": CONTEXT_PREPROCESSING_PROMPT,
-        "algspec_builder": SPEC_PROMPT,
-        "generalization_helper": GENERALIZATION_PROMPT
+        
     }
     return prompts.get(network, "Error")
+
+def fetch_context(concept):
+    edges = get_conceptnet_edges(concept)
+    context = []
+    for edge in edges:
+        context.append(edge["surftext"].replace("[[", "").replace("]]", ""))
+    return context
 
 def prompt_agent(metta: MeTTa, network: str, *args):
     """
@@ -84,18 +137,22 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     
     prompt = get_prompt(network)
     if network == "algspec_builder":
-        # Extract concept names from Concept atoms
-        concept1_name,context1 = _extract_concept_name(str(args[0]))
-        concept2_name,context2 = _extract_concept_name(str(args[1]))
-
+        concept1_name,context = _extract_concept_name(str(args[0]))
+        concept2_name,_ = _extract_concept_name(str(args[1]))
         
-        
-            
-        formatted_prompt = prompt.format(
+        formatted_prompt = SPEC_PROMPT.format(
             concept1=concept1_name,
             concept2=concept2_name,
-            context1=context1,
-            context2=context2
+            context=context
+            
+        )
+    elif network == "generalization_helper":
+        concept1_name, context = _extract_concept_name(str(args[0]))
+        concept2_name, _ = _extract_concept_name(str(args[1]))
+        formatted_prompt = GENERALIZATION_PROMPT.format(
+            concept1=concept1_name,
+            concept2=concept2_name,
+            context=context
         )
     elif network == "network_selector":
         concept1 = str(args[0])
@@ -124,60 +181,3 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     parsed_atoms = metta.parse_all(answer)
     # Always return a list of atoms.
     return parsed_atoms
-
-
-def _extract_concept_and_context(concept_str: str) -> tuple[str, str]:
-    """
-    Extract concept name and context from a MeTTa atom string representation.
-    
-    Args:
-        concept_str: String representation of a concept atom
-        
-    Returns:
-        Tuple of (concept_name, context_string)
-    """
-    if not concept_str:
-        return "", "no context provided"
-    
-    cleaned = re.sub(r'[()]|"', '', concept_str).strip()
-    parts = cleaned.split()
-    
-    if not parts:
-        return "", "no context provided"
-    
-    concept_name = parts[0]
-    context = ' '.join(parts[1:]) if len(parts) > 1 else "no context provided"
-    
-    return concept_name, context
-def _extract_concept_name(concept_atom_str: str) -> str:
-    """
-    Extract concept name from a Concept atom string representation.
-    
-    Args:
-        concept_atom_str: String representation like "(Concept name (Context ...))"
-        
-    Returns:
-        Extracted concept name
-    """
-    if not concept_atom_str:
-        return ""
-
-    match = re.search(r'(\w+)(\s+\(Context\s+(.*))?', concept_atom_str)
-
-    if match:
-        name = match.group(1)  #single name
-        full_context = match.group(2) 
-        print(f"Name: {name}")
-        print(f"full Context: {full_context}")
-        return name, full_context
-    else:
-        print("No match found.")
-
-
-def fetch_context(concept):
-    edges = get_conceptnet_edges(concept)
-    context = []
-    for edge in edges:
-        context.append(edge["surftext"].replace("[[", "").replace("]]", ""))
-    return context
-
