@@ -15,6 +15,7 @@ def context_preprocessing_helper(metta):
     This operation takes two concept atoms and generates Concept atoms with
     Context information using LLM preprocessing.
     """
+    #to avoid circular import error
     from an_infotheoretic_approach.libs.agents import context_preprocessing_agent
     processed_context = OperationAtom(
         'context_preprocessing',
