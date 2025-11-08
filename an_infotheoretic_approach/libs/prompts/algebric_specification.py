@@ -7,9 +7,8 @@ You are an expert in algebraic specification and conceptual modeling. Your task 
 
 ## INPUT CONCEPTS:
 - Concept 1: {concept1} (This is the concept name)
-- Context 1: {context1} (This is a seed context phrase of {concept1} to guide disambiguation)
 - Concept 2: {concept2} (This is the concept name)
-- Context 2: {context2} (This is a seed context phrase of {concept2} to guide disambiguation)
+- Context 2: {context} (This is a seed choherant context phrase of both {concept1} and {concept2} to guide disambiguation)
 ### Instructions:
 - For each concept, define a specification block using the structure below. 
 - Use concise and meaningful names for sorts, operations, and predicates relevant to the concept based on the context provided.
