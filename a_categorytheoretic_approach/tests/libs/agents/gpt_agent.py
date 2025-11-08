@@ -1,6 +1,6 @@
 from hyperon import *
 from .llmagent import GeminiAgent
-from libs.prompts.algspec_builder import GENERALIZATION_PROMPT, SPEC_PROMPT,Context_AGENT_PROMPT
+from libs.prompts import GENERALIZATION_PROMPT, SPEC_PROMPT, CONTEXT_PREPROCESSING_PROMPT
 import re
 
 
@@ -46,9 +46,11 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     
     concept1_name, context1 = _extract_concept_and_context(str(args[0]))
     concept2_name, context2 = _extract_concept_and_context(str(args[1]))
+    print('context1',context1)
+    print('context2',context2)
   
-  
-    formatted_prompt = Context_AGENT_PROMPT.format(
+    
+    formatted_prompt = CONTEXT_PREPROCESSING_PROMPT.format(
             concept1=concept1_name,
             concept2=concept2_name,
             context1=context1,
@@ -129,7 +131,7 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
         concept1_name,context = _extract_concept_name(str(args[0]))
         concept2_name,_ = _extract_concept_name(str(args[1]))
 
-        
+        print('name',concept1_name)
         
             
         formatted_prompt = prompt_template.format(

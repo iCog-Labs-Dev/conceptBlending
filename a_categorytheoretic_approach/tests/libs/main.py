@@ -1,8 +1,9 @@
 import os
 from hyperon import *
 from hyperon.ext import register_atoms
-from an_infotheoretic_approach.libs.agents.gpt_agent import context_preprocessing_agent, prompt_agent
-
+from .agents import GeminiAgent,ChatGPTAgent
+#from an_infotheoretic_approach.libs.agents.gpt_agent import context_preprocessing_agent, prompt_agent
+from .agents import context_preprocessing_agent,prompt_agent
 # Configuration
 AGENTS = ["algspec_builder","generalization_helper"]
 
