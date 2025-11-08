@@ -1,19 +1,18 @@
 from hyperon import *
 from .llmagent import ChatGPTAgent, GeminiAgent
 import threading
-from libs.prompts.network_selector import NETWORK_SELECTOR_PROMPT
-from libs.prompts.simplex_network import SIMPLEX_PROMPT
-from libs.prompts.mirror_network import MIRROR_PROMPT
-from libs.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
-from libs.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
-from libs.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
-from libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
+import re
+from an_infotheoretic_approach.libs.prompts.network_selector import NETWORK_SELECTOR_PROMPT
+from an_infotheoretic_approach.libs.prompts.simplex_network import SIMPLEX_PROMPT
+from an_infotheoretic_approach.libs.prompts.mirror_network import MIRROR_PROMPT
+from an_infotheoretic_approach.libs.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
+from an_infotheoretic_approach.libs.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
+from an_infotheoretic_approach.libs.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
+from an_infotheoretic_approach.libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
 from a_categorytheoretic_approach.tests.libs.prompts.context_preprocessing import CONTEXT_PREPROCESSING_PROMPT
 from a_categorytheoretic_approach.tests.libs.prompts.algspec_builder import SPEC_PROMPT
 from a_categorytheoretic_approach.tests.libs.prompts.generalization import GENERALIZATION_PROMPT
-import re
-from libs.agents.conceptnet_adapter import get_conceptnet_edges
-
+from an_infotheoretic_approach.libs.agents.conceptnet_adapter import get_conceptnet_edges
 
 
 def _extract_concept_and_context(concept_str: str) -> tuple[str, str]:
@@ -66,6 +65,7 @@ def context_preprocessing_agent(metta: MeTTa, *args):
             context1=context1,
             context2=context2
         )
+    print(formatted_prompt)
     # Generate Concept atoms using LLM
     llm_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
@@ -109,8 +109,6 @@ def get_prompt(network: str) -> str:
         "vector": VECTOR_EXTRACTION_PROMPT,
         "vital_relation": VITAL_RELATION_EXTRACTION_PROMPT,
         "network_selector": NETWORK_SELECTOR_PROMPT,
-        "algspec_builder": SPEC_PROMPT,
-        "generalization_helper": GENERALIZATION_PROMPT
         
     }
     return prompts.get(network, "Error")
@@ -147,7 +145,7 @@ def prompt_agent(metta: MeTTa, network: str, *args):
         
         
             
-        formatted_prompt = prompt.format(
+        formatted_prompt = SPEC_PROMPT.format(
             concept1=concept1_name,
             concept2=concept2_name,
             context=context
@@ -156,7 +154,7 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     elif network == "generalization_helper":
         concept1_name, context = _extract_concept_name(str(args[0]))
         concept2_name, _ = _extract_concept_name(str(args[1]))
-        formatted_prompt = prompt.format(
+        formatted_prompt = GENERALIZATION_PROMPT.format(
             concept1=concept1_name,
             concept2=concept2_name,
             context=context
