@@ -8,7 +8,96 @@ from libs.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
 from libs.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
 from libs.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
 from libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts.context_preprocessing import CONTEXT_PREPROCESSING_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts.algspec_builder import SPEC_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts.generalization import GENERALIZATION_PROMPT
+import re
 from libs.agents.conceptnet_adapter import get_conceptnet_edges
+
+
+
+def _extract_concept_and_context(concept_str: str) -> tuple[str, str]:
+    """
+    Extract concept name and context from a MeTTa atom string representation.
+    
+    Args:
+        concept_str: String representation of a concept atom
+        
+    Returns:
+        Tuple of (concept_name, context_string)
+    """
+    if not concept_str:
+        return "", "no context provided"
+    
+    cleaned = re.sub(r'[()]|"', '', concept_str).strip()
+    parts = cleaned.split()
+    
+    if not parts:
+        return "", "no context provided"
+    
+    concept_name = parts[0]
+    context = ' '.join(parts[1:]) if len(parts) > 1 else "no context provided"
+    
+    return concept_name, context
+
+
+def context_preprocessing_agent(metta: MeTTa, *args):
+    """
+    Preprocesses concepts by generating contextualized Concept atoms with 8 context descriptions.
+    
+    Uses LLM to analyze concepts and generate structured Concept atoms with Context information
+    that will be used for algebraic specification generation.
+    
+    Args:
+        metta: MeTTa interpreter instance
+        *args: Two concept atoms (concept_name context_data)
+        
+    Returns:
+        List of parsed Concept atoms with Context information
+    """
+    
+    concept1_name, context1 = _extract_concept_and_context(str(args[0]))
+    concept2_name, context2 = _extract_concept_and_context(str(args[1]))
+  
+  
+    formatted_prompt =CONTEXT_PREPROCESSING_PROMPT.format(
+            concept1=concept1_name,
+            concept2=concept2_name,
+            context1=context1,
+            context2=context2
+        )
+    # Generate Concept atoms using LLM
+    llm_agent = GeminiAgent()
+    messages = [{"role": "user", "content": formatted_prompt}]
+    response = llm_agent(messages, tools=[])
+    
+    # Parse LLM response into MeTTa atoms
+    parsed_atoms = metta.parse_all(response)
+    
+    return parsed_atoms
+def _extract_concept_name(concept_atom_str: str) -> str:
+    """
+    Extract concept name from a Concept atom string representation.
+    
+    Args:
+        concept_atom_str: String representation like "(Concept name (Context ...))"
+        
+    Returns:
+        Extracted concept name
+    """
+    if not concept_atom_str:
+        return ""
+
+    match = re.search(r'(\w+)(\s+\(Context\s+(.*))?', concept_atom_str)
+
+    if match:
+        name = match.group(1)  #single name
+        full_context = match.group(2) 
+        print(f"Name: {name}")
+        print(f"full Context: {full_context}")
+        return name, full_context
+    else:
+        print("No match found.")
 
 def get_prompt(network: str) -> str:
     """Returns the appropriate prompt based on the network type."""
@@ -19,7 +108,10 @@ def get_prompt(network: str) -> str:
         "double": DOUBLE_SCOPE_PROMPT,
         "vector": VECTOR_EXTRACTION_PROMPT,
         "vital_relation": VITAL_RELATION_EXTRACTION_PROMPT,
-        "network_selector": NETWORK_SELECTOR_PROMPT
+        "network_selector": NETWORK_SELECTOR_PROMPT,
+        "algspec_builder": SPEC_PROMPT,
+        "generalization_helper": GENERALIZATION_PROMPT
+        
     }
     return prompts.get(network, "Error")
 
@@ -48,7 +140,28 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     """
     
     prompt = get_prompt(network)
-    if network == "network_selector":
+    if network == "algspec_builder":
+        concept1_name,context = _extract_concept_name(str(args[0]))
+        concept2_name,_ = _extract_concept_name(str(args[1]))
+
+        
+        
+            
+        formatted_prompt = prompt.format(
+            concept1=concept1_name,
+            concept2=concept2_name,
+            context=context
+            
+        )
+    elif network == "generalization_helper":
+        concept1_name, context = _extract_concept_name(str(args[0]))
+        concept2_name, _ = _extract_concept_name(str(args[1]))
+        formatted_prompt = prompt.format(
+            concept1=concept1_name,
+            concept2=concept2_name,
+            context=context
+        )
+    elif network == "network_selector":
         concept1 = str(args[0])
         formatted_prompt = prompt.format(concept1=concept1)
         

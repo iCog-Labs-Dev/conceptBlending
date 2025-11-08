@@ -1,6 +1,6 @@
 from hyperon import *
 from .llmagent import GeminiAgent
-from libs.prompts.algspec_builder import SPEC_PROMPT,Context_AGENT_PROMPT
+from libs.prompts.algspec_builder import GENERALIZATION_PROMPT, SPEC_PROMPT,Context_AGENT_PROMPT
 import re
 
 
@@ -75,7 +75,8 @@ def get_prompt(agent_type: str) -> str:
         Prompt template string
     """
     prompts = {
-        "algspec_builder": SPEC_PROMPT
+        "algspec_builder": SPEC_PROMPT,
+        "generalization_helper": GENERALIZATION_PROMPT
     }
     return prompts.get(agent_type, "Error: Unknown agent type")
 
@@ -125,8 +126,8 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
     
     if agent_type == "algspec_builder":
         # Extract concept names from Concept atoms
-        concept1_name,context1 = _extract_concept_name(str(args[0]))
-        concept2_name,context2 = _extract_concept_name(str(args[1]))
+        concept1_name,context = _extract_concept_name(str(args[0]))
+        concept2_name,_ = _extract_concept_name(str(args[1]))
 
         
         
@@ -134,12 +135,17 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
         formatted_prompt = prompt_template.format(
             concept1=concept1_name,
             concept2=concept2_name,
-            context1=context1,
-            context2=context2
+            context=context
+            
         )
     else:
         # Default handling for other agent types
-        formatted_prompt = prompt_template
+        formatted_prompt = prompt_template.format(
+            concept1=concept1_name,
+            concept2=concept2_name,
+            context=context
+            
+        )
     
     # Generate algebraic specifications using LLM
     llm_agent = GeminiAgent()
