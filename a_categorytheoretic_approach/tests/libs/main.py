@@ -2,8 +2,7 @@ import os
 from hyperon import *
 from hyperon.ext import register_atoms
 from .agents import GeminiAgent,ChatGPTAgent
-#from an_infotheoretic_approach.libs.agents.gpt_agent import context_preprocessing_agent, prompt_agent
-from .agents import context_preprocessing_agent,prompt_agent
+
 # Configuration
 AGENTS = ["algspec_builder","generalization_helper"]
 
@@ -16,6 +15,7 @@ def context_preprocessing_helper(metta):
     This operation takes two concept atoms and generates Concept atoms with
     Context information using LLM preprocessing.
     """
+    from an_infotheoretic_approach.libs.agents import context_preprocessing_agent
     processed_context = OperationAtom(
         'context_preprocessing',
         lambda *args: context_preprocessing_agent(metta, *args),
@@ -27,6 +27,7 @@ def context_preprocessing_helper(metta):
 
 @register_atoms(pass_metta=True)
 def grounded_atoms(metta):
+    from an_infotheoretic_approach.libs.agents import prompt_agent
     registered_operations = {}
 
     for agent in AGENTS:
