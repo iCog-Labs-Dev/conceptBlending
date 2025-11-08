@@ -1,10 +1,10 @@
 import os
 from hyperon import *
 from hyperon.ext import register_atoms
-from .agents import context_preprocessing_agent, prompt_agent
+from an_infotheoretic_approach.libs.agents.gpt_agent import context_preprocessing_agent, prompt_agent
 
 # Configuration
-AGENTS = ["algspec_builder"]
+AGENTS = ["algspec_builder","generalization_helper"]
 
 
 @register_atoms(pass_metta=True)
@@ -42,7 +42,7 @@ def grounded_atoms(metta):
             registered_operations[operation_name] = OperationAtom(
                 operation_name,
                 lambda *args, agent=agent: prompt_agent(metta, agent, *args),
-                [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
+                [AtomType.ATOM, AtomType.ATOM, "Expression"],
                 unwrap=False
             )
         else:
