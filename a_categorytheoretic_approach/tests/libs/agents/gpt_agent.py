@@ -161,8 +161,8 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
         formatted_prompt = SPEC_PROMPT.format(
             concept1=concept1_name,
             concept2=concept2_name,
-            spec1=algspec_1,
-            spec2=algspec_2
+            algspec_1=algspec_1,
+            algspec_2=algspec_2
             
         )
         
