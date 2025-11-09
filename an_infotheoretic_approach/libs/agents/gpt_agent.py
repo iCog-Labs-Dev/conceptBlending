@@ -9,9 +9,9 @@ from libs.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
 from libs.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
 from libs.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
 from libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
-from a_categorytheoretic_approach.tests.libs.prompts.context_preprocessing import CONTEXT_PREPROCESSING_PROMPT
-from a_categorytheoretic_approach.tests.libs.prompts.algspec_builder import SPEC_PROMPT
-from a_categorytheoretic_approach.tests.libs.prompts.generalization import GENERALIZATION_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts import CONTEXT_PREPROCESSING_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts import SPEC_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts import GENERALIZATION_PROMPT
 from libs.agents.conceptnet_adapter import get_conceptnet_edges
 
 
@@ -65,7 +65,7 @@ def context_preprocessing_agent(metta: MeTTa, *args):
             context1=context1,
             context2=context2
         )
-    print(formatted_prompt)
+    
     # Generate Concept atoms using LLM
     llm_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
@@ -73,7 +73,7 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     
     # Parse LLM response into MeTTa atoms
     parsed_atoms = metta.parse_all(response)
-    
+
     return parsed_atoms
 def _extract_concept_name(concept_atom_str: str) -> tuple[str, str]:
     """
@@ -116,7 +116,6 @@ def _extract_concept_name(concept_atom_str: str) -> tuple[str, str]:
 
     # fallback: return from spec_start to end if not balanced
     return name, s[spec_start:]
-
 def get_prompt(network: str) -> str:
     """Returns the appropriate prompt based on the network type."""
     prompts = {
@@ -157,26 +156,46 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     
     prompt = get_prompt(network)
     if network == "algspec_builder":
+        
         concept1_name,context = _extract_concept_name(str(args[0]))
         concept2_name,_ = _extract_concept_name(str(args[1]))
+
         
+        
+            
         formatted_prompt = SPEC_PROMPT.format(
             concept1=concept1_name,
             concept2=concept2_name,
             context=context
             
         )
-    elif network == "generalization_helper":
-        concept1_name,algspec_1 = _extract_concept_name(str(args[0]))
-        concept2_name,algspec_2 = _extract_concept_name(str(args[1]))
 
-        formatted_prompt = SPEC_PROMPT.format(
-            concept1=concept1_name,
-            concept2=concept2_name,
-            spec1=algspec_1,
-            spec2=algspec_2
-            
-        )
+
+    elif network == "generalization_helper":
+        # extract both concept names and their full specs (or remaining context)
+        concept1_name, algspec_1 = _extract_concept_name(str(args[0]))
+        concept2_name, algspec_2 = _extract_concept_name(str(args[1]))
+
+        # Use GENERALIZATION_PROMPT and guard against missing placeholder keys
+        try:
+            formatted_prompt = GENERALIZATION_PROMPT.format(
+                concept1=concept1_name or "",
+                concept2=concept2_name or "",
+                algspec_1=algspec_1 or "",
+                algspec_2=algspec_2 or ""
+            )
+        except KeyError:
+            # Fallback: replace known placeholders manually to avoid KeyError
+            formatted_prompt = GENERALIZATION_PROMPT
+            replacements = {
+                'concept1': concept1_name or "",
+                'concept2': concept2_name or "",
+                'algspec_1': algspec_1 or "",
+                'algspec_2': algspec_2 or "",
+            }
+            for k, v in replacements.items():
+                formatted_prompt = formatted_prompt.replace('{' + k + '}', v)
+   
     elif network == "network_selector":
         concept1 = str(args[0])
         formatted_prompt = prompt.format(concept1=concept1)
