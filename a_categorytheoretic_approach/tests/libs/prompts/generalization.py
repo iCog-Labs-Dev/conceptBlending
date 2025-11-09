@@ -51,7 +51,7 @@ Return ONLY in the following way nothing else (no explanations, no quotes, no ma
   (preds (...))
   (axioms (...))
  )
-)
+)0
 
 FEW-SHOT GUIDANCE (apply same transformation style):
 - Pocketknife + Toothbrush -> handheld_tool with shared sorts entity/part/functionality; keep has_part/has_functionality preds; generalize specific parts/functions.
