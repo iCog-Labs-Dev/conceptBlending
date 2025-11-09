@@ -1,64 +1,48 @@
-
 GENERALIZATION_PROMPT = """
-You are an expert in algebraic specification, formal methods, and computational logic, specializing in **anti-unification (Least Common Generalization - LCG)**.
+You are an expert in algebraic specification, formal methods, and anti-unification (Least Common Generalization - LCG).
+Given two algebraic specs, produce a single concise, logically-coherent least common generalized spec that preserves shared structure and minimally generalizes differences.
 
-Your task is to compute the precise Least Common Generalization (LCG) of two given algebraic specifications. The LCG must preserve only the structural and semantic components shared between both concepts, while generalizing all differing components as minimally as possible.
-
-## INPUT CONCEPTS:
+INPUTS (placeholders):
 - Concept 1: {concept1}
 - Concept 2: {concept2}
-- Context:   {context}   (A coherent semantic phrase applying to both concepts)
+- specification1: {algspec_1}
+- specification2: {algspec_2}
 
-## INPUT SPECIFICATIONS:
-(Concept Concept1
- (spec
-  (sorts (...))
-  (ops (...))
-  (preds (...))
-  (axioms (...))
- )
-)
+GOAL:
+Return exactly one spec for (Concept GenericConcept (spec ...)) that is the LCG of the two input specs:
+- Preserve identical sorts, ops, preds, axioms.
+- Where components differ, replace with minimally more general element names or least-common super-sort.
+- Maintain arities and structural positions.
 
-(Concept Concept2
- (spec
-  (sorts (...))
-  (ops (...))
-  (preds (...))
-  (axioms (...))
- )
-)
+RULES / HEURISTICS:
+1. Sorts:
+   - Keep identical sorts.
+   - For differing sorts, choose a descriptive super-sort (e.g., Object, Entity, Resource) or synthesize GenericSortX.
+   - Preserve declared subsort relations (< Sub Super>) where possible.
 
-### Instructions:
+2. Ops / Constants:
+   - If op names and sorts match, keep them.
+   - If names differ but roles align, create a generalized op name (e.g., handheld_tool) and generalize its sort.
+   - Represent ops as (: name Sort).
 
-- define a specification block using the structure below. 
-- Use concise and meaningful names for sorts, operations, and predicates relevant to the concept based on the context provided.
-- Maintain **comparable structure** between the two specifications to facilitate later structural mapping.
-- Each specification must include:
-  - Use the context {context} provided to guide the selection of sorts, operations, and predicates.
-  - (sorts ...)  → sorts and subsort declarations ((< SubSort SuperSort))
-  - (ops ...)    → object-level constants ((: name Sort))
-  - (preds ...)  → predicates with argument types ((predicate Type1 Type2))
-  - (axioms ...) → statements relating operations and predicates ((predicate (arg1 arg2)))
+3. Predicates:
+   - Preserve predicates with identical arity and intent.
+   - Generalize argument sorts consistently (use generalized sorts chosen above).
 
-Apply structure-preserving anti-unification across Concepts components:
+4. Axioms:
+   - Translate axioms by substituting concrete names with generalized names.
+   - Preserve logical structure; if an axiom exists in both specs with different arguments, generalize arguments.
 
-1. Sort Anti-Unification:
-   - For each pair of corresponding sorts, select the least common super-sort.
-   - Retain shared global sorts.
+5. Naming:
+   - Use context (concept1={concept1} or concept2={concept2} strings) to choose meaningful generalized names.
+   - Prefer human-readable, descriptive names (e.g., vertical_structure, GeneralizedPart).
 
-2. Operation (Constant) Anti-Unification:
-   - For each pair of corresponding constants, introduce a generalized constant whose sort is the LCG of the original sorts.
-   - Retain constants identical across both specifications.
+6. Minimality:
+   - Only generalize when necessary. Do not invent unrelated structure.
+   - If unsure, favor a conservative generalization (keep structure, generalize names/sorts).
 
-3. Predicate Anti-Unification:
-   - Only retain predicates that appear in both specifications with the same arity.
-   - Generalize predicate argument sorts using the LCG of their respective sorts.
-
-4. Axiom Anti-Unification:
-   - Recursively generalize axiom expressions by replacing constants and sorts with their generalized counterparts.
-
-## OUTPUT FORMAT:
-Return only one generalized specification named GenericConcept:
+OUTPUT FORMAT:
+Return ONLY in the following way nothing else (no explanations, no quotes, no markdown):
 
 (Concept GenericConcept
  (spec
@@ -69,9 +53,15 @@ Return only one generalized specification named GenericConcept:
  )
 )
 
-## OUTPUT RULES:
-- Do not output the original two specifications.
-- Do not explain or comment.
-- Do not include markdown formatting or quotes.
-- Return only the final (Concept GenericConcept ...) expression.
+FEW-SHOT GUIDANCE (apply same transformation style):
+- Pocketknife + Toothbrush -> handheld_tool with shared sorts entity/part/functionality; keep has_part/has_functionality preds; generalize specific parts/functions.
+- Signpost + Forest -> vertical_structure with sorts entity/part/attachment; generalize post/trunk -> stem, panel/crown -> top, ground/root -> base.
+
+PROCESS (recommended):
+1. Parse both specs into sorts/ops/preds/axioms.
+2. Align components by role and arity.
+3. Compute minimal generalization for each aligned pair.
+4. Synthesize the final (Concept GenericConcept (spec ...)) using chosen names and relations.
+
+Strict: output must be a single valid MeTTa Concept spec as above.
 """
