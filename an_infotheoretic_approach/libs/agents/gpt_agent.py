@@ -2,17 +2,17 @@ from hyperon import *
 from .llmagent import ChatGPTAgent, GeminiAgent
 import threading
 import re
-from libs.prompts.network_selector import NETWORK_SELECTOR_PROMPT
-from libs.prompts.simplex_network import SIMPLEX_PROMPT
-from libs.prompts.mirror_network import MIRROR_PROMPT
-from libs.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
-from libs.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
-from libs.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
-from libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
-from a_categorytheoretic_approach.tests.libs.prompts.context_preprocessing import CONTEXT_PREPROCESSING_PROMPT
-from a_categorytheoretic_approach.tests.libs.prompts.algspec_builder import SPEC_PROMPT
-from a_categorytheoretic_approach.tests.libs.prompts.generalization import GENERALIZATION_PROMPT
-from libs.agents.conceptnet_adapter import get_conceptnet_edges
+from an_infotheoretic_approach.libs.prompts.network_selector import NETWORK_SELECTOR_PROMPT
+from an_infotheoretic_approach.libs.prompts.simplex_network import SIMPLEX_PROMPT
+from an_infotheoretic_approach.libs.prompts.mirror_network import MIRROR_PROMPT
+from an_infotheoretic_approach.libs.prompts.single_scope_network import SINGLE_SCOPE_PROMPT
+from an_infotheoretic_approach.libs.prompts.double_scope_network import DOUBLE_SCOPE_PROMPT
+from an_infotheoretic_approach.libs.prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
+from an_infotheoretic_approach.libs.prompts.vital_relation_extraction import VITAL_RELATION_EXTRACTION_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts import CONTEXT_PREPROCESSING_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts import SPEC_PROMPT
+from a_categorytheoretic_approach.tests.libs.prompts import GENERALIZATION_PROMPT
+from an_infotheoretic_approach.libs.agents.conceptnet_adapter import get_conceptnet_edges
 
 
 def _extract_concept_and_context(concept_str: str) -> tuple[str, str]:
@@ -65,7 +65,7 @@ def context_preprocessing_agent(metta: MeTTa, *args):
             context1=context1,
             context2=context2
         )
-    print(formatted_prompt)
+    
     # Generate Concept atoms using LLM
     llm_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
@@ -73,30 +73,49 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     
     # Parse LLM response into MeTTa atoms
     parsed_atoms = metta.parse_all(response)
-    
+
     return parsed_atoms
-def _extract_concept_name(concept_atom_str: str) -> str:
+def _extract_concept_name(concept_atom_str: str) -> tuple[str, str]:
     """
-    Extract concept name from a Concept atom string representation.
-    
-    Args:
-        concept_atom_str: String representation like "(Concept name (Context ...))"
-        
-    Returns:
-        Extracted concept name
+    Extract concept name and the full balanced '(spec ...)' block (if present).
+    Returns (name, spec_string_or_remaining_context).
     """
     if not concept_atom_str:
-        return ""
+        return "", ""
 
-    match = re.search(r'(\w+)(\s+\(Context\s+(.*))?', concept_atom_str)
+    s = concept_atom_str.strip()
+    # try to find "(Concept <Name>"
+    m = re.search(r'\(Concept\s+([^\s()]+)', s)
+    if not m:
+        # fallback: strip parens and split
+        cleaned = re.sub(r'[()]|"', '', s).strip()
+        parts = cleaned.split()
+        if not parts:
+            return "", ""
+        name = parts[0]
+        rest = ' '.join(parts[1:]) if len(parts) > 1 else ""
+        return name, rest
 
-    if match:
-        name = match.group(1)  #single name
-        full_context = match.group(2) 
-        return name, full_context
-    else:
-        print("No match found.")
+    name = m.group(1)
+    # look for a "(spec" block after the name
+    spec_start = s.find('(spec', m.end())
+    if spec_start == -1:
+        rest = s[m.end():].strip()
+        return name, rest
 
+    # extract balanced parentheses starting at spec_start
+    depth = 0
+    for i in range(spec_start, len(s)):
+        if s[i] == '(':
+            depth += 1
+        elif s[i] == ')':
+            depth -= 1
+            if depth == 0:
+                spec = s[spec_start:i+1]
+                return name, spec
+
+    # fallback: return from spec_start to end if not balanced
+    return name, s[spec_start:]
 def get_prompt(network: str) -> str:
     """Returns the appropriate prompt based on the network type."""
     prompts = {
@@ -137,6 +156,7 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     
     prompt = get_prompt(network)
     if network == "algspec_builder":
+        
         concept1_name,context = _extract_concept_name(str(args[0]))
         concept2_name,_ = _extract_concept_name(str(args[1]))
 
@@ -149,14 +169,12 @@ def prompt_agent(metta: MeTTa, network: str, *args):
             context=context
             
         )
+
+
     elif network == "generalization_helper":
-        concept1_name, context = _extract_concept_name(str(args[0]))
-        concept2_name, _ = _extract_concept_name(str(args[1]))
-        formatted_prompt = GENERALIZATION_PROMPT.format(
-            concept1=concept1_name,
-            concept2=concept2_name,
-            context=context
-        )
+        concept1_name,context = _extract_concept_name(str(args[0]))
+        concept1_name2,context1 = _extract_concept_name(str(args[1]))
+   
     elif network == "network_selector":
         concept1 = str(args[0])
         formatted_prompt = prompt.format(concept1=concept1)

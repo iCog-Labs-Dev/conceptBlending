@@ -80,28 +80,47 @@ def get_prompt(agent_type: str) -> str:
     }
     return prompts.get(agent_type, "Error: Unknown agent type")
 
-def _extract_concept_name(concept_atom_str: str) -> str:
+def _extract_concept_name(concept_atom_str: str) -> tuple[str, str]:
     """
-    Extract concept name from a Concept atom string representation.
-    
-    Args:
-        concept_atom_str: String representation like "(Concept name (Context ...))"
-        
-    Returns:
-        Extracted concept name
+    Extract concept name and the full balanced '(spec ...)' block (if present).
+    Returns (name, spec_string_or_remaining_context).
     """
     if not concept_atom_str:
-        return ""
+        return "", ""
 
-    match = re.search(r'(\w+)(\s+\(Context\s+(.*))?', concept_atom_str)
+    s = concept_atom_str.strip()
+    # try to find "(Concept <Name>"
+    m = re.search(r'\(Concept\s+([^\s()]+)', s)
+    if not m:
+        # fallback: strip parens and split
+        cleaned = re.sub(r'[()]|"', '', s).strip()
+        parts = cleaned.split()
+        if not parts:
+            return "", ""
+        name = parts[0]
+        rest = ' '.join(parts[1:]) if len(parts) > 1 else ""
+        return name, rest
 
-    if match:
-        name = match.group(1)  #single name
-        full_context = match.group(2) 
-        return name, full_context
-    else:
-        print("No match found.")
+    name = m.group(1)
+    # look for a "(spec" block after the name
+    spec_start = s.find('(spec', m.end())
+    if spec_start == -1:
+        rest = s[m.end():].strip()
+        return name, rest
 
+    # extract balanced parentheses starting at spec_start
+    depth = 0
+    for i in range(spec_start, len(s)):
+        if s[i] == '(':
+            depth += 1
+        elif s[i] == ')':
+            depth -= 1
+            if depth == 0:
+                spec = s[spec_start:i+1]
+                return name, spec
+
+    # fallback: return from spec_start to end if not balanced
+    return name, s[spec_start:]
 
 def prompt_agent(metta: MeTTa, agent_type: str, *args):
     """
@@ -135,6 +154,18 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
             context=context
             
         )
+    elif agent_type== "generalization_helper":
+        concept1_name,algspec_1 = _extract_concept_name(str(args[0]))
+        concept1_name,algspec_2 = _extract_concept_name(str(args[1]))
+
+        formatted_prompt = SPEC_PROMPT.format(
+            concept1=concept1_name,
+            concept2=concept2_name,
+            spec1=algspec_1,
+            spec2=algspec_2
+            
+        )
+        
     else:
         # Default handling for other agent types
         formatted_prompt = prompt_template.format(
