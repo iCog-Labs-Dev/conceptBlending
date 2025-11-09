@@ -1,2 +1,3 @@
-from .llmagent import ChatGPTAgent, GeminiAgent
-from .gpt_agent import prompt_agent
+from .algspec_builder import SPEC_PROMPT
+from .context_preprocessing import CONTEXT_PREPROCESSING_PROMPT 
+from .generalization import GENERALIZATION_PROMPT
