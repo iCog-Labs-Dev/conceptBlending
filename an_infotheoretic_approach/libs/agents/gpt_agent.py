@@ -168,7 +168,7 @@ def prompt_agent(metta: MeTTa, network: str, *args):
         )
     elif network == "generalization_helper":
         concept1_name,algspec_1 = _extract_concept_name(str(args[0]))
-        concept1_name,algspec_2 = _extract_concept_name(str(args[1]))
+        concept2_name,algspec_2 = _extract_concept_name(str(args[1]))
 
         formatted_prompt = SPEC_PROMPT.format(
             concept1=concept1_name,
