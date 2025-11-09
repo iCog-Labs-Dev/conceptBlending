@@ -1,40 +1,28 @@
 import os
 from hyperon import *
 from hyperon.ext import register_atoms
-from .agents import GeminiAgent,ChatGPTAgent
+
 
 # Configuration
-AGENTS = ["algspec_builder","generalization_helper"]
-
-
-@register_atoms(pass_metta=True)
-def context_preprocessing_helper(metta):
-    """
-    Register the context_preprocessing operation atom.
-    
-    This operation takes two concept atoms and generates Concept atoms with
-    Context information using LLM preprocessing.
-    """
-    #to avoid circular import error
-    from an_infotheoretic_approach.libs.agents import context_preprocessing_agent
-    processed_context = OperationAtom(
-        'context_preprocessing',
-        lambda *args: context_preprocessing_agent(metta, *args),
-        [AtomType.ATOM, AtomType.ATOM, "Expression"],
-        unwrap=False
-    )
-    return {'context_preprocessing': processed_context}
+AGENTS = ["context_preprocessing","algspec_builder","generalization_helper"]
 
 
 @register_atoms(pass_metta=True)
 def grounded_atoms(metta):
-    from an_infotheoretic_approach.libs.agents import prompt_agent
+    from an_infotheoretic_approach.libs.agents import context_preprocessing_agent,prompt_agent
     registered_operations = {}
 
     for agent in AGENTS:
         operation_name = f"gpt_{agent}"  # e.g., gpt_algspec_builder
 
-        if agent == "algspec_builder":
+        if agent == "context_preprocessing":
+            registered_operations[operation_name] = OperationAtom(
+                operation_name,
+                lambda *args, agent=agent: context_preprocessing_agent(metta, agent, *args),
+                [AtomType.ATOM, AtomType.ATOM, "Expression"],
+                unwrap=False
+            )
+        elif agent == "algspec_builder":
             registered_operations[operation_name] = OperationAtom(
             operation_name,
             lambda *args, agent=agent: prompt_agent(metta, agent, *args),
