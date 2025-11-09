@@ -18,7 +18,7 @@ def grounded_atoms(metta):
         if agent == "context_preprocessing":
             registered_operations[operation_name] = OperationAtom(
                 operation_name,
-                lambda *args, agent=agent: context_preprocessing_agent(metta, agent, *args),
+                lambda *args, agent=agent: context_preprocessing_agent(metta, *args),
                 [AtomType.ATOM, AtomType.ATOM, "Expression"],
                 unwrap=False
             )
