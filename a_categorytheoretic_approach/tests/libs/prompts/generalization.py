@@ -44,7 +44,7 @@ RULES / HEURISTICS:
 OUTPUT FORMAT:
 Return ONLY in the following way nothing else (no explanations, no quotes, no markdown):
 
-(Concept GenericConcept
+(Concept {concept1}@{concept2}
  (spec
   (sorts (...))
   (ops (...))
