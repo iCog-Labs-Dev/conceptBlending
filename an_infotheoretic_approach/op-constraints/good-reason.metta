@@ -1,6 +1,18 @@
 ! (import! &self libs)
 ; ! (import! &self common-utils)
 
+(=(is-property-justified $concept $property)
+    (let* (
+        ($justified (is-justified $concept $property))
+        (() (println! ("Justified match result: " $justified)))
+        ($direct (collapse(superpose(match &self (relation (HasProperty $concept $property) HasProperty) True))))
+        (()(println! ("Direct match result: " $direct)))
+        ($result (if (or $justified $direct) True False))
+    )
+    $result
+    )
+)
+
 (= (is-provenance-sources-justified $property $provenance-sources)
     (if (== $provenance-sources ())
         0
@@ -16,6 +28,7 @@
         )
     )
 )
+
 
 (= (conceptnet-justification-helper $prop $blend)
     (let ($blend-name $unwrapped-prop) ((blend-name $blend) (car-atom $prop))
@@ -33,6 +46,11 @@
 (= (llm-justification $properties $blend)
     (let ($blend-name $blend-context) ((blend-name $blend) (blend-context $blend)) (let $default-prompt (default-prompt $properties $blend-name $blend-context) (good-reason-llm $default-prompt)))
 )
+
+
+
+
+
 
 (= (blend-context $blend)
         (let* (

@@ -1,10 +1,67 @@
 ! (import! &self libs)
 ; ! (import! &self common-utils)
 
+(= (is-relation-part-of $term $context)
+    (let* (
+        ($res (collapse(match &self (relation (PartOf $term $context) PartOf) ($term $context))))
+        )
+        (if (> (size-atom $res) 0) True False)
+    )
+)
+
+; !(is-relation-part-of Apple Tree)
+
+(= (rel-exists-HasA $term $context)
+    (let* (
+        ($res (collapse(match &self (relation (HasA $context $term) HasA) ($context $term))))
+        )
+        (if (> (size-atom $res) 0) True False)
+    )
+)
+
+; !(rel-exists-HasA Leaf Tree)
+
+(= (rel-exists-LocatedNear $term $context)
+    (let* (
+        ($res (collapse(match &self (relation (LocatedNear $term $context) LocatedNear) ($term $context))))
+        )
+        (if (> (size-atom $res) 0) True False)
+    )
+)
+(=(rel-exists-SymbolOf $term $context)
+    (let* (
+        ($res (collapse(match &self (relation (SymbolOf $term $context) SymbolOf) ($term $context))))
+        )
+        (if (> (size-atom $res) 0) True False)
+    )
+)
+
+(=(is-relation-metonymy $term1 $term2)
+    (let* (
+        ($partof (is-relation-part-of $term1 $term2))
+        ($HasA (rel-exists-HasA $term1 $term2))
+        ($LocatedNear (rel-exists-LocatedNear $term1 $term2))
+        ($SymbolOf (rel-exists-SymbolOf $term1 $term2))
+        ($result (if (or $partof (or $HasA (or $LocatedNear $SymbolOf))) True False))
+    )
+    $result
+    ))
+
+
 (= (is-characteristic-part $relation $blend-properties $bled-name) 
     (if (is-list-member (index-atom $relation 1) $blend-properties)
         True
         (is-relation-part-of (index-atom $relation 1) $bled-name)
+    )
+)
+
+
+(=(is-abbreivation $term) 
+    (let* (
+        ($relation (collapse(match &self (target (IsA $term $fullformed) $abbriv) (car-atom $abbriv))))
+        ($result (if (== (abbreviation) $relation) True False))
+    )
+    $result
     )
 )
 
@@ -43,6 +100,8 @@
         )
     )
 )
+
+
 (= (metonymy-op $blend)
   (let* (
     ($blend-relations (relations-key-value-list $blend))

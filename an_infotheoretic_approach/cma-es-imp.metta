@@ -404,3 +404,4 @@
 )
 
 ; !(moedd-cma-es-main-loop)
+!(are-terms-antonyms hot cold)

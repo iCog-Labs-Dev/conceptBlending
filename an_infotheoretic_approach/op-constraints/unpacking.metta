@@ -1,7 +1,6 @@
 ! (import! &self libs)
 ; ! (import! &self common-utils)
 
-
 (= (evaluate-property ($prop-name $provenance-list) $blend-name)
    (if (== (size-atom $provenance-list) 0)
        0.0
@@ -17,15 +16,25 @@
     )
 )
 
+(=(are-related $term1 $term2) 
+    (let* (
+        ($rel (collapse (match &self (relation ($related $term1 $term2) $related) ($term1 $term2))))
+        ($result (if (> (size-atom $rel) 0) True False))
+    )
+    $result
+    )
+)
+
 (= (calculate-source-strength $prop-name $source-expr $blend-name)
     (let $source-word (car-atom $source-expr)
         (if (== $source-word $blend-name) 1
             (let ($similarity $is-related) ((get-similarity-score $prop-name $source-word) (are-related $prop-name $source-word)) 
-                (if $is-related (max-aton ($similarity 0.8)) $similarity)
+                (if $is-related (max-atom ($similarity 0.8)) $similarity)
             )
         )
     )
 )
+
 
 (= (unpacking-op $good-blend )
     (let ($props $blend-name) ((properties-list $good-blend) (blend-name $good-blend))

@@ -1,6 +1,6 @@
 ! (import! &self libs)
 ; ! (import! &self common-utils)
-
+; !(load-ascii &self data/kb_concepts.metta)
 
 (= (are-conflicting $item $item2 $terms-antonymity $pre-def-confl)
     (if (or (== ($item $item2) $pre-def-confl) (or (== ($item2 $item) $pre-def-confl) $terms-antonymity))
@@ -10,7 +10,16 @@
 )
 
 (= (check-i-j-conflict $prop-name-i $prop-name-j $props-antonymity $pre-def-confl)
-    (min-atom ((sum (map-atom $pre-def-confl $x (are-conflicting $prop-name-i $prop-name-j $props-antonymity $x))) 1))
+    (min-atom ((sum-op (map-atom $pre-def-confl $x (are-conflicting $prop-name-i $prop-name-j $props-antonymity $x))) 1))
+)
+
+(=(are-terms-antonyms $term1 $term2)
+    (let* (
+        ($m (collapse (match &self (relation (Antonym $term1 $term2) Antonym) $relation)))
+        ($n (if (> (size-atom $m) 0) True False))
+    )
+    $n
+    )
 )
 
 (= (check-props-conflict $props $predefined-conflicts)
@@ -18,7 +27,7 @@
         (chain (decons-atom $props) $ht
             (unify ($head $tail) $ht
                 (chain (eval (map-atom $tail $x (check-i-j-conflict $head $x (are-terms-antonyms $head $x) $predefined-conflicts))) $map-res
-                    (chain (sum $map-res) $res
+                    (chain (sum-op $map-res) $res
                             (chain (eval (check-props-conflict $tail $predefined-conflicts)) $tail-res
                                 (chain (+ $res $tail-res) $result (return $result))
                             )
@@ -30,6 +39,7 @@
     )
 )
 
+
 (= (integration-op $blend)
     (let $prop-list (properties-list $blend)
         (let $prop-names (map-atom $prop-list $x (car-atom $x))
@@ -40,4 +50,4 @@
     )
 )
 
-; ! (integration-op (good_blend))
+; ! (integration-op (blend))

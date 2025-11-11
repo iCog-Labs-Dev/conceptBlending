@@ -1,6 +1,7 @@
 ! (import! &self libs)
 ; ! (import! &self common-utils)
-
+!(bind! &concept-space (new-space))
+; !(load-ascii &concept-space data/kb_concepts.metta)
 
 (= (relation-exists-in-blend $blend-relations $rel-pair)
     (is-list-member $rel-pair $blend-relations)
@@ -68,6 +69,9 @@
   )
 )
 
+
+
+
 (= (web-op $cross-mappings $blend)
   (let* 
     (
@@ -77,7 +81,6 @@
         ($count (size-atom $scores))
         ($average (/ $sum $count))
         ($result (min-atom (1.0 $average)))
-        
     )
     $result
   )

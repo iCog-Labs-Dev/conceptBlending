@@ -1,5 +1,7 @@
 ! (import! &self libs)
 ; ! (import! &self common-utils)
+!(bind! &concept-space (new-space))
+; !(load-ascii &concept-space data/kb_concepts.metta)
 
 (= (similarity_threshold) 0.15)
 
@@ -19,7 +21,6 @@
         )
     )
 )
-
 
 (= (normalize-relation $rel $knowns)
     (let $match (find-similar-known-relation $rel $knowns)
@@ -83,6 +84,8 @@
     )
 )
 
+
+
 (= (topology-op $blend $concept1 $concept2)
     (let*(
        ($concept1-relations-list (relations-key-value-list $concept1))
@@ -92,7 +95,6 @@
         ($source-relations-size (size-atom $source-relations))
         ($blend-relations-list (relations-key-value-list $blend))
         ($preserved-count (count-preserved-loop $blend-relations-list $source-relations $knowns))
-
         ($source-relations-size-decimal (to-float-op $source-relations-size))
         ($preservation-score (/ $preserved-count $source-relations-size-decimal))
         )
@@ -100,4 +102,4 @@
     )
 )
 
-; ! (topology-op (good_blend) (op-concept1) (op-concept2))
+;  ! (topology-op (good_blend) (op-concept1) (op-concept2))
