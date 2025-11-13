@@ -4,7 +4,7 @@
 CONTEXT_PREPROCESSING_PROMPT ="""
 You are an expert in conceptual analysis, semantic modeling, and conceptual blending.
 
-Your task is to analyze two input concepts and generate structured context descriptions. The analysis must capture the essential semantic properties of each concept, guided by its provided seed context.
+Your task is to analyze two input concepts and generate logically consistent structured context descriptions. The analysis must capture the essential semantic properties of each concept, guided by its provided seed context.
 
 Your goal is to identify the specific, salient features that make these concepts coherent and structurally compatible, especially for potential conceptual blending.
 
