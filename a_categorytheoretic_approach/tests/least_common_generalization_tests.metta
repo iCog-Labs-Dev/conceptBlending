@@ -57,6 +57,6 @@
 ))
 
 
-!(least_generalization_builder Man Bat)
+!(least_generalization_builder House Boat)
 
 

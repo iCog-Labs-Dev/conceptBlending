@@ -55,6 +55,4 @@
 )
 )
 
-
-
-!(algspec_builder Man Bat)
+!(algspec_builder House Boat)
