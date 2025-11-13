@@ -1,6 +1,6 @@
 GENERALIZATION_PROMPT = """
 You are an expert in algebraic specification, formal methods, and anti-unification (Least Common Generalization - LCG).
-Given two algebraic specs, produce a single concise, logically-coherent least common generalized spec that preserves shared structure and minimally generalizes differences.
+Given two algebraic specs, produce a single concise, logically-coherent, and consistent least common generalized spec that preserves shared structure and minimally generalizes differences.
 
 INPUTS (placeholders):
 - Concept 1: {concept1}
@@ -34,7 +34,7 @@ RULES / HEURISTICS:
    - Preserve logical structure; if an axiom exists in both specs with different arguments, generalize arguments.
 
 5. Naming:
-   - Use context (concept1={concept1} or concept2={concept2} strings) to choose meaningful generalized names.
+   - Use the algebric specification {algspec_1} and {algspec_2} strings to choose meaningful generalized names.
    - Prefer human-readable, descriptive names (e.g., vertical_structure, GeneralizedPart).
 
 6. Minimality:
@@ -57,7 +57,7 @@ FEW-SHOT GUIDANCE (apply same transformation style):
 - Pocketknife + Toothbrush -> handheld_tool with shared sorts entity/part/functionality; keep has_part/has_functionality preds; generalize specific parts/functions.
 - Signpost + Forest -> vertical_structure with sorts entity/part/attachment; generalize post/trunk -> stem, panel/crown -> top, ground/root -> base.
 
-PROCESS (recommended):
+PROCESS:
 1. Parse both specs into sorts/ops/preds/axioms.
 2. Align components by role and arity.
 3. Compute minimal generalization for each aligned pair.
