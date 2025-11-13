@@ -5,7 +5,6 @@ from libs.prompts import (
     GENERALIZATION_PROMPT,
     SPEC_PROMPT,
     CONTEXT_PREPROCESSING_PROMPT,
-    AMALGAM_PROMPT,
 )
 
 
