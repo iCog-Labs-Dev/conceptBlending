@@ -1,4 +1,4 @@
-!(import! &self list-op-utils)
+!(import! &self utils/list-op-utils)
 
 
 (= (get-prop-value-pairs $concept)
