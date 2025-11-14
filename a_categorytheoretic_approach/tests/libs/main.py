@@ -1,22 +1,27 @@
-import os, yaml
+import os
 from hyperon import *
 from hyperon.ext import register_atoms
-from .agents import *
+from .agents import context_preprocessing_agent,prompt_agent
 
-
-
-# Define networks and their corresponding function names
-
-AGENTS = ["algspec_builder"]
+# Configuration
+AGENTS = ["context_preprocessing","algspec_builder","generalization_helper"]
 
 @register_atoms(pass_metta=True)
 def grounded_atoms(metta):
+
     registered_operations = {}
 
     for agent in AGENTS:
         operation_name = f"gpt_{agent}"  # e.g., gpt_algspec_builder
 
-        if agent == "algspec_builder":
+        if agent == "context_preprocessing":
+            registered_operations[operation_name] = OperationAtom(
+                operation_name,
+                lambda *args, agent=agent: context_preprocessing_agent(metta, *args),
+                [AtomType.ATOM, AtomType.ATOM, "Expression"],
+                unwrap=False
+            )
+        elif agent == "algspec_builder":
             registered_operations[operation_name] = OperationAtom(
             operation_name,
             lambda *args, agent=agent: prompt_agent(metta, agent, *args),
@@ -27,9 +32,10 @@ def grounded_atoms(metta):
             registered_operations[operation_name] = OperationAtom(
                 operation_name,
                 lambda *args, agent=agent: prompt_agent(metta, agent, *args),
-                [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
+                [AtomType.ATOM, AtomType.ATOM, "Expression"],
                 unwrap=False
             )
+        
         else:
             registered_operations[operation_name] = OperationAtom(
                 operation_name,
