@@ -310,9 +310,9 @@
 ;     )
 ; )
 
-; (= (dominates $u $v)
-;     (and (all-true (compare-lists $u $v >=)) (any-true (compare-lists $u $v >)))
-; )
+(= (dominates $u $v)
+    (and (all-true (compare-lists $u $v >=)) (any-true (compare-lists $u $v >)))
+)
 
 ; (= (custom-unify $var1 $var2 $op1 $op2)
 ;     (function
@@ -320,15 +320,30 @@
 ;     )
 ; )
 
-; (= (check-cross-dominance $obj1 $obj2)
-;     (if (dominates $obj1 $obj2) True (if (dominates $obj2 $obj1) False True))
-; )
+(= (check-cross-dominance $obj1 $obj2)
+    (if (dominates $obj1 $obj2) True (if (dominates $obj2 $obj1) False True))
+)
 
-; (= (non-deter-non-dominated-helper $obj $obj-tail)
-;     (all-true (collapse
-;         (check-cross-dominance $obj (superpose $obj-tail))
-;     ))
-; )
+(= (non-deter-non-dominated-helper $obj $obj-tail)
+    (all-true (collapse
+        (check-cross-dominance $obj (superpose $obj-tail))
+    ))
+)
+
+;; Non Dominated-helper
+(=(non-dominated-helper $obj $obj-tail) (
+    (if (== $obj-tail ()) () 
+    (let* (
+        ($head (car-atom $obj-tail))
+        ($tail (cdr-atom $obj-tail))
+        ($head-res (eval (dominates $obj $head)))
+        ($tail-res (eval (non-dominated-helper $obj $tail)))
+        ($head-res2 (eval (doaminates $head $obj)))
+        ($result (if (== $head-res True) $tail-res (if (== $head-res2 True) False (eval (non-dominated-helper $obj $tail)))))
+    )
+    $result
+    ))
+))
 
 ; (= (non-dominated-helper $obj $obj-tail)
 ;     (function
@@ -353,6 +368,23 @@
 ;     )
 ; )
 
+(=(non-dominated-sort-helper $objs-list $objs-tail $index)  
+        (if (== $objs-tail ()) ()
+        (let* 
+        (
+            ($fhead (car-atom $objs-tail))
+            ($ftail (cdr-atom $objs-tail))
+            ($head (index-atom $objs-list $index))
+            ($filtered-objs-list (filter-list $objs-list $head))
+            ($head-res (non-dominated-helper $head $filtered-objs-list))
+            ($new-index (+ $index 1))
+            ($tail-res (eval (non-dominated-sort-helper $objs-list $ftail $new-index)))
+            ($result (custom-cons-atom $head-res $tail-res ))
+        )
+        $result
+)   )
+)
+
 ; (= (non-dominated-sort-helper $objs-list $objs-tail $index)
 ;     (function
 ;         (chain (decons-atom $objs-tail) $ht
@@ -374,6 +406,22 @@
 ;     )
 ; )
 
+(= (non-dominated-sort $objs-list $objs-tv-list $index $accum)
+        (if (== $objs-tv-list ()) () 
+        (let* (
+            ($head (car-atom $objs-tv-list))
+            ($tail (cdr-atom $objs-tv-list))
+            ($index-obj (index-atom $objs-list $index))
+            ($new-accum (custom-cons-atom $index-obj $accum))
+            ($new-index (+ $index 1))
+            ($tail-res (eval (non-domainted-sort $objs-list $tail $new-index $new-accum)))
+        )
+        (if (== $head True) $tail-res $accum)
+        )
+        )
+)
+
+
 ; (= (non-dominated-sort $objs-list $objs-tv-list $index $accum)
 ;     (function
 ;         (chain (decons-atom $objs-tv-list) $ht
@@ -391,15 +439,15 @@
 ;     )
 ; )
 
-; (= (non-deter-non-dominated-sort-helper $var $objs-list)
-;     (let $filtered-objs (filter-list $objs-list $var) (if (non-deter-non-dominated-helper $var $filtered-objs) $var Empty))
-; )
+(= (non-deter-non-dominated-sort-helper $var $objs-list)
+    (let $filtered-objs (filter-list $objs-list $var) (if (non-deter-non-dominated-helper $var $filtered-objs) $var Empty))
+)
 
-; (= (non-deter-non-dominated-sort $objs-list)
-;     (collapse
-;         (non-deter-non-dominated-sort-helper (superpose $objs-list) $objs-list)
-;     )
-; )
+(= (non-deter-non-dominated-sort $objs-list)
+    (collapse
+        (non-deter-non-dominated-sort-helper (superpose $objs-list) $objs-list)
+    )
+)
 
 ; ; (= (objs-list) ((7 9.1) (2 3) (6 8) (2 3) (4 6) (8 9) (3 5) (4 6)))
 ; ; !(non-dominated-sort-helper (objs-list) (objs-list) 0)
@@ -407,116 +455,116 @@
 
 ; ; !(non-deter-non-dominated-sort (objs-list))
 
-; (= (check-non-dominated $indiv $candidates)
-;     (let ($indiv-obj $candis-objs) ((index-atom $indiv 1) (let $unzipped-candis (unzip-list $candidates) (index-atom $unzipped-candis 1))) (let $filtered-candis-objs (filter-list $candis-objs $indiv-obj) (if (non-deter-non-dominated-helper $indiv-obj $filtered-candis-objs) $indiv Empty)))
-; )
+(= (check-non-dominated $indiv $candidates)
+    (let ($indiv-obj $candis-objs) ((index-atom $indiv 1) (let $unzipped-candis (unzip-list $candidates) (index-atom $unzipped-candis 1))) (let $filtered-candis-objs (filter-list $candis-objs $indiv-obj) (if (non-deter-non-dominated-helper $indiv-obj $filtered-candis-objs) $indiv Empty)))
+)
 
-; (= (filter-non-dominated $candidates)
-;     (collapse
-;         (check-non-dominated (hyperpose $candidates) $candidates)
-;     )
-; )
+(= (filter-non-dominated $candidates)
+    (collapse
+        (check-non-dominated (superpose $candidates) $candidates)
+    )
+)
 
 ;  (= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
 
 ;  !(filter-non-dominated (candidates-list))
 
-; (= (cons-blend-properties $concept1 $blend-prop-values)
-;     (let (Concept $concpair $properties) $concept1
-;         (let ($length $props) ((size-atom $blend-prop-values) (cdr-atom $properties))
-;             (collapse(superpose
-;                 (
-;                     (if (>= (- $length 1) 0) (let $prop0 (index-atom $props 0) (let ($prop0name $blendprop0val) ((car-atom $prop0) (index-atom $blend-prop-values 0)) ($prop0name $blendprop0val))) Empty)
-;                     (if (>= (- $length 2) 0) (let $prop1 (index-atom $props 1) (let ($prop1name $blendprop1val) ((car-atom $prop1) (index-atom $blend-prop-values 1)) ($prop1name $blendprop1val))) Empty)
-;                     (if (>= (- $length 3) 0) (let $prop2 (index-atom $props 2) (let ($prop2name $blendprop2val) ((car-atom $prop2) (index-atom $blend-prop-values 2)) ($prop2name $blendprop2val))) Empty)
-;                     (if (>= (- $length 4) 0) (let $prop3 (index-atom $props 3) (let ($prop3name $blendprop3val) ((car-atom $prop3) (index-atom $blend-prop-values 3)) ($prop3name $blendprop3val))) Empty)
-;                     (if (>= (- $length 5) 0) (let $prop4 (index-atom $props 4) (let ($prop4name $blendprop4val) ((car-atom $prop4) (index-atom $blend-prop-values 4)) ($prop4name $blendprop4val))) Empty)
-;                     (if (>= (- $length 6) 0) (let $prop5 (index-atom $props 5) (let ($prop5name $blendprop5val) ((car-atom $prop5) (index-atom $blend-prop-values 5)) ($prop5name $blendprop5val))) Empty)
-;                     (if (>= (- $length 7) 0) (let $prop6 (index-atom $props 6) (let ($prop6name $blendprop6val) ((car-atom $prop6) (index-atom $blend-prop-values 6)) ($prop6name $blendprop6val))) Empty)
-;                     (if (>= (- $length 8) 0) (let $prop7 (index-atom $props 7) (let ($prop7name $blendprop7val) ((car-atom $prop7) (index-atom $blend-prop-values 7)) ($prop7name $blendprop7val))) Empty)
-;                     (if (>= (- $length 9) 0) (let $prop8 (index-atom $props 8) (let ($prop8name $blendprop8val) ((car-atom $prop8) (index-atom $blend-prop-values 8)) ($prop8name $blendprop8val))) Empty)
-;                     (if (>= (- $length 10) 0) (let $prop9 (index-atom $props 9) (let ($prop9name $blendprop9val) ((car-atom $prop9) (index-atom $blend-prop-values 9))($prop9name $blendprop9val))) Empty)
-;                 )
-;             ))
-;         )
-;     )    
-; )
+(= (cons-blend-properties $concept1 $blend-prop-values)
+    (let (Concept $concpair $properties) $concept1
+        (let ($length $props) ((size-atom $blend-prop-values) (cdr-atom $properties))
+            (collapse(superpose
+                (
+                    (if (>= (- $length 1) 0) (let $prop0 (index-atom $props 0) (let ($prop0name $blendprop0val) ((car-atom $prop0) (index-atom $blend-prop-values 0)) ($prop0name $blendprop0val))) Empty)
+                    (if (>= (- $length 2) 0) (let $prop1 (index-atom $props 1) (let ($prop1name $blendprop1val) ((car-atom $prop1) (index-atom $blend-prop-values 1)) ($prop1name $blendprop1val))) Empty)
+                    (if (>= (- $length 3) 0) (let $prop2 (index-atom $props 2) (let ($prop2name $blendprop2val) ((car-atom $prop2) (index-atom $blend-prop-values 2)) ($prop2name $blendprop2val))) Empty)
+                    (if (>= (- $length 4) 0) (let $prop3 (index-atom $props 3) (let ($prop3name $blendprop3val) ((car-atom $prop3) (index-atom $blend-prop-values 3)) ($prop3name $blendprop3val))) Empty)
+                    (if (>= (- $length 5) 0) (let $prop4 (index-atom $props 4) (let ($prop4name $blendprop4val) ((car-atom $prop4) (index-atom $blend-prop-values 4)) ($prop4name $blendprop4val))) Empty)
+                    (if (>= (- $length 6) 0) (let $prop5 (index-atom $props 5) (let ($prop5name $blendprop5val) ((car-atom $prop5) (index-atom $blend-prop-values 5)) ($prop5name $blendprop5val))) Empty)
+                    (if (>= (- $length 7) 0) (let $prop6 (index-atom $props 6) (let ($prop6name $blendprop6val) ((car-atom $prop6) (index-atom $blend-prop-values 6)) ($prop6name $blendprop6val))) Empty)
+                    (if (>= (- $length 8) 0) (let $prop7 (index-atom $props 7) (let ($prop7name $blendprop7val) ((car-atom $prop7) (index-atom $blend-prop-values 7)) ($prop7name $blendprop7val))) Empty)
+                    (if (>= (- $length 9) 0) (let $prop8 (index-atom $props 8) (let ($prop8name $blendprop8val) ((car-atom $prop8) (index-atom $blend-prop-values 8)) ($prop8name $blendprop8val))) Empty)
+                    (if (>= (- $length 10) 0) (let $prop9 (index-atom $props 9) (let ($prop9name $blendprop9val) ((car-atom $prop9) (index-atom $blend-prop-values 9))($prop9name $blendprop9val))) Empty)
+                )
+            ))
+        )
+    )    
+)
 
-; (= (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend $blendproperties))
-;     (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations $input1) (get-concept-relations $input2) (get-concept-relations $blend))))
-;         (let ((Concept $conpair1 $propsc1) (Concept $conpair2 $propsc2)) ($concept1 $concept2)
-;             (let ($formattedcon1 $formattedcon2 $formattedblend) (collapse(superpose((let $conce1rels (cons-atom Relations $con1rels) (Concept $input1 $propsc1 $conce1rels)) 
-;                                                                                     (let $conce2rels (cons-atom Relations $con2rels) (Concept $input2 $propsc2 $conce2rels))   
-;                                                                                     (let ($blenprops $blendrels) ((cons-atom Property $blendproperties) (cons-atom Relations $blenrels)) (Blend $blend $blenprops $blendrels))))) ($formattedcon1 $formattedcon2 $formattedblend)
-;             )
-;         )
-;     )
-; )
+(= (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend $blendproperties))
+    (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations $input1) (get-concept-relations $input2) (get-concept-relations $blend))))
+        (let ((Concept $conpair1 $propsc1) (Concept $conpair2 $propsc2)) ($concept1 $concept2)
+            (let ($formattedcon1 $formattedcon2 $formattedblend) (collapse(superpose((let $conce1rels (cons-atom Relations $con1rels) (Concept $input1 $propsc1 $conce1rels)) 
+                                                                                    (let $conce2rels (cons-atom Relations $con2rels) (Concept $input2 $propsc2 $conce2rels))   
+                                                                                    (let ($blenprops $blendrels) ((cons-atom Property $blendproperties) (cons-atom Relations $blenrels)) (Blend $blend $blenprops $blendrels))))) ($formattedcon1 $formattedcon2 $formattedblend)
+            )
+        )
+    )
+)
 
 ; ;;;; Vital Relation Extraction ;;;;
-; (= (vit-rel-extraction $input1 $input2)
-;     (let ($vital-relation-1 $vital-relation-2) (gpt_vital_relation $input1 $input2)
-;         (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))
-;     )
-; )
+(= (vit-rel-extraction $input1 $input2)
+    (let ($vital-relation-1 $vital-relation-2) (gpt_vital_relation $input1 $input2)
+        (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))
+    )
+)
 
 ; ;;;; Vector Extraction ;;;;
-; (= (vec-extraction $input1 $input2)
-;     (let $vital-relations (vit-rel-extraction $input1 $input2)
-;         (let $vec-concepts (gpt_vector $input1 $input2 $vital-relations) $vec-concepts)
-;     )
-; )
+(= (vec-extraction $input1 $input2)
+    (let $vital-relations (vit-rel-extraction $input1 $input2)
+        (let $vec-concepts (gpt_vector $input1 $input2 $vital-relations) $vec-concepts)
+    )
+)
 
 ; ;;;; Add vectorized concepts to self space ;;;;
-; (= (add-concepts)
-;     (let ($concept1 $concept2) (vec-extraction (Input1) (Input2))
-;         (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
-;     )
-; )
+(= (add-concepts)
+    (let ($concept1 $concept2) (vec-extraction (Input1) (Input2))
+        (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
+    )
+)
 
-; (= (blend $GAorCMA $eval)
-;     (let $final-pop ($GAorCMA)
-;         (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
-;             (let $best-fitness (index-atom $best-sample-with-fitness 1)
-;                 (if (>= $best-fitness 0)
-;                     (let $concept-pair (let (Concept $x $y) (concept1) $x)
-;                         (let $network (gpt_network_selector $concept-pair)
-;                             (if (not (== $network None))
-;                                 (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
-;                                     (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
-;                                         (let $blend ($network $concept-pair $best-cand-mu-emergence)
-;                                             (if $eval
-;                                             (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
-;                                                 (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
-;                                                     (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
-;                                                         (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
-;                                                             (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-;                                                                 (Formed Blend: $blend-name
-;                                                                 Evaluation-Metrics:
-;                                                                 Integration: $integration-res
-;                                                                 Good-reason: $good-reason-res
-;                                                                 Unpacking: $unpacking-res
-;                                                                 Web: $web-res
-;                                                                 Topology: $topology-res
-;                                                                 Metonymy: $metonymy-res
-;                                                                 )
-;                                                             )
-;                                                         )
-;                                                     )
-;                                                 )
-;                                             )
-;                                             $blend
-;                                             )
-;                                         )
-;                                     )
-;                                 )
-;                                 (Error $newtwork NoNetworkSelected)
-;                             )
-;                         )
-;                     )
-;                     (Error $best-fitness NegativeMu-hqblendValue)
-;                 )
-;             )
-;         )
-;     )
-; )
+(= (blend $GAorCMA $eval)
+    (let $final-pop ($GAorCMA)
+        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
+            (let $best-fitness (index-atom $best-sample-with-fitness 1)
+                (if (>= $best-fitness 0)
+                    (let $concept-pair (let (Concept $x $y) (concept1) $x)
+                        (let $network (gpt_network_selector $concept-pair)
+                            (if (not (== $network None))
+                                (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
+                                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
+                                        (let $blend ($network $concept-pair $best-cand-mu-emergence)
+                                            (if $eval
+                                            (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
+                                                (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
+                                                    (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
+                                                        (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
+                                                            (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                                                                (Formed Blend: $blend-name
+                                                                Evaluation-Metrics:
+                                                                Integration: $integration-res
+                                                                Good-reason: $good-reason-res
+                                                                Unpacking: $unpacking-res
+                                                                Web: $web-res
+                                                                Topology: $topology-res
+                                                                Metonymy: $metonymy-res
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                            $blend
+                                            )
+                                        )
+                                    )
+                                )
+                                (Error $newtwork NoNetworkSelected)
+                            )
+                        )
+                    )
+                    (Error $best-fitness NegativeMu-hqblendValue)
+                )
+            )
+        )
+    )
+)
