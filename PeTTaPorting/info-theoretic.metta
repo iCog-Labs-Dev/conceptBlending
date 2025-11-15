@@ -161,16 +161,16 @@
         (let ($length $props) ((size-atom $blend-prop-values) (cdr-atom $properties))
             (collapse(superpose
                 (
-                    (if (>= (- $length 1) 0) (let $prop0 (index-atom $props 0) (let ($prop0name $blendprop0val) ((car-atom $prop0) (index-atom $blend-prop-values 0)) ($prop0name $blendprop0val))) Empty)
-                    (if (>= (- $length 2) 0) (let $prop1 (index-atom $props 1) (let ($prop1name $blendprop1val) ((car-atom $prop1) (index-atom $blend-prop-values 1)) ($prop1name $blendprop1val))) Empty)
-                    (if (>= (- $length 3) 0) (let $prop2 (index-atom $props 2) (let ($prop2name $blendprop2val) ((car-atom $prop2) (index-atom $blend-prop-values 2)) ($prop2name $blendprop2val))) Empty)
-                    (if (>= (- $length 4) 0) (let $prop3 (index-atom $props 3) (let ($prop3name $blendprop3val) ((car-atom $prop3) (index-atom $blend-prop-values 3)) ($prop3name $blendprop3val))) Empty)
-                    (if (>= (- $length 5) 0) (let $prop4 (index-atom $props 4) (let ($prop4name $blendprop4val) ((car-atom $prop4) (index-atom $blend-prop-values 4)) ($prop4name $blendprop4val))) Empty)
-                    (if (>= (- $length 6) 0) (let $prop5 (index-atom $props 5) (let ($prop5name $blendprop5val) ((car-atom $prop5) (index-atom $blend-prop-values 5)) ($prop5name $blendprop5val))) Empty)
-                    (if (>= (- $length 7) 0) (let $prop6 (index-atom $props 6) (let ($prop6name $blendprop6val) ((car-atom $prop6) (index-atom $blend-prop-values 6)) ($prop6name $blendprop6val))) Empty)
-                    (if (>= (- $length 8) 0) (let $prop7 (index-atom $props 7) (let ($prop7name $blendprop7val) ((car-atom $prop7) (index-atom $blend-prop-values 7)) ($prop7name $blendprop7val))) Empty)
-                    (if (>= (- $length 9) 0) (let $prop8 (index-atom $props 8) (let ($prop8name $blendprop8val) ((car-atom $prop8) (index-atom $blend-prop-values 8)) ($prop8name $blendprop8val))) Empty)
-                    (if (>= (- $length 10) 0) (let $prop9 (index-atom $props 9) (let ($prop9name $blendprop9val) ((car-atom $prop9) (index-atom $blend-prop-values 9))($prop9name $blendprop9val))) Empty)
+                    (if (>= (- $length 1) 0) (let $prop0 (index-atom $props 0) (let ($prop0name $blendprop0val) ((car-atom $prop0) (index-atom $blend-prop-values 0)) ($prop0name $blendprop0val))) (empty))
+                    (if (>= (- $length 2) 0) (let $prop1 (index-atom $props 1) (let ($prop1name $blendprop1val) ((car-atom $prop1) (index-atom $blend-prop-values 1)) ($prop1name $blendprop1val))) (empty))
+                    (if (>= (- $length 3) 0) (let $prop2 (index-atom $props 2) (let ($prop2name $blendprop2val) ((car-atom $prop2) (index-atom $blend-prop-values 2)) ($prop2name $blendprop2val))) (empty))
+                    (if (>= (- $length 4) 0) (let $prop3 (index-atom $props 3) (let ($prop3name $blendprop3val) ((car-atom $prop3) (index-atom $blend-prop-values 3)) ($prop3name $blendprop3val))) (empty))
+                    (if (>= (- $length 5) 0) (let $prop4 (index-atom $props 4) (let ($prop4name $blendprop4val) ((car-atom $prop4) (index-atom $blend-prop-values 4)) ($prop4name $blendprop4val))) (empty))
+                    (if (>= (- $length 6) 0) (let $prop5 (index-atom $props 5) (let ($prop5name $blendprop5val) ((car-atom $prop5) (index-atom $blend-prop-values 5)) ($prop5name $blendprop5val))) (empty))
+                    (if (>= (- $length 7) 0) (let $prop6 (index-atom $props 6) (let ($prop6name $blendprop6val) ((car-atom $prop6) (index-atom $blend-prop-values 6)) ($prop6name $blendprop6val))) (empty))
+                    (if (>= (- $length 8) 0) (let $prop7 (index-atom $props 7) (let ($prop7name $blendprop7val) ((car-atom $prop7) (index-atom $blend-prop-values 7)) ($prop7name $blendprop7val))) (empty))
+                    (if (>= (- $length 9) 0) (let $prop8 (index-atom $props 8) (let ($prop8name $blendprop8val) ((car-atom $prop8) (index-atom $blend-prop-values 8)) ($prop8name $blendprop8val))) (empty))
+                    (if (>= (- $length 10) 0) (let $prop9 (index-atom $props 9) (let ($prop9name $blendprop9val) ((car-atom $prop9) (index-atom $blend-prop-values 9))($prop9name $blendprop9val))) (empty))
                 )
             ))
         )
@@ -290,35 +290,29 @@
 
 (= (Alpha) 0.3)
 
-; (= (coherence $props $degrees)
-;     (let $tc (total-correlation-entropy $degrees min)
-;         (let $tv (isnan-math $tc)
-;             (let $ftc (if $tv 0 $tc)
-;                 (let $sim (semantic-correlation $props $degrees) (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim)))        
-;             )        
-;         )
-;     )
-; )
+(= (coherence $props $degrees)
+    (let $tc (total-correlation-entropy $degrees min)
+        (let $tv (isnan-math $tc)
+            (let $ftc (if $tv 0 $tc)
+                (let $sim (semantic-correlation $props $degrees) (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim)))        
+            )        
+        )
+    )
+)
 
-; (= (objectives $concept1 $concept2 $candidate-degree)
-;     (function
-;         (chain (get-prop-value-pairs $concept1) $prop-val-pairs
-;             (chain (get-properties $prop-val-pairs) $props
-;                 (return (collapse(superpose((mu-hqblend $candidate-degree $concept1 $concept2) (coherence $props $candidate-degree)))))
-;             )
-;         )
-;     )
-; )
+(= (objectives $concept1 $concept2 $candidate-degree)
+        (let $prop-val-pairs (get-prop-value-pairs $concept1)
+            (let $props (get-properties $prop-val-pairs)
+                (collapse(superpose((mu-hqblend $candidate-degree $concept1 $concept2) (coherence $props $candidate-degree))))
+            )
+        )
+)
 
 (= (dominates $u $v)
     (and (all-true (compare-lists $u $v >=)) (any-true (compare-lists $u $v >)))
 )
 
-; (= (custom-unify $var1 $var2 $op1 $op2)
-;     (function
-;         (chain (unify $var1 $var2 $op1 $op2) $result (return $result))
-;     )
-; )
+
 
 (= (check-cross-dominance $obj1 $obj2)
     (if (dominates $obj1 $obj2) True (if (dominates $obj2 $obj1) False True))
@@ -345,28 +339,7 @@
     ))
 ))
 
-; (= (non-dominated-helper $obj $obj-tail)
-;     (function
-;         (chain (decons-atom $obj-tail) $ht
-;             (unify ($head $tail) $ht
-;                 (chain (eval (dominates $obj $head)) $head-res
-;                     (return (custom-unify $head-res True
-;                         (chain (eval (non-dominated-helper $obj $tail)) $tail-res
-;                             $tail-res
-;                         )
-;                         (chain (eval (dominates $head $obj)) $head-res2
-;                             (custom-unify $head-res2 True
-;                                 False
-;                                 (eval (non-dominated-helper $obj $tail))
-;                             )
-;                         )
-;                     ))
-;                 )
-;                 (return True)
-;             )
-;         )
-;     )
-; )
+
 
 (=(non-dominated-sort-helper $objs-list $objs-tail $index)  
         (if (== $objs-tail ()) ()
@@ -385,27 +358,6 @@
 )   )
 )
 
-; (= (non-dominated-sort-helper $objs-list $objs-tail $index)
-;     (function
-;         (chain (decons-atom $objs-tail) $ht
-;             (unify ($fhead $ftail) $ht
-;                 (chain (index-atom $objs-list $index) $head      
-;                     (chain (filter-list $objs-list $head) $filtered-objs-list
-;                         (chain (non-dominated-helper $head $filtered-objs-list) $head-res
-;                             (chain (+ 1 $index) $new-index
-;                                 (chain (eval (non-dominated-sort-helper $objs-list $ftail $new-index)) $tail-res
-;                                     (chain (custom-cons-atom $head-res $tail-res) $result (return $result))
-;                                 )
-;                             )
-;                         )
-;                     )
-;                 )
-;                 (return ())
-;             )
-;         )
-;     )
-; )
-
 (= (non-dominated-sort $objs-list $objs-tv-list $index $accum)
         (if (== $objs-tv-list ()) () 
         (let* (
@@ -422,25 +374,9 @@
 )
 
 
-; (= (non-dominated-sort $objs-list $objs-tv-list $index $accum)
-;     (function
-;         (chain (decons-atom $objs-tv-list) $ht
-;             (chain (index-atom $objs-list $index) $index-obj
-;                 (unify ($head $tail) $ht
-;                     (chain (unify $head True (custom-cons-atom $index-obj $accum) $accum) $new-accum
-;                         (chain (+ 1 $index) $new-index
-;                             (chain (eval (non-dominated-sort $objs-list $tail $new-index $new-accum)) $tail-res (return $tail-res))
-;                         )
-;                     )
-;                     (return $accum)
-;                 )
-;             )
-;         )
-;     )
-; )
 
 (= (non-deter-non-dominated-sort-helper $var $objs-list)
-    (let $filtered-objs (filter-list $objs-list $var) (if (non-deter-non-dominated-helper $var $filtered-objs) $var Empty))
+    (let $filtered-objs (filter-list $objs-list $var) (if (non-deter-non-dominated-helper $var $filtered-objs) $var (empty)))
 )
 
 (= (non-deter-non-dominated-sort $objs-list)
@@ -456,7 +392,7 @@
 ; ; !(non-deter-non-dominated-sort (objs-list))
 
 (= (check-non-dominated $indiv $candidates)
-    (let ($indiv-obj $candis-objs) ((index-atom $indiv 1) (let $unzipped-candis (unzip-list $candidates) (index-atom $unzipped-candis 1))) (let $filtered-candis-objs (filter-list $candis-objs $indiv-obj) (if (non-deter-non-dominated-helper $indiv-obj $filtered-candis-objs) $indiv Empty)))
+    (let ($indiv-obj $candis-objs) ((index-atom $indiv 1) (let $unzipped-candis (unzip-list $candidates) (index-atom $unzipped-candis 1))) (let $filtered-candis-objs (filter-list $candis-objs $indiv-obj) (if (non-deter-non-dominated-helper $indiv-obj $filtered-candis-objs) $indiv (empty))))
 )
 
 (= (filter-non-dominated $candidates)
@@ -474,16 +410,16 @@
         (let ($length $props) ((size-atom $blend-prop-values) (cdr-atom $properties))
             (collapse(superpose
                 (
-                    (if (>= (- $length 1) 0) (let $prop0 (index-atom $props 0) (let ($prop0name $blendprop0val) ((car-atom $prop0) (index-atom $blend-prop-values 0)) ($prop0name $blendprop0val))) Empty)
-                    (if (>= (- $length 2) 0) (let $prop1 (index-atom $props 1) (let ($prop1name $blendprop1val) ((car-atom $prop1) (index-atom $blend-prop-values 1)) ($prop1name $blendprop1val))) Empty)
-                    (if (>= (- $length 3) 0) (let $prop2 (index-atom $props 2) (let ($prop2name $blendprop2val) ((car-atom $prop2) (index-atom $blend-prop-values 2)) ($prop2name $blendprop2val))) Empty)
-                    (if (>= (- $length 4) 0) (let $prop3 (index-atom $props 3) (let ($prop3name $blendprop3val) ((car-atom $prop3) (index-atom $blend-prop-values 3)) ($prop3name $blendprop3val))) Empty)
-                    (if (>= (- $length 5) 0) (let $prop4 (index-atom $props 4) (let ($prop4name $blendprop4val) ((car-atom $prop4) (index-atom $blend-prop-values 4)) ($prop4name $blendprop4val))) Empty)
-                    (if (>= (- $length 6) 0) (let $prop5 (index-atom $props 5) (let ($prop5name $blendprop5val) ((car-atom $prop5) (index-atom $blend-prop-values 5)) ($prop5name $blendprop5val))) Empty)
-                    (if (>= (- $length 7) 0) (let $prop6 (index-atom $props 6) (let ($prop6name $blendprop6val) ((car-atom $prop6) (index-atom $blend-prop-values 6)) ($prop6name $blendprop6val))) Empty)
-                    (if (>= (- $length 8) 0) (let $prop7 (index-atom $props 7) (let ($prop7name $blendprop7val) ((car-atom $prop7) (index-atom $blend-prop-values 7)) ($prop7name $blendprop7val))) Empty)
-                    (if (>= (- $length 9) 0) (let $prop8 (index-atom $props 8) (let ($prop8name $blendprop8val) ((car-atom $prop8) (index-atom $blend-prop-values 8)) ($prop8name $blendprop8val))) Empty)
-                    (if (>= (- $length 10) 0) (let $prop9 (index-atom $props 9) (let ($prop9name $blendprop9val) ((car-atom $prop9) (index-atom $blend-prop-values 9))($prop9name $blendprop9val))) Empty)
+                    (if (>= (- $length 1) 0) (let $prop0 (index-atom $props 0) (let ($prop0name $blendprop0val) ((car-atom $prop0) (index-atom $blend-prop-values 0)) ($prop0name $blendprop0val))) (empty))
+                    (if (>= (- $length 2) 0) (let $prop1 (index-atom $props 1) (let ($prop1name $blendprop1val) ((car-atom $prop1) (index-atom $blend-prop-values 1)) ($prop1name $blendprop1val))) (empty))
+                    (if (>= (- $length 3) 0) (let $prop2 (index-atom $props 2) (let ($prop2name $blendprop2val) ((car-atom $prop2) (index-atom $blend-prop-values 2)) ($prop2name $blendprop2val))) (empty))
+                    (if (>= (- $length 4) 0) (let $prop3 (index-atom $props 3) (let ($prop3name $blendprop3val) ((car-atom $prop3) (index-atom $blend-prop-values 3)) ($prop3name $blendprop3val))) (empty))
+                    (if (>= (- $length 5) 0) (let $prop4 (index-atom $props 4) (let ($prop4name $blendprop4val) ((car-atom $prop4) (index-atom $blend-prop-values 4)) ($prop4name $blendprop4val))) (empty))
+                    (if (>= (- $length 6) 0) (let $prop5 (index-atom $props 5) (let ($prop5name $blendprop5val) ((car-atom $prop5) (index-atom $blend-prop-values 5)) ($prop5name $blendprop5val))) (empty))
+                    (if (>= (- $length 7) 0) (let $prop6 (index-atom $props 6) (let ($prop6name $blendprop6val) ((car-atom $prop6) (index-atom $blend-prop-values 6)) ($prop6name $blendprop6val))) (empty))
+                    (if (>= (- $length 8) 0) (let $prop7 (index-atom $props 7) (let ($prop7name $blendprop7val) ((car-atom $prop7) (index-atom $blend-prop-values 7)) ($prop7name $blendprop7val))) (empty))
+                    (if (>= (- $length 9) 0) (let $prop8 (index-atom $props 8) (let ($prop8name $blendprop8val) ((car-atom $prop8) (index-atom $blend-prop-values 8)) ($prop8name $blendprop8val))) (empty))
+                    (if (>= (- $length 10) 0) (let $prop9 (index-atom $props 9) (let ($prop9name $blendprop9val) ((car-atom $prop9) (index-atom $blend-prop-values 9))($prop9name $blendprop9val))) (empty))
                 )
             ))
         )
