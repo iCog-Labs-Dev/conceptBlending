@@ -159,7 +159,7 @@ def prompt_agent(metta: MeTTa, network: str, *args):
             algspec_2=algspec_2,
         )
     
-    elif network == "amalgam":
+    elif network == "amalgam_builder":
         algspec_1, least_generalized = _extract_concept_name(str(args[0]))
         concept2_name, _ = _extract_concept_name(str(args[1]))
 
