@@ -159,15 +159,16 @@ def prompt_agent(metta: MeTTa, network: str, *args):
             algspec_2=algspec_2,
         )
     
-    elif network == "amalgam_builder":
-        algspec_1, least_generalized = _extract_concept_name(str(args[0]))
-        concept2_name, _ = _extract_concept_name(str(args[1]))
+    elif network== "amalgam_builder":
+        
+        algspec_1,lcg_spec = _extract_concept_name(str(args[0]))
+        algspec_2,_ = _extract_concept_name(str(args[1]))
 
         formatted_prompt = AMALGAM_PROMPT.format(
-            
+
             algspec_1=algspec_1,
             algspec_2=algspec_2,
-            lcg_spec=least_generalized
+            lcg_spec=lcg_spec
         )
 
     else:
