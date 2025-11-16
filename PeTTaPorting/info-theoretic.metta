@@ -1,5 +1,7 @@
 !(import! &self utils/list-op-utils)
-
+; a temporary representation of the function Error
+(=(Error $atom $message) 
+    $message)
 
 (= (get-prop-value-pairs $concept)
     (let (Concept $x $y) $concept (cdr-atom $y))
