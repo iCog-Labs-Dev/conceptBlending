@@ -5,6 +5,7 @@ from libs.prompts import (
     GENERALIZATION_PROMPT,
     SPEC_PROMPT,
     CONTEXT_PREPROCESSING_PROMPT,
+    AMALGAM_PROMPT
 )
 
 
@@ -49,6 +50,7 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     """
     concept1_name, context1 = _extract_concept_and_context(str(args[0]))
     concept2_name, context2 = _extract_concept_and_context(str(args[1]))
+    
 
     formatted_prompt = CONTEXT_PREPROCESSING_PROMPT.format(
         concept1=concept1_name,
@@ -155,6 +157,17 @@ def prompt_agent(metta: MeTTa, network: str, *args):
             concept2=concept2_name,
             algspec_1=algspec_1,
             algspec_2=algspec_2,
+        )
+    
+    elif network == "amalgam":
+        algspec_1, least_generalized = _extract_concept_name(str(args[0]))
+        concept2_name, _ = _extract_concept_name(str(args[1]))
+
+        formatted_prompt = AMALGAM_PROMPT.format(
+            
+            algspec_1=algspec_1,
+            algspec_2=algspec_2,
+            lcg_spec=least_generalized
         )
 
     else:
