@@ -251,13 +251,15 @@
 ;  !(joint-entropy-compute-helper 0.9 (0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
 ; !(joint-entropy-compute-helper 0.9 (0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
 
+
+
 (=(joint-entropy-compute $candidate $mode)
     (if (== $candidate ()) () (let* (
           ($head (car-atom $candidate))
           ($tail (cdr-atom $candidate))
           ($jentropy (if (== $tail ()) () (joint-entropy-compute-helper $head $tail $mode)))
           ($tentropy (eval (joint-entropy-compute $tail $mode)))
-          ($result (custom-union-atom1 $jentropy $tentropy))
+          ($result (union-atom $jentropy $tentropy))
     )
     $result
     ))
@@ -288,7 +290,7 @@
         )
 )
 
- !(total-correlation-entropy (0.9 0.0 0.8 0.2 0.9 0.7 ) min)
+;  !(total-correlation-entropy (0.9 0.0 0.8 0.2 0.9 0.7 ) min)
 
 (= (Alpha) 0.3)
 
@@ -403,9 +405,9 @@
     )
 )
 
-;  (= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
+(= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
 
-;  !(filter-non-dominated (candidates-list))
+!(filter-non-dominated (candidates-list))
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1
