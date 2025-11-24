@@ -155,6 +155,16 @@
         )
     )
 )
+(= (input1) Man)
+(= (input2) Spider)
+(= (concepttest1) (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
+(= (concepttest2) (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
+(= (blend) SpiderMan)
+(= (blendpropswithoutprov) ((web-creation 0.9) (intelligence 1) (physical-strength 0.9) (mobility 1) (predatory-behavior 0.9) (social-structure 0.9) (symbolism 1) (tool-use 0.9)))
+!(let $blendpropwithprove (provenance-helper ((input1) (get-prop-value-pairs (concepttest1))) ((input2) (get-prop-value-pairs (concepttest2))) ((blend) (blendpropswithoutprov)))
+    (format-concepts ((input1) (concepttest1)) ((input2) (concepttest2)) ((blend) $blendpropwithprove))
+)
+; (format-concepts )
 
 ;;;; Vital Relation Extraction ;;;;
 (= (vit-rel-extraction $input1 $input2)
