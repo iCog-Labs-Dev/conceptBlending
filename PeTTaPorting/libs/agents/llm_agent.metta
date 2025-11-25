@@ -11,10 +11,16 @@
      (py-str-helper $tail $outp2)))
 (= (py-str $L) (py-str-helper $L ""))
 
+;Evaluate expression via py-call:
+(= (py-eval $str)
+   (let $dict (py-call (dict))
+        (py-call (quote (eval $str $dict $dict)))))
+
 ;Add to builtins a function that can call functions via keyword arguments
-!(py-call (eval "setattr(__import__('builtins'),'apply_kwargs',(lambda f,d: f(**d))) or 0" (emptydict)))
+!(py-eval "setattr(__import__('builtins'),'apply_kwargs',(lambda f,d: f(**d))) or 0")
 ;Add to builtins a function that can access by index:
-!(py-call (eval "setattr(__import__('builtins'),'index', (lambda o,i: o[i])) or 0" (emptydict)))
+!(py-eval "setattr(__import__('builtins'),'index', (lambda o,i: o[i])) or 0")
+
 
 ; Function to call Google Gemini using the new google-genai SDK
 (= (useGenAI $prompt)
@@ -26,17 +32,15 @@
           ($Client (py-call (getattr $genai "Client")))
 
           ; Prepare configuration with GEMINI_API_KEY
-          ($confargs (py-call (eval (py-str ("{'api_key':__import__('os').getenv('GEMINI_API_KEY')}"))
-                                    (emptydict)
-                                    (emptydict))))
+          ($confargs-str (py-str ("{'api_key':__import__('os').getenv('GEMINI_API_KEY')}")))
+          ($confargs (py-eval $confargs-str))
 
           ; Instantiate the client → client = genai.Client(api_key=...)
           ($client (py-call (builtins.apply_kwargs $Client $confargs)))
 
           ; Prepare model & prompt arguments
-          ($kwargs (py-call (eval (py-str ("{'model': 'gemini-2.5-flash', 'contents':\"" $prompt "\"}"))
-                                  (emptydict)
-                                  (emptydict))))
+          ($kwargs-str (py-str ("{'model': 'gemini-2.5-flash', 'contents':\"" $prompt "\"}")))
+          ($kwargs (py-eval $kwargs-str))
           ; Call client.models.generate_text(**kwargs)
           ($models (py-call (getattr $client "models")))
           ($generate (py-call (getattr $models "generate_content")))
