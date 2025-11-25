@@ -20,15 +20,10 @@ def priority_generator(specs):
         The LLM response with priority annotations (can be parsed with metta.parse_all)
     """
  
-  
-    
-
-    
     formatted_prompt = PRIORITY_PROMPT.format(
         specs=specs
         
     )
-
 
     # Call the LLM
     llm_agent = GeminiAgent()
@@ -36,9 +31,6 @@ def priority_generator(specs):
     response = llm_agent(messages, tools=[])
     
     return response 
-
-
-
 
 
 def context_preprocessing_agent(metta: MeTTa, *args):
@@ -55,15 +47,9 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     Returns:
         List of parsed Concept atoms with Context information
     """
-    print('args in context preprocessing agent:',args)
-    
-   
+
     concept1_name, context1, concept2_name, context2  = args
-    print('context 1:',context1)
-    print('context 2:',context2)
-    print('concept 1 name:',concept1_name)
-    print('concept 2 name:',concept2_name)
-    
+   
  
     formatted_prompt = CONTEXT_PREPROCESSING_PROMPT.format(
         concept1=concept1_name,
@@ -75,11 +61,9 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     llm_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
     response = llm_agent(messages, tools=[])
-   
+    
     
     return metta.parse_all(response)
-
-
 
 
 def get_prompt(agent_type: str) -> str:
@@ -119,7 +103,7 @@ def prompt_agent(metta: MeTTa, network: str, *args):
 
     if network == "algspec_builder":
         
-        
+        global concept1_name, concept2_name
         concept1_name,concept2_name, common_context = args
         
         
@@ -133,17 +117,20 @@ def prompt_agent(metta: MeTTa, network: str, *args):
         
         algspec_1, algspec_2 =args
         
-
+        
+        
         formatted_prompt = GENERALIZATION_PROMPT.format(
-            
+            concept1=concept1_name,
+            concept2=concept2_name,
             algspec_1=algspec_1,
             algspec_2=algspec_2,
         )
-       
+
     elif network== "amalgam_builder":
         
         algspec_1,algspec_2,lcg_spec = args
         
+       
         formatted_prompt = AMALGAM_PROMPT.format(
 
             algspec_1=algspec_1,
@@ -164,7 +151,7 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     answer = gpt_agent(messages, tools=[])
     
     if network=="algspec_builder":
-       
+        
         answer=priority_generator(answer)
         
         
