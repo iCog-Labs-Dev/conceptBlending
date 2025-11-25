@@ -1,10 +1,10 @@
 GENERALIZATION_PROMPT = """
-You are an expert in algebraic specification, formal methods, and anti-unification (Least Common Generalization - LCG).
-Given two algebraic specs, produce a single concise, logically-coherent, and consistent least common generalized spec that preserves shared structure and minimally generalizes differences.
+You are an expert in algebraic specification, formal methods, conceptual integration, and anti-unification (Least Common Generalization - LCG).
+Given two algebraic specs, produce a single concise, logically-coherent,a tightly integrated scene that can be manipulated as a unit, and consistent least common generalized spec that preserves shared structure and minimally generalizes differences.
 
-INPUTS (placeholders):
-- Concept 1: {concept1}
-- Concept 2: {concept2}
+INPUTS:
+- Concept1:
+- Concept2:
 - specification1: {algspec_1}
 - specification2: {algspec_2}
 
@@ -44,7 +44,7 @@ RULES / HEURISTICS:
 OUTPUT FORMAT:
 Return ONLY in the following way nothing else (no explanations, no quotes, no markdown):
 
-(Concept {concept1}@{concept2}
+(Concept Concept1@Concept2
  (spec
   (sorts (...))
   (ops (...))

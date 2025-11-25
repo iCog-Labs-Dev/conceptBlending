@@ -20,7 +20,7 @@ For `Concept 1: Man` (Context: 'a complex individual') and `Concept 2: Bat` (Con
 ## REQUIREMENTS:
 1.  **Analyze Context:** Use the provided Contexts: `{context1}` and `{context2}` to disambiguate `{concept1}` and `{concept2}` and select the most semantically coherent interpretation to each other.
 2.  **Generate Broad Contexts:** Internally generate a wide list of descriptive contexts for each concept based on the chosen interpretation.
-3.  **Select Strictly Top 8 not below or above 8:** From your internal list, select **exactly 8** diverse, meaningful, and salient context descriptions which connects and makes the to concept coherant.
+3.  **Select Strictly Top 8 not below or above 8:** From your internal list, select **exactly 8** diverse, meaningful, and salient context descriptions which connects and makes the two concept coherant.
 4.  **Capture Diverse Aspects:** The 8 descriptions must capture a mix of:
     * **Essential Semantic Properties:** (e.g., 'is a mammal', 'is sentient')
     * **Functional/Semantic Roles:** (e.g., 'navigates using echolocation', 'acts as a vigilante')
@@ -30,7 +30,7 @@ For `Concept 1: Man` (Context: 'a complex individual') and `Concept 2: Bat` (Con
     * **Usage/Contextual Patterns:** (e.g., 'emerges at dusk', 'operates in darkness')
 
 ## OUTPUT FORMAT:
-Return ONLY the one S-expression structures.
+Return Strictly ONLY the one S-expression structures.
 
 
 (Context
