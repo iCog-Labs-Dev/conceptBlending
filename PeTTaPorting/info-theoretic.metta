@@ -102,6 +102,7 @@
 (=(property-max $concept1 $concept2)
     (let*(
         (($properties1 $properties2) (collapse(superpose((get-prop-value-pairs $concept1) (get-prop-value-pairs $concept2)))))
+        ; ($_ (println! (pmax $properties1 $properties2)))
         (($properties1values $properties2values $properties) (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1)))))
     )
         (max-elements $properties1values $properties2values $properties)
@@ -131,7 +132,7 @@
 (= (mu-emergence $candidate-degrees $properties-max)
     (let
         ($propertiesvalues $properties)
-        (collapse(hyperpose((get-values $properties-max) (get-properties $properties-max))))
+        (collapse(superpose((get-values $properties-max) (get-properties $properties-max))))
         (list-substract $candidate-degrees $propertiesvalues $properties)
     )
 )
@@ -156,7 +157,7 @@
     )
 )
 
-; !(mu-hqblend (0.5 0.3 0.2 0.9) (batman) (spiderman) )
+;  !(mu-hqblend (0.5 0.3 0.2 0.9) (batman) (spiderman) )
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1
@@ -407,7 +408,7 @@
 
 (= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
 
-!(filter-non-dominated (candidates-list))
+; !(filter-non-dominated (candidates-list))
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1
