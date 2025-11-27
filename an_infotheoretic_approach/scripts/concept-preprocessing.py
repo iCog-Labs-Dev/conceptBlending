@@ -63,12 +63,11 @@ def remove_triplet_wrappers(text: str) -> str:
     return text
 
 
-def fix_brackets(text: str) -> str:
+def fix_brackets(text: str, mode: str) -> str:
     """
     Adjust brackets:
-      - remove: remove all [x] brackets
+      - remove all [x] brackets
     """
-    
     text = PAT_DOUBLE_BRACKET.sub(r"\1", text)
     return PAT_SINGLE_BRACKET.sub(r"\1", text)
     
@@ -79,7 +78,7 @@ def clean_decimal(value: str) -> str:
     return value[:-2] if value.endswith('.0') else value
 
 
-def transform_block(block: str) -> str:
+def transform_block(block: str, brackets_mode: str = 'remove', fix_weight: bool = True) -> str:
     """
     Processes one block of MeTTa code:
       - Removes Triplets
@@ -103,7 +102,7 @@ def transform_block(block: str) -> str:
 
         # Handle brackets unless metadata present
         if not ("'sources':_" in line and any(k in line for k in ["'contributor':", "'process':"])):
-            line = fix_brackets(line)
+            line = fix_brackets(line, brackets_mode)
 
         # Process dataset/target lines for weights
         if line.startswith('(dataset ') or line.startswith('(target '):
@@ -116,7 +115,7 @@ def transform_block(block: str) -> str:
                 line = re.sub(r"_+", "_", line)
                 line = re.sub(r"\s+", " ", line).strip()
 
-            # If this is a dataset line we should *remove* it (dataset field causes clashes)
+            # If this is a dataset line we should remove it
             # but keep any weight extracted as a separate (weight ...) line.
             if line.startswith('(dataset '):
                 if weight_value:
@@ -144,12 +143,26 @@ def transform_block(block: str) -> str:
             # Normalize identifiers/tokens: lowercase leading capital (avoid variables),
             # and escape+quote tokens that contain apostrophes.
             line = PAT_TOKEN_INSIDE.sub(lambda m: _normalize_token(m.group(1)), line)
+  
+            if line.startswith('(surfaceText '):
+
+                surf_pat = r"^\(surfaceText\s*\(\s*([^\s()]+)\s+([^\s()]+)\s+([^\s()]+)\s*\)\s+(.+?)\s*\)$"
+                m = re.match(surf_pat, line)
+                if m:             
+                    name1 = m.group(1)
+                    name2 = m.group(2)
+                    name3 = m.group(3).replace('\\',"")
+                    
+                    text_content = m.group(4)
+                    line = f"(surfaceText ({name1} {name2} {name3}) {text_content})"
             final_lines.append(line.rstrip())
 
     return '\n'.join(final_lines)
 
 
 def _lower_first_char(s: str) -> str:
+    """Lowercase the first character of a string if it is uppercase."""
+   
     if not s:
         return s
     return s[0].lower() + s[1:] if s[0].isupper() else s
@@ -189,14 +202,15 @@ def _normalize_token(token: str) -> str:
 
 # ---------------------- File and Folder Processing ----------------------
 
-def stream_transform(input_path: str, output_stream: TextIO) -> None:
+def stream_transform(input_path: str, output_stream: TextIO,
+                     brackets_mode: str = 'remove', fix_weight: bool = True) -> None:
     """Stream through the file block by block and transform each."""
     with open(input_path, 'r', encoding='utf-8') as file:
         block_lines = []
         for line in file:
             if not line.strip():
                 if block_lines:
-                    transformed = transform_block(''.join(block_lines), )
+                    transformed = transform_block(''.join(block_lines), brackets_mode, fix_weight)
                     if transformed:
                         output_stream.write(transformed + '\n\n')
                     block_lines = []
@@ -205,12 +219,12 @@ def stream_transform(input_path: str, output_stream: TextIO) -> None:
 
         # Handle last block
         if block_lines:
-            transformed = transform_block(''.join(block_lines) )
+            transformed = transform_block(''.join(block_lines), brackets_mode, fix_weight)
             if transformed:
                 output_stream.write(transformed + '\n')
 
 
-def process_folder(folder: str) -> None:
+def process_folder(folder: str, brackets_mode: str, fix_weight: bool) -> None:
     """Process all .metta files in a folder and overwrite them with cleaned output."""
     if not os.path.exists(folder):
         sys.exit(f"❌ Error: Folder not found: {folder}")
@@ -229,7 +243,7 @@ def process_folder(folder: str) -> None:
             with tempfile.NamedTemporaryFile('w', delete=False, dir=folder,
                                               prefix='.tmp_', suffix='.metta', encoding='utf-8') as tmp:
                 temp_path = tmp.name
-                stream_transform(path, tmp )
+                stream_transform(path, tmp, brackets_mode, fix_weight)
             os.replace(temp_path, path)
             print("✅")
         except Exception as e:
@@ -242,12 +256,15 @@ def process_folder(folder: str) -> None:
 def main():
 
     parser = argparse.ArgumentParser(description="Preprocess .metta concept files.")
-    parser.add_argument('--folder', '-f', default='concept-atomspace', help='Folder with .metta files (default: concept-atomspace)')
-    
- 
+    parser.add_argument('--folder', '-f', default='concept-atomspace',
+                        help='Folder with .metta files (default: concept-atomspace)')
+    parser.add_argument('--brackets', '-b', choices=['none', 'single', 'remove'],
+                        default='remove', help='Bracket cleanup mode (default: remove)')
+    parser.add_argument('--fix-weight', '-w', type=lambda x: x.lower() in ['true', '1', 'yes'],
+                        default=True, help='Normalize decimal weights (default: True)')
     args = parser.parse_args()
 
-    process_folder(args.folder)
+    process_folder(args.folder, args.brackets, args.fix_weight)
 
 
 if __name__ == '__main__':
