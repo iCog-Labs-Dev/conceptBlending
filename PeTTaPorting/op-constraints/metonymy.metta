@@ -1,6 +1,3 @@
-!(import! &self common-utils)
-
-
 (= (is-semantically-compressed $relation $blend-properties $blend-name $detect-abbreviations $detect-characteristic-parts) 
 
     (let* (
@@ -52,13 +49,3 @@
     )
   )
 )
-
-
-(= (good_blend)
-   (Blend spiderman 
-    (Properties  (mobility 1) (intelligence 1) (web-creation 1.0) (social-structure 1) (predatory-behavior 1) (communication 1) (symbolism 1) (physical-strength 1))
-    (Relations (UsedFor (transportation 1.0)) (Short_HasPart (engine 0.8)))
-    )
-)
-
-!(metonymy-op (good_blend))
