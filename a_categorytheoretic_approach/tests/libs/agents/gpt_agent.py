@@ -29,7 +29,6 @@ def priority_generator(specs):
     llm_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
     response = llm_agent(messages, tools=[])
-    
     return response 
 
 
@@ -138,14 +137,7 @@ def prompt_agent(metta: MeTTa, network: str, *args):
             lcg_spec=lcg_spec
         )
 
-    else:
-        concept_pair = str(args[0])
-        property_vector = str(args[1])
-        formatted_prompt = prompt.format(
-            concept_pair=concept_pair,
-            property_vector=property_vector,
-        )
-
+    
     gpt_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
     answer = gpt_agent(messages, tools=[])
