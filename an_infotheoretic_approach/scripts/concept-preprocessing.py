@@ -212,7 +212,8 @@ def stream_transform(input_path: str, output_stream: TextIO,
                 if block_lines:
                     transformed = transform_block(''.join(block_lines), brackets_mode, fix_weight)
                     if transformed:
-                        output_stream.write(transformed + '\n\n')
+                        # REMOVE extra blank line → use single newline
+                        output_stream.write(transformed + '\n')
                     block_lines = []
             else:
                 block_lines.append(line)
@@ -222,6 +223,7 @@ def stream_transform(input_path: str, output_stream: TextIO,
             transformed = transform_block(''.join(block_lines), brackets_mode, fix_weight)
             if transformed:
                 output_stream.write(transformed + '\n')
+
 
 
 def process_folder(folder: str, brackets_mode: str, fix_weight: bool) -> None:
