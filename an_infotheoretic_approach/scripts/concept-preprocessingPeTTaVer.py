@@ -185,6 +185,14 @@ def _normalize_token(token: str) -> str:
     wrapped = token.startswith("'") and token.endswith("'") and len(token) >= 2
     inner = token[1:-1] if wrapped else token
 
+    # _hello → hello, __x → x
+    if inner.startswith('_'):
+        inner = inner.lstrip('_')
+
+    # 12_hour → '12_hour'
+    if inner and inner[0].isdigit() and not inner.isdigit() and not wrapped:
+        return f"'{inner}'"
+
     # Lowercase leading capital letter
     inner = _lower_first_char(inner)
 
@@ -193,9 +201,16 @@ def _normalize_token(token: str) -> str:
         escaped = inner.replace("'", "\\'")
         return f"'{escaped}'"
 
+    # Example: a.m -> 'a.m', 2.34 -> '2.34'
+    if '.' in inner and not wrapped:
+        return f"'{inner}'"
+
     # If token contains an apostrophe-like unsafe char (shouldn't happen now), quote it
     if not wrapped and "'" in token:
-        return f"'{token.replace("'", "\\'")}'"
+        escaped = token.replace("'", "\\'")
+        return f"'{escaped}'"
+
+        # return f"'{token.replace("'", "\\'")}'"
 
     return inner
 
@@ -258,7 +273,7 @@ def process_folder(folder: str, brackets_mode: str, fix_weight: bool) -> None:
 def main():
 
     parser = argparse.ArgumentParser(description="Preprocess .metta concept files.")
-    parser.add_argument('--folder', '-f', default='concept-atomspace',
+    parser.add_argument('--folder', '-f', default='/home/wendecoder/expDirs/conceptBlending/an_infotheoretic_approach/concept-atomspace',
                         help='Folder with .metta files (default: concept-atomspace)')
     parser.add_argument('--brackets', '-b', choices=['none', 'single', 'remove'],
                         default='remove', help='Bracket cleanup mode (default: remove)')
