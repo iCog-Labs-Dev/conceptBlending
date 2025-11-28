@@ -1,5 +1,3 @@
-!(import! &self common-utils)
-
 (= (are-conflicting $item $item2 $terms-antonymity $pre-def-confl)
     (if (or (== ($item $item2) $pre-def-confl) (or (== ($item2 $item) $pre-def-confl) $terms-antonymity))
         1
@@ -47,9 +45,5 @@
     )
 )
 
-(= (blend) (Blend SpiderMan (Property (web-creation (Spider)) (intelligence) (physical-strength) (mobility) (predatory-behavior (Spider)) (social-structure) (symbolism) (tool-use)) (Relations (FormOf spiderman) (IsA human) (IsA superhero)))
-)
-
-!(integration-op (blend))
-
+;!(integration-op (blend))
 ; Expected output:- 1.0
