@@ -119,7 +119,11 @@ def validate_structure(code_str: str) -> tuple[bool, str]:
         if missing:
             return False, f"Structure Error [Concept {concept_name}]: Missing definitions for {', '.join(missing)}."
 
-        
+        if not definitions['sorts'] or not definitions['sorts'][0]:
+            return False, f"Structure Error [Concept {concept_name}]: Sorts list cannot be empty."
+            
+        if not definitions['ops'] or not definitions['ops'][0]:
+            return False, f"Structure Error [Concept {concept_name}]: Ops list cannot be empty."
         # OPS Validation: Must be ((: name Type) ...)
         if definitions['ops']:
             ops_list = definitions['ops'][0]

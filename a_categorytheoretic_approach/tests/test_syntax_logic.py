@@ -126,5 +126,5 @@ class TestValidationSuite(unittest.TestCase):
         self.assertTrue(valid)
         self.assertIn("Skipping", msg)
 if __name__ == '__main__':
-    print(">>> Running Comprehensive Syntax Tests...")
+    print(">>> Running Comprehensive Tests...")
     unittest.main()
