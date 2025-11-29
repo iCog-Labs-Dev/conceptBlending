@@ -91,6 +91,40 @@ class TestValidationSuite(unittest.TestCase):
         valid, msg = validate_structure(code)
         self.assertFalse(valid)
         self.assertIn("Invalid Op", msg)
+
+    # ----------------------------------------
+    # 3. GROUNDING TESTS (The Meaning Check)
+    # ----------------------------------------
+    def test_grounding_valid(self):
+        context = "The boat floats on water and carries passengers."
+        code = "(axioms (floats boat) (on boat water) (carries boat passengers))"
+        
+        valid, msg = validate_grounding(code, context)
+        self.assertTrue(valid, msg)
+
+    def test_grounding_hallucination(self):
+        context = "The boat floats on water."
+        # 'Wings' and 'Fly' are not in context
+        code = "(axioms (has boat wings) (can boat fly))"
+        
+        valid, msg = validate_grounding(code, context)
+        self.assertFalse(valid)
+        self.assertIn("Grounding Error", msg)
+
+    def test_grounding_fuzzy_match(self):
+        # 'floating' vs 'floats' - naive check might fail,
+        context = "The boat is floating."
+        code = "(floats boat)" 
+        # This will technically FAIL
+        valid, _ = validate_grounding(code, context)
+        # If strict, this is False.
+        self.assertFalse(valid) 
+
+    def test_grounding_skip_if_no_context(self):
+        code = "(axioms (fly pig))"
+        valid, msg = validate_grounding(code, "")
+        self.assertTrue(valid)
+        self.assertIn("Skipping", msg)
 if __name__ == '__main__':
     print(">>> Running Comprehensive Syntax Tests...")
     unittest.main()
