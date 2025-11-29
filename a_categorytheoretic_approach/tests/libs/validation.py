@@ -131,3 +131,26 @@ def validate_structure(code_str: str) -> tuple[bool, str]:
 
     return True, "Valid Structure"
 
+# Grounding Validator
+def validate_grounding(code_str: str, context_str: str) -> tuple[bool, str]:
+    """
+    Checks if the terms used in the specification actually appear in the source context.
+    """
+    if not context_str:
+        return True, "Skipping grounding check."
+
+    tokens = re.sub(r'[()]', ' ', code_str).split()
+    keywords = {'Concept', 'spec', 'sorts', 'ops', 'preds', 'axioms', 'Object', ':', '<'}
+    spec_terms = {t.lower() for t in tokens if len(t) > 2 and t not in keywords}
+    
+    context_lower = context_str.lower()
+    hallucinations = []
+    
+    for term in spec_terms:
+        if term not in context_lower:
+            hallucinations.append(term)
+    
+    if len(spec_terms) > 0 and len(hallucinations) > len(spec_terms) * 0.3:
+        return False, f"Grounding Error: Too many terms ({', '.join(hallucinations[:3])}...) not found in context."
+        
+    return True, "Grounding Valid"
