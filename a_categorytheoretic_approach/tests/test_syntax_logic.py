@@ -7,8 +7,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from libs.validation import validate_syntax, validate_structure, validate_grounding
 
 class TestValidationSuite(unittest.TestCase):
-
+    # ----------------------------------------
     # 1. SYNTAX TESTS (The Parenthesis Police)
+    # ----------------------------------------
     def test_syntax_valid(self):
         code = "(Concept House (spec (sorts (A))))"
         valid, msg = validate_syntax(code)
@@ -32,9 +33,64 @@ class TestValidationSuite(unittest.TestCase):
         code = '(Concept "String with )" ; Comment with (\n)'
         valid, _ = validate_syntax(code)
         self.assertTrue(valid)
+        
+    # ----------------------------------------
+    # 2. STRUCTURE TESTS (The Logic Check)
+    # ----------------------------------------
+    def test_structure_valid_full(self):
+        code = """
+        (Concept Boat 
+            (spec 
+                (sorts (A B)) 
+                (ops ((: a A))) 
+                (preds ((p A))) 
+                (axioms ((p a)))
+            )
+        )
+        """
+        valid, msg = validate_structure(code)
+        self.assertTrue(valid, f"Failed on valid struct: {msg}")
 
-      
+    def test_structure_missing_blocks(self):
+        # Missing 'axioms'
+        code = "(Concept Boat (spec (sorts (A)) (ops (x)) (preds (y))))"
+        valid, msg = validate_structure(code)
+        self.assertFalse(valid)
+        self.assertIn("axioms", msg)
 
+    def test_structure_malformed_tree(self):
+        # 'spec' is not a list, just a word
+        code = "(Concept Boat spec (sorts A))" 
+        valid, msg = validate_structure(code)
+        self.assertFalse(valid)
+        self.assertIn("Structure Error", msg)
+
+    def test_structure_empty_definitions(self):
+        # Ops cannot be empty list ()
+        code = """
+        (Concept Boat 
+            (spec (sorts (A)) (ops ()) (preds (P)) (axioms (X)))
+        )
+        """
+        valid, msg = validate_structure(code)
+        self.assertFalse(valid)
+        self.assertIn("empty", msg)
+
+    def test_structure_bad_op_format(self):
+        # Ops must be ((: name Type)), not just (name Type)
+        code = """
+        (Concept Boat 
+            (spec 
+                (sorts (A)) 
+                (ops ((boat Boat)))  ; <--- Missing colon ':'
+                (preds (P)) 
+                (axioms (X))
+            )
+        )
+        """
+        valid, msg = validate_structure(code)
+        self.assertFalse(valid)
+        self.assertIn("Invalid Op", msg)
 if __name__ == '__main__':
     print(">>> Running Comprehensive Syntax Tests...")
     unittest.main()
