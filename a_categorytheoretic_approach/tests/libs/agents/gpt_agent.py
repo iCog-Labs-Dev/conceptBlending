@@ -147,15 +147,26 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
             context=context  
         )
         
+    # elif agent_type == "generalization_helper":
+    #     concept1_name, algspec_1 = _extract_concept_name(str(args[0]))
+    #     concept2_name, algspec_2 = _extract_concept_name(str(args[1])) 
+
+    #     formatted_prompt = prompt_template.format(
+    #         concept1=concept1_name,
+    #         concept2=concept2_name,
+    #         spec1=algspec_1,
+    #         spec2=algspec_2
+    #     )
     elif agent_type == "generalization_helper":
+        # Extract Name and Spec
         concept1_name, algspec_1 = _extract_concept_name(str(args[0]))
-        concept2_name, algspec_2 = _extract_concept_name(str(args[1])) 
+        concept2_name, algspec_2 = _extract_concept_name(str(args[1]))
 
         formatted_prompt = prompt_template.format(
             concept1=concept1_name,
             concept2=concept2_name,
-            spec1=algspec_1,
-            spec2=algspec_2
+            algspec_1=algspec_1,  
+            algspec_2=algspec_2   
         )
     
     else:

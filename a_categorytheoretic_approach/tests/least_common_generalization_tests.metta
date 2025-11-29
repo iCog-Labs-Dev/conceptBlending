@@ -93,6 +93,6 @@
 ))
 
 
-
+!(least_generalization_builder "house" "boat")
 
 
