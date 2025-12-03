@@ -1,10 +1,47 @@
 !(import! &self ../../PeTTa/lib/lib_prolog)
-!(static-import! &space concept-atomspace/antonym_0_atlocation_0t_capableof_cs_causes_cs_causesdesire_ky_createdby)
+!(static-import! &space concept-atomspace/antonym-0_-atlocation-0t-capableof-cs-causes-cs-causesdesire-ky-createdby-az-definedby-0b)
+!(static-import! &space concept-atomspace/derivedfrom-ag)
+!(static-import! &space concept-atomspace/derivedfrom-gp)
+!(static-import! &space concept-atomspace/derivedfrom-pu)
+!(static-import! &space concept-atomspace/derivedfrom-uy-distinctfrom-em-desires-pp-etymologicallyrelatedto-ad)
+!(static-import! &space concept-atomspace/formof-bg)
+!(static-import! &space concept-atomspace/formof-gi)
+!(static-import! &space concept-atomspace/formof-ps)
+!(static-import! &space concept-atomspace/formof-t_-hasa-1u-hascontext-aa)
+!(static-import! &space concept-atomspace/hascontext-de)
+!(static-import! &space concept-atomspace/hascontext-pp)
+!(static-import! &space concept-atomspace/hasprerequisite-sw-hasproperty-as-hassubevent-bw-isa-ad)
+!(static-import! &space concept-atomspace/isa-dp)
+!(static-import! &space concept-atomspace/isa-py)
+!(static-import! &space concept-atomspace/partof-ft-receivesaction-nz-relatedto-0a)
+!(static-import! &space concept-atomspace/relatedto-ab)
+!(static-import! &space concept-atomspace/relatedto-bb)
+!(static-import! &space concept-atomspace/relatedto-cc)
+!(static-import! &space concept-atomspace/relatedto-dd)
+!(static-import! &space concept-atomspace/relatedto-ef)
+!(static-import! &space concept-atomspace/relatedto-ff)
+!(static-import! &space concept-atomspace/relatedto-hh)
+!(static-import! &space concept-atomspace/relatedto-jk)
+!(static-import! &space concept-atomspace/relatedto-mm)
+!(static-import! &space concept-atomspace/relatedto-nn)
+!(static-import! &space concept-atomspace/relatedto-pp)
+!(static-import! &space concept-atomspace/relatedto-pp2)
+!(static-import! &space concept-atomspace/relatedto-rr)
+!(static-import! &space concept-atomspace/relatedto-ss)
+!(static-import! &space concept-atomspace/relatedto-st)
+!(static-import! &space concept-atomspace/relatedto-uu)
+!(static-import! &space concept-atomspace/relatedto-wy)
+!(static-import! &space concept-atomspace/synonym-de)
+!(static-import! &space concept-atomspace/synonym-py-usedfor-br)
+!(static-import! &space concept-atomspace/usedfor-rt-dbpedia-go)
+
+!(static-import! &space concept-atomspace/additionals)
 
 !(import! &self common-utils)
 
 !(import! &self integration)
 !(import! &self metonymy)
+!(import! &self unpacking)
 
 
 
@@ -13,10 +50,12 @@
         (
             ($integration-res (integration-op $blend))
             ($metonymy-res (metonymy-op $blend))
+            ($unpacking-res (unpacking-op $blend))
         )
         (
             Evaluating Integration OP:- $integration-res
             Evaluating Metonymy OP:- $metonymy-res
+            Evaluating Unpacking OP:- $unpacking-res
         )
     )
 )
