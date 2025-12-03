@@ -6,7 +6,7 @@ from libs.prompts import (
     SPEC_PROMPT,
     CONTEXT_PREPROCESSING_PROMPT,
 )
-
+from libs.validation import validate_syntax, validate_structure, validate_grounding
 
 def _extract_concept_and_context(concept_str: str) -> tuple[str, str]:
     """
@@ -61,7 +61,9 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     messages = [{"role": "user", "content": formatted_prompt}]
     response = llm_agent(messages, tools=[])
 
-    return metta.parse_all(response)
+    valid, result = validate_syntax(response)
+    clean_response = result if valid else response
+    return metta.parse_all(clean_response)
 
 
 def _extract_concept_name(concept_atom_str: str) -> tuple[str, str]:
@@ -119,7 +121,7 @@ def get_prompt(agent_type: str) -> str:
     return prompts.get(agent_type, "Error: Unknown agent type")
 
 
-def prompt_agent(metta: MeTTa, network: str, *args):
+def prompt_agent(metta: MeTTa, agent_type: str, *args):
     """
     Generates a prompt using the given network type and concepts,
     calls the GPT agent, and parses the response into a list of MeTTa atoms.
@@ -134,39 +136,97 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     Returns:
       A list of MeTTa atoms.
     """
-    prompt = get_prompt(network)
+    prompt_template = get_prompt(agent_type)
 
-    if network == "algspec_builder":
-        concept1_name, context = _extract_concept_name(str(args[0]))
+    concept1_name, concept2_name, context_str = "", "", ""
+    
+    if agent_type == "algspec_builder":
+        # Extract concept names from Concept atoms
+        concept1_name, context_str = _extract_concept_name(str(args[0]))
         concept2_name, _ = _extract_concept_name(str(args[1]))
-
-        formatted_prompt = SPEC_PROMPT.format(
+        
+        formatted_prompt = prompt_template.format(
             concept1=concept1_name,
             concept2=concept2_name,
-            context=context,
+            context=context_str 
         )
+        
+    # elif agent_type == "generalization_helper":
+    #     concept1_name, algspec_1 = _extract_concept_name(str(args[0]))
+    #     concept2_name, algspec_2 = _extract_concept_name(str(args[1])) 
 
-    elif network == "generalization_helper":
+    #     formatted_prompt = prompt_template.format(
+    #         concept1=concept1_name,
+    #         concept2=concept2_name,
+    #         spec1=algspec_1,
+    #         spec2=algspec_2
+    #     )
+    elif agent_type == "generalization_helper":
+        # Extract Name and Spec
         concept1_name, algspec_1 = _extract_concept_name(str(args[0]))
         concept2_name, algspec_2 = _extract_concept_name(str(args[1]))
 
-        formatted_prompt = GENERALIZATION_PROMPT.format(
+        formatted_prompt = prompt_template.format(
             concept1=concept1_name,
             concept2=concept2_name,
-            algspec_1=algspec_1,
-            algspec_2=algspec_2,
+            algspec_1=algspec_1,  
+            algspec_2=algspec_2   
         )
-
+        # Combine specs to create the "Truth Context" for validation   
+        context_str = algspec_1 + " " + algspec_2
     else:
         concept_pair = str(args[0])
         property_vector = str(args[1])
-        formatted_prompt = prompt.format(
+        formatted_prompt = prompt_template.format(
             concept_pair=concept_pair,
             property_vector=property_vector,
         )
 
-    gpt_agent = GeminiAgent()
+    llm_agent = GeminiAgent()
+    max_retries = 3
     messages = [{"role": "user", "content": formatted_prompt}]
-    answer = gpt_agent(messages, tools=[])
+    
+    # answer = llm_agent(messages, tools=[])
+    
+    for attempt in range(max_retries):
+        if attempt > 0:
+            print(f"   > [Self-Correction] Attempt {attempt+1}/{max_retries}...")
+        response = llm_agent(messages, tools=[])
+        
+        # Validate Syntax (Parentheses)
+        valid_syntax, result = validate_syntax(response)
+        if not valid_syntax:
+            print(f"   [Retry] Syntax Error: {result}")
+            messages.append({"role": "user", "content": f"Syntax Error: {result}. Fix it."})
+            continue
+            
+        clean_code = result
 
-    return metta.parse_all(answer)
+        # 3. Validate Structure (Only for Builder)
+        if agent_type in ["algspec_builder", "generalization_helper"]:
+            is_valid_struct, msg_struct = validate_structure(clean_code)
+            if not is_valid_struct:
+                print(f"     x Structure Error: {msg_struct}")
+                messages.append({"role": "user", "content": f"LOGIC ERROR: {msg_struct}. Ensure you define (sorts), (ops), (preds), and (axioms) correctly."})
+                continue
+            
+            is_grounded, msg_ground = validate_grounding(clean_code, context_str)
+            if not is_grounded:
+                print(f"     x Grounding Error: {msg_ground}")
+                messages.append({"role": "user", "content": f"FACT ERROR: {msg_ground}. Only use terms found in the provided context/specs. Do not hallucinate new terms."})
+                continue
+
+            
+        try:
+            parsed_atoms = metta.parse_all(clean_code)
+            return parsed_atoms
+        except Exception as e:
+            print(f"   [Retry] MeTTa Parse Error: {e}")
+            messages.append({"role": "user", "content": f"Code parsing failed: {e}. Fix syntax."})
+            
+    print("Error: Max retries exceeded.")
+    return []
+    
+    
+
+    # return metta.parse_all(answer)
