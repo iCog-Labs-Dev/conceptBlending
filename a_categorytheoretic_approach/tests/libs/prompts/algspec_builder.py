@@ -64,8 +64,8 @@ Expected Output:
    ((on Object Medium))
   )
   (axioms
-   ((livein (resident house)))
-   ((on (house land)))
+   ((livein resident house))
+   ((on house land))
   )
  )
 )
@@ -87,7 +87,7 @@ Expected Output:
   )
   (axioms
    ((ride (passenger boat)))
-   ((on (boat water)))
+   ((on boat water))
   )
  )
 )

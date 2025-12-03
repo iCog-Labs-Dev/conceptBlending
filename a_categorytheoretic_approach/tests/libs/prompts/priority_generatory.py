@@ -9,11 +9,11 @@ PRIORITY RULES (PCS FRAMEWORK)
 ────────────────────────────────────────────
 
 **Priority Annotation Rules (Generalized):**
-   - Use integer values (p:1, p:3, p:5, p:10).
-   - `p:10` → Core structural/functional axioms and operators that **must always hold**. Assign to **all input specs’ essential operators and axioms** to ensure balance.
-   - `p:5` → Medium importance roles, actions, or secondary features. Assign consistently across specs to preserve **mirrored contribution**.
-   - `p:3` → Supporting predicates, relations, or mechanisms. Assign to **all supporting predicates in both specs**, keeping parallel priorities.
-   - `p:1` → Background sorts, general definitions, or conceptual scaffolding. Assign to all auxiliary sorts to **maintain structural context**.
+   - Use integer values (1, 3, 5, 10).
+   - `10` → Core structural/functional axioms and operators that **must always hold**. Assign to **all input specs’ essential operators and axioms** to ensure balance.
+   - `5` → Medium importance roles, actions, or secondary features. Assign consistently across specs to preserve **mirrored contribution**.
+   - `3` → Supporting predicates, relations, or mechanisms. Assign to **all supporting predicates in both specs**, keeping parallel priorities.
+   - `1` → Background sorts, general definitions, or conceptual scaffolding. Assign to all auxiliary sorts to **maintain structural context**.
 
 **General Principles:**
    1. **Mirrored priority distribution:** Ensure similar elements in both input specs get the same priority to **automatically minimize imbalance**.
@@ -30,7 +30,7 @@ Given TWO specifications in PCS-style S-expression format:
 
 specifications: {specs}
 
-Insert a priority annotation directly inside each element using the format: p:<value>
+Insert a priority annotation directly inside each element using the format: <value>
 
 Apply priorities to:
    - Every sort
@@ -52,7 +52,7 @@ Input:
 
 (Concept Cube
  (spec
-  (sorts (Object) (Solid (< Solid Object)) (Face (< Face Component)))
+  (sorts (Object) ((< Solid Object)) ((< Face Component)))
   (ops ((: cube Solid)) ((: six Nat)) ((: square Shape)))
   (preds ((hasCountOf Solid Component Nat)) ((hasShape Component Shape)))
   (axioms ((hasCountOf cube Face_six)) ((hasShape Face square)))
@@ -63,10 +63,10 @@ Output:
 
 (Concept Cube
  (spec
-  (sorts (Object p:1) (Solid (< Solid Object) p:1) (Face (< Face Component) p:1))
-  (ops ((: cube Solid) p:10) ((: six Nat) p:5) ((: square Shape) p:5))
-  (preds ((hasCountOf Solid Component Nat) p:3) ((hasShape Component Shape) p:3))
-  (axioms ((hasCountOf cube Face_six) p:10) ((hasShape Face square) p:10))
+  (sorts (Object 1) ((< Solid Object) 1) ((< Face Component) 1))
+  (ops ((: cube Solid) 10) ((: six Nat) 5) ((: square Shape) 5))
+  (preds ((hasCountOf Solid Component Nat) 3) ((hasShape Component Shape) 3))
+  (axioms ((hasCountOf cube Face_six) 10) ((hasShape Face square) 10))
  )
 )
 
@@ -95,5 +95,6 @@ Return only the two specifications in the following PCS-style S-expression struc
 )
 
 Return only the same specifications with priority annotations added.
+avoid (subsort (< subsort Object) p) generalstructure, it must be ((< subsort Object) p) structure.
 Do not add any explanations, comments, markdown, or extra text.
 """
