@@ -1,6 +1,3 @@
-
-
-
 CONTEXT_PREPROCESSING_PROMPT ="""
 You are an expert in conceptual analysis, semantic modeling, and conceptual blending.
 
@@ -20,7 +17,7 @@ For `Concept 1: Man` (Context: 'a complex individual') and `Concept 2: Bat` (Con
 ## REQUIREMENTS:
 1.  **Analyze Context:** Use the provided Contexts: `{context1}` and `{context2}` to disambiguate `{concept1}` and `{concept2}` and select the most semantically coherent interpretation to each other.
 2.  **Generate Broad Contexts:** Internally generate a wide list of descriptive contexts for each concept based on the chosen interpretation.
-3.  **Select Strictly Top 8 not below or above 8:** From your internal list, select **exactly 8** diverse, meaningful, and salient context descriptions which connects and makes the two concept coherant.
+3.  **Select Strictly Top 8 not below or above 8:** From your internal list, select **exactly 8** diverse, meaningful, and salient context descriptions which connects and makes the two concept coherant, and independent. Ensure exactly 4 descriptions primarily focused on {concept1} (with compatibility to {concept2}), and other 4 primarily focused on {concept2} (with compatibility to {concept1}), to maintain balance.
 4.  **Capture Diverse Aspects:** The 8 descriptions must capture a mix of:
     * **Essential Semantic Properties:** (e.g., 'is a mammal', 'is sentient')
     * **Functional/Semantic Roles:** (e.g., 'navigates using echolocation', 'acts as a vigilante')
@@ -34,14 +31,15 @@ Return Strictly ONLY the one S-expression structures.
 
 
 (Context
-  (descriptive context phrase 1)
-  (descriptive context phrase 2)
-  (descriptive context phrase 3)
-  (descriptive context phrase 4)
-  (descriptive context phrase 5)
-  (descriptive context phrase 6)
-  (descriptive context phrase 7)
-  (descriptive context phrase 8)
+  (descriptive context strictly focused on {concept1})
+  (descriptive context strictly focused on {concept1})
+  (descriptive context strictly focused on {concept1})
+  (descriptive context strictly focused on {concept1})
+  (descriptive context strictly focused on {concept2})
+  (descriptive context strictly focused on {concept2})
+  (descriptive context strictly focused on {concept2})
+  (descriptive context strictly focused on {concept2})
+  
 )
 
 
@@ -50,4 +48,5 @@ Return Strictly ONLY the one S-expression structures.
 - Do NOT include any explanations, apologies, or markdown formatting (like ```) in your output.
 - Each context phrase must be a complete, meaningful description.
 - Ensure the output uses valid S-expression syntax.
+- Alternate the phrases in the list to start with {concept1} focused, then {concept2} focused, and so on, for better flow and balance.
 """
