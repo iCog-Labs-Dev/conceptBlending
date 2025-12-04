@@ -21,35 +21,35 @@ This means:
 3. **Generalize** or **synthesize** new elements when both concepts contribute unique features.
 4. **Maintain logical coherence** (no contradictions among axioms).
 5. **Produce a minimal and interpretable blend** (no redundancy).
-6. **Assign priorities** to elements in the blend by summing the priorities of all source elements that map to them.
+6. **Assign priorities** to elements in the blend by summing the priorities of the source input specification elements A and B that map to them.
 
 ---
 
 ### RULES & HEURISTICS:
 
 1. **Sorts:**
-   - Identify sorts in A and B that correspond to the same generic sort in C and unify them.
+   - Identify sorts in A and B that correspond to the same generic sort in C conceptually and unify them.
    - Keep distinct sorts that have no correspondence.
    - If new super-sorts emerge, name them meaningfully (e.g., Structure, Entity, Medium).
-   - **Priority rule:** If a sort is shared, its priority = sum of priorities from A and B.
+   - **Priority rule:** If a sort is shared conceptually, its priority becomes sum of priorities from A and B.
 
 2. **Operations:**
    - Merge operations that share the same arity and generic role in C.
    - Create new generalized operation names when needed (e.g., `gen_location`, `gen_attachment`).
    - Preserve argument positions and output sorts.
-   - **Priority rule:** If an operation is shared, its priority = sum of priorities from A and B.
+   - **Priority rule:** If an operation is shared, its priority becomes sum of priorities from A and B.
 
 3. **Predicates:**
    - Retain predicates that appear in both A and B via C.
    - For unique predicates, include them in the blend if they do not conflict with others.
-   - If two predicates differ but serve similar roles, generalize into a new predicate.
-   - **Priority rule:** If a predicate is shared, its priority = sum of priorities from A and B.
+   - If two predicates differ but serve similar roles or conceptually simmilar generalize into a new predicate.
+   - **Priority rule:** If a predicate is shared or conceptually simmilar its priority becomes sum of priorities from A and B.
 
 4. **Axioms:**
-   - Combine consistent axioms from A and B, unifying terms that map through C.
+   - Combine conceptually consistent axioms from A and B, unifying terms that map through C.
    - If conflicting, produce a generalized version (e.g., conditional or parameterized).
    - Maintain minimality — no redundant or contradictory statements.
-   - **Priority rule:** If an axiom is shared, its priority = sum of priorities from A and B.
+   - **Priority rule:** If an axiom is shared, its priority becomes sum of priorities from A and B.
 
 5. **Naming & Structure:**
    - Use a merged concept name like `concept1@concept2_Blend`.
@@ -87,9 +87,9 @@ Output:
 (Concept House@Boat_Blend
  (spec
   (sorts (Medium (< Boat Object) (< House Object)) (< Habitat Object)))
-  (ops ((: boat Boat p:10) (: house House p:10) (: water Medium p:5) (: land Medium p:5)))
-  (preds ((on Object Medium p:8) (inhabits Object Habitat p:12)))
-  (axioms ((on (boat water) p:10) (on (house land) p:10) (inhabits (house habitat) p:12) (inhabits (boat habitat) p:12)))
+  (ops ((: boat Boat 10) (: house House 10) (: water Medium 5) (: land Medium 5)))
+  (preds ((on Object Medium 8) (inhabits Object Habitat 12)))
+  (axioms ((on boat water) 10) (on house land) 10) (inhabits house habitat) 12) (inhabits boat habitat) 12)))
  )
 )
 

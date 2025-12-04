@@ -10,13 +10,13 @@ PRIORITY RULES (PCS FRAMEWORK)
 
 **Priority Annotation Rules (Generalized):**
    - Use integer values (1, 3, 5, 10).
-   - `10` → Core structural/functional axioms and operators that **must always hold**. Assign to **all input specs’ essential operators and axioms** to ensure balance.
+   - `10` → Core structural/functional axioms and operators that **must always hold**. Assign to **all input specs** essential operators and axioms** to ensure balance.
    - `5` → Medium importance roles, actions, or secondary features. Assign consistently across specs to preserve **mirrored contribution**.
    - `3` → Supporting predicates, relations, or mechanisms. Assign to **all supporting predicates in both specs**, keeping parallel priorities.
    - `1` → Background sorts, general definitions, or conceptual scaffolding. Assign to all auxiliary sorts to **maintain structural context**.
 
 **General Principles:**
-   1. **Mirrored priority distribution:** Ensure similar elements in both input specs get the same priority to **automatically minimize imbalance**.
+   1. **Mirrored priority distribution:** Ensure similar elements in both input specs get the same priority based on their importance to their specific concept to **automatically minimize imbalance**.
    2. **Hierarchy-aware assignment:** Higher-priority values go to elements higher in the sort or functional hierarchy.
    3. **Compression support:** Shared or overlapping elements should retain their priority to maximize compression value in blends.
    4. **Normalization:** If specs differ in size, scale lower-priority elements proportionally to maintain total infoValue balance.

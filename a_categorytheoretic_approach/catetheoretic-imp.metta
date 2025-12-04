@@ -40,6 +40,19 @@
 (= (get_spec $algspec)
   (index-atom $algspec 2))
 
+
+(=(get_morphism $lcg)
+  (let $spec (get_spec $lcg)
+  (let ($sort $op $pred $axioms) (cdr-atom $spec)
+      ((- (size-atom $sort) 1)
+       (- (size-atom $op) 1)
+       (- (size-atom $pred) 1)
+       (- (size-atom $axioms) 1)
+       )
+  
+  )
+)
+)
 (= (get_priority_value ($entity $p_val))
   $p_val)
 
@@ -85,14 +98,27 @@
 ;------------Blend Evalation Matrix------------
 
 ; Information value
-(= (infoValue $algspec)
-  (let $priorities (priority-extractor $algspec)
-    (sum $priorities)))
-
+(= (infoValue $blend)
+  (let $priorities (priority-extractor $blend)
+    (sum $priorities)
     
+    ))
+
+(=(compression $lcg $blend)
+ (let $infovalue (infoValue $blend)
+ (let $number_of_morphism (sum (get_morphism $lcg))
+    (/ $infovalue $number_of_morphism)
+ 
+  )
+ 
+ )
+
+)
 ;Compression
+;count number of element in the lcg and calculate info value of the blend and devide it with number of element inside lcg as it is total number of morphism to the blend space
+;(use llm python grounding to know number of input morphism to the blend by giving the two spec and final blend)
 
-
+;main evaluator takes two concept generate spec using gpt algspec then store it and generate lcg and store it and fin..;
 
 ; Imbalance between two specs
 (= (imbalance $spec1 $spec2)
@@ -100,15 +126,11 @@
     (let $v2 (infoValue $spec2)
       (/ (abs-math (- $v1 $v2)) 2))))
 
-
-!(priority-extractor (Concept cube (spec (sorts (Object 1) (GeometricFeature 1) (Characteristic 1) (Attribute 1) (Role 1) (Count 1) ((< Cube Object) 1) ((< Face GeometricFeature) 1) ((< Edge GeometricFeature) 1) ((< Vertex GeometricFeature) 1)) (ops ((: cube Cube) 10) ((: six Count) 5) ((: threeDimensional Characteristic) 10) ((: distinct Characteristic) 10) ((: discreteUnit Characteristic) 10) ((: geometricForm Attribute) 5) ((: structuralDefinition Role) 5)) (preds ((hasCharacteristic Object Characteristic) 3) ((hasFeature Object GeometricFeature) 
-3) ((hasCount Object Count GeometricFeature) 3) ((definedBy Object GeometricFeature GeometricFeature) 3) ((hasAttribute Object Attribute) 3) ((hasRole Object Role) 3)) (axioms ((hasCharacteristic cube threeDimensional) 10) ((hasFeature cube Face) 10) ((hasCount cube six Face) 10) ((hasCharacteristic cube distinct) 10) ((definedBy cube Edge Vertex) 10) ((hasCharacteristic cube discreteUnit) 10) ((hasAttribute cube geometricForm) 5) ((hasRole cube structuralDefinition) 5))
-
-)))
-
-
+; The final evaluation Matrix
+(=(value $spec1 $spec2 $lcg $blend)
+(let ($info_value $compression $imbalance) ((infoValue $blend) (Compression $lcg $blend) (Imbalance $spec1 $spec2))
+  (- (+ $info_value $compression) $imbalance)
+)
 
 
-;!(get_sorts_priority (sorts (Object 5) ))
-
-
+)

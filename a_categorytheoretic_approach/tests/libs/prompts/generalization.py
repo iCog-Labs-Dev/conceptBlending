@@ -17,7 +17,7 @@ Return exactly one spec for (Concept GenericConcept (spec ...)) that is the LCG 
 RULES / HEURISTICS:
 1. Sorts:
    - Keep identical sorts.
-   - For differing sorts, choose a descriptive super-sort (e.g., Object, Entity, Resource) or synthesize GenericSortX.
+   - For differing sorts, choose a descriptive super-sort (e.g., Object, Entity, Resource).
    - Preserve declared subsort relations (< Sub Super>) where possible.
 
 2. Ops / Constants:
@@ -63,5 +63,5 @@ PROCESS:
 3. Compute minimal generalization for each aligned pair.
 4. Synthesize the final (Concept GenericConcept (spec ...)) using chosen names and relations.
 
-Strict: output must be a single valid MeTTa Concept spec as above.
+Strict: output must be a single valid S Expression Concept spec as above.
 """
