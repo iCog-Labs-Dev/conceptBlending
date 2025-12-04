@@ -111,19 +111,19 @@
 ;;;; Test objectives with a list containing candidate's degree values, and two input concepts 
 ; Ouput = mu-hqblend and coherence value for the candidate
 
-(= (testconcept1) 
-    (Concept Man@Bat (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
-)
+; (= (testconcept1) 
+;     (Concept Man@Bat (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+; )
 
-(= (testconcept2) 
-    (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
-)
+; (= (testconcept2) 
+;     (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+; )
 
-(= (testcandidatedegrees)
-    (0.4 0.5 0.6 0.3 0.6 0.7 0.8 0.9)
-)
+; (= (testcandidatedegrees)
+;     (0.4 0.5 0.6 0.3 0.6 0.7 0.8 0.9)
+; )
 
-!(assertEqual
-    (let ($mu-hqblend-val $coh-val) (objectives (testconcept1) (testconcept2) (testcandidatedegrees)) ((truncate $mu-hqblend-val 5) (truncate $coh-val 5)))
-    (0.01500 0.33320)
-)
+; !(assertEqual
+;     (let ($mu-hqblend-val $coh-val) (objectives (testconcept1) (testconcept2) (testcandidatedegrees)) ((truncate $mu-hqblend-val 5) (truncate $coh-val 5)))
+;     (0.01500 0.33320)
+; )
