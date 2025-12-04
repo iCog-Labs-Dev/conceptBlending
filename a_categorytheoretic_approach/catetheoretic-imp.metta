@@ -37,72 +37,49 @@
 (=(sum $priorities)
     (foldl-atom $priorities 0 $acc $p (+ $acc $p))
 )
-(=(get_spec $algspec) 
-  (index-atom $algspec 2)
+(= (get_spec $algspec)
+  (index-atom $algspec 2))
 
-)
+(= (get_priority_value ($entity $p_val))
+  $p_val)
 
-(= (get_priority_value ($entity $p_val)) 
-     $p_val
-)
+(= (get_sorts_priority $sorts)
+  (let $items (cdr-atom $sorts)
+    (if (> (size-atom $items) 0)
+      (+ (get_priority_value (car-atom $items)) (get_sorts_priority $items))
+      0)))
 
-(=(get_sorts_priority $sorts)
+(= (get_ops_priority $ops)
+  (let $items (cdr-atom $ops)
+    (if (> (size-atom $items) 0)
+      (+ (get_priority_value (car-atom $items)) (get_ops_priority $items))
+      0)))
 
-    (let $sorts_element (cdr-atom $sorts)
-    (let $sorts_priority (get_priority_value (car-atom $sorts_element))
-    $sorts_priority
-    )
-    
-    )
-)
+(= (get_preds_priority $preds)
+  (let $items (cdr-atom $preds)
+    (if (> (size-atom $items) 0)
+      (+ (get_priority_value (car-atom $items)) (get_preds_priority $items))
+      0)))
 
-(=(get_ops_priority $ops)
-
-    (let $ops_element (cdr-atom $ops)
-    (let $ops_priority (get_priority_value (car-atom $ops_element))
-    $ops_priority
-    )
-    
-    )
-)
-
-(=(get_preds_priority $preds)
-
-    (let $preds_element (cdr-atom $preds)
-    (let $preds_priority (get_priority_value (car-atom $preds_element))
-    $preds_priority
-    )
-    
-    )
-)
-(=(get_axioms_priority $axioms)
-
-    (let $axioms_element (cdr-atom $axioms)
-    (let $axioms_priority (get_priority_value (car-atom $axioms_element))
-    $axioms_priority
-    )
-    
-    )
-)
-
-
-
+(= (get_axioms_priority $axioms)
+  (let $items (cdr-atom $axioms)
+    (if (> (size-atom $items) 0)
+      (+ (get_priority_value (car-atom $items)) (get_axioms_priority $items))
+      0)))
 
 (= (priority-extractor $concept_algspec)
   (let $spec (get_spec $concept_algspec)
     (let ($sort $op $pred $axioms) (cdr-atom $spec)
-    (let $priorities
       ((get_sorts_priority $sort)
        (get_ops_priority $op)
        (get_preds_priority $pred)
-       (get_axioms_priority $axioms)
-      )
+       (get_axioms_priority $axioms)))))
 
-      $priorities
-    )
-  )
-)
-)
+
+
+
+
+
 
 
 ;------------Blend Evalation Matrix------------
@@ -110,26 +87,28 @@
 ; Information value
 (= (infoValue $algspec)
   (let $priorities (priority-extractor $algspec)
-    (sum $priorities)
-  )
-)
+    (sum $priorities)))
 
+    
 ;Compression
+
 
 
 ; Imbalance between two specs
 (= (imbalance $spec1 $spec2)
-  (let $spec1_info_value (infoValue $spec1)
-    (let $spec2_info_value (infoValue $spec2)
-      (/ (abs-math (- $spec1_info_value $spec2_info_value)) 2)
-    )
-  )
-)
-
-;Value
+  (let $v1 (infoValue $spec1)
+    (let $v2 (infoValue $spec2)
+      (/ (abs-math (- $v1 $v2)) 2))))
 
 
-!(infoValue (Concept Cube@Dice_Blend (spec (sorts (Object 2) ((< GenericObject Object) 2) (Number 2) (Face 2) (GeometricForm 2) (Property 2) (UsageContext 1) (Symbolism 2) (Action 2)) (ops ((: genericObject GenericObject) 20) ((: six Number) 10) ((: squareFace Face) 10) ((: geometricForm GeometricForm) 10) ((: buildingBlock Property) 5) ((: unit Property) 5) ((: randomNumericalResult Property) 5) ((: game UsageContext) 5) ((: order Symbolism) 5) ((: stability Symbolism) 5) ((: unpredictability Symbolism) 5) ((: handle Action) 10) ((: rotate Action) 10) ((: throw Action) 10)) (preds ((is3DPolyhedralObject GenericObject) 6) ((hasFaces GenericObject Number Face) 6) ((representsForm GenericObject GeometricForm) 6) ((canPerformAction GenericObject Action) 6) ((hasProperty GenericObject Property) 6) ((usedIn GenericObject UsageContext) 3) ((symbolizes GenericObject Symbolism) 6)) (axioms ((is3DPolyhedralObject genericObject) 20) ((hasFaces genericObject six squareFace) 20) ((representsForm genericObject geometricForm) 20) ((canPerformAction genericObject handle) 20) ((canPerformAction genericObject rotate) 20) ((canPerformAction genericObject throw) 20) ((hasProperty genericObject buildingBlock) 10) ((hasProperty genericObject unit) 10) ((hasProperty genericObject randomNumericalResult) 10) ((usedIn genericObject game) 10) ((symbolizes genericObject order) 10) ((symbolizes genericObject stability) 10) ((symbolizes genericObject unpredictability) 10)))))
-!(imbalance (Concept Cube@Dice_Blend (spec (sorts (Object 20) ((< GenericObject Object) 882) (Number 2) (Face 2) (GeometricForm 2) (Property 2) (UsageContext 1) (Symbolism 2) (Action 2)) (ops ((: genericObject GenericObject) 20) ((: six Number) 10) ((: squareFace Face) 10) ((: geometricForm GeometricForm) 10) ((: buildingBlock Property) 5) ((: unit Property) 5) ((: randomNumericalResult Property) 5) ((: game UsageContext) 5) ((: order Symbolism) 5) ((: stability Symbolism) 5) ((: unpredictability Symbolism) 5) ((: handle Action) 10) ((: rotate Action) 10) ((: throw Action) 10)) (preds ((is3DPolyhedralObject GenericObject) 6) ((hasFaces GenericObject Number Face) 6) ((representsForm GenericObject GeometricForm) 6) ((canPerformAction GenericObject Action) 6) ((hasProperty GenericObject Property) 6) ((usedIn GenericObject UsageContext) 3) ((symbolizes GenericObject Symbolism) 6)) (axioms ((is3DPolyhedralObject genericObject) 20) ((hasFaces genericObject six squareFace) 20) ((representsForm genericObject geometricForm) 20) ((canPerformAction genericObject handle) 20) ((canPerformAction genericObject rotate) 20) ((canPerformAction genericObject throw) 20) ((hasProperty genericObject buildingBlock) 10) ((hasProperty genericObject unit) 10) ((hasProperty genericObject randomNumericalResult) 10) ((usedIn genericObject game) 10) ((symbolizes genericObject order) 10) ((symbolizes genericObject stability) 10) ((symbolizes genericObject unpredictability) 10)))) (Concept Cube@Dice_Blend (spec (sorts (Object 2) ((< GenericObject Object) 2) (Number 2) (Face 2) (GeometricForm 2) (Property 2) (UsageContext 1) (Symbolism 2) (Action 2)) (ops ((: genericObject GenericObject) 20) ((: six Number) 10) ((: squareFace Face) 10) ((: geometricForm GeometricForm) 10) ((: buildingBlock Property) 5) ((: unit Property) 5) ((: randomNumericalResult Property) 5) ((: game UsageContext) 5) ((: order Symbolism) 5) ((: stability Symbolism) 5) ((: unpredictability Symbolism) 5) ((: handle Action) 10) ((: rotate Action) 10) ((: throw Action) 10)) (preds ((is3DPolyhedralObject GenericObject) 6) ((hasFaces GenericObject Number Face) 6) ((representsForm GenericObject GeometricForm) 6) ((canPerformAction GenericObject Action) 6) ((hasProperty GenericObject Property) 6) ((usedIn GenericObject UsageContext) 3) ((symbolizes GenericObject Symbolism) 6)) (axioms ((is3DPolyhedralObject genericObject) 20) ((hasFaces genericObject six squareFace) 20) ((representsForm genericObject geometricForm) 20) ((canPerformAction genericObject handle) 20) ((canPerformAction genericObject rotate) 20) ((canPerformAction genericObject throw) 20) ((hasProperty genericObject buildingBlock) 10) ((hasProperty genericObject unit) 10) ((hasProperty genericObject randomNumericalResult) 10) ((usedIn genericObject game) 10) ((symbolizes genericObject order) 10) ((symbolizes genericObject stability) 10) ((symbolizes genericObject unpredictability) 10)))))
+!(priority-extractor (Concept cube (spec (sorts (Object 1) (GeometricFeature 1) (Characteristic 1) (Attribute 1) (Role 1) (Count 1) ((< Cube Object) 1) ((< Face GeometricFeature) 1) ((< Edge GeometricFeature) 1) ((< Vertex GeometricFeature) 1)) (ops ((: cube Cube) 10) ((: six Count) 5) ((: threeDimensional Characteristic) 10) ((: distinct Characteristic) 10) ((: discreteUnit Characteristic) 10) ((: geometricForm Attribute) 5) ((: structuralDefinition Role) 5)) (preds ((hasCharacteristic Object Characteristic) 3) ((hasFeature Object GeometricFeature) 
+3) ((hasCount Object Count GeometricFeature) 3) ((definedBy Object GeometricFeature GeometricFeature) 3) ((hasAttribute Object Attribute) 3) ((hasRole Object Role) 3)) (axioms ((hasCharacteristic cube threeDimensional) 10) ((hasFeature cube Face) 10) ((hasCount cube six Face) 10) ((hasCharacteristic cube distinct) 10) ((definedBy cube Edge Vertex) 10) ((hasCharacteristic cube discreteUnit) 10) ((hasAttribute cube geometricForm) 5) ((hasRole cube structuralDefinition) 5))
 
-;test
+)))
+
+
+
+
+;!(get_sorts_priority (sorts (Object 5) ))
+
+
