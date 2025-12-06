@@ -42,6 +42,7 @@
 !(import! &self integration)
 !(import! &self metonymy)
 !(import! &self unpacking)
+!(import! &self web)
 
 (= (op-evaluater $blend $concept1 $concept2)
     (let*
@@ -49,11 +50,13 @@
             ($integration-res (integration-op $blend))
             ($metonymy-res (metonymy-op $blend))
             ($unpacking-res (unpacking-op $blend))
+            ($web-res (web-op (cross_mappings) $blend))
         )
         (
             Evaluating Integration OP:- $integration-res
             Evaluating Metonymy OP:- $metonymy-res
             Evaluating Unpacking OP:- $unpacking-res
+            Evaluating Web OP:- $web-res
         )
     )
 )

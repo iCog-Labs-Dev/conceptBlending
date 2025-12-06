@@ -20,6 +20,16 @@
     (size-atom $x)
 )
 
+(=(get-similarity-score $term1 $term2)
+    (let* (
+        ($m (collapse(match &space (similarity (($term1) ($term2))) 1)))
+        ($n (if (> (size-atom $m) 0) 1 0))
+
+    )
+    $n
+    )
+)
+
 (= (custom-filter-atom $list $predicate)
     (if (== (size-atom $predicate) 3)
         (let (($method $op $val) $length) ($predicate (size-atom $list))
