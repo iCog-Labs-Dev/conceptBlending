@@ -1,4 +1,6 @@
 import re
+import json
+from libs.prompts.validation import GROUNDING_VALIDATION_PROMPT
 
 # Preparing for Structure Validation
 def parse_s_expr(code):
@@ -136,61 +138,99 @@ def validate_structure(code_str: str) -> tuple[bool, str]:
     return True, "Valid Structure"
 
 # Grounding Validator
-def validate_grounding(code_str: str, context_str: str) -> tuple[bool, str]:
-    """
-    Checks if the terms used in the specification actually appear in the source context.
-    """
+# def validate_grounding(code_str: str, context_str: str) -> tuple[bool, str]:
+#     """
+#     Checks if the terms used in the specification actually appear in the source context.
+#     """
     
-    if not context_str:
-        return True, "Skipping grounding check."
+#     if not context_str:
+#         return True, "Skipping grounding check."
 
-    # 1. Normalize Context
-    context_words = set(re.sub(r'[^a-zA-Z0-9]', ' ', context_str).lower().split())
+#     # 1. Normalize Context
+#     context_words = set(re.sub(r'[^a-zA-Z0-9]', ' ', context_str).lower().split())
     
     
-    tokens = re.sub(r'[()]', ' ', code_str).split()
-    keywords = {'Concept', 'spec', 'sorts', 'ops', 'preds', 'axioms', 'Object', ':', '<'}
-    spec_terms = {t for t in tokens if len(t) > 2 and t not in keywords}
+#     tokens = re.sub(r'[()]', ' ', code_str).split()
+#     keywords = {'Concept', 'spec', 'sorts', 'ops', 'preds', 'axioms', 'Object', ':', '<'}
+#     spec_terms = {t for t in tokens if len(t) > 2 and t not in keywords}
     
 
-    hallucinations = []
+#     hallucinations = []
     
-    for term in spec_terms:
-        term_clean = term.lower()
+#     for term in spec_terms:
+#         term_clean = term.lower()
         
-        if term_clean not in context_words:
-            continue
-            # hallucinations.append(term)
-        sub_terms = re.split(r'[_,-]', term_clean)
+#         if term_clean not in context_words:
+#             continue
+#             # hallucinations.append(term)
+#         sub_terms = re.split(r'[_,-]', term_clean)
         
-        if len(sub_terms) == 1:
-            sub_terms = re.findall(r'[a-zA-Z][^A-Z]*', term)
-            sub_terms = [s.lower() for s in sub_terms]
+#         if len(sub_terms) == 1:
+#             sub_terms = re.findall(r'[a-zA-Z][^A-Z]*', term)
+#             sub_terms = [s.lower() for s in sub_terms]
         
-        # Check if ALL parts exist in the context
-        all_parts_found = True
-        if not sub_terms: # Fallback if regex failed
-            all_parts_found = False
+#         # Check if ALL parts exist in the context
+#         all_parts_found = True
+#         if not sub_terms: # Fallback if regex failed
+#             all_parts_found = False
             
-        all_parts_found = True
-        for part in sub_terms:
-            if len(part) > 2 and part not in context_words:
-                all_parts_found = False
-                break
+#         all_parts_found = True
+#         for part in sub_terms:
+#             if len(part) > 2 and part not in context_words:
+#                 all_parts_found = False
+#                 break
             
         
-        if not all_parts_found:
-            # Last Resort: Fuzzy check (is the part a substring of any context word?)
-            found_fuzzy = False
-            for part in sub_terms:
-                if len(part) > 3 and any(part in w for w in context_words):
-                    found_fuzzy = True
+#         if not all_parts_found:
+#             # Last Resort: Fuzzy check (is the part a substring of any context word?)
+#             found_fuzzy = False
+#             for part in sub_terms:
+#                 if len(part) > 3 and any(part in w for w in context_words):
+#                     found_fuzzy = True
             
-            if not found_fuzzy:
-                hallucinations.append(term)
+#             if not found_fuzzy:
+#                 hallucinations.append(term)
                 
         
-    if len(spec_terms) > 0 and len(hallucinations) > len(spec_terms) * 0.4:
-        return False, f"Grounding Error: Too many terms ({', '.join(hallucinations[:3])}...) not found in context."
+#     if len(spec_terms) > 0 and len(hallucinations) > len(spec_terms) * 0.4:
+#         return False, f"Grounding Error: Too many terms ({', '.join(hallucinations[:3])}...) not found in context."
         
-    return True, "Grounding Valid"
+#     return True, "Grounding Valid"
+
+def validate_grounding(code_str: str, context_str: str, llm_agent=None) -> tuple[bool, str]:
+    """
+    Semantic Grounding Check using a Second-Layer LLM.
+    Args:
+        code_str: The generated algebraic specification.
+        context_str: The source context (English text).
+        llm_agent: An instance of the GeminiAgent to perform the check.
+    """
+    if not context_str or not llm_agent:
+        return True, "Skipping grounding check.(Missing context or LLM agent.)"
+    
+    # Prepare Prompt
+    prompt = GROUNDING_VALIDATION_PROMPT.format(context=context_str, spec=code_str)
+    # Calling the Judge LLM
+    try:
+        messges = [{"role": "user", "content": prompt}]
+        
+        response = llm_agent(messages=messges, tools=[])
+        
+        clean_response = response.replace("```json", "").replace("```", "").strip()
+        # Robust JSON extraction (in case LLM adds chatter)
+        json_start = clean_response.find('{')
+        json_end = clean_response.rfind('}') + 1
+        
+        if json_start != -1 and json_end != -1:
+            clean_response = clean_response[json_start:json_end]
+        result = json.loads(clean_response)
+        
+        if result.get("valid") is True:
+            return True, "Grounding Valid"
+        else:
+            hallucinations = ", ".join(result.get("hallucinations", [])[:3])
+            return False, f"Grounding Error: Unsupported terms found ({hallucinations}... Reason: {result.get('reason')})"
+        
+    except Exception as e:
+        print(f"Grounding Validation LLM Error: {str(e)}")
+        return False, f"Grounding Validation Failed: (Soft Pass)"
