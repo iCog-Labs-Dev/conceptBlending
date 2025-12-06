@@ -210,12 +210,13 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
                 messages.append({"role": "user", "content": f"LOGIC ERROR: {msg_struct}. Ensure you define (sorts), (ops), (preds), and (axioms) correctly."})
                 continue
             
-            is_grounded, msg_ground = validate_grounding(clean_code, context_str)
+            # is_grounded, msg_ground = validate_grounding(clean_code, context_str)
+            is_grounded, msg_ground = validate_grounding(clean_code, context_str, llm_agent=llm_agent)
+            
             if not is_grounded:
                 print(f"     x Grounding Error: {msg_ground}")
-                messages.append({"role": "user", "content": f"FACT ERROR: {msg_ground}. Only use terms found in the provided context/specs. Do not hallucinate new terms."})
+                messages.append({"role": "user", "content": f"FACT ERROR: {msg_ground}. Only use terms found in the provided context. Do not hallucinate."})
                 continue
-
             
         try:
             parsed_atoms = metta.parse_all(clean_code)
@@ -227,6 +228,4 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
     print("Error: Max retries exceeded.")
     return []
     
-    
-
     # return metta.parse_all(answer)
