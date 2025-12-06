@@ -416,23 +416,141 @@
     (map-atom $matrice $x (vec-clip $x $lb $ub))
 )
 
+
 (= (add-lmat-to-lspace $mat $lspace)
     (collapse
         (superpose
             (
-                (let $l0 (index-atom $mat 0) (add-atom $lspace (cell l00 (index-atom $l0 0))))
-                (let $l1 (index-atom $mat 1) (collapse(superpose((add-atom $lspace (cell l10 (index-atom $l1 0))) (add-atom $lspace (cell l11 (index-atom $l1 1)))))))
-                (let $l2 (index-atom $mat 2) (collapse(superpose((add-atom $lspace (cell l20 (index-atom $l2 0))) (add-atom $lspace (cell l21 (index-atom $l2 1))) (add-atom $lspace (cell l22 (index-atom $l2 2)))))))
-                (let $l3 (index-atom $mat 3) (collapse(superpose((add-atom $lspace (cell l30 (index-atom $l3 0))) (add-atom $lspace (cell l31 (index-atom $l3 1))) (add-atom $lspace (cell l32 (index-atom $l3 2))) (add-atom $lspace (cell l33 (index-atom $l3 3)))))))
-                (let $l4 (index-atom $mat 4) (collapse(superpose((add-atom $lspace (cell l40 (index-atom $l4 0))) (add-atom $lspace (cell l41 (index-atom $l4 1))) (add-atom $lspace (cell l42 (index-atom $l4 2))) (add-atom $lspace (cell l43 (index-atom $l4 3))) (add-atom $lspace (cell l44 (index-atom $l4 4)))))))
-                (let $l5 (index-atom $mat 5) (collapse(superpose((add-atom $lspace (cell l50 (index-atom $l5 0))) (add-atom $lspace (cell l51 (index-atom $l5 1))) (add-atom $lspace (cell l52 (index-atom $l5 2))) (add-atom $lspace (cell l53 (index-atom $l5 3))) (add-atom $lspace (cell l54 (index-atom $l5 4))) (add-atom $lspace (cell l55 (index-atom $l5 5)))))))
-                (let $l6 (index-atom $mat 6) (collapse(superpose((add-atom $lspace (cell l60 (index-atom $l6 0))) (add-atom $lspace (cell l61 (index-atom $l6 1))) (add-atom $lspace (cell l62 (index-atom $l6 2))) (add-atom $lspace (cell l63 (index-atom $l6 3))) (add-atom $lspace (cell l64 (index-atom $l6 4))) (add-atom $lspace (cell l65 (index-atom $l6 5))) (add-atom $lspace (cell l66 (index-atom $l6 6)))))))
-                (let $l7 (index-atom $mat 7) (collapse(superpose((add-atom $lspace (cell l70 (index-atom $l7 0))) (add-atom $lspace (cell l71 (index-atom $l7 1))) (add-atom $lspace (cell l72 (index-atom $l7 2))) (add-atom $lspace (cell l73 (index-atom $l7 3))) (add-atom $lspace (cell l74 (index-atom $l7 4))) (add-atom $lspace (cell l75 (index-atom $l7 5))) (add-atom $lspace (cell l76 (index-atom $l7 6))) (add-atom $lspace (cell l77 (index-atom $l7 7)))))))
+                ;; Row 0
+                (let $l0 (index-atom $mat 0)
+                    (let $l00 (index-atom $l0 0)
+                        (add-atom $lspace (cell l00 $l00))
+                    )
+                )
+
+                ;; Row 1
+                (let $l1 (index-atom $mat 1)
+                    (collapse
+                        (superpose
+                            (
+                                (let $l10 (index-atom $l1 0)
+                                    (let $l11 (index-atom $l1 1)
+                                        (let $add (add-atom $lspace (cell l10 $l10))
+                                            (add-atom $lspace (cell l11 $l11))
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+
+                ;; Row 2
+                (let $l2 (index-atom $mat 2)
+                    (collapse
+                        (superpose
+                            (
+                                (let $l20 (index-atom $l2 0)
+                                    (add-atom $lspace (cell l20 $l20))
+                                )
+                                (let $l21 (index-atom $l2 1)
+                                    (add-atom $lspace (cell l21 $l21))
+                                )
+                                (let $l22 (index-atom $l2 2)
+                                    (add-atom $lspace (cell l22 $l22))
+                                )
+                            )
+                        )
+                    )
+                )
+
+                ;; Row 3
+                (let $l3 (index-atom $mat 3)
+                    (collapse
+                        (superpose
+                            (
+                                (let $l30 (index-atom $l3 0) (add-atom $lspace (cell l30 $l30)))
+                                (let $l31 (index-atom $l3 1) (add-atom $lspace (cell l31 $l31)))
+                                (let $l32 (index-atom $l3 2) (add-atom $lspace (cell l32 $l32)))
+                                (let $l33 (index-atom $l3 3) (add-atom $lspace (cell l33 $l33)))
+                            )
+                        )
+                    )
+                )
+
+                ;; Row 4
+                (let $l4 (index-atom $mat 4)
+                    (collapse
+                        (superpose
+                            (
+                                (let $l40 (index-atom $l4 0) (add-atom $lspace (cell l40 $l40)))
+                                (let $l41 (index-atom $l4 1) (add-atom $lspace (cell l41 $l41)))
+                                (let $l42 (index-atom $l4 2) (add-atom $lspace (cell l42 $l42)))
+                                (let $l43 (index-atom $l4 3) (add-atom $lspace (cell l43 $l43)))
+                                (let $l44 (index-atom $l4 4) (add-atom $lspace (cell l44 $l44)))
+                            )
+                        )
+                    )
+                )
+
+                ;; Row 5
+                (let $l5 (index-atom $mat 5)
+                    (collapse
+                        (superpose
+                            (
+                                (let $l50 (index-atom $l5 0) (add-atom $lspace (cell l50 $l50)))
+                                (let $l51 (index-atom $l5 1) (add-atom $lspace (cell l51 $l51)))
+                                (let $l52 (index-atom $l5 2) (add-atom $lspace (cell l52 $l52)))
+                                (let $l53 (index-atom $l5 3) (add-atom $lspace (cell l53 $l53)))
+                                (let $l54 (index-atom $l5 4) (add-atom $lspace (cell l54 $l54)))
+                                (let $l55 (index-atom $l5 5) (add-atom $lspace (cell l55 $l55)))
+                            )
+                        )
+                    )
+                )
+
+                ;; Row 6
+                (let $l6 (index-atom $mat 6)
+                    (collapse
+                        (superpose
+                            (
+                                (let $l60 (index-atom $l6 0) (add-atom $lspace (cell l60 $l60)))
+                                (let $l61 (index-atom $l6 1) (add-atom $lspace (cell l61 $l61)))
+                                (let $l62 (index-atom $l6 2) (add-atom $lspace (cell l62 $l62)))
+                                (let $l63 (index-atom $l6 3) (add-atom $lspace (cell l63 $l63)))
+                                (let $l64 (index-atom $l6 4) (add-atom $lspace (cell l64 $l64)))
+                                (let $l65 (index-atom $l6 5) (add-atom $lspace (cell l65 $l65)))
+                                (let $l66 (index-atom $l6 6) (add-atom $lspace (cell l66 $l66)))
+                            )
+                        )
+                    )
+                )
+
+                ;; Row 7
+                (let $l7 (index-atom $mat 7)
+                    (collapse
+                        (superpose
+                            (
+                                (let $l70 (index-atom $l7 0) (add-atom $lspace (cell l70 $l70)))
+                                (let $l71 (index-atom $l7 1) (add-atom $lspace (cell l71 $l71)))
+                                (let $l72 (index-atom $l7 2) (add-atom $lspace (cell l72 $l72)))
+                                (let $l73 (index-atom $l7 3) (add-atom $lspace (cell l73 $l73)))
+                                (let $l74 (index-atom $l7 4) (add-atom $lspace (cell l74 $l74)))
+                                (let $l75 (index-atom $l7 5) (add-atom $lspace (cell l75 $l75)))
+                                (let $l76 (index-atom $l7 6) (add-atom $lspace (cell l76 $l76)))
+                                (let $l77 (index-atom $l7 7) (add-atom $lspace (cell l77 $l77)))
+                            )
+                        )
+                    )
+                )
             )
         )
-    )               
+    )
 )
 
+!(bind! &lspace (new-space))
+!(add-lmat-to-lspace ((1 2 3)(4 5 6)(7 8 9)) &lspace)
+!(let $result (collapse(match &lspace $x $x)) $result)
 
 (= (call-lik $lspace $i $k)
     (
@@ -959,7 +1077,7 @@
 )
 )
 
-!(chol-decomp ((1 0 1) (0 1 1) (0 0 1)) &self)
+; !(chol-decomp ((1 0 1) (0 1 1) (0 0 1)) &self)
 
 (= (vec-inf-checker $vec)
     (let $length (size-atom $vec)
@@ -1037,8 +1155,18 @@
     (/ (to-float $num) $denom)
 )
 
+
+; (= (m00 $lspace $mspace)
+;     (let $l00 (match $lspace (cell l00 $x) $x) 
+;         (let $m00 (div 1 $l00) 
+;             (let $add (add-atom $mspace (cell m00 $m00)) $m00)
+;         )
+;     )
+; )
+
 (= (m00 $lspace $mspace)
     (let* (
+        ($_ (println! "Calculating M00"))
         ($l00 (match $lspace (cell l00 $x) $x))
         ($_ (println! "L00:" $l00))
         ($m00 (div 1 $l00))
@@ -1048,7 +1176,6 @@
     $m00
     )
 )
-
 
 (= (m10 $lspace $mspace)
     (let ($l10 $l11 $m00) ((match $lspace (cell l10 $x) $x) (match $lspace (cell l11 $x) $x) (match $mspace (cell m00 $x) $x))
@@ -1334,7 +1461,10 @@
 (= (inverse-lmatrice $lmatrice $lspace $mspace)
     (let* (
         ($_ (println! Executing...))
+        ($_ (println! (L-Matrice:-> $lmatrice)))
         ($add     (add-lmat-to-lspace $lmatrice $lspace))
+        ($x (collapse(match $lspace $y $y)))
+        ($_ (println! (X-after-adding-L-Matrice:-> $x)))
         ($_ (println! (add:-> $add)))
         ($rows    (size-atom $lmatrice))
         ($_ (println! (Row:-> $rows)))
