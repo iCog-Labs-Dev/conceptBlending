@@ -44,8 +44,6 @@
 !(import! &self unpacking)
 !(import! &self web)
 
-
-
 (= (op-evaluater $blend $concept1 $concept2)
     (let*
         (
@@ -76,3 +74,5 @@
 
 !(op-evaluater (blend) (concept1) (concept2))
 
+!(custom-filter-atom (3 4 5) (Method >= 4))
+!(custom-filter-atom ((3 4 5) (1 2 3 4) (2 3 4 5 6)) (Method >= size-atom 3))
