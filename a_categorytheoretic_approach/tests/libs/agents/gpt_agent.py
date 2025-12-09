@@ -176,6 +176,17 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
         )
         # Combine specs to create the "Truth Context" for validation   
         context_str = algspec_1 + " " + algspec_2
+    
+    # Morphism Finder
+    elif agent_type == "morphism_finder":
+        _, generic_spec = _extract_concept_name(str(args[0]))
+        _, specific_spec = _extract_concept_name(str(args[1]))
+        
+        formatted_prompt = prompt_template.format(
+            generic_spec=generic_spec,
+            specific_spec=specific_spec
+        )
+        
     else:
         concept_pair = str(args[0])
         property_vector = str(args[1])
@@ -219,7 +230,9 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
                 print(f"     x Grounding Error: {msg_ground}")
                 messages.append({"role": "user", "content": f"FACT ERROR: {msg_ground}. Only use terms found in the provided context. Do not hallucinate."})
                 continue
-            
+        elif agent_type == "morphism_finder":
+            # Just return cleaned string,
+            return response.replace("```json", "").replace("```", "").strip()
         try:
             parsed_atoms = metta.parse_all(clean_code)
             return parsed_atoms
