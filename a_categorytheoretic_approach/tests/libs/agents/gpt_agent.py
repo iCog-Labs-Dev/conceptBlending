@@ -123,29 +123,73 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
             algspec_1=algspec_1,  
             algspec_2=algspec_2   
         )
-
-    elif agent_type== "amalgam_builder":
+        # Combine specs to create the "Truth Context" for validation   
+        context_str = algspec_1 + " " + algspec_2
+    
+    # Morphism Finder
+    elif agent_type == "morphism_finder":
+        _, generic_spec = _extract_concept_name(str(args[0]))
+        _, specific_spec = _extract_concept_name(str(args[1]))
         
-        algspec_1,algspec_2,lcg_spec = args
+        formatted_prompt = prompt_template.format(
+            generic_spec=generic_spec,
+            specific_spec=specific_spec
+        )
         
-       
-        formatted_prompt = AMALGAM_PROMPT.format(
-
-            algspec_1=algspec_1,
-            algspec_2=algspec_2,
-            lcg_spec=lcg_spec
+    else:
+        concept_pair = str(args[0])
+        property_vector = str(args[1])
+        formatted_prompt = prompt_template.format(
+            concept_pair=concept_pair,
+            property_vector=property_vector,
         )
 
     
     gpt_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
-    answer = gpt_agent(messages, tools=[])
     
-    if agent_type=="algspec_builder":
+    # answer = llm_agent(messages, tools=[])
+    
+    for attempt in range(max_retries):
+        if attempt > 0:
+            print(f"   > [Self-Correction] Attempt {attempt+1}/{max_retries}...")
+        response = llm_agent(messages, tools=[])
         
-        answer=priority_generator(answer)
-        
-        
-        
-        
-    return metta.parse_all(answer)
+        # Validate Syntax (Parentheses)
+        valid_syntax, result = validate_syntax(response)
+        if not valid_syntax:
+            print(f"   [Retry] Syntax Error: {result}")
+            messages.append({"role": "user", "content": f"Syntax Error: {result}. Fix it."})
+            continue
+            
+        clean_code = result
+
+        # 3. Validate Structure (Only for Builder)
+        if agent_type in ["algspec_builder", "generalization_helper"]:
+            is_valid_struct, msg_struct = validate_structure(clean_code)
+            if not is_valid_struct:
+                print(f"     x Structure Error: {msg_struct}")
+                messages.append({"role": "user", "content": f"LOGIC ERROR: {msg_struct}. Ensure you define (sorts), (ops), (preds), and (axioms) correctly."})
+                continue
+            
+            # is_grounded, msg_ground = validate_grounding(clean_code, context_str)
+            is_grounded, msg_ground = validate_grounding(clean_code, context_str, llm_agent=llm_agent)
+            
+            if not is_grounded:
+                print(f"     x Grounding Error: {msg_ground}")
+                messages.append({"role": "user", "content": f"FACT ERROR: {msg_ground}. Only use terms found in the provided context. Do not hallucinate."})
+                continue
+        elif agent_type == "morphism_finder":
+            # Just return cleaned string,
+            return response.replace("```json", "").replace("```", "").strip()
+        try:
+            parsed_atoms = metta.parse_all(clean_code)
+            return parsed_atoms
+        except Exception as e:
+            print(f"   [Retry] MeTTa Parse Error: {e}")
+            messages.append({"role": "user", "content": f"Code parsing failed: {e}. Fix syntax."})
+            
+    print("Error: Max retries exceeded.")
+    return []
+    
+    # return metta.parse_all(answer)
