@@ -5,6 +5,7 @@ from libs.prompts import (
     GENERALIZATION_PROMPT,
     SPEC_PROMPT,
     CONTEXT_PREPROCESSING_PROMPT,
+    MORPHISM_PROMPT
 )
 from libs.validation import validate_syntax, validate_structure, validate_grounding
 
@@ -117,6 +118,7 @@ def get_prompt(agent_type: str) -> str:
     prompts = {
         "algspec_builder": SPEC_PROMPT,
         "generalization_helper": GENERALIZATION_PROMPT,
+        "morphism_finder": MORPHISM_PROMPT,
     }
     return prompts.get(agent_type, "Error: Unknown agent type")
 
