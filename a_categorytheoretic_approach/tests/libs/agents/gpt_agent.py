@@ -5,8 +5,7 @@ from libs.prompts import (
     GENERALIZATION_PROMPT,
     SPEC_PROMPT,
     CONTEXT_PREPROCESSING_PROMPT,
-    AMALGAM_PROMPT,
-    PRIORITY_PROMPT
+    MORPHISM_PROMPT
 )
 
 def priority_generator(specs):
@@ -78,7 +77,7 @@ def get_prompt(agent_type: str) -> str:
     prompts = {
         "algspec_builder": SPEC_PROMPT,
         "generalization_helper": GENERALIZATION_PROMPT,
-        "amalgam_builder": AMALGAM_PROMPT,
+        "morphism_finder": MORPHISM_PROMPT,
     }
     return prompts.get(agent_type, "Error: Unknown agent type")
 
