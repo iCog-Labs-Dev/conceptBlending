@@ -2,6 +2,7 @@
 !(import! &self utils/random-list-utils)
 !(import! &self utils/cma-es-utils)
 !(import! &self info-theoretic)
+
 ; !(import! &self op-constraints:op-evaluation)
 ; !(import! &self space-info-theoretic)
 
@@ -60,7 +61,6 @@
     ( 
         ($test1 (testconcept1))
         ($test2 (testconcept2))
-        ; ($_ (println! ($test1 $test2)))
        ($result (map-atom $population $x (mu-hqblend $x $test1 $test2)))
 
     )
@@ -137,16 +137,13 @@
 
 (= (new-p-sigma $c-sigma $p-sigma $mu-eff $c-inv-sqrt $y)
        (let* (
-            ($_ (println! (Executing....)))
             (($m1-sigma $b2 $vec-mul) (collapse(superpose((- 1 $c-sigma) (sqrt-math (* (* $c-sigma (- 2 $c-sigma)) $mu-eff)) (mat-mat-mul $c-inv-sqrt ($y))))))
-            ($_ (println! (M1 Sigma $m1-sigma B2 $b2 Vec Mul $vec-mul)))
             (($m1-sigma-p-sigma $vec-mul-b2) (collapse(superpose((map-atom $p-sigma $ps (* $ps $m1-sigma)) (map-atom $vec-mul $vm (* $vm $b2))))))
             )
             (vector-op $m1-sigma-p-sigma $vec-mul-b2 +)
         )
 )
 
-!(mat-mat-mul ((0 0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0) (0 0 0 0) (0 0 0) (0 0) (0)) ((0.629276773868858 0.7029813694774427 0.17915574673512397 0.021359372554875078 0.5556770423164838 -1.1102230246251565e-16 -1.3877787807814457e-17 -5.551115123125783e-17)) )
 ; !(new-p-sigma 0.3196142529106335 (0 0) 3.1672992814107035 ((0 0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0) (0 0 0 0) (0 0 0) (0 0) (0)) (0.629276773868858 0.7029813694774427 0.17915574673512397 0.021359372554875078 0.5556770423164838 -1.1102230246251565e-16 -1.3877787807814457e-17 -5.551115123125783e-17))
 ; !(mat-mat-mul (identity-matrice 3) (0.5 0.4 0.6))
 ;  !(new-p-sigma 0.3 (0.1 0.2 0.3) 2 (identity-matrice 3) (0.5 0.4 0.6))
@@ -160,14 +157,9 @@
 
 (= (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma $mu-eff $c-inv-sqrt $y)
         (let* (
-            ($_ (println! (Executing New Step Size Adaptation)))
             ($new-p-sigma (new-p-sigma $c-sigma $p-sigma $mu-eff $c-inv-sqrt $y))
-            ($_ (println! (New P Sigma Inside Step Size Adaptation $new-p-sigma)))
-            
             ($adaptingfactor (pow-math (e) (* (/ $c-sigma $d-sigma) (- (/ (l2-norm $new-p-sigma) (sqrt-math $dim)) 1))))
-            ($_ (println! (Adapting Factor $adaptingfactor)))
             ($adaptXsize (* $step-size $adaptingfactor))
-            ($_ (println! (Adapted Step Size Before Returning $adaptXsize)))
 
         )
         ($adaptXsize $new-p-sigma)
@@ -265,10 +257,23 @@
     (add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
 )
 
-!(add-to-single-cma-es-inputspace)
 (= (clean-from-single-cma-es-inputspace)
     (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params))))
 )
+
+(=(clean-from-space $space)
+    (collapse (match $space $X (remove-atom $space $X)))
+)
+
+(= (add-concepts)
+    (let $concept1 (testconcept1)
+        (let $concept2 (testconcept2)
+            (collapse(superpose((add-atom &concept-space (= (concept1) $concept1)) (add-atom &concept-space (= (concept2) $concept2)))))
+        )
+    )
+)
+
+
 !(add-to-single-cma-es-inputspace)
 !(add-concepts)
 
@@ -290,10 +295,10 @@
                 ($improved?  (> $new-best-fitness $best-fitness))
                 ($new-stall  (if $improved? 0 (+ 1 $stall)))
                 (($y $C-inv-sqrt) ((y $new-mean $mean $step-size) (C-inv-sqrt $cov $cispace1 $cispace2 $cispace3)))
-                ($_ (println! (Cinvsqer $C-inv-sqrt)))
                 (($new-step-size $new-p-sigma) (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma $mu-eff $C-inv-sqrt $y))
                 (($new-cov $new-p-c) (new-cov $cov $p-c $new-p-sigma $c-sigma $gen $y $normalized-weights $selected $mean))
                 ($clean (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params)))))
+                ($cleanspace (collapse(superpose((clean-from-space &rmspace) (clean-from-space &cispace1) (clean-from-space &cispace2) (clean-from-space &cispace3)))))
                 ($_ (println!(GENERATION $gen |  Max Fitness $new-best-fitness  |  Stall $new-stall)))
             )
             (let $added (add-reduct &single-cma-es-inputspace (Inputs ($new-mean $new-cov $new-step-size $new-p-sigma $new-p-c $new-best-pop $new-best-fitness (+ 1 $gen) $new-stall))) ($new-best-pop $new-best-fitness)))
@@ -302,7 +307,9 @@
 )
 
 (= (cma-es-main-loop)
-    (let $iters (generate-toy-list (GENERATIONS))  (map-atom $iters $iter (cma-es-single-iteration population-fitness-score-test)))
+    (let $iters (generate-toy-list (GENERATIONS))  
+        (map-atom $iters $iter (cma-es-single-iteration population-fitness-score-test))
+        )
 )
 
-!(cma-es-main-loop)
+; !(cma-es-main-loop)
