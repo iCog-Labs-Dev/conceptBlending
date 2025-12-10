@@ -642,7 +642,7 @@
 )
 
 (= (l10 $cov-matrice $lspace)
-    (let ($a1 $l00) ((index-atom $cov-matrice 1) (match $lspace (cell l00 $x) $x))
+    (let ($a1 $l00) (collapse(superpose((index-atom $cov-matrice 1) (match $lspace (cell l00 $x) $x))))
         (let $a10 (index-atom $a1 0)
             (let $l10 (/ $a10 $l00)
                 (let $add (add-atom $lspace (cell l10 $l10)) $l10)
@@ -661,7 +661,6 @@
 
 (=(l11 $cov-matrice $lspace)
     (let* (
-        ($_ (println! ("Calculating l11...")))
         ($a1 (index-atom $cov-matrice 1))
         ($l10 (match $lspace (cell l10 $x) $x))
         ($a11 (index-atom $a1 1))
@@ -675,7 +674,7 @@
 )
 
 (= (l20 $cov-matrice $lspace)
-    (let ($a2 $l00) ((index-atom $cov-matrice 2) (match $lspace (cell l00 $x) $x))
+    (let ($a2 $l00) (collapse(superpose((index-atom $cov-matrice 2) (match $lspace (cell l00 $x) $x))))
         (let $a20 (index-atom $a2 0)
             (let $l20 (/ $a20 $l00)
                 (let $add (add-atom $lspace (cell l20 $l20)) $l20)
@@ -704,7 +703,7 @@
 
 
 (= (l30 $cov-matrice $lspace)
-    (let ($a3 $l00) ((index-atom $cov-matrice 3) (match $lspace (cell l00 $x) $x))
+    (let ($a3 $l00) (collapse(superpose((index-atom $cov-matrice 3) (match $lspace (cell l00 $x) $x))))
         (let $a30 (index-atom $a3 0)
             (let $l30 (/ $a30 $l00)
                 (let $add (add-atom $lspace (cell l30 $l30)) $l30)
@@ -724,7 +723,7 @@
 )
 
 (= (l32 $cov-matrice $lspace)
-    (let ($a3 $l22) ((index-atom $cov-matrice 3) (match $lspace (cell l22 $x) $x))
+    (let ($a3 $l22) (collapse(superpose((index-atom $cov-matrice 3) (match $lspace (cell l22 $x) $x))))
         (let $a33 (index-atom $a3 2)
             (let $l32 (/ (- $a33 (sum (cells-product 3 2 $lspace))) $l22)
                 (let $add (add-atom $lspace (cell l32 $l32)) $l32)
@@ -742,7 +741,7 @@
 )
 
 (= (l40 $cov-matrice $lspace)
-    (let ($a4 $l00) ((index-atom $cov-matrice 4) (match $lspace (cell l00 $x) $x))
+    (let ($a4 $l00) (collapse(superpose((index-atom $cov-matrice 4) (match $lspace (cell l00 $x) $x))))
         (let $a40 (index-atom $a4 0) 
             (let $l40 (/ $a40 $l00)
                 (let $add (add-atom $lspace (cell l40 $l40)) $l40)
@@ -762,7 +761,7 @@
 )
 
 (= (l42 $cov-matrice $lspace)
-    (let ($a4 $l22) ((index-atom $cov-matrice 4) (match $lspace (cell l22 $x) $x))
+    (let ($a4 $l22) (collapse(superpose((index-atom $cov-matrice 4) (match $lspace (cell l22 $x) $x))))
         (let $a42 (index-atom $a4 2)
             (let $l42 (/ (- $a42 (sum (cells-product 4 2 $lspace))) $l22)
                 (let $add (add-atom $lspace (cell l42 $l42)) $l42)
@@ -772,7 +771,7 @@
 )
 
 (= (l43 $cov-matrice $lspace)
-    (let ($a4 $l33) ((index-atom $cov-matrice 4) (match $lspace (cell l33 $x) $x))
+    (let ($a4 $l33) (collapse(superpose((index-atom $cov-matrice 4) (match $lspace (cell l33 $x) $x))))
         (let $a43 (index-atom $a4 3)
             (let $l43 (/ (- $a43 (sum (cells-product 4 3 $lspace))) $l33)
                 (let $add (add-atom $lspace (cell l43 $l43)) $l43)
@@ -790,7 +789,7 @@
 )
 
 (= (l50 $cov-matrice $lspace)
-    (let ($a5 $l00) ((index-atom $cov-matrice 5) (match $lspace (cell l00 $x) $x))
+    (let ($a5 $l00) (collapse(superpose((index-atom $cov-matrice 5) (match $lspace (cell l00 $x) $x))))
         (let $a50 (index-atom $a5 0)
             (let $l50 (/ $a50 $l00)
                 (let $add (add-atom $lspace (cell l50 $l50)) $l50)
@@ -810,7 +809,7 @@
 )
 
 (= (l52 $cov-matrice $lspace)
-    (let ($a5 $l22) ((index-atom $cov-matrice 5) (match $lspace (cell l22 $x) $x))
+    (let ($a5 $l22) (collapse(superpose((index-atom $cov-matrice 5) (match $lspace (cell l22 $x) $x))))
         (let $a52 (index-atom $a5 2)
             (let $l52 (/ (- $a52 (sum (cells-product 5 2 $lspace))) $l22)
                 (let $add (add-atom $lspace (cell l52 $l52)) $l52)
@@ -820,7 +819,7 @@
 )
 
 (= (l53 $cov-matrice $lspace)
-    (let ($a5 $l33) ((index-atom $cov-matrice 5) (match $lspace (cell l33 $x) $x))
+    (let ($a5 $l33) (collapse(superpose((index-atom $cov-matrice 5) (match $lspace (cell l33 $x) $x))))
         (let $a53 (index-atom $a5 3)
             (let $l53 (/ (- $a53 (sum (cells-product 5 3 $lspace))) $l33)
                 (let $add (add-atom $lspace (cell l53 $l53)) $l53)
@@ -830,7 +829,7 @@
 )
 
 (= (l54 $cov-matrice $lspace)
-    (let ($a5 $l44) ((index-atom $cov-matrice 5) (match $lspace (cell l44 $x) $x))
+    (let ($a5 $l44) (collapse(superpose((index-atom $cov-matrice 5) (match $lspace (cell l44 $x) $x))))
         (let $a54 (index-atom $a5 4)
             (let $l54 (/ (- $a54 (sum (cells-product 5 4 $lspace))) $l44)
                 (let $add (add-atom $lspace (cell l54 $l54)) $l54)
@@ -848,7 +847,7 @@
 )
 
 (= (l60 $cov-matrice $lspace)
-    (let ($a6 $l00) ((index-atom $cov-matrice 6) (match $lspace (cell l00 $x) $x))
+    (let ($a6 $l00) (collapse(superpose((index-atom $cov-matrice 6) (match $lspace (cell l00 $x) $x))))
         (let $a60 (index-atom $a6 0)
             (let $l60 (/ $a60 $l00)
                 (let $add (add-atom $lspace (cell l60 $l60)) $l60)
@@ -868,7 +867,7 @@
 )
 
 (= (l62 $cov-matrice $lspace)
-    (let ($a6 $l22) ((index-atom $cov-matrice 6) (match $lspace (cell l22 $x) $x))
+    (let ($a6 $l22) (collapse(superpose((index-atom $cov-matrice 6) (match $lspace (cell l22 $x) $x))))
         (let $a62 (index-atom $a6 2)
             (let $l62 (/ (- $a62 (sum (cells-product 6 2 $lspace))) $l22)
                 (let $add (add-atom $lspace (cell l62 $l62)) $l62)
@@ -878,7 +877,7 @@
 )
 
 (= (l63 $cov-matrice $lspace)
-    (let ($a6 $l33) ((index-atom $cov-matrice 6) (match $lspace (cell l33 $x) $x))
+    (let ($a6 $l33) (collapse(superpose((index-atom $cov-matrice 6) (match $lspace (cell l33 $x) $x))))
         (let $a63 (index-atom $a6 3)
             (let $l63 (/ (- $a63 (sum (cells-product 6 3 $lspace))) $l33)
                 (let $add (add-atom $lspace (cell l63 $l63)) $l63)
@@ -888,7 +887,7 @@
 )
 
 (= (l64 $cov-matrice $lspace)
-    (let ($a6 $l44) ((index-atom $cov-matrice 6) (match $lspace (cell l44 $x) $x))
+    (let ($a6 $l44) (collapse(superpose((index-atom $cov-matrice 6) (match $lspace (cell l44 $x) $x))))
         (let $a64 (index-atom $a6 4)
             (let $l64 (/ (- $a64 (sum (cells-product 6 4 $lspace))) $l44)
                 (let $add (add-atom $lspace (cell l64 $l64)) $l64)
@@ -898,7 +897,7 @@
 )
 
 (= (l65 $cov-matrice $lspace)
-    (let ($a6 $l55) ((index-atom $cov-matrice 6) (match $lspace (cell l55 $x) $x))
+    (let ($a6 $l55) (collapse(superpose((index-atom $cov-matrice 6) (match $lspace (cell l55 $x) $x))))
         (let $a65 (index-atom $a6 5)
             (let $l65 (/ (- $a65 (sum (cells-product 6 5 $lspace))) $l55)
                 (let $add (add-atom $lspace (cell l65 $l65)) $l65)
@@ -916,7 +915,7 @@
 )
 
 (= (l70 $cov-matrice $lspace)
-    (let ($a7 $l00) ((index-atom $cov-matrice 7) (match $lspace (cell l00 $x) $x))
+    (let ($a7 $l00) (collapse(superpose((index-atom $cov-matrice 7) (match $lspace (cell l00 $x) $x))))
         (let $a70 (index-atom $a7 0)
             (let $l70 (/ $a70 $l00)
                 (let $add (add-atom $lspace (cell l70 $l70)) $l70)
@@ -936,7 +935,7 @@
 )
 
 (= (l72 $cov-matrice $lspace)
-    (let ($a7 $l22) ((index-atom $cov-matrice 7) (match $lspace (cell l22 $x) $x))
+    (let ($a7 $l22) (collapse(superpose((index-atom $cov-matrice 7) (match $lspace (cell l22 $x) $x))))
         (let $a72 (index-atom $a7 2)
             (let $l72 (/ (- $a72 (sum (cells-product 7 2 $lspace))) $l22)
                 (let $add (add-atom $lspace (cell l72 $l72)) $l72)
@@ -946,7 +945,7 @@
 )
 
 (= (l73 $cov-matrice $lspace)
-    (let ($a7 $l33) ((index-atom $cov-matrice 7) (match $lspace (cell l33 $x) $x))
+    (let ($a7 $l33) (collapse(superpose((index-atom $cov-matrice 7) (match $lspace (cell l33 $x) $x))))
         (let $a73 (index-atom $a7 3)
             (let $l73 (/ (- $a73 (sum (cells-product 7 3 $lspace))) $l33)
                 (let $add (add-atom $lspace (cell l73 $l73)) $l73)
@@ -956,7 +955,7 @@
 )
 
 (= (l74 $cov-matrice $lspace)
-    (let ($a7 $l44) ((index-atom $cov-matrice 7) (match $lspace (cell l44 $x) $x))
+    (let ($a7 $l44) (collapse(superpose((index-atom $cov-matrice 7) (match $lspace (cell l44 $x) $x))))
         (let $a74 (index-atom $a7 4)
             (let $l74 (/ (- $a74 (sum (cells-product 7 4 $lspace))) $l44)
                 (let $add (add-atom $lspace (cell l74 $l74)) $l74)
@@ -966,7 +965,7 @@
 )
 
 (= (l75 $cov-matrice $lspace)
-    (let ($a7 $l55) ((index-atom $cov-matrice 7) (match $lspace (cell l55 $x) $x))
+    (let ($a7 $l55) (collapse(superpose((index-atom $cov-matrice 7) (match $lspace (cell l55 $x) $x))))
         (let $a75 (index-atom $a7 5)
             (let $l75 (/ (- $a75 (sum (cells-product 7 5 $lspace))) $l55)
                 (let $add (add-atom $lspace (cell l75 $l75)) $l75)
@@ -976,7 +975,7 @@
 )
 
 (= (l76 $cov-matrice $lspace)
-    (let ($a7 $l66) ((index-atom $cov-matrice 7) (match $lspace (cell l66 $x) $x))
+    (let ($a7 $l66) (collapse(superpose((index-atom $cov-matrice 7) (match $lspace (cell l66 $x) $x))))
         (let $a76 (index-atom $a7 6)
             (let $l76 (/ (- $a76 (sum (cells-product 7 6 $lspace))) $l66)
                 (let $add (add-atom $lspace (cell l76 $l76)) $l76)
@@ -1169,20 +1168,11 @@
 )
 
 
-; (= (m00 $lspace $mspace)
-;     (let $l00 (match $lspace (cell l00 $x) $x) 
-;         (let $m00 (div 1 $l00) 
-;             (let $add (add-atom $mspace (cell m00 $m00)) $m00)
-;         )
-;     )
-; )
-
 (= (m00 $lspace $mspace)
     (let* (
-        ($_ (println! ("Calculating m00")))
         ($l00 (match $lspace (cell l00 $x) $x))
+        ($lspace1 (collapse(get-atoms $lspace)))
         ($m00 (div 1 $l00))
-        ($_ (println! ("m00 value: " $m00)))
         ($add (add-atom $mspace (cell m00 $m00)))
     )
     $m00)
@@ -1191,16 +1181,8 @@
 
 (= (m10 $lspace $mspace)
     (let* (
-        ($_ (println! ("Calculating m10")))
-        ($l10 (match $lspace (cell l10 $x) $x))
-        ($_ (println! ("l10 value: " $l10)))
-        ($_ (println! ("Fetching l11 value")))
-        ($l11 (match $lspace (cell l11 $x) $x))
-        ($_ (println! ("l11 value: " $l11)))
-        ($m00 (match $mspace (cell m00 $x) $x))
-        ($_ (println! ("m00 value" : $m00)))
+        (($l10 $l11 $m00) (collapse(superpose((match $lspace (cell l10 $x) $x) (match $lspace (cell l11 $x) $x) (match $mspace (cell m00 $x) $x)))))
         ($m10 (-ve (* $m00 (div $l10 $l11))))
-        ($_ (println! ("m10 value: " $m10)))
         ($add (add-atom $mspace (cell m10 $m10)))
     )
     $m10)
@@ -1210,10 +1192,8 @@
 
 (= (m11 $lspace $mspace)
     (let* (
-        ($_ (println! ("Calculating m11")))
         ($l11 (match $lspace (cell l11 $x) $x))
         ($m11 (div 1.0 $l11))
-        ($_ (println! ("m11 value: " $m11)))
         ($add (add-atom $mspace (cell m11 $m11)))
     )
     $m11)
@@ -1222,7 +1202,6 @@
 
 (= (m20 $lspace $mspace)
     (let* (
-        ($_ (println! ("Calculating m20")))
         ($l22 (match $lspace (cell l22 $x) $x))
         ($m20 (-ve (div (sum (inverse-cells-product 2 0 $lspace $mspace)) $l22)))
         ($add (add-atom $mspace (cell m20 $m20)))
@@ -1233,10 +1212,10 @@
 
 (= (m21 $lspace $mspace)
     (let* (
-        ($_ (println! ("Calculating m21")))
-        ($l21 (match $lspace (cell l21 $x) $x))
-        ($l22 (match $lspace (cell l22 $x) $x))
-        ($l11 (match $lspace (cell l11 $x) $x))
+        (($l21 $l22 $l11) (collapse(superpose((match $lspace (cell l21 $x) $x) (match $lspace (cell l22 $x) $x) (match $lspace (cell l11 $x) $x)))))
+        ; ($l21 (match $lspace (cell l21 $x) $x))
+        ; ($l22 (match $lspace (cell l22 $x) $x))
+        ; ($l11 (match $lspace (cell l11 $x) $x))
         ($m21 (-ve (div $l21 (* $l22 $l11))))
         ($add (add-atom $mspace (cell m21 $m21)))
     )
@@ -1245,7 +1224,6 @@
 
 (= (m22 $lspace $mspace)
     (let* (
-        ($_ (println! ("Calculating m22")))
         ($l22 (match $lspace (cell l22 $x) $x))
         ($m22 (div 1.0 $l22))
         ($add (add-atom $mspace (cell m22 $m22)))
@@ -1255,7 +1233,6 @@
 
 (= (m30 $lspace $mspace)
     (let* (
-        ($_ (println! ("Calculating m30")))
         ($l33 (match $lspace (cell l33 $x) $x))
         ($m30 (-ve (div (sum (inverse-cells-product 3 0 $lspace $mspace)) $l33)))
         ($add (add-atom $mspace (cell m30 $m30)))
@@ -1274,9 +1251,10 @@
 
 (= (m32 $lspace $mspace)
     (let* (
-        ($l32 (match $lspace (cell l32 $x) $x))
-        ($l33 (match $lspace (cell l33 $x) $x))
-        ($l22 (match $lspace (cell l22 $x) $x))
+        (($l32 $l33 $l22) (collapse(superpose((match $lspace (cell l32 $x) $x) (match $lspace (cell l33 $x) $x) (match $lspace (cell l22 $x) $x)))))
+        ; ($l32 (match $lspace (cell l32 $x) $x))
+        ; ($l33 (match $lspace (cell l33 $x) $x))
+        ; ($l22 (match $lspace (cell l22 $x) $x))
         ($m32 (-ve (div $l32 (* $l33 $l22))))
         ($add (add-atom $mspace (cell m32 $m32)))
     )
@@ -1285,7 +1263,6 @@
 
 (= (m33 $lspace $mspace)
     (let* (
-        ($_ (println! ("Calculating m33")))
         ($l33 (match $lspace (cell l33 $x) $x))
         ($m33 (div 1.0 $l33))
         ($add (add-atom $mspace (cell m33 $m33)))
@@ -1295,7 +1272,6 @@
 
 (= (m40 $lspace $mspace)
     (let* (
-        ($_ (println! ("Calculating m40")))
         ($l44 (match $lspace (cell l44 $x) $x))
         ($m40 (-ve (div (sum (inverse-cells-product 4 0 $lspace $mspace)) $l44)))
         ($add (add-atom $mspace (cell m40 $m40)))
@@ -1323,9 +1299,7 @@
 
 (= (m43 $lspace $mspace)
     (let* (
-        ($l43 (match $lspace (cell l43 $x) $x))
-        ($l44 (match $lspace (cell l44 $x) $x))
-        ($l33 (match $lspace (cell l33 $x) $x))
+        (($l43 $l44 $l33) (collapse(superpose((match $lspace (cell l43 $x) $x) (match $lspace (cell l44 $x) $x) (match $lspace (cell l33 $x) $x)))))
         ($m43 (-ve (div $l43 (* $l44 $l33))))
         ($add (add-atom $mspace (cell m43 $m43)))
     )
@@ -1379,9 +1353,7 @@
 
 (= (m54 $lspace $mspace)
     (let* (
-        ($l54 (match $lspace (cell l54 $x) $x))
-        ($l55 (match $lspace (cell l55 $x) $x))
-        ($l44 (match $lspace (cell l44 $x) $x))
+        (($l54 $l55 $l44) (collapse(superpose((match $lspace (cell l54 $x) $x) (match $lspace (cell l55 $x) $x) (match $lspace (cell l44 $x) $x)))))
         ($m54 (-ve (div $l54 (* $l55 $l44))))
         ($add (add-atom $mspace (cell m54 $m54)))
     )
@@ -1444,9 +1416,7 @@
 
 (= (m65 $lspace $mspace)
     (let* (
-        ($l65 (match $lspace (cell l65 $x) $x))
-        ($l66 (match $lspace (cell l66 $x) $x))
-        ($l55 (match $lspace (cell l55 $x) $x))
+        (($l65 $l66 $l55) (collapse(superpose((match $lspace (cell l65 $x) $x) (match $lspace (cell l66 $x) $x) (match $lspace (cell l55 $x) $x)))))
         ($m65 (-ve (div $l65 (* $l66 $l55))))
         ($add (add-atom $mspace (cell m65 $m65)))
     )
@@ -1518,9 +1488,7 @@
 
 (= (m76 $lspace $mspace)
     (let* (
-        ($l76 (match $lspace (cell l76 $x) $x))
-        ($l77 (match $lspace (cell l77 $x) $x))
-        ($l66 (match $lspace (cell l66 $x) $x))
+        (($l76 $l77 $l66) (collapse(superpose((match $lspace (cell l76 $x) $x) (match $lspace (cell l77 $x) $x) (match $lspace (cell l66 $x) $x)))))
         ($m76 (-ve (div $l76 (* $l77 $l66))))
         ($add (add-atom $mspace (cell m76 $m76)))
     )
@@ -1538,16 +1506,10 @@
 
 (= (inverse-lmatrice $lmatrice $lspace $mspace)
     (let* (
-        ($_ (println! Executing...))
-        ($_ (println! (L-Matrice:-> $lmatrice)))
+        ($_ (println! ("Starting Inverse L-Matrice Computation")))
         ($add     (add-lmat-to-lspace $lmatrice $lspace))
-        ($x (collapse(match $lspace $y $y)))
-        ($_ (println! (X-after-adding-L-Matrice:-> $x)))
-        ($_ (println! (add:-> $add)))
         ($rows    (size-atom $lmatrice))
-        ($_ (println! (Row:-> $rows)))
         ($row0    (index-atom $lmatrice 0))
-        ($_ (println! (Row0:-> $row0)))
         ($columns (size-atom $row0))
     )
     (collapse
@@ -1651,6 +1613,23 @@
 
 
 ; !(inverse-lmatrice ((1 2) (3 4)) &space1 &space2)
+
+; (L-Matrice:-> ((1 2) (3 4)))
+; (add:-> (() (() ())))
+; (L-Space-after-add:-> ((cell l00 1) (cell l10 3) (cell l11 4)))
+; (Row:-> 2)
+; (Row0:-> (1 2))
+; ("Calculating m00")
+; ("m00 =" 1.0 "l00 =" 1)
+; ("Calculating m10")
+; ("l10 =" 3 "l11 =" 4 "m00 =" 1.0)
+; ("m10 =" -0.75)
+; ("Calculating m11")
+; [()]
+; [()]
+; [()]
+; [((1.0 0) (-0.75 0.25))]
+
 
 (= (transpose-matrice $matrice)
     (let ($rows $columns) ((size-atom $matrice) (let $row0 (index-atom $matrice 0) (size-atom $row0)))
