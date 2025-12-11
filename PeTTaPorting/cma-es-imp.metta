@@ -313,3 +313,72 @@
 )
 
 ; !(cma-es-main-loop)
+
+(= (moedd-cma-es-single-iteration $fitness-fn $iter)
+    (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen $stall) (match &single-cma-es-inputspace (Inputs $x) $x)
+        (let*
+        (
+            (($normalized-weights $c-sigma $d-sigma $mu $mu-eff $dim $rmspace $cispace1 $cispace2 $cispace3) (collapse(superpose((normalized_weights) (c_sigma) (d_sigma) (mu) (mu_eff) (dim) &rmspace &cispace1 &cispace2 &cispace3))))
+            ($samples (mat-clip (random-multivariate $mean (mat-scalar-op $cov (pow-math $step-size 2) *) (lambda_) $rmspace) 0 1))
+            (($selected $fitness-score) (moedd-update-mean $samples $mu $normalized-weights $fitness-fn $iter))
+            (($new-best-pop $new-best-fitness) ((cons-atom $selected $best-pop) (if (== (get-metatype $best-fitness) Grounded) (cons-atom $fitness-score ()) (cons-atom $fitness-score $best-fitness))))
+            ($clean (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params)))))
+            ($cleanspace (collapse(superpose((clean-from-space &rmspace) (clean-from-space &cispace1) (clean-from-space &cispace2) (clean-from-space &cispace3)))))
+        )
+        (let $added (add-reduct &single-cma-es-inputspace (Inputs ($mean $cov $step-size $p-sigma $p-c $new-best-pop $new-best-fitness $gen $stall))) ($new-best-pop $new-best-fitness))
+        )
+    )
+)
+
+;;;; Multi-Objective CMA-ES ;;;;
+
+(= (Num-subproblems) 6)
+(= (Num-objectives) 2)
+(= (Weight) (let $nos (Num-subproblems) (np-dirichlet (1 1) $nos)))
+(= (Moedd-cma-gen) 5)
+
+!(bind! &multi-cma-es-inputspace (new-space))
+!(add-reduct &multi-cma-es-inputspace (Inputs ((zeros-vec (Num-objectives)) () 0)))
+
+(= (moedd-cma-es-single-generation $weights)
+    (let*
+        (
+            ($_ (println! ("Starting moedd-cma-es-single-generation")))
+            (($ref-point $pop $gen) (collapse(superpose(match &multi-cma-es-inputspace (Inputs $x) $x))))
+            ($_ (println! (ref-point $ref-point | Generation $gen | Population Size (size-atom $pop))))
+            ($add (add-atom &self (= (scalarized-fitness $samples $iter) (let $objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample))
+                                                                        (let $weight (index-atom $weights $iter) ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
+                                                                        ))))
+            ($iters (let $iters-res (range 0 (- (Num-subproblems) 1)  1) $iters-res))
+            (($sol $fit-score) (collapse(superpose(let $res (map-atom $iters $iter (moedd-cma-es-single-iteration scalarized-fitness $iter)) (index-atom $res (- (Num-subproblems) 1))))))
+            ($clean (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params)))))
+            ($add (add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0))))
+            (($new-ref-point $sub-candidates) (collapse(superpose((np-max $ref-point $fit-score 0) (zip-list $sol $fit-score)))))
+            ($_ (println! (Sub candidates $sub-candidates)))
+            ($best-non-dominated (filter-non-dominated $sub-candidates))
+            ($_ (println! (Non dominated $best-non-dominated)))
+            ($survivors (let $length (size-atom $best-non-dominated) (if (== $length 1) ($best-non-dominated) (map-atom $iters $iter (max-best-nd $best-non-dominated $new-ref-point $iter $weights)))))
+            ($_ (println! (Survivors $survivors)))
+            ($filtered-surv (unionize $survivors ()))
+            ($_ (println! (Filtered survivors $filtered-surv)))
+            ($new-pop (union-atom $filtered-surv $pop))
+            ($filtered-pop (filter-non-dominated $new-pop))
+            ($_ (println! (Generation $gen | Population $filtered-pop)))
+            ($clean (collapse(match &self (= (scalarized-fitness $samples $iter) (let $objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample))
+                                                                        (let $weight (index-atom $weights $iter) ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
+                                                                        )) (remove-atom &self (= (scalarized-fitness $samples $iter) (let $objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample))
+                                                                        (let $weight (index-atom $weights $iter) ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
+                                                                        ))))))
+            ($clean2 (collapse (match &multi-cma-es-inputspace (Inputs $x) (remove-atom &multi-cma-es-inputspace (Inputs $x)))))
+        )
+        (let $added (add-reduct &multi-cma-es-inputspace (Inputs ($new-ref-point $filtered-pop (+ $gen 1)))) (cleaner $filtered-pop 0))
+    )
+)
+
+(= (Eval) True)
+
+(= (moedd-cma-es-main-loop)
+    (let $weights (Weight) (let $iterations (range 0 (- (Moedd-cma-gen) 1) 1) (map-atom $iterations $iteration (moedd-cma-es-single-generation $weights))))
+)
+
+ !(moedd-cma-es-main-loop) 
