@@ -1,4 +1,7 @@
+
+; !(import! &self list-op-utils)
 ; ;Evaluate expression via py-call:
+
 (= (py-eval $str)
    (let $dict (py-call (dict))
         (py-call (quote (eval $str $dict $dict)))))
@@ -176,12 +179,71 @@
 )
 
 ; !(identity-matrice 3)
+(= (generate-toy-list $n)
+    (collapse
+        (superpose
+            (
+                (if (>= (- $n 1) 0) 1 (empty))
+                (if (>= (- $n 2) 0) 1 (empty))
+                (if (>= (- $n 3) 0) 1 (empty))
+                (if (>= (- $n 4) 0) 1 (empty))
+                (if (>= (- $n 5) 0) 1 (empty))
+                (if (>= (- $n 6) 0) 1 (empty))
+                (if (>= (- $n 7) 0) 1 (empty))
+                (if (>= (- $n 8) 0) 1 (empty))
+                (if (>= (- $n 9) 0) 1 (empty))
+                (if (>= (- $n 10) 0) 1 (empty))
+                (if (>= (- $n 11) 0) 1 (empty))
+                (if (>= (- $n 12) 0) 1 (empty))
+                (if (>= (- $n 13) 0) 1 (empty))
+                (if (>= (- $n 14) 0) 1 (empty))
+                (if (>= (- $n 15) 0) 1 (empty))
+                (if (>= (- $n 16) 0) 1 (empty))
+                (if (>= (- $n 17) 0) 1 (empty))
+                (if (>= (- $n 18) 0) 1 (empty))
+                (if (>= (- $n 19) 0) 1 (empty))
+                (if (>= (- $n 20) 0) 1 (empty))
+                (if (>= (- $n 21) 0) 1 (empty))
+                (if (>= (- $n 22) 0) 1 (empty))
+                (if (>= (- $n 23) 0) 1 (empty))
+                (if (>= (- $n 24) 0) 1 (empty))
+                (if (>= (- $n 25) 0) 1 (empty))
+                (if (>= (- $n 26) 0) 1 (empty))
+                (if (>= (- $n 27) 0) 1 (empty))
+                (if (>= (- $n 28) 0) 1 (empty))
+                (if (>= (- $n 29) 0) 1 (empty))
+                (if (>= (- $n 30) 0) 1 (empty))
+                (if (>= (- $n 31) 0) 1 (empty))
+                (if (>= (- $n 32) 0) 1 (empty))
+                (if (>= (- $n 33) 0) 1 (empty))
+                (if (>= (- $n 34) 0) 1 (empty))
+                (if (>= (- $n 35) 0) 1 (empty))
+                (if (>= (- $n 36) 0) 1 (empty))
+                (if (>= (- $n 37) 0) 1 (empty))
+                (if (>= (- $n 38) 0) 1 (empty))
+                (if (>= (- $n 39) 0) 1 (empty))
+                (if (>= (- $n 40) 0) 1 (empty))
+                (if (>= (- $n 41) 0) 1 (empty))
+                (if (>= (- $n 42) 0) 1 (empty))
+                (if (>= (- $n 43) 0) 1 (empty))
+                (if (>= (- $n 44) 0) 1 (empty))
+                (if (>= (- $n 45) 0) 1 (empty))
+                (if (>= (- $n 46) 0) 1 (empty))
+                (if (>= (- $n 47) 0) 1 (empty))
+                (if (>= (- $n 48) 0) 1 (empty))
+                (if (>= (- $n 49) 0) 1 (empty))
+                (if (>= (- $n 50) 0) 1 (empty))
+            )
+        )
+    )
+)
 
 (= (zeros-vec $length)
     (let $toy-list (generate-toy-list $length) (map-atom $toy-list $x 0))
 )
 
-; !(zeros-vec 2)
+
+; !(zeros-vec 8)
 
 (= (range $lb $ub)
     (let $x (- $ub $lb) (
@@ -1506,7 +1568,7 @@
 
 (= (inverse-lmatrice $lmatrice $lspace $mspace)
     (let* (
-        ($_ (println! ("Starting Inverse L-Matrice Computation")))
+        ; ($_ (println! ("Starting Inverse L-Matrice Computation")))
         ($add     (add-lmat-to-lspace $lmatrice $lspace))
         ($rows    (size-atom $lmatrice))
         ($row0    (index-atom $lmatrice 0))
@@ -1608,6 +1670,8 @@
     )
     )
 )
+
+
 ; !(bind! &space1 (new-space))
 ; !(bind! &space2 (new-space))
 
