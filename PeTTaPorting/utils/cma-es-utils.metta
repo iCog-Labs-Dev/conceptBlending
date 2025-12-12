@@ -24,6 +24,20 @@
         $result)
 )
 
+(= (np-dirichlet $alpha $size)
+    (let*
+        (
+            ($numpy (py-call (importlib.import_module "numpy")))
+            ($np-random (py-call (getattr $numpy "random")))
+            ($dirichlet (py-call (getattr $np-random "dirichlet")))
+
+            
+        )
+        (py-call (builtins.apply_args $dirichlet ($alpha $size)))
+))
+
+
+
 ;  !(numpy-random-normal (1 3))
 
 (=(gauss $std) (numpy-random-normal (0 $std)))
