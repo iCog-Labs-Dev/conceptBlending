@@ -1,5 +1,5 @@
 
-!(import! &self tests:libs)
+!(import! &self libs)
 !(import! &self utils:helper)
 
 ; GPT-based Algspec Builder
@@ -13,7 +13,7 @@
 )
 
 
-;!(algspec_builder dice cube)
+
 
 ; GPT-based Generalization Builder
 
@@ -95,7 +95,7 @@
 
 
 
-;------------Blend Evalation Matrix------------
+;------------Blend Evaluation Matrix------------
 
 ; Information value
 (= (infoValue $blend)
@@ -103,7 +103,8 @@
     (sum $priorities)
     
     ))
-
+    
+;Compression
 (=(compression $lcg $blend)
  (let $infovalue (infoValue $blend)
  (let $number_of_morphism (sum (get_morphism $lcg))
@@ -114,11 +115,6 @@
  )
 
 )
-;Compression
-;count number of element in the lcg and calculate info value of the blend and devide it with number of element inside lcg as it is total number of morphism to the blend space
-;(use llm python grounding to know number of input morphism to the blend by giving the two spec and final blend)
-
-;main evaluator takes two concept generate spec using gpt algspec then store it and generate lcg and store it and fin..;
 
 ; Imbalance between two specs
 (= (imbalance $spec1 $spec2)
@@ -128,7 +124,7 @@
 
 ; The final evaluation Matrix
 (=(value $spec1 $spec2 $lcg $blend)
-(let ($info_value $compression $imbalance) ((infoValue $blend) (Compression $lcg $blend) (Imbalance $spec1 $spec2))
+(let ($info_value $compression $imbalance) ((infoValue $blend) (compression $lcg $blend) (imbalance $spec1 $spec2))
   (- (+ $info_value $compression) $imbalance)
 )
 
