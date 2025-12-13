@@ -15,3 +15,20 @@
 ; !(algspec_builder Bat Man)
 
 
+
+!(algspec_builder "house" "boat")
+
+
+; EXPORT SECTION FOR THE PIPELINE
+
+!(let ($specA $specB) (algspec_builder "house" "boat")
+    (superpose (
+        ; Save "House" spec with a tag we can query later
+        (add-atom &self (OutputSpec House $specA))
+        
+        ; Save "Boat" spec
+        (add-atom &self (OutputSpec Boat $specB))
+    ))
+)
+
+!(print " Specs for House and Boat saved to AtomSpace.")
