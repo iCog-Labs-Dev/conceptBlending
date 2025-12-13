@@ -4,31 +4,30 @@
 
 ; GPT-based Algspec Builder
 
-(=(algspec_builder $concept1 $concept2)
+(=(algspec-builder $concept1 $concept2)
      (let ($context1 $context2) ((main-fetch $concept1) (main-fetch $concept2))
-        (let ($generated_context) (collapse (gpt_context_preprocessing $concept1 $context1 $concept2 $context2))
-           (gpt_algspec_builder $concept1 $concept2 $generated_context) 
+        (let ($generated_context) (collapse (gpt-context-preprocessing $concept1 $context1 $concept2 $context2))
+           (gpt-algspec-builder $concept1 $concept2 $generated_context) 
            )
            )
 )
-
 
 
 
 ; GPT-based Generalization Builder
 
-(=(least_generalization_builder $concept1 $concept2)
-    (let ($algspec1 $algspec2) (collapse (algspec_builder $concept1 $concept2))
-        (gpt_generalization_helper $algspec1 $algspec2)
+(=(least-generalization-builder $concept1 $concept2)
+    (let ($algspec1 $algspec2) (collapse (algspec-builder $concept1 $concept2))
+        (gpt-generalization-helper $algspec1 $algspec2)
     )
 )
 
-;!(least_generalization_builder dice cube)
+
 ; GPT-based Amalgam Builder
-(=(amalgam_builder $concept1 $concept2)
-        (let ($algspec1 $algspec2) (collapse (algspec_builder $concept1 $concept2))
-            (let $generalized_algspec (collapse (gpt_generalization_helper $algspec1 $algspec2))
-                (gpt_amalgam_builder $algspec1 $algspec2 $generalized_algspec) 
+(=(amalgam-builder $concept1 $concept2)
+        (let ($algspec1 $algspec2) (collapse (algspec-builder $concept1 $concept2))
+            (let $generalized_algspec (collapse (gpt-generalization-helper $algspec1 $algspec2))
+                (gpt-amalgam-builder $algspec1 $algspec2 $generalized_algspec) 
             )
         )
 )
@@ -37,12 +36,12 @@
 (=(sum $priorities)
     (foldl-atom $priorities 0 $acc $p (+ $acc $p))
 )
-(= (get_spec $algspec)
+(= (get-spec $algspec)
   (index-atom $algspec 2))
 
 
-(=(get_morphism $lcg)
-  (let $spec (get_spec $lcg)
+(=(get-morphism $lcg)
+  (let $spec (get-spec $lcg)
   (let ($sort $op $pred $axioms) (cdr-atom $spec)
       ((- (size-atom $sort) 1)
        (- (size-atom $op) 1)
@@ -53,40 +52,40 @@
   )
 )
 )
-(= (get_priority_value ($entity $p_val))
-  $p_val)
+(= (get-priority-value ($entity $p-val))
+  $p-val)
 
-(= (get_sorts_priority $sorts)
+(= (get-sorts-priority $sorts)
   (let $items (cdr-atom $sorts)
     (if (> (size-atom $items) 0)
-      (+ (get_priority_value (car-atom $items)) (get_sorts_priority $items))
+      (+ (get-priority-value (car-atom $items)) (get-sorts-priority $items))
       0)))
 
-(= (get_ops_priority $ops)
+(= (get-ops-priority $ops)
   (let $items (cdr-atom $ops)
     (if (> (size-atom $items) 0)
-      (+ (get_priority_value (car-atom $items)) (get_ops_priority $items))
+      (+ (get-priority-value (car-atom $items)) (get-ops-priority $items))
       0)))
 
-(= (get_preds_priority $preds)
+(= (get-preds-priority $preds)
   (let $items (cdr-atom $preds)
     (if (> (size-atom $items) 0)
-      (+ (get_priority_value (car-atom $items)) (get_preds_priority $items))
+      (+ (get-priority-value (car-atom $items)) (get-preds-priority $items))
       0)))
 
-(= (get_axioms_priority $axioms)
+(= (get-axioms-priority $axioms)
   (let $items (cdr-atom $axioms)
     (if (> (size-atom $items) 0)
-      (+ (get_priority_value (car-atom $items)) (get_axioms_priority $items))
+      (+ (get-priority-value (car-atom $items)) (get-axioms-priority $items))
       0)))
 
 (= (priority-extractor $concept_algspec)
-  (let $spec (get_spec $concept_algspec)
+  (let $spec (get-spec $concept_algspec)
     (let ($sort $op $pred $axioms) (cdr-atom $spec)
-      ((get_sorts_priority $sort)
-       (get_ops_priority $op)
-       (get_preds_priority $pred)
-       (get_axioms_priority $axioms)))))
+      ((get-sorts-priority $sort)
+       (get-ops-priority $op)
+       (get-preds-priority $pred)
+       (get-axioms-priority $axioms)))))
 
 
 
@@ -106,9 +105,9 @@
     
 ;Compression
 (=(compression $lcg $blend)
- (let $infovalue (infoValue $blend)
- (let $number_of_morphism (sum (get_morphism $lcg))
-    (/ $infovalue $number_of_morphism)
+ (let $info_value (infoValue $blend)
+ (let $number_of_morphism (sum (get-morphism $lcg))
+    (/ $info_value $number_of_morphism)
  
   )
  
