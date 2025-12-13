@@ -83,7 +83,7 @@ def get_prompt(agent_type: str) -> str:
     return prompts.get(agent_type, "Error: Unknown agent type")
 
 
-def prompt_agent(metta: MeTTa, network: str, *args):
+def prompt_agent(metta: MeTTa, agent_type: str, *args):
     """
     Generates a prompt using the given network type and concepts,
     calls the GPT agent, and parses the response into a list of MeTTa atoms.
@@ -98,7 +98,7 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     Returns:
       A list of MeTTa atoms.
     """
-    prompt = get_prompt(network)
+    prompt_template = get_prompt(agent_type)
 
     if network == "algspec_builder":
         
@@ -121,8 +121,8 @@ def prompt_agent(metta: MeTTa, network: str, *args):
         formatted_prompt = GENERALIZATION_PROMPT.format(
             concept1=concept1_name,
             concept2=concept2_name,
-            algspec_1=algspec_1,
-            algspec_2=algspec_2,
+            algspec_1=algspec_1,  
+            algspec_2=algspec_2   
         )
 
     elif network== "amalgam_builder":
