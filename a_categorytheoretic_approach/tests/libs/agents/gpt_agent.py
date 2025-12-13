@@ -147,4 +147,6 @@ def prompt_agent(metta: MeTTa, network: str, *args):
         answer=priority_generator(answer)
         
         
+        
+        
     return metta.parse_all(answer)
