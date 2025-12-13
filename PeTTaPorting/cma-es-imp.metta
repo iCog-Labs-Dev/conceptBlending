@@ -224,6 +224,7 @@
     (if (and (== (size-atom $obj) 2) (and (== (size-atom $ref) 2) (== (size-atom $weight) 2)))
         (let*
             (
+                ($_ (println! Starting-PBI-scalarization))
                 ($proc-l2 (+ (l2-norm $weight) 0.000000000001))
                 ($norm-weight (scalar-op $weight $proc-l2 /))
                 ($diff (vector-op $obj $ref -))
@@ -344,12 +345,16 @@
     (let*
         (
             ($_ (println! ("Starting moedd-cma-es-single-generation")))
-            (($ref-point $pop $gen) (collapse(superpose(match &multi-cma-es-inputspace (Inputs $x) $x))))
+            (($ref-point $pop $gen) (match &multi-cma-es-inputspace (Inputs $x) $x))
             ($_ (println! (ref-point $ref-point | Generation $gen | Population Size (size-atom $pop))))
-            ($add (add-atom &self (= (scalarized-fitness $samples $iter) (let $objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample))
-                                                                        (let $weight (index-atom $weights $iter) ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
+            ($add (add-atom &self (= (scalarized-fitness $samples $iter)
+                                  (let $objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample))
+                                        (let $weight (index-atom $weights $iter) ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
                                                                         ))))
             ($iters (let $iters-res (range 0 (- (Num-subproblems) 1)  1) $iters-res))
+            ($_ (println! (Iterations $iters)))
+            ($res1 (map-atom $iters $iter (moedd-cma-es-single-iteration scalarized-fitness $iter)))
+            ($_ (println! (Results per iteration $res1)))
             (($sol $fit-score) (collapse(superpose(let $res (map-atom $iters $iter (moedd-cma-es-single-iteration scalarized-fitness $iter)) (index-atom $res (- (Num-subproblems) 1))))))
             ($clean (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params)))))
             ($add (add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0))))
