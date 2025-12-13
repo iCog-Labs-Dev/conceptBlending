@@ -76,9 +76,9 @@ def get_prompt(agent_type: str) -> str:
         Prompt template string
     """
     prompts = {
-        "algspec_builder": SPEC_PROMPT,
-        "generalization_helper": GENERALIZATION_PROMPT,
-        "amalgam_builder": AMALGAM_PROMPT,
+        "algspec-builder": SPEC_PROMPT,
+        "generalization-helper": GENERALIZATION_PROMPT,
+        "amalgam-builder": AMALGAM_PROMPT,
     }
     return prompts.get(agent_type, "Error: Unknown agent type")
 
@@ -98,39 +98,39 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     Returns:
       A list of MeTTa atoms.
     """
-    prompt = get_prompt(network)
+    prompt_template = get_prompt(network)
 
-    if network == "algspec_builder":
+    if network == "algspec-builder":
         
         global concept1_name, concept2_name
         concept1_name,concept2_name, common_context = args
         
         
-        formatted_prompt = SPEC_PROMPT.format(
+        formatted_prompt = prompt_template.format(
             concept1=concept1_name,
             concept2=concept2_name,
             context=common_context,
         )
 
-    elif network == "generalization_helper":
+    elif network == "generalization-helper":
         
         algspec_1, algspec_2 =args
         
         
         
-        formatted_prompt = GENERALIZATION_PROMPT.format(
+        formatted_prompt = prompt_template.format(
             concept1=concept1_name,
             concept2=concept2_name,
             algspec_1=algspec_1,
             algspec_2=algspec_2,
         )
 
-    elif network== "amalgam_builder":
+    elif network== "amalgam-builder":
         
         algspec_1,algspec_2,lcg_spec = args
         
        
-        formatted_prompt = AMALGAM_PROMPT.format(
+        formatted_prompt = prompt_template.format(
 
             algspec_1=algspec_1,
             algspec_2=algspec_2,
@@ -142,7 +142,7 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     messages = [{"role": "user", "content": formatted_prompt}]
     answer = gpt_agent(messages, tools=[])
     
-    if network=="algspec_builder":
+    if network=="algspec-builder":
         
         answer=priority_generator(answer)
        
