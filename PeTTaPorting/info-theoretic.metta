@@ -1,4 +1,5 @@
 !(import! &self utils/list-op-utils)
+!(import! &self utils/info-theoretic-utils)
 ; a temporary representation of the function Error
 (=(Error $atom $message) 
     $message)
@@ -45,7 +46,7 @@
     )
         (if (is-expr $b)
             (let $c (cdr-atom $b)
-                (length $c))
+                (size-atom $c))
                 (empty)
         )
     
@@ -130,23 +131,30 @@
 ; !(property-min (spiderman) (batman))
 
 (= (mu-emergence $candidate-degrees $properties-max)
-    (let
-        ($propertiesvalues $properties)
-        (collapse(superpose((get-values $properties-max) (get-properties $properties-max))))
-        (list-substract $candidate-degrees $propertiesvalues $properties)
+    (let* (
+        ; ($_ (println! Starting-mu-emergence))
+        (($propertiesvalues $properties) ((get-values $properties-max) (get-properties $properties-max)))
+        ; ($_ (println! (Properties-values $propertiesvalues)))
+        ($result (list-substract $candidate-degrees $propertiesvalues $properties))
+        ; ($_ (println! (Mu-emergence-end $result)))
+    )
+        $result
     )
 )
 
-;  ! (mu-emergence (0.5 0.3 0.2 0.9) ((web-creation 0.1) (intelligence 0.3) (strength 0.5) (mobility 0.8)) )
+;  !(mu-emergence (0.5 0.3 0.2 0.9) ((web-creation 0.1) (intelligence 0.3) (strength 0.5) (mobility 0.8)) )
 
 ; ###################### Calculate mu hq blend ##########################
 
 (= (mu-hqblend $candidate-degrees $concept1 $concept2)
     (let*(
+        ($_ (println! Starting-mu-hqblend))
         ($properties-max (property-max $concept1 $concept2))
         ($properties-min (property-min $concept1 $concept2))
         ($mu-emer (mu-emergence $candidate-degrees $properties-max))
+        
         ($product-emer-min (property-product $mu-emer $properties-min))
+        
         ($product-emer-min-nums (get-values $product-emer-min))
         ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
         ($num-properties (size-atom $product-emer-min))
@@ -295,23 +303,52 @@
 
 (= (Alpha) 0.3)
 
-(= (coherence $props $degrees)
-    (let $tc (total-correlation-entropy $degrees min)
-        (let $tv (isnan-math $tc)
-            (let $ftc (if $tv 0 $tc)
-                (let $sim (semantic-correlation $props $degrees) (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim)))        
-            )        
-        )
+; (= (coherence $props $degrees)
+;     (let $tc (total-correlation-entropy $degrees min)
+;         (let $tv (isnan-math $tc)
+;             (let $ftc (if $tv 0 $tc)
+;                 (let $sim (semantic-correlation $props $degrees) (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim)))        
+;             )        
+;         )
+;     )
+; )
+
+(=(coherence $props $degrees) 
+    (let* (
+        ($_ (println! ("Calculating coherence for properties")))
+        ($tc (total-correlation-entropy $degrees min))
+        ($tv (isnan-math $tc))
+        ($ftc (if $tv 0 $tc))
+        ($sim (semantic-correlation $props $degrees))
+        ; ($_ (println! ("Total Correlation: " $ftc " Semantic Similarity: " $sim)))
+    )
+        (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim))        
     )
 )
 
-(= (objectives $concept1 $concept2 $candidate-degree)
-        (let $prop-val-pairs (get-prop-value-pairs $concept1)
-            (let $props (get-properties $prop-val-pairs)
-                (collapse(superpose((mu-hqblend $candidate-degree $concept1 $concept2) (coherence $props $candidate-degree))))
-            )
-        )
+
+; !(coherence (intelligence physical-strength agility) (0.3 0.7 0.6))
+
+; (= (objectives $concept1 $concept2 $candidate-degree)
+;         (let $prop-val-pairs (get-prop-value-pairs $concept1)
+;             (let $props (get-properties $prop-val-pairs)
+;                 (collapse(superpose((mu-hqblend $candidate-degree $concept1 $concept2) (coherence $props $candidate-degree))))
+;             )
+;         )
+; )
+
+(=(objectives $concept1 $concept2 $candidate-degree)
+    (let* (
+        ($prop-val-pairs (get-prop-value-pairs $concept1))
+        ($props (get-properties $prop-val-pairs))
+        ($_ (println! ("Calculating objectives for concepts ")))
+
+    )
+        (collapse(superpose((mu-hqblend $candidate-degree $concept1 $concept2) (coherence $props $candidate-degree)))
+    ))
 )
+
+; !(objectives (spiderman) (batman) (0.5 0.3 0.2 0.9))
 
 (= (dominates $u $v)
     (and (all-true (compare-lists $u $v >=)) (any-true (compare-lists $u $v >)))

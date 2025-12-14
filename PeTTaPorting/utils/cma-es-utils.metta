@@ -37,7 +37,6 @@
 ))
 
 
-
 ;  !(numpy-random-normal (1 3))
 
 (=(gauss $std) (numpy-random-normal (0 $std)))
