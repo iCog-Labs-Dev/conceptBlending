@@ -43,6 +43,7 @@
 !(import! &self metonymy)
 !(import! &self unpacking)
 !(import! &self web)
+!(import! &self topology)
 
 (= (op-evaluater $blend $concept1 $concept2)
     (let*
@@ -51,12 +52,14 @@
             ($metonymy-res (metonymy-op $blend))
             ($unpacking-res (unpacking-op $blend))
             ($web-res (web-op (cross_mappings) $blend))
+            ($topology-res (topology-op $blend $concept1 $concept2))
         )
         (
             Evaluating Integration OP:- $integration-res
             Evaluating Metonymy OP:- $metonymy-res
             Evaluating Unpacking OP:- $unpacking-res
             Evaluating Web OP:- $web-res
+            Evaluating Topology OP:- $topology-res
         )
     )
 )
@@ -73,6 +76,3 @@
 )
 
 !(op-evaluater (blend) (concept1) (concept2))
-
-!(custom-filter-atom (3 4 5) (Method >= 4))
-!(custom-filter-atom ((3 4 5) (1 2 3 4) (2 3 4 5 6)) (Method >= size-atom 3))
