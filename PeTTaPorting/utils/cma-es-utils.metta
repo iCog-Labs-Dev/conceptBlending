@@ -1,6 +1,17 @@
 
 ; !(import! &self list-op-utils)
 ; ;Evaluate expression via py-call:
+!(import! &self "utils/numpy_methods.py")
+
+(=(np-max $ref-point $objs-val $axis)
+    (let* (
+    ($result (py-call (numpy_methods.np_max $ref-point $objs-val $axis)))
+)
+    $result
+))
+
+
+
 
 (= (py-eval $str)
    (let $dict (py-call (dict))
@@ -38,6 +49,8 @@
 
 
 ;  !(numpy-random-normal (1 3))
+
+
 
 (=(gauss $std) (numpy-random-normal (0 $std)))
 
@@ -2122,7 +2135,8 @@
         (if (== $head-length 1)
 
             (let* (
-                ($new-acc (cons-atom $head $acc))
+                ($new-head (car-atom $head))
+                ($new-acc (cons-atom $new-head $acc))
                 ($tail-res (eval (unionize $tail $new-acc)))
                 ($result (custom-unique-atom $tail-res))
             )
