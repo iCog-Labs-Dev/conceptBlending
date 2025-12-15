@@ -220,7 +220,7 @@
     ))
 )
 
-(= (check-equality $val1 $val2) (if (== $val1 $val2) Empty $val2))
+(= (check-equality $val1 $val2) (if (== $val1 $val2) (empty) $val2))
 
 (= (filter-list $list $val)
     (collapse
@@ -440,7 +440,7 @@
             (unzip-helper-right (superpose $list))
         )
         )
-        ((reverse-list $list1) (reverse-list $list2))
+        ($list1 $list2)
     )
     )
 )
