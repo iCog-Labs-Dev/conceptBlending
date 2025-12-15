@@ -2,564 +2,8 @@
 !(import! &self utils/random-list-utils)
 !(import! &self utils/cma-es-utils)
 !(import! &self info-theoretic)
-(= (random-list $length $width $lb $ub) 
-    (
-        collapse(
-            superpose(
-                (
-                    if (>= (- $length 1) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 2) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 3) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 4) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 5) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 6) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 7) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 8) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 9) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 10) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 11) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 12) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 13) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 14) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 15) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 16) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 17) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 18) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 19) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 20) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 21) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 22) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 23) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 24) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 25) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 26) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 27) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 28) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 29) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 30) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 31) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 32) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 33) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 34) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 35) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 36) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 37) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 38) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 39) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 40) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 41) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 42) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 43) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 44) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 45) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 46) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 47) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 48) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 49) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-                (
-                    if (>= (- $length 50) 0)
-                    (
-                        collapse(
-                            superpose(
-                                (if (>= (- $width 1) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 2) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 3) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 4) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 5) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 6) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 7) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 8) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 9) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 10) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 11) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 12) 0) (random-float &rng $lb $ub) (empty)) (if (>= (- $width 13) 0) (random-float &rng $lb $ub) (empty))                              
-                            )
-                        )
-                    )
-                    ((empty))
-                )
-            )    
-        )
-    )
-)
+!(import! &self "utils/numpy_methods.py")
+
 
 ; !(random-list 51 5 0.0 1.0 )
 
@@ -784,14 +228,12 @@
     (if (and (== (size-atom $obj) 2) (and (== (size-atom $ref) 2) (== (size-atom $weight) 2)))
         (let*
             (
-                ($_ (println! Starting-PBI-scalarization))
                 ($proc-l2 (+ (l2-norm $weight) 0.000000000001))
                 ($norm-weight (scalar-op $weight $proc-l2 /))
                 ($diff (vector-op $obj $ref -))
                 ($d1 (inner-product $diff $norm-weight))
                 ($proj (scalar-op $norm-weight $d1 *))
                 ($d2 (l2-norm (vector-op $diff $proj -)))
-                ($_ (println! (END OF scalarization------>)))
             )
             (+ $d1 (* (Thetha) $d2))
         )
@@ -809,12 +251,8 @@
 
 (=(max-best-nd $best-nds $ref $iter $weights) 
     (let* (
-        ($_ (println! Starting-max-best-nd))
         ($weight (index-atom $weights $iter))
-        ; ($_ (println! (calculating results with weight: $weight)))
-        ($_ (println! (Best-NDs: (index-atom $best-nds 1) | Weight: $weight | ref: $ref)))
         ($res (map-atom $best-nds $best-nd (pbi-scalarization (index-atom $best-nd 1) $ref $weight)))
-        ($_ (println! (Result-----------------------------------------------5)))
         ($zipped-res (zip-list $best-nds $res))
         ($max-val (max-atom $res))
         ($result (max-best-nd-helper $max-val $zipped-res))
@@ -855,7 +293,7 @@
 
 
 !(add-to-single-cma-es-inputspace)
-!(add-concepts)
+; !(add-concepts)
 
 !(bind! &rmspace (new-space))
 !(bind! &cispace1 (new-space))
@@ -912,10 +350,10 @@
 
 ;;;; Multi-Objective CMA-ES ;;;;
 
-(= (Num-subproblems) 6)
+(= (Num-subproblems) 3)
 (= (Num-objectives) 2)
 (= (Weight) (let $nos (Num-subproblems) (np-dirichlet (1 1) $nos)))
-(= (Moedd-cma-gen) 5)
+(= (Moedd-cma-gen) 2)
 
 !(bind! &multi-cma-es-inputspace (new-space))
 !(add-reduct &multi-cma-es-inputspace (Inputs ((zeros-vec (Num-objectives)) () 0)))
@@ -923,51 +361,43 @@
 (= (moedd-cma-es-single-generation $weights)
     (let*
         (
-            ($_ (println! ("Starting moedd-cma-es-single-generation")))
             (($ref-point $pop $gen) (match &multi-cma-es-inputspace (Inputs $x) $x))
             ($_ (println! (ref-point $ref-point | Generation $gen | Population Size (size-atom $pop))))
             ($add (add-atom &self (= (scalarized-fitness $samples $iter)
                                         (let* (
-                                            ($_ (println! (Calculating scalarized fitness  sample)))
                                             ($objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample)))
-                                            ($_ (println! (Objectives  samples $objs)))
                                             ($weight (index-atom $weights $iter))
                                             ($result ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
                                         )
-                                        $result
-
-                                        ))))
-            ($_ (println! (Finished adding scalarized fitness function to the space----------------------1)))
-                                  
+                                        $result ))))                                  
             ($iters (let $iters-res (range 0 (- (Num-subproblems) 1)  1) $iters-res))
-            ($_ (println! (Iterations $iters)))
-            ; ($res1 (map-atom $iters $iter (moedd-cma-es-single-iteration scalarized-fitness $iter)))
-            ; ($_ (println! (Results per iteration $res1)))
-            ($_ (println! (Starting Evaluation per problem caling the scalazied fitness function----------------------2)))
             (($sol $fit-score) (let $res (map-atom $iters $iter (moedd-cma-es-single-iteration scalarized-fitness $iter)) (index-atom $res (- (Num-subproblems) 1))))
-            ($_ (println! (END OF THE EVALUATION OF SOL AND FITSCORE I GUESS--------------------------------->3)))
             ($clean (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params)))))
             ($add (add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0))))
             (($new-ref-point $sub-candidates) (collapse(superpose((np-max $ref-point $fit-score 0) (zip-list $sol $fit-score)))))
-            ($_ (println! (Sub candidates $sub-candidates)))
             ($best-non-dominated (filter-non-dominated $sub-candidates))
-            ($_ (println! (Non dominated $best-non-dominated)))
-            ($_ (println! (Calculating survivors based on PBI scalarization (size-atom $best-non-dominated))))
-            ($survivors (let $length (size-atom $best-non-dominated) (if (== $length 1) ($best-non-dominated) (map-atom $iters $iter (max-best-nd $best-non-dominated $new-ref-point $iter $weights)))))
-            ($_ (println! (Survivors $survivors)))
+            ($survivors (let $length (size-atom $best-non-dominated) (if (== $length 1) $best-non-dominated (map-atom $iters $iter (max-best-nd $best-non-dominated $new-ref-point $iter $weights)))))
             ($filtered-surv (unionize $survivors ()))
-            ($_ (println! (Filtered survivors $filtered-surv)))
             ($new-pop (union-atom $filtered-surv $pop))
             ($filtered-pop (filter-non-dominated $new-pop))
             ($_ (println! (Generation $gen | Population $filtered-pop)))
-            ($clean (collapse(match &self (= (scalarized-fitness $samples $iter) (let $objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample))
-                                                                        (let $weight (index-atom $weights $iter) ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
-                                                                        )) (remove-atom &self (= (scalarized-fitness $samples $iter) (let $objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample))
-                                                                        (let $weight (index-atom $weights $iter) ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
-                                                                        ))))))
+            ($clean (collapse(match &self (= (scalarized-fitness $samples $iter)
+                                        (let* (
+                                            ($objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample)))
+                                            ($weight (index-atom $weights $iter))
+                                            ($result ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
+                                        )
+                                        $result )) (remove-atom &self (= (scalarized-fitness $samples $iter)
+                                        (let* (
+                                            ($objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample)))
+                                            ($weight (index-atom $weights $iter))
+                                            ($result ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
+                                        )
+                                        $result ))))))
             ($clean2 (collapse (match &multi-cma-es-inputspace (Inputs $x) (remove-atom &multi-cma-es-inputspace (Inputs $x)))))
+
         )
-        (let $added (add-reduct &multi-cma-es-inputspace (Inputs ($new-ref-point $filtered-pop (+ $gen 1)))) (cleaner $filtered-pop 0))
+        (let $added (add-reduct &multi-cma-es-inputspace (Inputs ($new-ref-point $filtered-pop (+ $gen 1)))) $filtered-pop)
     )
 )
 
@@ -978,4 +408,6 @@
 )
 
  !(moedd-cma-es-main-loop) 
+;22m29.236s
+
 
