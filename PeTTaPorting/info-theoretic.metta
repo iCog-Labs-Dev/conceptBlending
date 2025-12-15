@@ -327,13 +327,6 @@
 
 ; !(coherence (intelligence physical-strength agility) (0.3 0.7 0.6))
 
-; (= (objectives $concept1 $concept2 $candidate-degree)
-;         (let $prop-val-pairs (get-prop-value-pairs $concept1)
-;             (let $props (get-properties $prop-val-pairs)
-;                 (collapse(superpose((mu-hqblend $candidate-degree $concept1 $concept2) (coherence $props $candidate-degree))))
-;             )
-;         )
-; )
 
 (=(objectives $concept1 $concept2 $candidate-degree)
     (let* (
@@ -430,9 +423,7 @@
 
 ; ; !(non-deter-non-dominated-sort (objs-list))
 
-; (= (check-non-dominated $indiv $candidates)
-;     (let ($indiv-obj $candis-objs) ((index-atom $indiv 1) (let $unzipped-candis (unzip-list $candidates) (index-atom $unzipped-candis 1))) (let $filtered-candis-objs (filter-list $candis-objs $indiv-obj) (if (non-deter-non-dominated-helper $indiv-obj $filtered-candis-objs) $indiv (empty))))
-; )
+
 
 (=(check-non-dominated $indiv $candidates)
     (let* (

@@ -5,10 +5,6 @@
 !(import! &self "utils/numpy_methods.py")
 
 
-; !(random-list 51 5 0.0 1.0 )
-
-; !(import! &self op-constraints:op-evaluation)
-; !(import! &self space-info-theoretic)
 
 (=(add-reduct $space $atom)
     (let $result $atom (add-atom $space $atom))
@@ -153,11 +149,7 @@
 ;  !(new-p-sigma 0.3 (0.1 0.2 0.3) 2 (identity-matrice 3) (0.5 0.4 0.6))
 
 ; ; ;;;; STEP SIZE ADAPTATION ;;;;
-; (= (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma $mu-eff $c-inv-sqrt $y)
-;     (let $new-p-sigma (new-p-sigma $c-sigma $p-sigma $mu-eff $c-inv-sqrt $y)
-;             (let $adaptingfactor (pow-math (e) (* (/ $c-sigma $d-sigma) (- (/ (l2-norm $new-p-sigma) (sqrt-math $dim)) 1))) ((* $step-size $adaptingfactor) $new-p-sigma))
-;     )
-; )
+
 
 (= (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma $mu-eff $c-inv-sqrt $y)
         (let* (
@@ -407,7 +399,7 @@
     (let $weights (Weight) (let $iterations (range 0 (- (Moedd-cma-gen) 1) 1) (map-atom $iterations $iteration (moedd-cma-es-single-generation $weights))))
 )
 
- !(moedd-cma-es-main-loop) 
+;  !(moedd-cma-es-main-loop) 
 ;22m29.236s
 
 
