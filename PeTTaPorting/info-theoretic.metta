@@ -1,4 +1,5 @@
 !(import! &self utils/list-op-utils)
+!(import! &self utils/info-theoretic-utils)
 ; a temporary representation of the function Error
 (=(Error $atom $message) 
     $message)
@@ -45,7 +46,7 @@
     )
         (if (is-expr $b)
             (let $c (cdr-atom $b)
-                (length $c))
+                (size-atom $c))
                 (empty)
         )
     
@@ -102,6 +103,7 @@
 (=(property-max $concept1 $concept2)
     (let*(
         (($properties1 $properties2) (collapse(superpose((get-prop-value-pairs $concept1) (get-prop-value-pairs $concept2)))))
+        ; ($_ (println! (pmax $properties1 $properties2)))
         (($properties1values $properties2values $properties) (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1)))))
     )
         (max-elements $properties1values $properties2values $properties)
@@ -129,14 +131,18 @@
 ; !(property-min (spiderman) (batman))
 
 (= (mu-emergence $candidate-degrees $properties-max)
-    (let
-        ($propertiesvalues $properties)
-        (collapse(hyperpose((get-values $properties-max) (get-properties $properties-max))))
-        (list-substract $candidate-degrees $propertiesvalues $properties)
+    (let* (
+        ; ($_ (println! Starting-mu-emergence))
+        (($propertiesvalues $properties) ((get-values $properties-max) (get-properties $properties-max)))
+        ; ($_ (println! (Properties-values $propertiesvalues)))
+        ($result (list-substract $candidate-degrees $propertiesvalues $properties))
+        ; ($_ (println! (Mu-emergence-end $result)))
+    )
+        $result
     )
 )
 
-;  ! (mu-emergence (0.5 0.3 0.2 0.9) ((web-creation 0.1) (intelligence 0.3) (strength 0.5) (mobility 0.8)) )
+;  !(mu-emergence (0.5 0.3 0.2 0.9) ((web-creation 0.1) (intelligence 0.3) (strength 0.5) (mobility 0.8)) )
 
 ; ###################### Calculate mu hq blend ##########################
 
@@ -145,7 +151,9 @@
         ($properties-max (property-max $concept1 $concept2))
         ($properties-min (property-min $concept1 $concept2))
         ($mu-emer (mu-emergence $candidate-degrees $properties-max))
+        
         ($product-emer-min (property-product $mu-emer $properties-min))
+        
         ($product-emer-min-nums (get-values $product-emer-min))
         ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
         ($num-properties (size-atom $product-emer-min))
@@ -156,7 +164,7 @@
     )
 )
 
-; !(mu-hqblend (0.5 0.3 0.2 0.9) (batman) (spiderman) )
+;  !(mu-hqblend (0.5 0.3 0.2 0.9) (batman) (spiderman) )
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1
@@ -294,23 +302,43 @@
 
 (= (Alpha) 0.3)
 
-(= (coherence $props $degrees)
-    (let $tc (total-correlation-entropy $degrees min)
-        (let $tv (isnan-math $tc)
-            (let $ftc (if $tv 0 $tc)
-                (let $sim (semantic-correlation $props $degrees) (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim)))        
-            )        
-        )
+; (= (coherence $props $degrees)
+;     (let $tc (total-correlation-entropy $degrees min)
+;         (let $tv (isnan-math $tc)
+;             (let $ftc (if $tv 0 $tc)
+;                 (let $sim (semantic-correlation $props $degrees) (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim)))        
+;             )        
+;         )
+;     )
+; )
+
+(=(coherence $props $degrees) 
+    (let* (
+        ($tc (total-correlation-entropy $degrees min))
+        ($tv (isnan-math $tc))
+        ($ftc (if $tv 0 $tc))
+        ($sim (semantic-correlation $props $degrees))
+        ; ($_ (println! ("Total Correlation: " $ftc " Semantic Similarity: " $sim)))
+    )
+        (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim))        
     )
 )
 
-(= (objectives $concept1 $concept2 $candidate-degree)
-        (let $prop-val-pairs (get-prop-value-pairs $concept1)
-            (let $props (get-properties $prop-val-pairs)
-                (collapse(superpose((mu-hqblend $candidate-degree $concept1 $concept2) (coherence $props $candidate-degree))))
-            )
-        )
+
+; !(coherence (intelligence physical-strength agility) (0.3 0.7 0.6))
+
+
+(=(objectives $concept1 $concept2 $candidate-degree)
+    (let* (
+        ($prop-val-pairs (get-prop-value-pairs $concept1))
+        ($props (get-properties $prop-val-pairs))
+
+    )
+        (collapse(superpose((mu-hqblend $candidate-degree $concept1 $concept2) (coherence $props $candidate-degree)))
+    ))
 )
+
+; !(objectives (spiderman) (batman) (0.5 0.3 0.2 0.9))
 
 (= (dominates $u $v)
     (and (all-true (compare-lists $u $v >=)) (any-true (compare-lists $u $v >)))
@@ -395,9 +423,21 @@
 
 ; ; !(non-deter-non-dominated-sort (objs-list))
 
-(= (check-non-dominated $indiv $candidates)
-    (let ($indiv-obj $candis-objs) ((index-atom $indiv 1) (let $unzipped-candis (unzip-list $candidates) (index-atom $unzipped-candis 1))) (let $filtered-candis-objs (filter-list $candis-objs $indiv-obj) (if (non-deter-non-dominated-helper $indiv-obj $filtered-candis-objs) $indiv (empty))))
+
+
+(=(check-non-dominated $indiv $candidates)
+    (let* (
+        ($indiv-obj (index-atom $indiv 1))
+        ($unzipped-candis (unzip-list $candidates))
+        ($candis-objs  (index-atom $unzipped-candis 1))
+        ($filtered-candis-objs (filter-list $candis-objs $indiv-obj))
+        ($truthvalue (non-deter-non-dominated-helper $indiv-obj $filtered-candis-objs))
+        ($result (if $truthvalue $indiv (empty)))
+    )
+    $result
+    )
 )
+
 
 (= (filter-non-dominated $candidates)
     (collapse
@@ -405,9 +445,9 @@
     )
 )
 
-(= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
-
-!(filter-non-dominated (candidates-list))
+; (= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
+; (=(can) ((((0.32232694064146683 1 0 1 1 1 1 0) (0.039999999999999994 0.4386171638965606))) (((0.355600784118316 1 0 0.340925989026196 0 1 0 0.6018432294056829) (0.007499999999999999 0.4410333294915798)))))
+; !(filter-non-dominated (can))
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1
