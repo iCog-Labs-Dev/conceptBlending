@@ -21,16 +21,6 @@
     )
 )
 
-(=(get-similarity-score $term1 $term2)
-    (let* (
-        ($m (collapse(match &space (similarity (($term1) ($term2))) 1)))
-        ($n (if (> (size-atom $m) 0) 1 0))
-
-    )
-    $n
-    )
-)
-
 (= (calculate-source-strength $prop-name $source-expr $blend-name)
     (let $source-word (car-atom $source-expr)
         (if (== $source-word $blend-name) 1
