@@ -41,7 +41,7 @@
     )
 )
 
-(= (expansion-enabled) True )
+(= (expansion-enabled) True)
 (= (min-similarity) 0.1)
 
 ; !(unpacking-op (blend))

@@ -3,10 +3,12 @@
 
 (=(is-property-justified $concept $property)
     (let* (
-        ($direct (collapse(match &space (relation (HasProperty $concept $property) HasProperty) 1)))
-        ($result (if (> (size-atom $direct) 0) True False))
+        ($cleaned-concept (if (== (get-metatype $concept) Symbol) $concept (car-atom $concept)))
+        ($cleaned-property (if (== (get-metatype $property) Symbol) $property (car-atom $property)))
+        ($concept-properties (collapse(match &space (hasProperty $cleaned-concept $var) $var)))
+        ($direct (is-list-member $cleaned-property $concept-properties))
     )
-    $result
+    $direct
     )
 )
 

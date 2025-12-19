@@ -10,8 +10,8 @@
 
 (=(are-terms-antonyms $term1 $term2)
     (let* (
-        ($m (collapse (match &self (relation (antonym $term1 $term2) antonym) $relation)))
-        ($n (if (> (size-atom $m) 0) True False))
+        ($m (collapse (match &space (antonym $term1 $var) $var)))
+        ($n (is-list-member $term2 $m))
     )
     $n
     )
@@ -42,6 +42,7 @@
                 (let $conflict-ratio (/ $conflicts (pow-math (size-atom $prop-names) 0.5)) (max-atom (0.0 (- 1.0 $conflict-ratio))))
             )
         )
+        ; $prop-list
     )
 )
 
