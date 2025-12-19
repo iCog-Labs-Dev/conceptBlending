@@ -118,7 +118,7 @@
         ($num-properties (size-atom $product-emer-min))
         ($1-over-prop (/ 1.0 (decimal $num-properties)))
         ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
-        (() (println! $1-over-prop-summation))
+        ;(() (println! $1-over-prop-summation))
     )
         (min-atom ($1-over-prop-summation 1))
     )
