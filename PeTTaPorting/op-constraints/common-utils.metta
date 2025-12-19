@@ -97,7 +97,7 @@
 )
 
 (= (provenance-sources $blend-properties)
-    (let $props-with-prov (custom-filter-atom $blend-properties $var (> (Method size-atom $var) 1)) (map-atom $props-with-prov $prop (index-atom $prop 1)))
+    (let $props-with-prov (custom-filter-atom $blend-properties (Method > size-atom 1)) (map-atom $props-with-prov $prop (index-atom $prop 1)))
 )
 
 (= (predefined-conflicts)
