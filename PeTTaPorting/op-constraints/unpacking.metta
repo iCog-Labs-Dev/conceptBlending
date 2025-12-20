@@ -14,19 +14,17 @@
 )
 
 (= (provenance-strength $prop-name $provenance-list $blend-name)
-    (let $scores (map-atom $provenance-list $source-expr (calculate-source-strength $prop-name $source-expr $blend-name))
+    (let $scores (map-atom $provenance-list $source-word (calculate-source-strength $prop-name $source-word $blend-name))
         (let $max-score (max-in-list $scores)
             (if (> $max-score (min-similarity)) $max-score 0.0)
         )
     )
 )
 
-(= (calculate-source-strength $prop-name $source-expr $blend-name)
-    (let $source-word (car-atom $source-expr)
-        (if (== $source-word $blend-name) 1
-            (let ($similarity $is-related) ((get-similarity-score $prop-name $source-word) (are-related $prop-name $source-word)) 
-                (if $is-related (max-atom ($similarity 0.8)) $similarity)
-            )
+(= (calculate-source-strength $prop-name $source-word $blend-name)
+    (if (== $source-word $blend-name) 1
+        (let ($similarity $is-related) ((py-call (op-helper-codes.compute_average_pairwise_similarity ($prop-name $source-word) )) (are-related $prop-name $source-word)) 
+            (if $is-related (max-atom ($similarity 0.8)) $similarity)
         )
     )
 )
