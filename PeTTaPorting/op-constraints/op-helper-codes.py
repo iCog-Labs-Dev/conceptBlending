@@ -12,8 +12,18 @@ def llm_result(response):
 
 
 
+_sentence_model = None
+
+def get_sentence_model():
+    global _sentence_model
+    if _sentence_model is None:
+        print("Loading sentence transformer model...")
+        _sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
+        print("Model loaded.")
+    return _sentence_model
+
 def compute_average_pairwise_similarity(properties):
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    model = get_sentence_model()
     threshold = 0.5
 
     properties_clean = [str(prop).replace('-', ' ').replace('_', ' ') for prop in properties]
