@@ -176,10 +176,10 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
             is_grounded, msg_ground = validate_grounding(clean_code, context_str, llm_agent=llm_agent)
             
             if not is_grounded:
-                print(f"     x Grounding Error: {msg_ground}")
+                print(f"Grounding Error: {msg_ground}")
                 messages.append({"role": "user", "content": f"FACT ERROR: {msg_ground}. Only use terms found in the provided context. Do not hallucinate."})
                 continue
-        elif agent_type == "morphism_finder":
+        elif agent_type in ["morphism_finder"]:
             # Just return cleaned string,
             return response.replace("```json", "").replace("```", "").strip()
         try:
