@@ -12,23 +12,27 @@
            )
 )
 
-; !(algspec_builder Bat Man)
-
-
-
 !(algspec_builder "house" "boat")
 
-
-; EXPORT SECTION FOR THE PIPELINE
-
-!(let ($specA $specB) (algspec_builder "house" "boat")
-    (superpose (
-        ; Save "House" spec with a tag we can query later
-        (add-atom &self (OutputSpec House $specA))
-        
-        ; Save "Boat" spec
-        (add-atom &self (OutputSpec Boat $specB))
-    ))
-)
-
-!(print " Specs for House and Boat saved to AtomSpace.")
+;; EXPORT SECTION FOR THE PIPELINE
+;
+;!(print ">>> Generating Algebraic Specs (Calling LLM)...")
+;
+;; 1. Force evaluation of the builder
+;!(let $result (eval (algspec_builder "house" "boat"))
+;    
+;    ; 2. Check if we got a valid tuple ($A $B)
+;    (let ($specA $specB) $result
+;        (superpose (
+;            ; Save House Spec
+;            (add-atom &self (OutputSpec House $specA))
+;            (println! (format-args "Saved House Spec: {} chars" ((len-atom $specA))))
+;            
+;            ; Save Boat Spec
+;            (add-atom &self (OutputSpec Boat $specB))
+;            (println! (format-args "Saved Boat Spec: {} chars" ((len-atom $specB))))
+;        ))
+;    )
+;)
+;
+;!(print "Specs for House and Boat saved to AtomSpace.")
