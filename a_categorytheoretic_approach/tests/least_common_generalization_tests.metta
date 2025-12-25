@@ -13,11 +13,12 @@
 
 !(least_generalization_builder "house" "boat")
 
-; EXPORT TO PYTHON PIPELINE
 
-!(let $genSpec (least_generalization_builder "house" "boat")
-    ; Save the generalization with the tag 'Generic'
-    (add-atom &self (OutputSpec Generic $genSpec))
-)
-
-!(print "Generic Spec saved to AtomSpace.")
+;; EXPORT TO PYTHON PIPELINE
+;
+;!(let $genSpec (least_generalization_builder "house" "boat")
+;    ; Save the generalization with the tag 'Generic'
+;    (add-atom &self (OutputSpec Generic $genSpec))
+;)
+;
+;!(print "Generic Spec saved to AtomSpace.")
