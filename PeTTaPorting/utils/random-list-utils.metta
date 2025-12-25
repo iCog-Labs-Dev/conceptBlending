@@ -1,8 +1,3 @@
-
-
-
-
-
 (= (random-list $length $width $lb $ub) 
     (
         collapse(

@@ -5,6 +5,16 @@ from collections import Counter
 import math
 from hyperon import *
 
+_sentence_model = None
+
+def get_sentence_model():
+    global _sentence_model
+    if _sentence_model is None:
+        print("Loading sentence transformer model...")
+        _sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
+        print("Model loaded.")
+    return _sentence_model
+
 def parse_to_list(s: str):
         # remove surrounding parentheses
         s = s.strip("()")
@@ -30,7 +40,7 @@ def parse_to_list(s: str):
 
 def semantic_similarity(properties, degrees):
     """Compute weighted average semantic similarity for properties with degree >= threshold."""
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    model = get_sentence_model()
     threshold = 0.5
 
     # ensure degrees are floats
@@ -58,5 +68,4 @@ def semantic_similarity(properties, degrees):
             weighted_sims.append(weight * sim_matrix[i, j])
 
     res = np.mean(weighted_sims) if weighted_sims else 0.0
-
     return float(res)

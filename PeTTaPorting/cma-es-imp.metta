@@ -342,10 +342,10 @@
 
 ;;;; Multi-Objective CMA-ES ;;;;
 
-(= (Num-subproblems) 3)
+(= (Num-subproblems) 10)
 (= (Num-objectives) 2)
 (= (Weight) (let $nos (Num-subproblems) (np-dirichlet (1 1) $nos)))
-(= (Moedd-cma-gen) 2)
+(= (Moedd-cma-gen) 5)
 
 !(bind! &multi-cma-es-inputspace (new-space))
 !(add-reduct &multi-cma-es-inputspace (Inputs ((zeros-vec (Num-objectives)) () 0)))
@@ -368,7 +368,7 @@
             ($add (add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0))))
             (($new-ref-point $sub-candidates) (collapse(superpose((np-max $ref-point $fit-score 0) (zip-list $sol $fit-score)))))
             ($best-non-dominated (filter-non-dominated $sub-candidates))
-            ($survivors (let $length (size-atom $best-non-dominated) (if (== $length 1) $best-non-dominated (map-atom $iters $iter (max-best-nd $best-non-dominated $new-ref-point $iter $weights)))))
+            ($survivors (let $length (size-atom $best-non-dominated) (if (== $length 1) ($best-non-dominated) (map-atom $iters $iter (max-best-nd $best-non-dominated $new-ref-point $iter $weights)))))
             ($filtered-surv (unionize $survivors ()))
             ($new-pop (union-atom $filtered-surv $pop))
             ($filtered-pop (filter-non-dominated $new-pop))
@@ -399,7 +399,5 @@
     (let $weights (Weight) (let $iterations (range 0 (- (Moedd-cma-gen) 1) 1) (map-atom $iterations $iteration (moedd-cma-es-single-generation $weights))))
 )
 
-;  !(moedd-cma-es-main-loop) 
-;22m29.236s
-
-
+!(moedd-cma-es-main-loop) 
+;Execution time: 19.436s
