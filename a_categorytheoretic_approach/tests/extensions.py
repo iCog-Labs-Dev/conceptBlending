@@ -7,10 +7,8 @@ from hyperon import *
 from hyperon.ext import register_atoms
 from hyperon.stdlib import ValueAtom, OperationAtom
 
-# Ensure we can import from libs
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# Import your Logic
 try:
     from libs.agents.gpt_agent import prompt_agent, context_preprocessing_agent
     from libs.colimit import compute_colimit
@@ -27,14 +25,13 @@ def clean_and_parse_json(text_atom):
     """
     Tries multiple ways to extract a dictionary from a messy string.
     """
-    # 1. Get raw string and handle MeTTa's string wrapping
     raw_text = str(text_atom)
     
     # Remove outer quotes if MeTTa added them
     if raw_text.startswith('"') and raw_text.endswith('"'):
         raw_text = raw_text[1:-1]
     
-    # FIX: Unescape characters that MeTTa might have escaped
+    # Unescape characters that MeTTa might have escaped
     raw_text = raw_text.replace('\\"', '"') 
     raw_text = raw_text.replace('\\n', '\n')
 
@@ -49,7 +46,7 @@ def clean_and_parse_json(text_atom):
     try:
         return json.loads(clean_text)
     except:
-        pass # Failed? Don't worry, try next method.
+        pass 
 
     # 4. ATTEMPT 2: Python Eval (Forgiving)
     try:
@@ -57,7 +54,7 @@ def clean_and_parse_json(text_atom):
     except:
         pass
 
-    # 5. DEBUGGING: If all fail, print exactly what broke it
+    # 5. DEBUGGING: If all fail
     print(f"\n [JSON PARSE FAILED]")
     print(f"   Input snippet: {raw_text[:100]}...") 
     return {}
@@ -100,7 +97,7 @@ def py_compute_colimit(spec_a, spec_b, spec_g, map_a_atom, map_b_atom):
         if not map_a or not map_b:
             return [ValueAtom("(Error \"Morphism JSON was empty or invalid\")")]
 
-        # Compute
+        # Compute Colimit
         result = compute_colimit(str(spec_a), str(spec_b), str(spec_g), map_a, map_b)
         return [ValueAtom(result)]
         
