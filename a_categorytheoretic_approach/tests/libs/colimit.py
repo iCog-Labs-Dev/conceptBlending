@@ -20,6 +20,30 @@ except ImportError:
         sys.path.append(os.path.join(current_dir, "../"))
         from validation import parse_s_expr
 
+
+
+def parse_s_expr(s):
+    # A very simple recursive parser for testing
+    s = s.replace('(', ' ( ').replace(')', ' ) ')
+    tokens = s.split()
+    if not tokens: return []
+    
+    def read_from_tokens(tokens):
+        if len(tokens) == 0: raise SyntaxError("Unexpected EOF")
+        token = tokens.pop(0)
+        if token == '(':
+            L = []
+            while tokens[0] != ')':
+                L.append(read_from_tokens(tokens))
+            tokens.pop(0) # pop ')'
+            return L
+        elif token == ')':
+            raise SyntaxError("Unexpected )")
+        else:
+            return token
+            
+    return [read_from_tokens(tokens)]
+
 def flatten_sexpr(item_list):
     """
     Recursive helper: ['a', ['b', 'c']] -> "(a (b c))"
