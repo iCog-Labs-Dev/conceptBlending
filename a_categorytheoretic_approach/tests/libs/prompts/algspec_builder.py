@@ -21,78 +21,53 @@ You are an expert in algebraic specification and conceptual modeling. Your task 
   - (axioms ...) → statements relating operations and predicates ((predicate (arg1 arg2)))
 
 ### Output Format:
-Return only the two specifications in the following S-expression structure:
-
-(Concept {concept1}
+(Concept ConceptName
  (spec
-  (sorts (...))
-  (ops (...))
-  (preds (...))
-  (axioms (...))
-  )
-)
-
-(Concept {concept2}
- (spec
-  (sorts (...))
-  (ops (...))
-  (preds (...))
-  (axioms (...))
-  )
+  ;; Format: (Element PriorityScore)
+  ;; PriorityScore must be a float between 0.0 (Optional) and 1.0 (Essential).
+  (sorts (
+    (SortName Priority) 
+    ((< SubSort SuperSort) Priority)
+  ))
+  (ops (
+    ((: opName SortName) Priority)
+  ))
+  (preds (
+    ((predName Type1 Type2) Priority)
+  ))
+  (axioms (
+    ((predName (arg1 arg2)) Priority)
+  ))
+ )
 )
 
 ### Example:
 Input:
 - Concept 1: House
-- Concept 2: Boat
+- Context: A residential building
 
 Expected Output:
 (Concept House
  (spec
-  (sorts
-   (Medium)
-   ((< House Object))
-   ((< Person Object))
-  )
-  (ops
-   ((: house House))
-   ((: resident Person))
-   ((: land Medium))
-  )
-  (preds
-   ((livein Person House))
-   ((on Object Medium))
-  )
-  (axioms
-   ((livein resident house))
-   ((on house land))
-  )
+  (sorts (
+    (Object 1.0) 
+    (Structure 0.9) 
+    ((< House Structure) 1.0)
+  ))
+  (ops (
+    ((: house House) 1.0) 
+    ((: resident Person) 0.8) 
+    ((: garden ExternalSpace) 0.4) ;; Lower priority because not all houses have gardens
+  ))
+  (preds (
+    ((providesShelter House) 0.95)
+    ((hasColor House Color) 0.2)   ;; Low priority, incidental feature
+  ))
+  (axioms (
+    ((providesShelter (house)) 0.95)
+  ))
  )
 )
-(Concept Boat
- (spec
-  (sorts
-   (Medium)
-   ((< Boat Object))
-   ((< Person Object))
-  )
-  (ops
-   ((: boat Boat))
-   ((: passenger Person))
-   ((: water Medium))
-  )
-  (preds
-   ((ride Person Boat))
-   ((on Object Medium))
-  )
-  (axioms
-   ((ride (passenger boat)))
-   ((on boat water))
-  )
- )
-)
-
-
 ### Output Rules:
 - DO NOT include quotes, backticks, explanations, or markdown.
 - Return strictly only the two (Concept ...) expressions.
