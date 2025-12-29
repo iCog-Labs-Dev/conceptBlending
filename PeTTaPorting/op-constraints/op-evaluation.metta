@@ -37,6 +37,8 @@
 
 !(let $temp (static-import! &space concept-atomspace/additionals) (empty))
 
+!(import! &self "op-helper-codes.py")
+
 !(import! &self common-utils)
 
 !(import! &self integration)

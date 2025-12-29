@@ -8,8 +8,8 @@
        (let* (
            ($head (car-atom $knowns))
            ($tail (cdr-atom $knowns))
-           ($type-similarity (let ($rel-type $known-head-type) ((car-atom $rel) (car-atom $head)) (get-similarity-score $rel-type $known-head-type)))
-           ($target-similarity (let ($rel-target $known-head-target) ((index-atom $rel 1) (index-atom $head 1)) (get-similarity-score $rel-target $known-head-target)))
+           ($type-similarity (let ($rel-type $known-head-type) ((car-atom $rel) (car-atom $head)) (py-call (op-helper-codes.compute_average_pairwise_similarity ( $rel-type $known-head-type)))))
+           ($target-similarity (let ($rel-target $known-head-target) ((index-atom $rel 1) (index-atom $head 1)) (py-call (op-helper-codes.compute_average_pairwise_similarity ( $rel-target $known-head-target)))))
          )
          (if (and (> $type-similarity (similarity_threshold)) (> $target-similarity (similarity_threshold)))
             $head
