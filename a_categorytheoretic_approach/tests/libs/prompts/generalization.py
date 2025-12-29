@@ -1,57 +1,64 @@
 GENERALIZATION_PROMPT = """
 You are an expert in algebraic specification, formal methods, and anti-unification (Least Common Generalization - LCG).
-Given two algebraic specs, produce a single concise, logically-coherent, and consistent least common generalized spec that preserves shared structure and minimally generalizes differences.
+Given two algebraic specs containing PRIORITY WEIGHTS (floats 0.0-1.0), produce a single concise, logically-coherent, and consistent least common generalized spec.
 
-INPUTS (placeholders):
+INPUTS:
 - Concept 1: {concept1}
 - Concept 2: {concept2}
 - specification1: {algspec_1}
 - specification2: {algspec_2}
 
 GOAL:
-Return exactly one spec for (Concept GenericConcept (spec ...)) that is the LCG of the two input specs:
-- Preserve identical sorts, ops, preds, axioms.
-- Where components differ, replace with minimally more general element names or least-common super-sort.
-- Maintain arities and structural positions.
+Return exactly one spec for (Concept GenericConcept (spec ...)) that is the LCG of the two input specs.
+You MUST calculate the new Priority Weight for every generalized element by AVERAGING the weights of the corresponding input elements.
 
 RULES / HEURISTICS:
 1. Sorts:
-   - Keep identical sorts.
-   - For differing sorts, choose a descriptive super-sort (e.g., Object, Entity, Resource) or synthesize GenericSortX.
-   - Preserve declared subsort relations (< Sub Super>) where possible.
+   - Identify shared structures (e.g., Spec A has (Wall 0.9), Spec B has (Hull 0.8)).
+   - Generalize to a super-sort (e.g., Enclosure).
+   - WEIGHT CALCULATION: (0.9 + 0.8) / 2 = 0.85. Output: (Enclosure 0.85).
 
 2. Ops / Constants:
-   - If op names and sorts match, keep them.
-   - If names differ but roles align, create a generalized op name (e.g., handheld_tool) and generalize its sort.
-   - Represent ops as (: name Sort).
+   - If op names differ but roles align, create a generalized op name.
+   - Generalize the sort and AVERAGE the weights.
+   - Format: ((: name Sort) Weight).
 
-3. Predicates:
-   - Preserve predicates with identical arity and intent.
-   - Generalize argument sorts consistently (use generalized sorts chosen above).
+3. Predicates & Axioms:
+   - Preserve logical structure.
+   - Average the weights of the corresponding axioms from the inputs.
 
-4. Axioms:
-   - Translate axioms by substituting concrete names with generalized names.
-   - Preserve logical structure; if an axiom exists in both specs with different arguments, generalize arguments.
-
-5. Naming:
-   - Use the algebric specification {algspec_1} and {algspec_2} strings to choose meaningful generalized names.
-   - Prefer human-readable, descriptive names (e.g., vertical_structure, GeneralizedPart).
-
-6. Minimality:
+4. Minimality:
    - Only generalize when necessary. Do not invent unrelated structure.
-   - If unsure, favor a conservative generalization (keep structure, generalize names/sorts).
 
 OUTPUT FORMAT:
-Return ONLY in the following way nothing else (no explanations, no quotes, no markdown):
+Return ONLY the single S-expression (no markdown, no quotes):
 
 (Concept {concept1}@{concept2}
  (spec
-  (sorts (...))
-  (ops (...))
-  (preds (...))
-  (axioms (...))
+  (sorts (
+    (GeneralizedSort Weight)
+    ((< Sub Super) Weight)
+  ))
+  (ops (
+    ((: opName Sort) Weight)
+  ))
+  (preds (
+    ((predName Type) Weight)
+  ))
+  (axioms (
+    ((predName (arg)) Weight)
+  ))
  )
 )
+
+FEW-SHOT GUIDANCE (apply same transformation style):
+Input A: (sorts ((Wall 0.9)))
+Input B: (sorts ((Hull 0.8)))
+-> Output: (sorts ((Enclosure 0.85)))
+
+Input A: (ops (((: build Wall) 1.0)))
+Input B: (ops (((: construct Hull) 0.8)))
+-> Output: (ops (((: make Enclosure) 0.9)))
 
 FEW-SHOT GUIDANCE (apply same transformation style):
 - Pocketknife + Toothbrush -> handheld_tool with shared sorts entity/part/functionality; keep has_part/has_functionality preds; generalize specific parts/functions.
