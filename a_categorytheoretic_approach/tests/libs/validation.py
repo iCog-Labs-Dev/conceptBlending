@@ -68,6 +68,21 @@ def validate_syntax(code_str: str) -> tuple[bool, str]:
         
     return True, clean_code
 
+def strip_weight(item):
+    """
+    Helper: Removes the priority weight (e.g., '1.0') from an item if present.
+    Input:  [[':', 'house', 'House'], '1.0']  -> Output: [':', 'house', 'House']
+    Input:  ['Wall', '0.9']                   -> Output: 'Wall'
+    """
+    # Check if item is a list with exactly 2 elements, and the second is a number
+    if isinstance(item, list) and len(item) == 2:
+        try:
+            float(item[1])
+            return item[0]
+        except (ValueError, TypeError):
+            pass
+            
+    return item 
 # Validate Structure and Semantics
 def validate_structure(code_str: str) -> tuple[bool, str]:
     """
@@ -130,7 +145,8 @@ def validate_structure(code_str: str) -> tuple[bool, str]:
         if definitions['ops']:
             ops_list = definitions['ops'][0]
             if isinstance(ops_list, list):
-                for op in ops_list:
+                for raw_op in ops_list:
+                    op = strip_weight(raw_op)
                     # Check format (: name Type)
                     if not isinstance(op, list) or len(op) < 2 or op[0] != ':':
                         return False, f"Semantic Error [Concept {concept_name}]: Invalid Op '{op}'. Expected (: name Type)."
