@@ -1,12 +1,43 @@
-
 ; ---------------------------------------------------------
-; 🔗 GENERALIZATION (Shared Structure)
+; GENERALIZED CONCEPT (G): House@Boat
 ; ---------------------------------------------------------
 (Concept House@Boat 
-  (spec 
-    (sorts (Object (< HabitableStructure Object) (< Person Object) (< Environment Object) (< Location Object))) 
-    (ops ((: habitable_unit HabitableStructure) (: inhabitant Person) (: water Environment) (: station_point Location))) 
-    (preds ((inhabits Person HabitableStructure) (on Object Environment) (isMobile Object) (isShelter Object) (isHabitable Object) (locatedAt Object Location))) 
-    (axioms ((inhabits inhabitant habitable_unit) (on habitable_unit water) (isMobile habitable_unit) (isShelter habitable_unit) (isHabitable habitable_unit) (locatedAt habitable_unit station_point)))
-  )
+ (spec 
+  (sorts (
+    (Object 1) (Structure 0.9) ((< House@Boat Structure) 1) 
+    (Enclosure 0.9) (Space 0.8) (Compartment 0.7) 
+    (Human 0.8) (Dwelling 0.8) (Environment 0.7)
+  )) 
+  (ops (
+    ((: self House@Boat) 1) ((: occupant Human) 0.8) 
+    ((: interiorSpace Space) 0.9) ((: compartment Compartment) 0.7) 
+    ((: environment Environment) 0.7)
+  )) 
+  (preds (
+    ((isConstructedEnclosure House@Boat) 0.9) 
+    ((providesShelter House@Boat) 0.95) 
+    ((providesSecurity House@Boat) 0.9) 
+    ((hasInteriorSpace House@Boat Space) 0.9) 
+    ((hasCompartment House@Boat Compartment) 0.7) 
+    ((isDwelling House@Boat) 0.8) 
+    ((containsBelongings House@Boat) 0.7) 
+    ((facilitatesActivities House@Boat) 0.7) 
+    ((isPlaceOfBelonging House@Boat) 0.6) 
+    ((isJourneyBase House@Boat) 0.7) 
+    ((interactsWithEnvironment House@Boat Environment) 1.0)
+  )) 
+  (axioms (
+    ((isConstructedEnclosure (self)) 0.9) 
+    ((providesShelter (self)) 0.95) 
+    ((providesSecurity (self)) 0.9) 
+    ((hasInteriorSpace (self) (interiorSpace)) 0.9) 
+    ((hasCompartment (self) (compartment)) 0.7) 
+    ((isDwelling (self)) 0.8) 
+    ((containsBelongings (self)) 0.7) 
+    ((facilitatesActivities (self)) 0.7) 
+    ((isPlaceOfBelonging (self)) 0.6) 
+    ((isJourneyBase (self)) 0.7) 
+    ((interactsWithEnvironment (self) (environment)) 1.0)
+  ))
+ )
 )
