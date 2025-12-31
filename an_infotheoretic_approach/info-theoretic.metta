@@ -562,7 +562,7 @@
 
 (= (blend $GAorCMA $eval)
     (let $final-pop ($GAorCMA)
-        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
+        (let $best-sample-with-fitness (index-atom $final-pop (- (Moedd-cma-gen) 1))
             (let $multi-objective-check-result (multi-objective-check $best-sample-with-fitness)
                 (let $concept-pair (let (Concept $x $y) (testconcept1) $x)
                     (let $network (gpt_network_selector $concept-pair)
