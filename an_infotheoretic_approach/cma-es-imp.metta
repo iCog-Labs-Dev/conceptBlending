@@ -363,8 +363,9 @@
 (= (cma-es-main-loop)
     (let $iters (generate-toy-list (GENERATIONS))  (map-atom $iters $iter (cma-es-single-iteration population-fitness-score)))
 )
+(= (Eval) False)
 
-; !(blend cma-es-main-loop (Eval))
+!(blend cma-es-main-loop (Eval))
 
 ; !(space-blend blend cma-es-main-loop (Eval))
 
@@ -414,7 +415,6 @@
     )
 )
 
-(= (Eval) True)
 
 (= (moedd-cma-es-main-loop)
     (let $weights (Weight) (let $iterations (range 0 (- (Moedd-cma-gen) 1) 1) 
@@ -422,8 +422,8 @@
                 ))
 )
 
-!(moedd-cma-es-main-loop)
+; !(moedd-cma-es-main-loop)
 
 
-; (blend moedd-cma-es-main-loop (Eval))
+! (blend moedd-cma-es-main-loop (Eval))
 ;!(are-terms-antonyms hot cold)
