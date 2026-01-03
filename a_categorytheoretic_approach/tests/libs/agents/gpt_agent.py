@@ -100,7 +100,7 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
     """
     prompt_template = get_prompt(agent_type)
 
-    if network == "algspec_builder":
+    if agent_type == "algspec_builder":
         
         global concept1_name, concept2_name
         concept1_name,concept2_name, common_context = args
@@ -112,7 +112,7 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
             context=common_context,
         )
 
-    elif network == "generalization_helper":
+    elif agent_type == "generalization_helper":
         
         algspec_1, algspec_2 =args
         
@@ -125,7 +125,7 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
             algspec_2=algspec_2   
         )
 
-    elif network== "amalgam_builder":
+    elif agent_type== "amalgam_builder":
         
         algspec_1,algspec_2,lcg_spec = args
         
@@ -142,7 +142,7 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
     messages = [{"role": "user", "content": formatted_prompt}]
     answer = gpt_agent(messages, tools=[])
     
-    if network=="algspec_builder":
+    if agent_type=="algspec_builder":
         
         answer=priority_generator(answer)
         
