@@ -52,7 +52,7 @@
 
 ;;;; POPULATION FITNESS SCORE CALCULATION ;;;;
 (= (population-fitness-score $population)
-    (map-atom $population $x (mu-hqblend $x (concept1) (concept2)))
+    (map-atom $population $x (mu-hqblend $x (testconcept1) (testconcept2)))
 )
 
 ;;;; POPULATION FITNESS SCORE CALCULATION FOR TESTING ;;;;
@@ -308,21 +308,29 @@
 )
 
 
-!(bind! &single-cma-es-inputspace (get-space))
-(= (add-to-single-cma-es-inputspace)
-    (add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 -10000 0 0)))
+!(bind! &multi-single-iteration-cma-es-inputspace (get-space))
+(= (add-to-multi-single-iteration-cma-es-inputspace)
+    (add-reduct &multi-single-iteration-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 -10000 0 0)))
 )
 
-(= (clean-from-single-cma-es-inputspace)
-    (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params))))
+!(bind! &single-cma-es-inputspace (get-space))
+(= (add-to-single-cma-es-inputspace)
+    (add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
 )
+
 !(add-to-single-cma-es-inputspace)
+
+(= (clean-from-multi-single-cma-es-inputspace)
+    (collapse (match &multi-single-iteration-cma-es-inputspace (Inputs $params) (remove-atom &multi-single-iteration-cma-es-inputspace (Inputs $params))))
+)
+!(add-to-multi-single-iteration-cma-es-inputspace)
 ; !(add-concepts)
+
 
 (= (cma-es-single-iteration $fitness-fn)
     (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen $stall) (match &single-cma-es-inputspace (Inputs $x) $x)
         (if (>= $stall 5)                         ; patience = 5 gens
-          ($best-pop $best-fitness)             
+          ($best-pop $best-fitness)           
           (let*
             (
                 (($normalized-weights $c-sigma $d-sigma $mu $mu-eff $dim $rmspace $cispace1 $cispace2 $cispace3) (collapse(superpose((normalized_weights) (c_sigma) (d_sigma) (mu) (mu_eff) (dim) (get-space) (get-space) (get-space) (get-space)))))
@@ -343,7 +351,7 @@
 )
 
 (= (moedd-cma-es-single-iteration $fitness-fn $iter)
-    (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-unscalarized-fitness $best-scalarized-fitness $gen $stall) (match &single-cma-es-inputspace (Inputs $x) $x)
+    (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-unscalarized-fitness $best-scalarized-fitness $gen $stall) (match &multi-single-iteration-cma-es-inputspace (Inputs $x) $x)
         (let*
         (
             (($normalized-weights $c-sigma $d-sigma $mu $mu-eff $dim $rmspace $cispace1 $cispace2 $cispace3) (collapse(superpose((normalized_weights) (c_sigma) (d_sigma) (mu) (mu_eff) (dim) (get-space) (get-space) (get-space) (get-space)))))
@@ -353,9 +361,9 @@
             (($selected $unscalarized-fit-score $scalarized-fitness-score) (moedd-update-mean $samples $mu $normalized-weights $fitness-fn $iter))
             (() (println! ($selected $unscalarized-fit-score $scalarized-fitness-score)))
             (($new-best-pop $new-best-unscalarized-fitness $new-best-scalarized-fitness) ((cons-atom $selected $best-pop) (if (== (get-metatype $best-unscalarized-fitness) Grounded) (cons-atom $unscalarized-fit-score ()) (cons-atom $unscalarized-fit-score $best-unscalarized-fitness)) (if (== (get-metatype $best-scalarized-fitness) Grounded) (cons-atom $scalarized-fitness-score ()) (cons-atom $scalarized-fitness-score $best-scalarized-fitness))))
-            ($clean (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params)))))
+            ($clean (collapse (match &multi-single-iteration-cma-es-inputspace (Inputs $params) (remove-atom &multi-single-iteration-cma-es-inputspace (Inputs $params)))))
         )
-        (let $added (add-reduct &single-cma-es-inputspace (Inputs ($mean $cov $step-size $p-sigma $p-c $new-best-pop $new-best-unscalarized-fitness $new-best-scalarized-fitness $gen $stall))) ($new-best-pop $new-best-unscalarized-fitness $new-best-scalarized-fitness))
+        (let $added (add-reduct &multi-single-iteration-cma-es-inputspace (Inputs ($mean $cov $step-size $p-sigma $p-c $new-best-pop $new-best-unscalarized-fitness $new-best-scalarized-fitness $gen $stall))) ($new-best-pop $new-best-unscalarized-fitness $new-best-scalarized-fitness))
         )
     )
 )
@@ -391,8 +399,8 @@
             (() (println! ($iters)))
             (($sol $unscalarized-fit-score $scalarized-fit-score) (let $res (map-atom $iters $iter (moedd-cma-es-single-iteration scalarized-fitness $iter)) (index-atom $res (- (Num-subproblems) 1))))
             (() (println! ($sol $unscalarized-fit-score $scalarized-fit-score)))
-            ($clean (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params)))))
-            ($add (add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 -10000 0 0))))
+            ($clean (collapse (match &multi-single-iteration-cma-es-inputspace (Inputs $params) (remove-atom &multi-single-iteration-cma-es-inputspace (Inputs $params)))))
+            ($add (add-reduct &multi-single-iteration-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 -10000 0 0))))
             (($new-ref-point $sub-candidates) ((np-max $ref-point $unscalarized-fit-score 0) (let $first-zip (zip-list $sol $unscalarized-fit-score) (zip-list $first-zip $scalarized-fit-score))))
             (() (println! (Sub candidates $sub-candidates)))
             ($best-non-dominated (filter-non-dominated $sub-candidates))
@@ -425,5 +433,5 @@
 ; !(moedd-cma-es-main-loop)
 
 
-! (blend moedd-cma-es-main-loop (Eval))
+; ! (blend moedd-cma-es-main-loop (Eval))
 ;!(are-terms-antonyms hot cold)

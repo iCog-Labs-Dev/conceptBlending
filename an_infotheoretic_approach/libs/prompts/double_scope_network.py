@@ -29,5 +29,6 @@ Return only one line like this:
 ### Output Rules:
 - DO NOT use quotes, backticks, or extra explanation.
 - For the BlendedConcept, consider just combining the two concepts if it gives a clearer insight, instead of trying to find a complex synthesis.
+- Use the most widely recognized name for the blended concept when possible; do not invent new names unless necessary.
 - Return only a single valid MeTTa expression in the format specified.
 """

@@ -460,17 +460,24 @@
 ;     )
 ; )
 
+; (= (multi-objective-check $best-sample-with-fitness)
+;     (let $one-sample (index-atom $best-sample-with-fitness 0)
+;         (let ($first-unzip $fit-score) $one-sample
+;             (if (== (size-atom $first-unzip) 2) True False
+;             )))
+; )
+
+
 (= (multi-objective-check $best-sample-with-fitness)
     (let $one-sample (index-atom $best-sample-with-fitness 0)
-        (let ($first-unzip $fit-score) $one-sample
-            (if (== (size-atom $first-unzip) 2) True False
+        (let $first-atom (car-atom $one-sample)
+            (if (== (size-atom $first-atom) 2) True False
             )))
 )
 
 
 
-
-(single-objective-blend $best-sample-with-fitness $network $eval
+(= (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval)
     (let $best-fitness (index-atom $best-sample-with-fitness 1)
         (if (>= $best-fitness 0)
                 (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
@@ -507,7 +514,7 @@
 )
 
 
-(= (multi-objective-blend-single $single-best-blend $network $eval)
+(= (multi-objective-blend-single $single-best-blend $concept-pair $network $eval)
     (let $scalarized-fitness (index-atom $single-best-blend 1)
     ((if (> $scalarized-fitness 0)
                         ;; -- PATH A: Fitness is positive, attempt blend --
@@ -552,8 +559,8 @@
 )
 
 
-(= (multi-objective-blend-loop $best-sample-with-fitness $network $eval)
-    (map-atom $best-sample-with-fitness $single-best-blend (multi-objective-blend-single $single-best-blend $network $eval)))
+(= (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval)
+    (map-atom $best-sample-with-fitness $single-best-blend (multi-objective-blend-single $single-best-blend $concept-pair $network $eval)))
 
 
 
@@ -561,15 +568,15 @@
 
 
 (= (blend $GAorCMA $eval)
-    (let $final-pop ($GAorCMA)
-        (let $best-sample-with-fitness (index-atom $final-pop (- (Moedd-cma-gen) 1))
+    (let $final-pop ($GAorCMA)                                    ;Moedd-cma-gen
+        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
             (let $multi-objective-check-result (multi-objective-check $best-sample-with-fitness)
                 (let $concept-pair (let (Concept $x $y) (testconcept1) $x)
                     (let $network (gpt_network_selector $concept-pair)
                         (if (not (== $network None))
                             (if $multi-objective-check-result
-                                (let () (println! (Multi-objective check passed $multi-objective-check-result)) (multi-objective-blend-loop $best-sample-with-fitness $network $eval))
-                                (let () (println! (Multi-objective check failed $multi-objective-check-result)) (single-objective-blend $best-sample-with-fitness $network $eval))
+                                (let () (println! (Multi-objective check result: $multi-objective-check-result)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval))
+                                (let () (println! (Multi-objective check result: $multi-objective-check-result)) (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval))
                             )
                             (Error $network NoNetworkSelected)
                         )
