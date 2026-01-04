@@ -593,10 +593,10 @@ update-mean-test
 ;;;; cma-es-blend (encompasses a test for cma-es-main-loop) ;;;;
 ; Output = The formed blend.
 
-; !(assertEqual 
-;    (let ($net-type $exp-ver $blend $ext-ver) (blend cma-es-main-loop (Eval)) ($net-type $blend))
-;    (doubleScope Batman)
-; )
+!(assertEqual 
+   (let ($net-type $exp-ver $blend $ext-ver) (blend cma-es-main-loop (Eval)) ($net-type $blend))
+   (doubleScope Batman)
+)
 
 ;;; cma-es-blend with evaluation ;;;;
 ; Output = the formed blend, and six optimality constraints(integration, good-reason, web, unpacking, topology, metonymy) evaluation scores
