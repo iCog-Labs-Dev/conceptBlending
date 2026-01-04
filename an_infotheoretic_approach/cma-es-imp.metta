@@ -373,7 +373,7 @@
 )
 (= (Eval) False)
 
-!(blend cma-es-main-loop (Eval))
+; !(blend cma-es-main-loop (Eval))
 
 ; !(space-blend blend cma-es-main-loop (Eval))
 
@@ -433,5 +433,5 @@
 ; !(moedd-cma-es-main-loop)
 
 
-; ! (blend moedd-cma-es-main-loop (Eval))
+; !(blend moedd-cma-es-main-loop (Eval))
 ;!(are-terms-antonyms hot cold)

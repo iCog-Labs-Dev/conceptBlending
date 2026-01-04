@@ -411,62 +411,6 @@
     )
 )
 
-;;; Original blend function ;;; 
-
-; (= (blend $GAorCMA $eval)
-;     (let $final-pop ($GAorCMA)
-;         (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
-;             (let $best-fitness (index-atom $best-sample-with-fitness 1)
-;                 (if (>= $best-fitness 0)
-;                     (let $concept-pair (let (Concept $x $y) (concept1) $x)
-;                         (let $network (gpt_network_selector $concept-pair)
-;                             (if (not (== $network None))
-;                                 (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
-;                                     (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
-;                                         (let $blend ($network $concept-pair $best-cand-mu-emergence)
-;                                             (if $eval
-;                                             (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
-;                                                 (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
-;                                                     (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
-;                                                         (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
-;                                                             (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-;                                                                 (Formed Blend: $blend-name
-;                                                                 Evaluation-Metrics:
-;                                                                 Integration: $integration-res
-;                                                                 Good-reason: $good-reason-res
-;                                                                 Unpacking: $unpacking-res
-;                                                                 Web: $web-res
-;                                                                 Topology: $topology-res
-;                                                                 Metonymy: $metonymy-res
-;                                                                 )
-;                                                             )
-;                                                         )
-;                                                     )
-;                                                 )
-;                                             )
-;                                             $blend
-;                                             )
-;                                         )
-;                                     )
-;                                 )
-;                                 (Error $newtwork NoNetworkSelected)
-;                             )
-;                         )
-;                     )
-;                     (Error $best-fitness NegativeMu-hqblendValue)
-;                 )
-;             )
-;         )
-;     )
-; )
-
-; (= (multi-objective-check $best-sample-with-fitness)
-;     (let $one-sample (index-atom $best-sample-with-fitness 0)
-;         (let ($first-unzip $fit-score) $one-sample
-;             (if (== (size-atom $first-unzip) 2) True False
-;             )))
-; )
-
 
 (= (multi-objective-check $best-sample-with-fitness)
     (let $one-sample (index-atom $best-sample-with-fitness 0)
@@ -519,7 +463,7 @@
     ((if (> $scalarized-fitness 0)
                         ;; -- PATH A: Fitness is positive, attempt blend --
                         (let $best-candidate (let $unscalarized-zip (index-atom $single-best-blend 0) (let ($props $unscalarized-fitness-score) $unscalarized-zip $props))
-                            (let () (println! (best candidate-ye: $best-candidate))
+                            (let () (println! (best single-candidate: $best-candidate))
                                 (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (testconcept1) (testconcept2)))
                                     (let () (println! (best candidate miu emergence: $best-cand-mu-emergence))
                                         (let $blend ($network $concept-pair $best-cand-mu-emergence)
@@ -561,10 +505,6 @@
 
 (= (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval)
     (map-atom $best-sample-with-fitness $single-best-blend (multi-objective-blend-single $single-best-blend $concept-pair $network $eval)))
-
-
-
-
 
 
 (= (blend $GAorCMA $eval)

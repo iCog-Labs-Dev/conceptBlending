@@ -74,12 +74,9 @@ def prompt_agent(metta: MeTTa, network: str, *args):
     messages = [{"role": "user", "content": formatted_prompt}]
     if isinstance(gpt_agent, GeminiAgent):
       answer = gpt_agent(messages, tools=[])
-      print("Gemini raw answer:", answer)
       parsed_atoms = metta.parse_all(answer)
     else:
       answer = gpt_agent(messages, functions=[])
-      print("GPT answer content:", answer.content)
-      print("GPT full answer:", answer)
       parsed_atoms = metta.parse_all(answer.content)
 
     # Use the built-in parser to convert the response text into atoms.
