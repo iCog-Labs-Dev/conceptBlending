@@ -1,35 +1,37 @@
-; ALGSPEC BUILDER (ROBUST MODE)
+; ALGSPEC BUILDER WRAPPER (DIRECT MODE)
+; =====================================
+
 !(import! &self libs)
 !(import! &self knowledge_base)
 
 ; Logic
 (=(algspec_builder $concept1 $concept2)
-     (let ($context1 $context2) ((main-fetch $concept1) (main-fetch $concept2))
-        (let ($generated_context) (collapse (gpt_context_preprocessing ($concept1 $context1) ($concept2 $context2)))
-           (gpt_algspec_builder ($concept1 $generated_context) ($concept2 $generated_context)))
-))`
+   (let $context1 (main-fetch $concept1)
+      (let $context2 (main-fetch $concept2)
+         
+         ; Verify whether we have the ingredients
+         (let $_ (println! (format-args ">>> Context Found for {}: {}" ($concept1 $context1)))
+             
+             ; STEP 1: BYPASSING PREPROCESSING 
+             (let $clean_context (format-args "Context for {}: {}. Context for {}: {}." ($concept1 $context1 $concept2 $context2))
+                 
+                 ; STEP 2: GENERATION
+                 (gpt_algspec_builder ($concept1 $clean_context) ($concept2 $clean_context))
+             )
+         )
+      )
+   )
+)
 
-; EXECUTION & ROBUST PRINTING
-
+; EXECUTION
 !(println! ">>> STARTING GENERATION...")
 
-; We use 'case' (or match) to handle the result safely
-!(let $result (algspec_builder "house" "boat")
+; Calling the algspec_builder
+!(let $result (algspec_builder house boat)
     (superpose (
-        ; Case 1: It returned a tuple (Correct)
-        (match &self (is-tuple $result) 
-            (let ($specA $specB) $result
-                (superpose (
-                    (println! "\n; ================= HOUSE =================")
-                    (println! $specA)
-                    (println! "\n; ================= BOAT ==================")
-                    (println! $specB)
-                ))
-            )
-        )
-        
-        ; Case 2: It returned a list or just the atoms directly (Fallback)
-        (println! "\n; === RAW RESULT (Fallback View) ===")
+        (println! "\n; === FINAL RESULT ===")
         (println! $result)
     ))
 )
+
+!(println! ">>> GENERATION FINISHED")
