@@ -637,6 +637,24 @@ update-mean-test
 ;    (0 0)
 ;    1
 ;    ((0.2 0.8) (0.5 0.5) (0.8 0.2))) (((d) (0.8 0.2))))
+
+!(assertEqual
+    (max-best-nd 
+        (
+            ; Structure: ( (Genome Objectives) DummyData )
+            ( ((b) (0.4 0.6)) Empty )
+            ( ((c) (0.6 0.4)) Empty )
+            ( ((d) (0.8 0.2)) Empty )
+        )
+        (0 0)   ; Ref
+        1       ; Iter -> selects weight (0.5 0.5)
+        ((0.2 0.8) (0.5 0.5) (0.8 0.2)) ; Weights
+    )
+    ; Expected Result: The item with the highest PBI.
+    ; (0.8 0.2) is furthest from the diagonal weight vector (0.5 0.5), 
+    ; so it has the highest penalty (d2).
+    ( ((d) (0.8 0.2)) Empty )
+)
 ;;;; Multi-objectvie cma-es tests ;;;;
 
 ;;;; pbi-scalarization ;;;;
