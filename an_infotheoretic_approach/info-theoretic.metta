@@ -464,7 +464,7 @@
                         ;; -- PATH A: Fitness is positive, attempt blend --
                         (let $best-candidate (let $unscalarized-zip (index-atom $single-best-blend 0) (let ($props $unscalarized-fitness-score) $unscalarized-zip $props))
                             (let () (println! (best single-candidate: $best-candidate))
-                                (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (testconcept1) (testconcept2)))
+                                (let $best-cand-mu-emergence (miu-emergence $best-candidate (property-max (testconcept1) (testconcept2)))
                                     (let () (println! (best candidate miu emergence: $best-cand-mu-emergence))
                                         (let $blend ($network $concept-pair $best-cand-mu-emergence)
                                             (let () (println! (blend: $blend))
