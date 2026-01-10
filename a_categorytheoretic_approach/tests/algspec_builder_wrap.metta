@@ -1,6 +1,3 @@
-; ALGSPEC BUILDER WRAPPER (DIRECT MODE)
-; =====================================
-
 !(import! &self libs)
 !(import! &self knowledge_base)
 
