@@ -1,15 +1,17 @@
-(=(get-expand-provenance $term)
-    (let* (
-        ($m (match &space (related ($term $term2)) $term2))
-    )
-    ($m)
-    )
+(=(get-expand-provenance $list)
+    (map-atom $list $source-word (py-call (op-helper-codes.get_word_associations $source-word)) )
 )
 
 (= (evaluate-property ($prop-name $provenance-list) $blend-name)
    (if (== (size-atom $provenance-list) 0)
        0.0
-       (let $expanded-provenance (if (expansion-enabled) (get-expand-provenance $provenance-list) ($provenance-list)) (provenance-strength $prop-name $expanded-provenance $blend-name))           
+       (let $expanded-provenance 
+            (if (expansion-enabled) 
+                (get-expand-provenance $provenance-list) 
+                ($provenance-list)
+            ) 
+         (provenance-strength $prop-name $expanded-provenance $blend-name)
+        )           
     )
 )
 
