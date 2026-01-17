@@ -1,14 +1,12 @@
-; ===============================================\========
-;       MASTER CONCEPT BLENDING PIPELINE\
-; ===============================================\========
+; =======================================================
+;       MASTER CONCEPT BLENDING PIPELINE
+; =======================================================
 
-; 1. DIRECT LOAD OF EXTENSIONS
+; 1. DIRECT LOAD
 !(import! &self extensions)
 !(import! &self knowledge_base)
 
-; 2. DEFINE WRAPPERS LOCALLY
-
-; --- A. Spec Generation ---
+; 2. DEFINE WRAPPERS
 (= (generate_specs $c1 $c2)
    (let $context1 (main-fetch $c1)
       (let $context2 (main-fetch $c2)
@@ -19,20 +17,20 @@
    )
 )
 
-; B. Generalization 
-(= (find_generalization $A $B)
+; --- GENERALIZATION ---
+
+(= (find_generalization $A $B) 
    (llm:generate-gen $A $B)
 )
 
-; C. Morphism (The Glue) 
-(= (find_morphism $G $Target)
-   (llm:find-morph $G $Target)
-)
+; (= (find_generalization $A $B) (llm:generate-gen $A $B))
 
-; D. Math Engine 
-(= (compute_blend $A $B $G $mA $mB) 
-   (math:colimit $A $B $G $mA $mB)
-)
+; --- MORPHISM (Gluing) ----
+(= (find_morphism $G $Target) (llm:find-morph $G $Target))
+
+;--- THE REAL BLENDING (COLIMIT Calculation)
+(= (compute_blend $A $B $G $mA $mB) (math:colimit $A $B $G $mA $mB))
+
 
 ; 3. EXECUTE THE PIPELINE
 ; =======================
@@ -41,43 +39,47 @@
 
 !(let $specs (generate_specs house boat)
    (let ($specA $specB) $specs
-      (superpose (
-         ; 1. Save Specs
-         !(add-atom &self $specA)
-         !(add-atom &self $specB)
-         (util:log "; ---> Specs Generated.")
-
-         !(util:log "\n>>> [PHASE 2] Finding Shared Generalization (G)...")
-         
-         ; 2. Find G
-         (let $specG (find_generalization $specA $specB)
-            (superpose (
-               (util:log "; ---> Generalization Found.")
-
-               !(util:log "\n>>> [PHASE 3] Finding Morphisms (Mapping)...")
-               
-               ; 3. Finding Morphisms
-               (let $mapA (find_morphism $specG $specA)
-                  (let $mapB (find_morphism $specG $specB)
-                     (superpose (
-                        (util:log "; ---> Maps Acquired (JSON).")
-
-                        !(util:log "\n>>> [PHASE 4] Computing Final Blend...")
-                        
-                        ; 4. Compute Colimit
-                        (let $result (compute_blend $specA $specB $specG $mapA $mapB)
-                           (superpose (
-                              (println! "\n; ===========================================")
-                              (println! ";        FINAL HOUSEBOAT BLEND              ")
-                              (println! "; ===========================================")
-                              (println! $result)
-                           ))
-                        )
-                     ))
-                  )
-               )
-            ))
+      
+      ; STEP 1: Add to AtomSpace
+      (let $u1 (add-atom &self $specA)
+         (let $u2 (add-atom &self $specB)
+             (let $u3 (util:log "; ---> Specs Generated.")
+                 
+                 ; STEP 2: Generalization
+                 (let $u4 (util:log "\n>>> [PHASE 2] Finding Shared Generalization (G)...")
+                     (let $specG (find_generalization $specA $specB)
+                         (let $u5 (util:log "; ---> Generalization Found (Debug Mode).")
+                             
+                             ; STEP 3: Morphisms
+                             (let $u6 (util:log "\n>>> [PHASE 3] Finding Morphisms (Mapping)...")
+                                 (let $mapA (find_morphism $specG $specA)
+                                     (let $mapB (find_morphism $specG $specB)
+                                         (let $u7 (util:log "; ---> Maps Acquired (JSON).")
+                                             
+                                             ;STEP 4: Math (colimit)
+                                             (let $u8 (util:log "\n>>> [PHASE 4] Computing Final Blend...")
+                                                 (let $result (compute_blend $specA $specB $specG $mapA $mapB)
+                                                     
+                                                     ; FINAL OUTPUT BLOCK
+                                                     (let $u9 (println! "\n; ===========================================")
+                                                         (let $u10 (println! ";        FINAL HOUSEBOAT BLEND              ")
+                                                             (let $u11 (println! "; ===========================================")
+                                                                 (println! $result)
+                                                             )
+                                                         )
+                                                     )
+                                                 )
+                                             )
+                                         )
+                                     )
+                                 )
+                             )
+                         )
+                     )
+                 )
+             )
          )
-      ))
+      )
    )
 )
+!(util:log "\n>>> PIPELINE FINISHED.")
