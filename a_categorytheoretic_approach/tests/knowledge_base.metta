@@ -79,6 +79,14 @@
    )
 )
 
+; --- Defining to fetch any Triplet ---
+(= (fetch-any-triplet $c)
+   (match &self 
+       (surfaceText (Triplet ($pred $c $target)) $text)
+       (format-result $target $text)
+   )
+)
+
 ; Main fetch function 
 (= (main-fetch $c)
    (collapse 
@@ -87,11 +95,25 @@
                (fetch-atom-RelatedTo $c) 
                (fetch-atom-HasProperty $c) 
                (fetch-atom-IsA $c)
+               (fetch-any-triplet $c)
            ))
        )
    )
 )
 
-!(println! "--- TESTING HOUSE FETCH ---")
-!(main-fetch house)
+;!(println! "--- TESTING FETCH ---")
 
+;!(let $res (main-fetch house)
+;   (println! (format-args "House Data: {}" ($res)))
+;)
+;!(let $res (main-fetch virus)
+;   (println! (format-args "Virus Data: {}" ($res)))
+;)
+
+;!(let $res (main-fetch horse)
+;   (println! (format-args "Horse Data: {}" ($res)))
+;)
+
+;!(let $res (main-fetch time)
+;   (println! (format-args "Time Data:  {}" ($res)))
+;)
