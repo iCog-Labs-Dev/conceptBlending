@@ -411,47 +411,116 @@
     )
 )
 
-(= (blend $GAorCMA $eval)
-    (let $final-pop ($GAorCMA)
-        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
-            (let $best-fitness (index-atom $best-sample-with-fitness 1)
-                (if (>= $best-fitness 0)
-                    (let $concept-pair (let (Concept $x $y) (concept1) $x)
-                        (let $network (gpt_network_selector $concept-pair)
-                            (if (not (== $network None))
-                                (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
-                                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
-                                        (let $blend ($network $concept-pair $best-cand-mu-emergence)
-                                            (if $eval
-                                            (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
-                                                (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
-                                                    (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
-                                                        (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
-                                                            (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                                (Formed Blend: $blend-name
-                                                                Evaluation-Metrics:
-                                                                Integration: $integration-res
-                                                                Good-reason: $good-reason-res
-                                                                Unpacking: $unpacking-res
-                                                                Web: $web-res
-                                                                Topology: $topology-res
-                                                                Metonymy: $metonymy-res
-                                                                )
-                                                            )
-                                                        )
-                                                    )
+
+(= (multi-objective-check $best-sample-with-fitness)
+    (let $one-sample (index-atom $best-sample-with-fitness 0)
+        (let $first-atom (car-atom $one-sample)
+            (if (== (size-atom $first-atom) 2) True False
+            )))
+)
+
+
+
+(= (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval)
+    (let $best-fitness (index-atom $best-sample-with-fitness 1)
+        (if (>= $best-fitness 0)
+                (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
+                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (testconcept1) (testconcept2)))
+                        (let $blend ($network $concept-pair $best-cand-mu-emergence)
+                            (if $eval
+                            (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (testconcept1) $best-candidate))
+                                (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (testconcept1) (testconcept2))
+                                    (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
+                                        (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
+                                            (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                                                (Formed Blend: $blend-name
+                                                Evaluation-Metrics:
+                                                Integration: $integration-res
+                                                Good-reason: $good-reason-res
+                                                Unpacking: $unpacking-res
+                                                Web: $web-res
+                                                Topology: $topology-res
+                                                Metonymy: $metonymy-res
                                                 )
-                                            )
-                                            $blend
                                             )
                                         )
                                     )
                                 )
-                                (Error $newtwork NoNetworkSelected)
+                            )
+                            $blend
                             )
                         )
                     )
-                    (Error $best-fitness NegativeMu-hqblendValue)
+                )
+            (Error $best-fitness NegativeMu-hqblendValue)
+        )
+    )
+)
+
+
+(= (multi-objective-blend-single $single-best-blend $concept-pair $network $eval)
+    (let $scalarized-fitness (index-atom $single-best-blend 1)
+    ((if (> $scalarized-fitness 0)
+                        ;; -- PATH A: Fitness is positive, attempt blend --
+                        (let $best-candidate (let $unscalarized-zip (index-atom $single-best-blend 0) (let ($props $unscalarized-fitness-score) $unscalarized-zip $props))
+                            (let () (println! (best single-candidate: $best-candidate))
+                                (let $best-cand-mu-emergence (miu-emergence $best-candidate (property-max (testconcept1) (testconcept2)))
+                                    (let () (println! (best candidate miu emergence: $best-cand-mu-emergence))
+                                        (let $blend ($network $concept-pair $best-cand-mu-emergence)
+                                            (let () (println! (blend: $blend))
+                                                (if $eval
+                                                    ;; -- Sub-Path A1: Eval is True --
+                                                    (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (testconcept1) $best-candidate))
+                                                        (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (testconcept1) (testconcept2))
+                                                            (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
+                                                                (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
+                                                                    (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                                                                        (Formed Blend: $blend-name
+                                                                        Evaluation-Metrics:
+                                                                        Integration: $integration-res
+                                                                        Good-reason: $good-reason-res
+                                                                        Unpacking: $unpacking-res
+                                                                        Web: $web-res
+                                                                        Topology: $topology-res
+                                                                        Metonymy: $metonymy-res)
+                                                                    )
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                    ;; -- Sub-Path A2: Eval is False (Skip this item) --
+                                                    $blend
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                        ;; -- PATH B: Fitness is <= 0 (Skip this item) --
+                        (println! (Blend ignored. Fitness cannot be less than zero! Scalarized-fitness: $scalarized-fitness Blend: $single-best-blend))
+                    )))
+)
+
+
+(= (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval)
+    (map-atom $best-sample-with-fitness $single-best-blend (multi-objective-blend-single $single-best-blend $concept-pair $network $eval)))
+
+
+(= (blend $GAorCMA $eval)
+    (let $final-pop ($GAorCMA)                                    ;Moedd-cma-gen
+        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
+            (let $multi-objective-check-result (multi-objective-check $best-sample-with-fitness)
+                (let $concept-pair (let (Concept $x $y) (testconcept1) $x)
+                    (let $network (gpt_network_selector $concept-pair)
+                        (if (not (== $network None))
+                            (if $multi-objective-check-result
+                                (let () (println! (Multi-objective check result: $multi-objective-check-result)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval))
+                                (let () (println! (Multi-objective check result: $multi-objective-check-result)) (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval))
+                            )
+                            (Error $network NoNetworkSelected)
+                        )
+                    )
                 )
             )
         )

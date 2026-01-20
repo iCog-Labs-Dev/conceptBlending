@@ -51,9 +51,9 @@
             (() (println! "Evaluating Integration OP"))
             ($integration-res (integration-op $blend))
             (() (println! (Integrate-OP Result = $integration-res)))
-            ; (() (println! "Evaluating Good-reason OP"))
-            ; ($good-reason-res (good-reason-op $blend))
-            ; (() (println! (Good-Reason-OP Result = $good-reason-res)))
+            (() (println! "Evaluating Good-reason OP"))
+            ($good-reason-res (good-reason-op $blend))
+            (() (println! (Good-Reason-OP Result = $good-reason-res)))
             (() (println! "Evaluating Metonymy OP"))
             ($metonymy-res (metonymy-op $blend))
             (() (println! (Metonymy-OP Result = $metonymy-res)))
@@ -81,4 +81,3 @@
 )
 
 ; !(op-evaluater (blend) (concept1) (concept2))
-

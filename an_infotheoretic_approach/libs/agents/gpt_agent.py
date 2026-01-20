@@ -64,14 +64,22 @@ def prompt_agent(metta: MeTTa, network: str, *args):
       formatted_prompt = prompt.format(concept1=concept1, concept2=concept2, vital_relations=vital_relations)
     else:
       concept_pair = str(args[0])
+      print("Concept pair:", concept_pair)
       property_vector = str(args[1])
+      print("Property vector:", property_vector)
       formatted_prompt = prompt.format(concept_pair=concept_pair, property_vector=property_vector)
 
-    # gpt_agent = ChatGPTAgent()
-    gpt_agent = GeminiAgent()
+    gpt_agent = ChatGPTAgent()
+    # gpt_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
-    answer = gpt_agent(messages, tools=[])
+    if isinstance(gpt_agent, GeminiAgent):
+      answer = gpt_agent(messages, tools=[])
+      parsed_atoms = metta.parse_all(answer)
+    else:
+      answer = gpt_agent(messages, functions=[])
+      parsed_atoms = metta.parse_all(answer.content)
+
     # Use the built-in parser to convert the response text into atoms.
-    parsed_atoms = metta.parse_all(answer)
+
     # Always return a list of atoms.
     return parsed_atoms
