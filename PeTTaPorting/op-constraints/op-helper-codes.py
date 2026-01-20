@@ -2,6 +2,23 @@ import json
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import requests
+
+def get_word_associations(word):
+    url = f"https://api.datamuse.com/words?rel_trg={word}&max=10"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        word_list = [item['word'] for item in data]
+
+        if word not in word_list:
+            word_list.insert(0, word)
+
+        return word_list
+    return [word]
+# Output: ['web', 'snake', 'venom', 'bite', 'creepy', 'legs', 'arachnid', 'tarantula'...]
+
 
 def llm_result(response):
     text = "".join(response)
