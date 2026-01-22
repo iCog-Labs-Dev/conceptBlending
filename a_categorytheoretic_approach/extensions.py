@@ -144,5 +144,5 @@ if "extensions_loaded" not in globals():
     globals()["extensions_loaded"] = True
     
     @register_atoms
-    def register_my_atoms_wrapper():
+    def register_operation_atoms_wrapper():
         return operation_atoms()

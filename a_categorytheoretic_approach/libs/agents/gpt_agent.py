@@ -60,8 +60,9 @@ def context_preprocessing_agent(metta: MeTTa, *args):
 
     llm_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
+    print(f"   -> [Agent] Calling LLM for 'context_preprocessing'...")
     response = llm_agent(messages, tools=[])
-
+    print(f"   -> LLM Response Received.")
     valid, result = validate_syntax(response)
     clean_response = result if valid else response
     return metta.parse_all(clean_response)
@@ -138,6 +139,7 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
     Returns:
       A list of MeTTa atoms.
     """
+    print(f"   -> [Agent] Preparing prompt for '{agent_type}'...")
     prompt_template = get_prompt(agent_type)
 
     concept1_name, concept2_name, context_str = "", "", ""
@@ -200,12 +202,12 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
     messages = [{"role": "user", "content": formatted_prompt}]
     
     # answer = llm_agent(messages, tools=[])
-    
+    print(f"   -> [Agent] Calling LLM for '{agent_type}'...")
     for attempt in range(max_retries):
         if attempt > 0:
             print(f"   > [Self-Correction] Attempt {attempt+1}/{max_retries}...")
         response = llm_agent(messages, tools=[])
-        
+        print(f"   -> LLM Response Received.")
         # Validate Syntax (Parentheses)
         valid_syntax, result = validate_syntax(response)
         if not valid_syntax:
