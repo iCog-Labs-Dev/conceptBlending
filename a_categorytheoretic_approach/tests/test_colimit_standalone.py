@@ -116,4 +116,3 @@ try:
         print(f"FAILURE: The following metrics are missing: {', '.join(metrics_missing)}")
 except Exception as e:
     print(f"\n EXECUTION FAILED: {e}")
-

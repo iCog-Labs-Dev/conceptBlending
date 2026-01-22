@@ -1,7 +1,7 @@
 ; UNIT TEST: MORPHISM LOGIC (SIMPLIFIED)
 ; ======================================
-
-!(import! &self extensions)
+!(register-module! &self ../../a_categorytheoretic_approach)
+!(import! &self a_categorytheoretic_approach:utils:extensions)
 
 ; 2. Define Dummy Data
 (= (get-test-G) 
@@ -14,13 +14,9 @@
 
 !(let $specG (get-test-G)
    (let $specA (get-test-A)
-      
       ; Call the registered atom directly to test connectivity
       (let $result (llm:find-morph $specG $specA)
-         (superpose (
-             (println! "; --- RAW RESULT ---")
-             (println! $result)
-         ))
+          (println! "Generated Morphisim:" $result)         
       )
    )
 )

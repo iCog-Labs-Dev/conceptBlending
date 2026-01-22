@@ -130,7 +130,7 @@ def py_log(msg):
 # =========================================================
 
 @register_atoms
-def my_atoms():
+def operation_atoms():
     return {
         "llm:generate-spec": OperationAtom("llm:generate-spec", py_generate_spec, unwrap=False),
         "llm:generate-gen":  OperationAtom("llm:generate-gen",  py_generate_gen,  unwrap=False),
@@ -145,4 +145,4 @@ if "extensions_loaded" not in globals():
     
     @register_atoms
     def register_my_atoms_wrapper():
-        return my_atoms()
+        return operation_atoms()

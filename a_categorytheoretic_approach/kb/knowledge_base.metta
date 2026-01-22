@@ -1,7 +1,6 @@
 ; SHARED KNOWLEDGE BASE
 ; This file loads the data and defines the fetch functions ONCE.
 
-!(import! &self libs)
 
 ; ============================================================
 ; 1. LOAD DATA
@@ -58,7 +57,7 @@
 ; Fetch IsA atoms 
 (= (fetch-atom-IsA $c)
    (match &self 
-       (surfaceText (Triplet (IsA $c $target)) $text)
+       (surfaceText (IsA $c $target) $text)
        (format-result $target $text)
    )
 )
@@ -66,7 +65,7 @@
 ;Fetch Is-RelatedTo atoms
 (= (fetch-atom-RelatedTo $c)
    (match &self 
-       (surfaceText (Triplet (RelatedTo $c $target)) $text)
+       (surfaceText (RelatedTo $c $target) $text)
        (format-result $target $text)
    )
 )
@@ -74,24 +73,21 @@
 ; Fetch HasProperty atoms 
 (= (fetch-atom-HasProperty $c)
    (match &self 
-       (surfaceText (Triplet (HasProperty $c $target)) $text)
+       (surfaceText (HasProperty $c $target) $text)
        (format-result $target $text)
    )
 )
 
 ; Main fetch function 
 (= (main-fetch $c)
-   (collapse 
-       (unique 
+   (let $res
+       (collapse 
            (superpose (
                (fetch-atom-RelatedTo $c) 
                (fetch-atom-HasProperty $c) 
                (fetch-atom-IsA $c)
            ))
        )
+       (unique-atom $res)
    )
 )
-
-!(println! "--- TESTING HOUSE FETCH ---")
-!(main-fetch house)
-

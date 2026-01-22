@@ -1,5 +1,3 @@
-
-
 ;  !(load-ascii &self concept-atomspace/antonym-0_-atlocation-0t-capableof-cs-causes-cs-causesdesire-ky-createdby-az-definedby-0b.metta)
 ;  !(load-ascii &self concept-atomspace/derivedfrom-ag.metta)
 ;  !(load-ascii &self concept-atomspace/derivedfrom-gp.metta)
@@ -35,10 +33,7 @@
 ;  !(load-ascii &self concept-atomspace/synonym-de.metta)
 ;  !(load-ascii &self concept-atomspace/synonym-py-usedfor-br.metta)
 ;  !(load-ascii &self concept-atomspace/usedfor-rt-dbpedia-go.metta)
-
-
-
-
+!(load-ascii &self knowledge_base/small_kb.metta)
 
 ; Helper to reorder triplet
 (= (reorder-triplet $triplet)
@@ -48,41 +43,55 @@
 )
 
 ; Fetch IsA atoms for a concept
-(=(fetch-atom-IsA $concept)
-  (let $pairs (match &self (surfaceText (IsA $concept $target) $text)
-               (if (== NA $text)
-                   (reorder-triplet (IsA $concept $target))
-                   ($target $text)
-               )
-             )
-   (if (== $pairs ()) $concept $pairs)
-  )
+(= (fetch-atom-IsA $concept)
+    (let $pairs (match &self (surfaceText (IsA $concept $target) $text)
+            (if (== NA $text)
+                (reorder-triplet (IsA $concept $target))
+                ($target $text)
+            )
+        )
+        (if (== $pairs ()) $concept $pairs)
+    )
 )
 
 ; Fetch RelatedTo atoms for a concept
-(=(fetch-atom-RelatedTo $concept)
-  (let $pairs 
-                (match &self (surfaceText (RelatedTo $concept $target) $text)
-                       (if (== NA $text)
-                           (reorder-triplet (RelatedTo $concept $target))
-                           ($target $concept)))
-    (if (== $pairs ()) $concept $pairs)))
-
-; Fetch HasProperty atoms for a concept
-(=(fetch-atom-HasProperty $concept)
-  (let $pairs 
-                (match &self (surfaceText (HasProperty $concept $target) $text)
-              
-                       (if (== NA $text)
-                           (reorder-triplet (HasProperty $concept $target))
-                           ($target $text)))
-    (if (== $pairs ()) $concept $pairs)))
-
-
-; Main fetch function to get all relevant atoms for a concept
-(=(main-fetch $concept)
-     (collapse (unique((superpose ((fetch-atom-RelatedTo $concept) (fetch-atom-HasProperty $concept) (fetch-atom-IsA $concept))
-     ))))
-     
+(= (fetch-atom-RelatedTo $concept)
+    (let $pairs (match &self (surfaceText (RelatedTo $concept $target) $text)
+            (if (== NA $text)
+                (reorder-triplet (RelatedTo $concept $target))
+                ($target $concept)
+            )
+        )
+        (if (== $pairs ()) $concept $pairs)
+    )
 )
 
+; Fetch HasProperty atoms for a concept
+(= (fetch-atom-HasProperty $concept)
+    (let $pairs (match &self (surfaceText (HasProperty $concept $target) $text)
+            (if (== NA $text)
+                (reorder-triplet (HasProperty $concept $target))
+                ($target $text)
+            )
+        )
+        (if (== $pairs ()) $concept $pairs)
+    )
+)
+
+; Main fetch function to get all relevant atoms for a concept
+(= (main-fetch $concept)
+    (let $res
+        (collapse
+            (superpose
+                (
+                    (fetch-atom-RelatedTo $concept)
+                    (fetch-atom-HasProperty $concept)
+                    (fetch-atom-IsA $concept)
+                )
+            )
+        )
+        (unique-atom $res)
+    )
+)
+
+; !(main-fetch house)

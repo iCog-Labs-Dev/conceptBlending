@@ -4,7 +4,7 @@ from hyperon.ext import register_atoms
 from .agents import context_preprocessing_agent,prompt_agent
 
 # Configuration
-AGENTS = ["context_preprocessing","algspec_builder","generalization_helper","amalgam_builder"]
+AGENTS = ["context_preprocessing","algspec_builder","generalization_helper"]
 
 @register_atoms(pass_metta=True)
 def grounded_atoms(metta):
@@ -17,15 +17,15 @@ def grounded_atoms(metta):
         if agent == "context_preprocessing":
             registered_operations[operation_name] = OperationAtom(
                 operation_name,
-                lambda *args: context_preprocessing_agent(metta, *args),
-                [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
+                lambda *args, agent=agent: context_preprocessing_agent(metta, *args),
+                [AtomType.ATOM, AtomType.ATOM, "Expression"],
                 unwrap=False
             )
         elif agent == "algspec_builder":
             registered_operations[operation_name] = OperationAtom(
             operation_name,
             lambda *args, agent=agent: prompt_agent(metta, agent, *args),
-            [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
+            [AtomType.ATOM, AtomType.ATOM, "Expression"],
             unwrap=False
         )
         elif agent == "generalization_helper":
@@ -33,13 +33,6 @@ def grounded_atoms(metta):
                 operation_name,
                 lambda *args, agent=agent: prompt_agent(metta, agent, *args),
                 [AtomType.ATOM, AtomType.ATOM, "Expression"],
-                unwrap=False
-            )
-        elif agent == "amalgam_builder":
-            registered_operations[operation_name] = OperationAtom(
-                operation_name,
-                lambda *args, agent=agent: prompt_agent(metta, agent, *args),
-                [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
                 unwrap=False
             )
         

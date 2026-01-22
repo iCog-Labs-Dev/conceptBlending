@@ -7,28 +7,31 @@ from libs.prompts import (
     CONTEXT_PREPROCESSING_PROMPT,
     MORPHISM_PROMPT
 )
+from libs.validation import validate_syntax, validate_structure, validate_grounding
 
-def priority_generator(specs):
+def _extract_concept_and_context(concept_str: str) -> tuple[str, str]:
     """
-    Assign priority annotations to the given specifications using the LLM.
-    
+    Extract concept name and context from a MeTTa atom string representation.
+
     Args:
-        args: A single tuple/list containing two specifications (S-expression strings or MeTTa atoms)
-    
-    Returns:
-        The LLM response with priority annotations (can be parsed with metta.parse_all)
-    """
- 
-    formatted_prompt = PRIORITY_PROMPT.format(
-        specs=specs
-        
-    )
+        concept_str: String representation of a concept atom
 
-    # Call the LLM
-    llm_agent = GeminiAgent()
-    messages = [{"role": "user", "content": formatted_prompt}]
-    response = llm_agent(messages, tools=[])
-    return response 
+    Returns:
+        Tuple of (concept_name, context_string)
+    """
+    if not concept_str:
+        return "", "no context provided"
+
+    cleaned = re.sub(r'[()]|"', "", concept_str).strip()
+    parts = cleaned.split()
+
+    if not parts:
+        return "", "no context provided"
+
+    concept_name = parts[0]
+    context = " ".join(parts[1:]) if len(parts) > 1 else "no context provided"
+
+    return concept_name, context
 
 
 def context_preprocessing_agent(metta: MeTTa, *args):
@@ -45,10 +48,9 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     Returns:
         List of parsed Concept atoms with Context information
     """
+    concept1_name, context1 = _extract_concept_and_context(str(args[0]))
+    concept2_name, context2 = _extract_concept_and_context(str(args[1]))
 
-    concept1_name, context1, concept2_name, context2  = args
-   
- 
     formatted_prompt = CONTEXT_PREPROCESSING_PROMPT.format(
         concept1=concept1_name,
         concept2=concept2_name,
@@ -59,9 +61,48 @@ def context_preprocessing_agent(metta: MeTTa, *args):
     llm_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
     response = llm_agent(messages, tools=[])
-    
-    
-    return metta.parse_all(response)
+
+    valid, result = validate_syntax(response)
+    clean_response = result if valid else response
+    return metta.parse_all(clean_response)
+
+
+def _extract_concept_name(concept_atom_str: str) -> tuple[str, str]:
+    """
+    Extract concept name and the full balanced '(spec ...)' block (if present).
+    Returns (name, spec_string_or_remaining_context).
+    """
+    if not concept_atom_str:
+        return "", ""
+
+    s = concept_atom_str.strip()
+    match = re.search(r"\(Concept\s+([^\s()]+)", s)
+
+    if not match:
+        cleaned = re.sub(r'[()]|"', "", s).strip()
+        parts = cleaned.split()
+        if not parts:
+            return "", ""
+        name = parts[0]
+        rest = " ".join(parts[1:]) if len(parts) > 1 else ""
+        return name, rest
+
+    name = match.group(1)
+    spec_start = s.find("(spec", match.end())
+
+    if spec_start == -1:
+        return name, s[match.end():].strip()
+
+    depth = 0
+    for i in range(spec_start, len(s)):
+        if s[i] == "(":
+            depth += 1
+        elif s[i] == ")":
+            depth -= 1
+            if depth == 0:
+                return name, s[spec_start : i + 1]
+
+    return name, s[spec_start:]
 
 
 def get_prompt(agent_type: str) -> str:
@@ -99,25 +140,35 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
     """
     prompt_template = get_prompt(agent_type)
 
+    concept1_name, concept2_name, context_str = "", "", ""
+    
     if agent_type == "algspec_builder":
+        # Extract concept names from Concept atoms
+        concept1_name, context_str = _extract_concept_name(str(args[0]))
+        concept2_name, _ = _extract_concept_name(str(args[1]))
         
-        global concept1_name, concept2_name
-        concept1_name,concept2_name, common_context = args
-        
-        
-        formatted_prompt = SPEC_PROMPT.format(
+        formatted_prompt = prompt_template.format(
             concept1=concept1_name,
             concept2=concept2_name,
-            context=common_context,
+            context=context_str 
         )
+        
+    # elif agent_type == "generalization_helper":
+    #     concept1_name, algspec_1 = _extract_concept_name(str(args[0]))
+    #     concept2_name, algspec_2 = _extract_concept_name(str(args[1])) 
 
+    #     formatted_prompt = prompt_template.format(
+    #         concept1=concept1_name,
+    #         concept2=concept2_name,
+    #         spec1=algspec_1,
+    #         spec2=algspec_2
+    #     )
     elif agent_type == "generalization_helper":
-        
-        algspec_1, algspec_2 =args
-        
-        
-        
-        formatted_prompt = GENERALIZATION_PROMPT.format(
+        # Extract Name and Spec
+        concept1_name, algspec_1 = _extract_concept_name(str(args[0]))
+        concept2_name, algspec_2 = _extract_concept_name(str(args[1]))
+
+        formatted_prompt = prompt_template.format(
             concept1=concept1_name,
             concept2=concept2_name,
             algspec_1=algspec_1,  
@@ -144,8 +195,8 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
             property_vector=property_vector,
         )
 
-    
-    gpt_agent = GeminiAgent()
+    llm_agent = GeminiAgent()
+    max_retries = 3
     messages = [{"role": "user", "content": formatted_prompt}]
     
     # answer = llm_agent(messages, tools=[])

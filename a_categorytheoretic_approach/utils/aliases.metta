@@ -1,5 +1,5 @@
 
-!(import! &self extensions)
+; !(import! &self extensions)
 
 ; 1. Define Standard Aliases
 (= (algspec_builder $c1 $c2)      (llm:generate-spec $c1 $c2))
