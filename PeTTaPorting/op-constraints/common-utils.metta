@@ -134,3 +134,9 @@
 (= (max-in-list ($x)) $x)
 (= (max-in-list $list) (max-of-two (car-atom $list) (max-in-list (cdr-atom $list))))
 ; The expected output is the max number from the list
+
+
+(= (get-concepts-relations $concept)
+    (collapse(match &space ($rel $concept $var) ($rel $var)))
+)
+; Returns a list of relation expressions like (isa feline) (hasa whiskers) ...
