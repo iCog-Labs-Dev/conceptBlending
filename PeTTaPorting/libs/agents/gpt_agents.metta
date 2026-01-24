@@ -1,41 +1,44 @@
-!(import! &self ../libs/prompts/double_scope_network)
-!(import! &self ../libs/prompts/mirror_network)
-!(import! &self ../libs/prompts/simplex_network)
-!(import! &self ../libs/prompts/network_selector)
-!(import! &self ../libs/prompts/single_scope_network)
-!(import! &self ../libs/prompts/vector_extraction)
-!(import! &self ../libs/prompts/vital_relation_extraction)
-!(import! &self ../libs/agents/llm_agent)
+!(import! &self libs/prompts/double_scope_network)
+!(import! &self libs/prompts/mirror_network)
+!(import! &self libs/prompts/simplex_network)
+!(import! &self libs/prompts/network_selector)
+!(import! &self libs/prompts/single_scope_network)
+!(import! &self libs/prompts/vector_extraction)
+!(import! &self libs/prompts/vital_relation_extraction)
+!(import! &self "libs/agents/api_key_loader.py")
 
-(= (py-concat $str1 $str2)
-    (py-call (operator.add $str1 $str2))
-)
+!(py-call (api_key_loader.get_openai_config))
+;; --- vital-relation ---
+(= (gpt-vital-relation $concept-pair $property-vector)
+   (let $prompt (vital-relation-prompt $concept-pair $property-vector)
+       (useGPT (py-str $prompt))))
 
-(= (Networks) ("mirror" "simplex" "double-scope" "network-selector" "single-scope" "vector-extraction" "vital-relation"))
+;; --- network-selector ---
+(= (gpt-network-selector $concept)
+   (let $prompt (network-selector-prompt $concept)
+       (useGPT (py-str $prompt))))
 
-(= (get-prompt-name $network)
-    (py-concat $network "-prompt")
-)
+;; --- vector-extraction ---
+(= (gpt-vector-extraction $concept1 $concept2 $vital-relations)
+   (let $prompt (vector-extraction-prompt $concept1 $concept2 $vital-relations)
+       (useGPT (py-str $prompt))))
 
-(= (get-gpt-agent-name $network)
-    (py-concat "gpt-" $network)
-)
+;; --- mirror ---
+(= (gpt-mirror $concept-pair $property-vector)
+   (let $prompt (mirror-prompt $concept-pair $property-vector)
+       (useGPT (py-str $prompt))))
 
-(= (define-gpts $network)
-    (if (== $network "network-selector")
-        (let $add (add-atom &self (= (gpt-network-selector $concept)
-                                        (let $prompt-type (get-prompt-name $network) (let $prompt (py-str ($prompt-type $concept)) (sread (useGenAI $prompt)))))) 1)
-        (if (== $network "vector-extraction")
-            (let $add (add-atom &self (= (gpt-vector-extraction $concept1 $concept2 $vital-relations)
-                                        (let $prompt-type (get-prompt-name $network) (let $prompt (py-str ($prompt-type $concept1 $concept2 $vital-relations)) (sread (useGenAI $prompt)))))) 1)
-            (let $gpt-agent (get-gpt-agent-name $network) (let $add (add-atom &self (= ($gpt-agent $concept-pair $property-vector)
-                                        (let $prompt-type (get-prompt-name $network) (let $prompt (py-str ($prompt-type $concept-pair $property-vector)) (sread (useGenAI $prompt)))))) 1))
-        )
-    )
-)
+;; --- simplex ---
+(= (gpt-simplex $concept-pair $property-vector)
+   (let $prompt (simplex-prompt $concept-pair $property-vector)
+       (useGPT (py-str $prompt))))
 
-(= (initialize-gpt-agents)
-    (let $networks (Networks) (map-atom $networks $x (define-gpts $x)))
-)
+;; --- double-scope ---
+(= (gpt-double-scope $concept-pair $property-vector)
+   (let $prompt (double-scope-prompt $concept-pair $property-vector)
+       (useGPT (py-str $prompt))))
 
-!(initialize-gpt-agents)
+;; --- single-scope ---
+(= (gpt-single-scope $concept-pair $property-vector)
+   (let $prompt (single-scope-prompt $concept-pair $property-vector)
+       (useGPT (py-str $prompt))))
