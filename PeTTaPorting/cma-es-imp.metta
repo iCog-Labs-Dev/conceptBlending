@@ -2,6 +2,7 @@
 !(import! &self utils/random-list-utils)
 !(import! &self utils/cma-es-utils)
 !(import! &self info-theoretic)
+!(import! &self libs/agents/gpt_agents)
 !(import! &self "utils/numpy_methods.py")
 
 
@@ -324,10 +325,62 @@
         )
 )
 
+;Empty Python dictionary
+(= (emptydict)
+   (py-call (dict)))
+
+
+(= (py-str-helper () $outp) $outp)
+
+(= (py-str-helper $L $outp)
+   (let* (($head (car-atom $L))
+          ($tail (cdr-atom $L))
+          ($outp2
+            (if (== $outp "")
+                ;; first token → no leading space
+                (py-call (operator.add $outp (py-call (str $head))))
+                ;; subsequent tokens → prepend space
+                (py-call (operator.add
+                          (py-call (operator.add $outp " "))
+                          (py-call (str $head)))))))
+     (py-str-helper $tail $outp2)))
+
+(= (py-str $L)
+   (py-str-helper $L ""))
+
+;Evaluate expression via py-call:
+(= (py-eval $str)
+   (let $dict (py-call (dict))
+        (py-call (quote (eval $str $dict $dict)))))
+
+;Add to builtins a function that can call functions via keyword arguments
+!(py-eval "setattr(__import__('builtins'),'apply_kwargs',(lambda f,d: f(**d))) or 0")
+;Add to builtins a function that can access by index:
+!(py-eval "setattr(__import__('builtins'),'index', (lambda o,i: o[i])) or 0")
+
+
+; Function to call openAI GPT model with prompt and return text response
+
+(= (useGPT $prompt)
+   (let* (($client    (py-call (openai.OpenAI)))
+          ($responses (py-call (getattr $client "responses")))
+          ($create (py-call (getattr $responses "create")))
+          ($mydict (py-str  ("{'model':'gpt-4o','input':\"" $prompt "\", 'temperature':0}")))
+          ($kwargs (once (py-eval $mydict)))
+            ($_ (println! ("kwargs:" $kwargs)))
+          ($res (py-call (builtins.apply_kwargs $create $kwargs)))
+          ($output (py-call (getattr $res "output")))
+          ($outmsg (py-call (builtins.index $output 0))) ;0 is ResponseReasoningItem
+          ($content (py-call (getattr $outmsg "content")))
+          ($part (py-call (builtins.index $content 0)))
+          ($text (py-call (getattr $part "text")))
+          )
+         $text))
+
 (= (Eval) False)
 
 ; !(cma-es-main-loop)
-; !(blend cma-es-main-loop (Eval))
+!(blend cma-es-main-loop (Eval))
 
 !(bind! &multi-single-iteration-cma-es-inputspace (get-space))
 (= (add-to-multi-single-iteration-cma-es-inputspace)
@@ -379,23 +432,14 @@
                                         )
                                         $result ))))                                  
             ($iters (let $iters-res (range 0 (- (Num-subproblems) 1)  1) $iters-res))
-            ; ($_ (println! (Iters line $iters)))
             (($sol $unscalarized-fit-score $scalarized-fit-score) (let $res (map-atom $iters $iter (moedd-cma-es-single-iteration scalarized-fitness $iter)) (index-atom $res (- (Num-subproblems) 1))))
-            ; ($_ (println! (Sol line $sol $unscalarized-fit-score $scalarized-fit-score)))
             ($clean (collapse (match &multi-single-iteration-cma-es-inputspace (Inputs $params) (remove-atom &multi-single-iteration-cma-es-inputspace (Inputs $params)))))
-            ; ($_ (println! (Clean line $clean)))
             ($add (add-reduct &multi-single-iteration-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 -10000 0 0))))
-            ; ($_ (println! (Add line $add)))
             (($new-ref-point $sub-candidates) (collapse(superpose((np-max $ref-point $unscalarized-fit-score 0) (let $first-zip (zip-list $sol $unscalarized-fit-score) (zip-list $first-zip $scalarized-fit-score))))))
-            ; ($_ (println! (ref point line $new-ref-point $sub-candidates)))
             ($best-non-dominated (filter-non-dominated $sub-candidates))
-            ; ($_ (println! (best nd line $best-non-dominated)))
             ($survivors (let $length (size-atom $best-non-dominated) (if (== $length 1) ($best-non-dominated) (map-atom $iters $iter (max-best-nd $best-non-dominated $new-ref-point $iter $weights)))))
-            ; ($_ (println! (Survivors line $survivors)))
             ($filtered-surv (unionize $survivors ()))
-            ; ($_ (println! (Filter line line $filtered-surv)))
             ($new-pop (union-atom $filtered-surv $pop))
-            ; ($_ (println! (New pop line $new-pop)))
             ($filtered-pop (filter-non-dominated $new-pop))
             ($_ (println! (Generation $gen | Population $filtered-pop)))
             ($clean (collapse(match &self (= (scalarized-fitness $samples $iter)
@@ -425,6 +469,4 @@
 )
 
 ; !(moedd-cma-es-main-loop)
-!(blend moedd-cma-es-main-loop (Eval))
-
-;Execution time: 19.436s
+; !(blend moedd-cma-es-main-loop (Eval))
