@@ -93,7 +93,7 @@
     (let ($blend-name $blend-context) ((blend-name $blend) (blend-context $blend)) 
         (let $default-prompt (default-prompt $properties $blend-name $blend-context) 
             ; (good-reason-llm $default-prompt)
-            (useGenAI (py-str $default-prompt))
+            (useGPT (py-str $default-prompt))
         )
     )
 )
