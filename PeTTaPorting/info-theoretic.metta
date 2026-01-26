@@ -597,15 +597,15 @@
 
 (= (blend $GAorCMA $eval)
     (let $final-pop ($GAorCMA)                                    ;Moedd-cma-gen
-        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
+        (let $best-sample-with-fitness (index-atom $final-pop (- (Moedd-cma-gen) 1))
             (let $multi-objective-check-result (multi-objective-check $best-sample-with-fitness)
                 (let $concept-pair (let (Concept $x $y) (testconcept1) $x)
                     (let $network (gpt-network-selector $concept-pair)
                         (if (not (== $network None))
                             (if $multi-objective-check-result
-                                (let $_ (println! (Multi-objective check result: $multi-objective-check-result)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval))
+                                (let $_ (println! (Multi-objective check result: $multi-objective-check-result | Selected Network: $network)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval))
                                 ; (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval)
-                                (let $_ (println! (Multi-objective check result: $multi-objective-check-result Selected Network: $network)) (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval))
+                                (let $_ (println! (Multi-objective check result: $multi-objective-check-result | Selected Network: $network)) (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval))
 
                             )
                             (Error $network NoNetworkSelected)
