@@ -367,7 +367,6 @@
           ($create (py-call (getattr $responses "create")))
           ($mydict (py-str  ("{'model':'gpt-4o','input':\"" $prompt "\", 'temperature':0}")))
           ($kwargs (once (py-eval $mydict)))
-            ($_ (println! ("kwargs:" $kwargs)))
           ($res (py-call (builtins.apply_kwargs $create $kwargs)))
           ($output (py-call (getattr $res "output")))
           ($outmsg (py-call (builtins.index $output 0))) ;0 is ResponseReasoningItem
