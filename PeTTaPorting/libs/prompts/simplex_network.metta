@@ -30,7 +30,7 @@ Return only:
 
 ### Output Rules:
 - DO NOT include quotes, backticks, or brackets around the output.
-- For the BlendedConcept, consider just combining the two concepts if it gives a clearer insight, instead of trying to find a complex synthesis.
+- For the BlendedConcept, consider just combining the two concepts(during combining, you should chose the best order of the concepts so that the formed combination gives correct meaning) if it gives a clearer insight, instead of trying to find a complex synthesis.
 - DO NOT write explanations or return extra text.
 - Return only **one valid MeTTa expression** on a single line.)
 )

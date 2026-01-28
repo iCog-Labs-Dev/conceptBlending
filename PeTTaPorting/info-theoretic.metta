@@ -553,7 +553,7 @@
                         (let $best-candidate (let $unscalarized-zip (index-atom $single-best-blend 0) (let ($props $unscalarized-fitness-score) $unscalarized-zip $props))
                             (let $_ (println! (best single-candidate: $best-candidate))
                                 (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (testconcept1) (testconcept2)))
-                                    (let $_ (println! (best candidate miu emergence: $best-cand-mu-emergence))
+                                    (let $_ (println! (best candidate mu emergence: $best-cand-mu-emergence))
                                         (let $blend ($network $concept-pair $best-cand-mu-emergence)
                                             (let $_ (println! (blend: $blend))
                                                 (if $eval
