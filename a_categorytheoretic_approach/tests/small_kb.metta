@@ -22,10 +22,9 @@
 (surfaceText (Triplet (IsA dice cube)) "Dice are cubes")
 (surfaceText (Triplet (IsA dice randomized_generator)) "Dice generate random numbers")
 
-
-; ======================================================
+; ==========================================================
 ; 2. EXPERIMENT B: BIOLOGICAL VS DIGITAL (VIRUS + SOFTWARE)
-; ======================================================
+; ==========================================================
 (surfaceText (Triplet (IsA virus microorganism)) "A virus is a microorganism")
 (surfaceText (Triplet (RelatedTo virus host_cell)) "Viruses infect host cells")
 (surfaceText (Triplet (Action virus replicate)) "Viruses replicate themselves")
