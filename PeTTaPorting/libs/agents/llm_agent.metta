@@ -2,14 +2,24 @@
 (= (emptydict)
    (py-call (dict)))
 
-;Create string by appending the list entries
+
 (= (py-str-helper () $outp) $outp)
+
 (= (py-str-helper $L $outp)
    (let* (($head (car-atom $L))
           ($tail (cdr-atom $L))
-          ($outp2 (py-call (operator.add $outp (py-call (str $head))))))
+          ($outp2
+            (if (== $outp "")
+                ;; first token → no leading space
+                (py-call (operator.add $outp (py-call (str $head))))
+                ;; subsequent tokens → prepend space
+                (py-call (operator.add
+                          (py-call (operator.add $outp " "))
+                          (py-call (str $head)))))))
      (py-str-helper $tail $outp2)))
-(= (py-str $L) (py-str-helper $L ""))
+
+(= (py-str $L)
+   (py-str-helper $L ""))
 
 ;Evaluate expression via py-call:
 (= (py-eval $str)

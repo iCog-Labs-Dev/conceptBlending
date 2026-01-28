@@ -3,6 +3,7 @@
 !(import! &self utils/cma-es-utils)
 !(import! &self info-theoretic)
 !(import! &self libs/agents/gpt_agents)
+!(import! &self libs/agents/llm_agent)
 !(import! &self "utils/numpy_methods.py")
 
 
@@ -325,40 +326,6 @@
         )
 )
 
-;Empty Python dictionary
-(= (emptydict)
-   (py-call (dict)))
-
-
-(= (py-str-helper () $outp) $outp)
-
-(= (py-str-helper $L $outp)
-   (let* (($head (car-atom $L))
-          ($tail (cdr-atom $L))
-          ($outp2
-            (if (== $outp "")
-                ;; first token → no leading space
-                (py-call (operator.add $outp (py-call (str $head))))
-                ;; subsequent tokens → prepend space
-                (py-call (operator.add
-                          (py-call (operator.add $outp " "))
-                          (py-call (str $head)))))))
-     (py-str-helper $tail $outp2)))
-
-(= (py-str $L)
-   (py-str-helper $L ""))
-
-;Evaluate expression via py-call:
-(= (py-eval $str)
-   (let $dict (py-call (dict))
-        (py-call (quote (eval $str $dict $dict)))))
-
-;Add to builtins a function that can call functions via keyword arguments
-!(py-eval "setattr(__import__('builtins'),'apply_kwargs',(lambda f,d: f(**d))) or 0")
-;Add to builtins a function that can access by index:
-!(py-eval "setattr(__import__('builtins'),'index', (lambda o,i: o[i])) or 0")
-
-
 ; Function to call openAI GPT model with prompt and return text response
 
 (= (useGPT $prompt)
@@ -379,7 +346,7 @@
 (= (Eval) False)
 
 ; !(cma-es-main-loop)
-; !(blend cma-es-main-loop (Eval))
+!(blend cma-es-main-loop (Eval))
 
 !(bind! &multi-single-iteration-cma-es-inputspace (get-space))
 (= (add-to-multi-single-iteration-cma-es-inputspace)
@@ -468,4 +435,4 @@
 )
 
 ; !(moedd-cma-es-main-loop)
-!(blend moedd-cma-es-main-loop (Eval))
+; !(blend moedd-cma-es-main-loop (Eval))
