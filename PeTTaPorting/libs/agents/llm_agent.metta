@@ -61,3 +61,18 @@
          $text))
 
 ; !(useGenAI (py-str (double-scope-prompt bat@man (1 1 1 1 1 1 1 1))))
+
+(= (useGPT $prompt)
+   (let* (($client    (py-call (openai.OpenAI)))
+          ($responses (py-call (getattr $client "responses")))
+          ($create (py-call (getattr $responses "create")))
+          ($mydict (py-str  ("{'model':'gpt-4o','input':\"" $prompt "\", 'temperature':0}")))
+          ($kwargs (once (py-eval $mydict)))
+          ($res (py-call (builtins.apply_kwargs $create $kwargs)))
+          ($output (py-call (getattr $res "output")))
+          ($outmsg (py-call (builtins.index $output 0))) ;0 is ResponseReasoningItem
+          ($content (py-call (getattr $outmsg "content")))
+          ($part (py-call (builtins.index $content 0)))
+          ($text (py-call (getattr $part "text")))
+          )
+         $text))

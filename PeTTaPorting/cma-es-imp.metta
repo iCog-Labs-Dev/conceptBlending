@@ -3,7 +3,6 @@
 !(import! &self utils/cma-es-utils)
 !(import! &self info-theoretic)
 !(import! &self libs/agents/gpt_agents)
-!(import! &self libs/agents/llm_agent)
 !(import! &self "utils/numpy_methods.py")
 
 
@@ -326,27 +325,10 @@
         )
 )
 
-; Function to call openAI GPT model with prompt and return text response
-
-(= (useGPT $prompt)
-   (let* (($client    (py-call (openai.OpenAI)))
-          ($responses (py-call (getattr $client "responses")))
-          ($create (py-call (getattr $responses "create")))
-          ($mydict (py-str  ("{'model':'gpt-4o','input':\"" $prompt "\", 'temperature':0}")))
-          ($kwargs (once (py-eval $mydict)))
-          ($res (py-call (builtins.apply_kwargs $create $kwargs)))
-          ($output (py-call (getattr $res "output")))
-          ($outmsg (py-call (builtins.index $output 0))) ;0 is ResponseReasoningItem
-          ($content (py-call (getattr $outmsg "content")))
-          ($part (py-call (builtins.index $content 0)))
-          ($text (py-call (getattr $part "text")))
-          )
-         $text))
-
 (= (Eval) False)
 
 ; !(cma-es-main-loop)
-!(blend cma-es-main-loop (Eval))
+; !(blend cma-es-main-loop (Eval))
 
 !(bind! &multi-single-iteration-cma-es-inputspace (get-space))
 (= (add-to-multi-single-iteration-cma-es-inputspace)
@@ -435,4 +417,4 @@
 )
 
 ; !(moedd-cma-es-main-loop)
-; !(blend moedd-cma-es-main-loop (Eval))
+!(blend moedd-cma-es-main-loop (Eval))

@@ -5,6 +5,7 @@
 !(import! &self libs/prompts/single_scope_network)
 !(import! &self libs/prompts/vector_extraction)
 !(import! &self libs/prompts/vital_relation_extraction)
+!(import! &self libs/agents/llm_agent)
 !(import! &self "libs/agents/api_key_loader.py")
 
 !(py-call (api_key_loader.get_openai_config))
