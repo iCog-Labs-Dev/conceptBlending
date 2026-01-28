@@ -4,7 +4,7 @@ from hyperon.ext import register_atoms
 from .agents import context_preprocessing_agent,prompt_agent
 
 # Configuration
-AGENTS = ["context_preprocessing","algspec_builder","generalization_helper"]
+AGENTS = ["context-preprocessing","algspec-builder","generalization-helper","amalgam-builder"]
 
 @register_atoms(pass_metta=True)
 def grounded_atoms(metta):
@@ -12,27 +12,34 @@ def grounded_atoms(metta):
     registered_operations = {}
 
     for agent in AGENTS:
-        operation_name = f"gpt_{agent}"  # e.g., gpt_algspec_builder
+        operation_name = f"gpt-{agent}"  # e.g., gpt-algspec-builder
 
-        if agent == "context_preprocessing":
+        if agent == "context-preprocessing":
             registered_operations[operation_name] = OperationAtom(
                 operation_name,
-                lambda *args, agent=agent: context_preprocessing_agent(metta, *args),
-                [AtomType.ATOM, AtomType.ATOM, "Expression"],
+                lambda *args: context_preprocessing_agent(metta, *args),
+                [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
                 unwrap=False
             )
-        elif agent == "algspec_builder":
+        elif agent == "algspec-builder":
             registered_operations[operation_name] = OperationAtom(
             operation_name,
             lambda *args, agent=agent: prompt_agent(metta, agent, *args),
-            [AtomType.ATOM, AtomType.ATOM, "Expression"],
+            [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
             unwrap=False
         )
-        elif agent == "generalization_helper":
+        elif agent == "generalization-helper":
             registered_operations[operation_name] = OperationAtom(
                 operation_name,
                 lambda *args, agent=agent: prompt_agent(metta, agent, *args),
                 [AtomType.ATOM, AtomType.ATOM, "Expression"],
+                unwrap=False
+            )
+        elif agent == "amalgam-builder":
+            registered_operations[operation_name] = OperationAtom(
+                operation_name,
+                lambda *args, agent=agent: prompt_agent(metta, agent, *args),
+                [AtomType.ATOM, AtomType.ATOM, AtomType.ATOM, "Expression"],
                 unwrap=False
             )
         

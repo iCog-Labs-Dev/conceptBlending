@@ -11,7 +11,7 @@ You are an expert in algebraic specification and conceptual modeling. Your task 
 - Context 2: {context} (This is a seed choherant context phrase of both {concept1} and {concept2} to guide disambiguation)
 ### Instructions:
 - For each concept, define a specification block using the structure below. 
-- Use concise, logically consistent, and meaningful names for sorts, operations, and predicates relevant to the concept based on the context provided.
+- Use concise, logically consistent, and meaningful formal name for sorts, operations, and predicates relevant to the concept based on the context provided.
 - Maintain **comparable structure** between the two specifications to facilitate later structural mapping.
 - Each specification must include:
   - Use the context provided to guide the selection of sorts, operations, and predicates.
