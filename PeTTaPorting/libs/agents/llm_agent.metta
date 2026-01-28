@@ -2,14 +2,24 @@
 (= (emptydict)
    (py-call (dict)))
 
-;Create string by appending the list entries
+
 (= (py-str-helper () $outp) $outp)
+
 (= (py-str-helper $L $outp)
    (let* (($head (car-atom $L))
           ($tail (cdr-atom $L))
-          ($outp2 (py-call (operator.add $outp (py-call (str $head))))))
+          ($outp2
+            (if (== $outp "")
+                ;; first token → no leading space
+                (py-call (operator.add $outp (py-call (str $head))))
+                ;; subsequent tokens → prepend space
+                (py-call (operator.add
+                          (py-call (operator.add $outp " "))
+                          (py-call (str $head)))))))
      (py-str-helper $tail $outp2)))
-(= (py-str $L) (py-str-helper $L ""))
+
+(= (py-str $L)
+   (py-str-helper $L ""))
 
 ;Evaluate expression via py-call:
 (= (py-eval $str)
@@ -51,3 +61,18 @@
          $text))
 
 ; !(useGenAI (py-str (double-scope-prompt bat@man (1 1 1 1 1 1 1 1))))
+
+(= (useGPT $prompt)
+   (let* (($client    (py-call (openai.OpenAI)))
+          ($responses (py-call (getattr $client "responses")))
+          ($create (py-call (getattr $responses "create")))
+          ($mydict (py-str  ("{'model':'gpt-4o','input':\"" $prompt "\", 'temperature':0}")))
+          ($kwargs (once (py-eval $mydict)))
+          ($res (py-call (builtins.apply_kwargs $create $kwargs)))
+          ($output (py-call (getattr $res "output")))
+          ($outmsg (py-call (builtins.index $output 0))) ;0 is ResponseReasoningItem
+          ($content (py-call (getattr $outmsg "content")))
+          ($part (py-call (builtins.index $content 0)))
+          ($text (py-call (getattr $part "text")))
+          )
+         $text))

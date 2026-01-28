@@ -1,3 +1,4 @@
+; !(double-scope-prompt bat@man (1 1 1 1 1 1 1 1))
 (= (double-scope-prompt $concept-pair $property-vector)
        (You are an expert in conceptual blending. Your task is to:
 1. Expand the given two concepts independently within their own cognitive scopes.
@@ -28,8 +29,6 @@ Return only one line like this:
 
 ### Output Rules:
 - DO NOT use quotes, backticks, or extra explanation.
-- For the BlendedConcept, consider just combining the two concepts if it gives a clearer insight, instead of trying to find a complex synthesis.
+- For the BlendedConcept, consider just combining the two concepts(during combining, you should chose the best order of the concepts so that the formed combination gives correct meaning) if it gives a clearer insight, instead of trying to find a complex synthesis.
 - Return only a single valid MeTTa expression in the format specified.)
 )
-
-; !(double-scope-prompt bat@man (1 1 1 1 1 1 1 1))
