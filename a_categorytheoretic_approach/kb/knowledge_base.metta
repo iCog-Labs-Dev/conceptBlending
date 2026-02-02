@@ -78,6 +78,14 @@
    )
 )
 
+; --- Defining to fetch any Triplet ---
+(= (fetch-any-triplet $c)
+   (match &self 
+       (surfaceText (Triplet ($pred $c $target)) $text)
+       (format-result $target $text)
+   )
+)
+
 ; Main fetch function 
 (= (main-fetch $c)
    (let $res
@@ -86,8 +94,29 @@
                (fetch-atom-RelatedTo $c) 
                (fetch-atom-HasProperty $c) 
                (fetch-atom-IsA $c)
+               (fetch-any-triplet $c)
            ))
        )
        (unique-atom $res)
    )
 )
+<<<<<<< HEAD:a_categorytheoretic_approach/tests/knowledge_base.metta
+
+;!(println! "--- TESTING FETCH ---")
+
+;!(let $res (main-fetch house)
+;   (println! (format-args "House Data: {}" ($res)))
+;)
+;!(let $res (main-fetch virus)
+;   (println! (format-args "Virus Data: {}" ($res)))
+;)
+
+;!(let $res (main-fetch horse)
+;   (println! (format-args "Horse Data: {}" ($res)))
+;)
+
+;!(let $res (main-fetch time)
+;   (println! (format-args "Time Data:  {}" ($res)))
+;)
+=======
+>>>>>>> upstream/catetheoretic_approach:a_categorytheoretic_approach/kb/knowledge_base.metta

@@ -4,7 +4,7 @@
 
 ; 1. DIRECT LOAD
 !(import! &self extensions)
-!(import! &self kb:knowledge_base)
+!(import! &self knowledge_base)
 
 ; 2. DEFINE WRAPPERS
 (= (generate_specs $c1 $c2)
