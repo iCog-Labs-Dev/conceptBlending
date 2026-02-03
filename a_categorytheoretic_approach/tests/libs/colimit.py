@@ -123,6 +123,37 @@ def extract_weighted_items(concept_tree, block_name):
 # 2. CORE LOGIC: THE PUSHOUT (COLIMIT)
 # ==============================================================================
 
+# ==============================================================================
+# 2. ADVANCED METRICS (CCR & SFS) - [PAPER COMPLIANT]
+# ==============================================================================
+
+def calculate_hybrid_metrics(renamed_tree_a, renamed_tree_b, final_blend_stats):
+    """
+    Calculates metrics comparing Structural Fidelity vs Efficiency.
+    """
+    categories = ["sorts", "ops", "preds", "axioms"]
+    
+    # DATA PREPARATION: Extract weighted items from both inputs for all categories
+    input_items_a = {}
+    input_items_b = {}
+    
+    for cat in categories:
+        input_items_a.update(extract_weighted_items(renamed_tree_a, cat))
+        input_items_b.update(extract_weighted_items(renamed_tree_b, cat))
+        
+    #1. CCR: WEIGHTED CONCEPTUAL COMPRESSION RATIO
+    # EQ: 1 - (TotalWeight(Blend) / TotalWeight(Inputs))
+    total_input_weight = sum(input_items_a.values()) + sum(input_items_b.values())
+    total_blend_weight = final_blend_stats["total_blend_weight"]
+    
+    if total_input_weight > 0:
+        # We clamp at 0.0 because strictly additive blends can't have negative compression
+        ccr = max(0.0, 1.0 - (total_blend_weight / total_input_weight))
+    else:
+        ccr = 0.0
+
+    
+
 def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):    
     """
     Computes the Colimit (Blend) deterministically.
@@ -242,15 +273,15 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
 
     # 6. RETURN FORMATTED S-EXPRESSION
     return f"""(Concept BlendedConcept 
- (metrics
-  (compression {compression:.2f})
-  (infoValue {info_value:.2f})
-  (imbalance {imbalance:.2f})
- )
- (spec
-  (sorts ({' '.join(sorted(final_blend['sorts']))}))
-  (ops ({' '.join(sorted(final_blend['ops']))}))
-  (preds ({' '.join(sorted(final_blend['preds']))}))
-  (axioms ({' '.join(sorted(final_blend['axioms']))}))
- )
-))"""
+            (metrics
+             (compression {compression:.2f})
+             (infoValue {info_value:.2f})
+             (imbalance {imbalance:.2f})
+            )
+            (spec
+             (sorts ({' '.join(sorted(final_blend['sorts']))}))
+             (ops ({' '.join(sorted(final_blend['ops']))}))
+             (preds ({' '.join(sorted(final_blend['preds']))}))
+             (axioms ({' '.join(sorted(final_blend['axioms']))}))
+            )
+        ))"""
