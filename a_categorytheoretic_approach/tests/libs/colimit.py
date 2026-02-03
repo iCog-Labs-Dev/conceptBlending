@@ -141,18 +141,50 @@ def calculate_hybrid_metrics(renamed_tree_a, renamed_tree_b, final_blend_stats):
         input_items_a.update(extract_weighted_items(renamed_tree_a, cat))
         input_items_b.update(extract_weighted_items(renamed_tree_b, cat))
         
-    #1. CCR: WEIGHTED CONCEPTUAL COMPRESSION RATIO
+    #1. WEIGHTED CONCEPTUAL COMPRESSION RATIO (CCR)
     # EQ: 1 - (TotalWeight(Blend) / TotalWeight(Inputs))
     total_input_weight = sum(input_items_a.values()) + sum(input_items_b.values())
     total_blend_weight = final_blend_stats["total_blend_weight"]
     
     if total_input_weight > 0:
-        # We clamp at 0.0 because strictly additive blends can't have negative compression
         ccr = max(0.0, 1.0 - (total_blend_weight / total_input_weight))
     else:
         ccr = 0.0
 
+    # 3. SFS: STRUCTURAL FIDELITY SCORE (How many AXIOMS from the inputs survived in the blend?)  
+    axioms_a = extract_weighted_items(renamed_tree_a, "axioms")
+    axioms_b = extract_weighted_items(renamed_tree_b, "axioms")
     
+    total_axiom_weight = sum(axioms_a.values()) + sum(axioms_b.values())
+    preserved_weight = 0.0
+    
+    # Get the set of axioms that actually made it into the blend
+    blend_axioms_content = set()
+    for entry in final_blend_stats.get('axioms_list', []):
+        # clean entry: "( (isA x y) 0.9 )" -> "(isA x y)"
+        clean = entry.strip("() ")
+        last_space = clean.rfind(' ')
+        if last_space != -1:
+            content = clean[:last_space].strip("() ")
+            blend_axioms_content.add(content)
+
+    # Check preservation (A)
+    for ax_str, w in axioms_a.items():
+        if ax_str in blend_axioms_content:
+            preserved_weight += w
+            
+    # Check preservation (B)
+    for ax_str, w in axioms_b.items():
+        if ax_str in blend_axioms_content:
+            preserved_weight += w
+            
+    if total_axiom_weight > 0:
+        sfs = preserved_weight / total_axiom_weight
+    else:
+        # Perfect fidelity if there were no rules to break
+        sfs = 1.0 
+        
+    return ccr, sfs
 
 def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):    
     """
@@ -213,7 +245,8 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
         "weight_from_b": 0.0,
         "count_input_items": 0,  
         "count_blend_items": 0, 
-        "total_blend_weight": 0.0
+        "total_blend_weight": 0,
+        "axioms_list": []
     }
     
     for cat in categories:
