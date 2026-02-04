@@ -119,9 +119,6 @@ def extract_weighted_items(concept_tree, block_name):
             
     return items
 
-# ==============================================================================
-# 2. CORE LOGIC: THE PUSHOUT (COLIMIT)
-# ==============================================================================
 
 # ==============================================================================
 # 2. ADVANCED METRICS (CCR & SFS) - [PAPER COMPLIANT]
@@ -186,6 +183,10 @@ def calculate_hybrid_metrics(renamed_tree_a, renamed_tree_b, final_blend_stats):
         
     return ccr, sfs
 
+# ==============================================================================
+# 3. CORE LOGIC: THE PUSHOUT (COLIMIT)
+# ==============================================================================
+
 def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):    
     """
     Computes the Colimit (Blend) deterministically.
@@ -243,8 +244,8 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
     stats = {
         "weight_from_a": 0.0,
         "weight_from_b": 0.0,
-        "count_input_items": 0,  
-        "count_blend_items": 0, 
+        # "count_input_items": 0,  
+        # "count_blend_items": 0, 
         "total_blend_weight": 0,
         "axioms_list": []
     }
@@ -254,7 +255,7 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
         items_b = extract_weighted_items(renamed_tree_b, cat)
         
         merged_items = {}
-        stats["count_input_items"] += len(items_a) + len(items_b)
+        # stats["count_input_items"] += len(items_a) + len(items_b)
         
         # Add A items
         for feat, w in items_a.items():
@@ -286,28 +287,37 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
             
         final_blend[cat] = final_list
         
+        if cat == "axioms":
+            stats["axioms_list"] = final_list
+        
     # 5. CALCULATE METRICS
     
-    # InfoValue
-    info_value = stats["total_blend_weight"]
+    # # InfoValue
+    # info_value = stats["total_blend_weight"]
     
-    # Imbalance
-    total_input = stats["weight_from_a"] + stats["weight_from_b"]
-    if total_input > 0:
-        imbalance = abs(stats["weight_from_a"] - stats["weight_from_b"]) / total_input
-    else:
-        imbalance = 0.0
+    # # Imbalance
+    # total_input = stats["weight_from_a"] + stats["weight_from_b"]
+    # if total_input > 0:
+    #     imbalance = abs(stats["weight_from_a"] - stats["weight_from_b"]) / total_input
+    # else:
+    #     imbalance = 0.0
             
     # Compression
-    if stats["count_input_items"] > 0:
-        compression = 1.0 - (stats["count_blend_items"] / stats["count_input_items"])
-    else:
-        compression = 0.0
+    # if stats["count_input_items"] > 0:
+    #     compression = 1.0 - (stats["count_blend_items"] / stats["count_input_items"])
+    # else:
+    #     compression = 0.0
 
+    ccr, sfs = calculate_hybrid_metrics(renamed_tree_a, renamed_tree_b, stats)
+    # Info_value is simply sum of priorities
+    info_value = stats["total_blend_weight"]
+    
+    imbalance = abs(stats["weight_from_a"] - stats["weight_from_b"]) / 2.0
     # 6. RETURN FORMATTED S-EXPRESSION
     return f"""(Concept BlendedConcept 
             (metrics
-             (compression {compression:.2f})
+             (CCR {ccr:.3f})              
+             (SFS {sfs:.3f})             
              (infoValue {info_value:.2f})
              (imbalance {imbalance:.2f})
             )
