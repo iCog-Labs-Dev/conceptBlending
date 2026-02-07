@@ -376,22 +376,24 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
         
     # ccr, sfs = calculate_hybrid_metrics(renamed_tree_a, renamed_tree_b, stats)
     metrics = calculate_main_metrics(renamed_tree_a, renamed_tree_b, stats)
-    # Info_value is simply sum of priorities
-    info_value = stats["total_blend_weight"]
-    
-    imbalance = abs(stats["weight_from_a"] - stats["weight_from_b"]) / 2.0
+        
     return f"""(Concept BlendedConcept 
-            (metrics
-             (Richness {metrics['Richness']:.2f})
-             (Synergy {metrics['Synergy']:.2f})
-             (Fidelity {metrics['Fidelity']:.3f})
-             (Efficiency {metrics['Efficiency']:.3f})
-             (Balance {metrics['Balance']:.2f})
-            )
-            (spec
+            (specs
              (sorts ({' '.join(sorted(final_blend['sorts']))}))
              (ops ({' '.join(sorted(final_blend['ops']))}))
              (preds ({' '.join(sorted(final_blend['preds']))}))
              (axioms ({' '.join(sorted(final_blend['axioms']))}))
             )
-        ))"""
+        ))
+            
+        ---------------------------------------
+               Output Metrics
+        ---------------------------------------
+        (metrics
+             (InfoValue(Richness): {metrics['Richness']:.2f})
+             (Compression(Synergy): {metrics['Synergy']:.2f})
+             (SFS(Fidelity): {metrics['Fidelity']:.3f})
+             (CCR(Efficiency): {metrics['Efficiency']:.3f})
+             (Imbalance(Balance): {metrics['Balance']:.2f})
+            )
+        """
