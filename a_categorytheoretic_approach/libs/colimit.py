@@ -183,6 +183,82 @@ def calculate_hybrid_metrics(renamed_tree_a, renamed_tree_b, final_blend_stats):
         
     return ccr, sfs
 
+    
+def calculate_main_metrics(renamed_tree_a, renamed_tree_b, final_blend_stats):
+    """
+    Calculates the 5 Universal Metrics:
+    1. Richness (InfoValue)
+    2. Synergy (Compression)
+    3. Fidelity (SFS)
+    4. Efficiency (CCR)
+    5. Balance (Imbalance)
+    """
+    categories = ["sorts", "ops", "preds", "axioms"]
+    
+    # --- Data Prep ---
+    input_items_a = {}
+    input_items_b = {}
+    for cat in categories:
+        input_items_a.update(extract_weighted_items(renamed_tree_a, cat))
+        input_items_b.update(extract_weighted_items(renamed_tree_b, cat))
+
+    # Calculate Total Input Weights (infoValue of inputs) for Imbalance & Efficiency
+    info_val_a = sum(input_items_a.values())
+    info_val_b = sum(input_items_b.values())
+    total_input_weight = info_val_a + info_val_b
+
+    # --- Metric 1: Richness (InfoValue) ---
+    richness = final_blend_stats["total_blend_weight"]
+
+    # --- Metric 2: Synergy (Paper's "Compression") ---
+    synergy = 0.0
+    # Guard against empty item_weights
+    weights = final_blend_stats.get("item_weights", {})
+    
+    for feat, blend_weight in weights.items():
+        sources = 0
+        if feat in input_items_a: sources += 1
+        if feat in input_items_b: sources += 1
+        
+        if sources > 0:
+            # N=2 (Two Inputs)
+            synergy += blend_weight * (sources / 2.0)
+
+    # --- Metric 3: Fidelity (SFS) ---
+    axioms_a = extract_weighted_items(renamed_tree_a, "axioms")
+    axioms_b = extract_weighted_items(renamed_tree_b, "axioms")
+    total_axiom_weight = sum(axioms_a.values()) + sum(axioms_b.values())
+    preserved_weight = 0.0
+    
+    blend_axioms_content = set()
+    for entry in final_blend_stats.get('axioms_list', []):
+        clean = entry.strip("() ")
+        last_space = clean.rfind(' ')
+        if last_space != -1:
+            content = clean[:last_space].strip("() ")
+            blend_axioms_content.add(content)
+
+    for ax_str, w in axioms_a.items():
+        if ax_str in blend_axioms_content: preserved_weight += w
+    for ax_str, w in axioms_b.items():
+        if ax_str in blend_axioms_content: preserved_weight += w
+            
+    fidelity = preserved_weight / total_axiom_weight if total_axiom_weight > 0 else 1.0
+
+    # --- Metric 4: Efficiency (CCR) ---
+    efficiency = max(0.0, 1.0 - (richness / total_input_weight)) if total_input_weight > 0 else 0.0
+
+    # --- Metric 5: Balance (Imbalance) ---
+    balance_penalty = abs(info_val_a - info_val_b) / 2.0
+        
+    return {
+        "Richness": richness,
+        "Synergy": synergy,
+        "Fidelity": fidelity,
+        "Efficiency": efficiency,
+        "Balance": balance_penalty
+    }
+
 # ==============================================================================
 # 3. CORE LOGIC: THE PUSHOUT (COLIMIT)
 # ==============================================================================
@@ -246,7 +322,8 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
         "weight_from_b": 0.0,
         "total_blend_weight": 0,
         "synergy_score": 0.0,
-        "axioms_list": []
+        "axioms_list": [],
+        "item_weights": {}
     }
     
     for cat in categories:
@@ -282,34 +359,34 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
         for feat, w in merged_items.items():
             final_list.append(f"({feat} {w})")
             stats["total_blend_weight"] += w
-            
+            stats["item_weights"][feat] = w
             # Compression (Synergy) 
             # If a feature is present in both A and B, it contributes more to the blend's value.
-            sources = 0
-            if feat in items_a: sources += 1
-            if feat in items_b: sources += 1
+            # sources = 0
+            # if feat in items_a: sources += 1
+            # if feat in items_b: sources += 1
             
-            if sources > 0:
-                stats["synergy_score"] += w * (sources / 2.0)
+            # if sources > 0:
+            #     stats["synergy_score"] += w * (sources / 2.0)
             
         final_blend[cat] = final_list
         
         if cat == "axioms":
             stats["axioms_list"] = final_list
         
-    ccr, sfs = calculate_hybrid_metrics(renamed_tree_a, renamed_tree_b, stats)
+    # ccr, sfs = calculate_hybrid_metrics(renamed_tree_a, renamed_tree_b, stats)
+    metrics = calculate_main_metrics(renamed_tree_a, renamed_tree_b, stats)
     # Info_value is simply sum of priorities
     info_value = stats["total_blend_weight"]
     
     imbalance = abs(stats["weight_from_a"] - stats["weight_from_b"]) / 2.0
-    # 6. RETURN FORMATTED S-EXPRESSION
     return f"""(Concept BlendedConcept 
             (metrics
-             (CCR(Efficiency) {ccr:.3f})              
-             (SFS(Fidelity) {sfs:.3f})             
-             (infoValue {info_value:.2f})
-             (Compression(synergy) {stats['synergy_score']:.2f})
-             (imbalance {imbalance:.2f})
+             (Richness {metrics['Richness']:.2f})
+             (Synergy {metrics['Synergy']:.2f})
+             (Fidelity {metrics['Fidelity']:.3f})
+             (Efficiency {metrics['Efficiency']:.3f})
+             (Balance {metrics['Balance']:.2f})
             )
             (spec
              (sorts ({' '.join(sorted(final_blend['sorts']))}))
@@ -318,67 +395,3 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
              (axioms ({' '.join(sorted(final_blend['axioms']))}))
             )
         ))"""
-
-    categories = ["sorts", "ops", "preds", "axioms"]
-    
-    # --- Data Prep ---
-    input_items_a = {}
-    input_items_b = {}
-    for cat in categories:
-        input_items_a.update(extract_weighted_items(renamed_tree_a, cat))
-        input_items_b.update(extract_weighted_items(renamed_tree_b, cat))
-
-    # Calculate Independent Input Weights 
-    info_val_a = sum(input_items_a.values())
-    info_val_b = sum(input_items_b.values())
-    total_input_weight = info_val_a + info_val_b
-
-    # --- Metric 1: Richness (InfoValue) ---
-    richness = final_blend_stats["total_blend_weight"]
-
-    # --- Metric 2: Synergy (Compression) ---
-    synergy = 0.0
-    for feat, blend_weight in final_blend_stats["item_weights"].items():
-        sources = 0
-        if feat in input_items_a: sources += 1
-        if feat in input_items_b: sources += 1
-        
-        # N=2. If item is in both: score += weight * (2/2). 
-        if sources > 0:
-            synergy += blend_weight * (sources / 2.0)
-
-    # --- Metric 3: Fidelity (SFS) ---
-    axioms_a = extract_weighted_items(renamed_tree_a, "axioms")
-    axioms_b = extract_weighted_items(renamed_tree_b, "axioms")
-    total_axiom_weight = sum(axioms_a.values()) + sum(axioms_b.values())
-    preserved_weight = 0.0
-    
-    blend_axioms_content = set()
-    for entry in final_blend_stats.get('axioms_list', []):
-        clean = entry.strip("() ")
-        last_space = clean.rfind(' ')
-        if last_space != -1:
-            content = clean[:last_space].strip("() ")
-            blend_axioms_content.add(content)
-
-    for ax_str, w in axioms_a.items():
-        if ax_str in blend_axioms_content: preserved_weight += w
-    for ax_str, w in axioms_b.items():
-        if ax_str in blend_axioms_content: preserved_weight += w
-            
-    fidelity = preserved_weight / total_axiom_weight if total_axiom_weight > 0 else 1.0
-
-    # --- Metric 4: Efficiency (CCR) ---
-    efficiency = max(0.0, 1.0 - (richness / total_input_weight)) if total_input_weight > 0 else 0.0
-
-    # --- Metric 5: Balance (Imbalance) ---
-    balance_penalty = abs(info_val_a - info_val_b) / 2.0
-        
-    return {
-        
-        "Synergy(Compression)": synergy,
-        "Fidelity(SFS)": fidelity,
-        "Efficiency(CCR)": efficiency,
-        "Richness(InfoValue)": richness,
-        "Balance": balance_penalty
-    }
