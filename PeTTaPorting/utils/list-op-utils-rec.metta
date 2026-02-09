@@ -1,5 +1,5 @@
 ;; ==========================================
-;; 1. LIST MATH & COMPARISON
+;; LIST MATH & COMPARISON
 ;; ==========================================
 
 ;; Element-wise multiplication of two lists, tagged with properties
@@ -48,7 +48,7 @@
              (cons-atom ($p $final) $rest))))
 
 ;; ==========================================
-;; 2. LIST TRANSFORMATION
+;; LIST TRANSFORMATION
 ;; ==========================================
 
 ;; Pairs elements from two lists: (1 2) (A B) -> ((1 A) (2 B))
@@ -118,7 +118,7 @@
 
 
 ;; ==========================================
-;; 3. FILTERING & SEARCHING
+;; FILTERING & SEARCHING
 ;; ==========================================
 
 ;; Removes all instances of $val from $list
@@ -137,6 +137,48 @@
 (= (filter-list $list $val)
    (collapse (check-equality $val (superpose $list))))
 (= (check-equality $val $target) (if (== $val $target) (empty) $target))
+
+
+
+
+
+;; ==========================================
+;;  Property Comparison Helper
+;; ==========================================
+;; Extracts property at index from both inputs and returns the winner.
+;; Format returned: (WinnerName PropName WinnerValue)
+(= (compare-concepts-prop-val ($input1 $props1) ($input2 $props2) $index)
+   (let* (($p1 (index-atom $props1 $index))
+          ($p2 (index-atom $props2 $index))
+          ($prop-name (car-atom $p1))
+          ($v1 (index-atom $p1 1))
+          ($v2 (index-atom $p2 1)))
+     (if (>= $v1 $v2) 
+         ($input1 $prop-name $v1) 
+         ($input2 $prop-name $v2))))
+
+;; ==========================================
+;; Provenance Implementation
+;; ==========================================
+
+(= (provenance-helper ($input1 $concept1props) ($input2  $concept2props) ($blend $blendprops))   
+   (provenance-recursive ($input1 $concept1props) ($input2  $concept2props) $blendprops 0))
+
+(= (provenance-recursive ($input1 $concept1props) ($input2  $concept2props) $blendprops $idx)
+   (if (>= $idx (size-atom $blendprops))
+       () 
+       (let* (
+           (($gcn $gcp $gcpv) (compare-concepts-prop-val ($input1 $concept1props) ($input2  $concept2props) $idx))
+           ($blend_prop (index-atom $blendprops $idx))
+           ($blend_prop_name (car-atom $blend_prop))
+           ($blend_prop_val  (index-atom $blend_prop 1))
+           ($current-entry (if (>= $blend_prop_val $gcpv) 
+                               ($blend_prop_name) 
+                               ($blend_prop_name ($gcn))))
+           ($rest (provenance-recursive ($input1 $concept1props) ($input2  $concept2props) $blendprops (+ $idx 1)))
+       )
+       (cons-atom $current-entry $rest))))
+
 
 ;; Logic checks
 (= (all-true ()) True)
@@ -157,16 +199,16 @@
               ($tail-res (compare-lists $t1 $t2 $sign)))
              (cons-atom $head-res $tail-res))))
         
-;; Returns True if all elements in list match firstelem, else False
+;; Returns True if all elements in list match firstelem, else False (check-all-equal (1 1 1) 1) -> True
 (= (check-all-equal () $firstelem) True)
 (= (check-all-equal $list $firstelem)
    (let* (($head (car-atom $list))
           ($tail (cdr-atom $list)))
          (and (== $head $firstelem) (check-all-equal $tail $firstelem))))
 
-;; Test: (check-all-equal (1 1 1) 1) -> True
+
 ;; ==========================================
-;; 4. GENETIC ALGORITHM / SPACE UTILS
+;; GENETIC ALGORITHM / SPACE UTILS
 ;; ==========================================
 
 
@@ -192,7 +234,7 @@
          (add-list-to-space (cdr-atom $list) $space)))
 
 ;; ==========================================
-;; 5. MATH & MISC
+;; MATH & MISC
 ;; ==========================================
 
 ;; Truncate to N decimal places
