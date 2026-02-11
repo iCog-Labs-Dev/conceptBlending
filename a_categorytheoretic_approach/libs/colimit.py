@@ -1,6 +1,7 @@
 import sys
 import os
-
+import time
+from .performance_monitor import monitor
 # ==============================================================================
 # 1. PARSING UTILITIES
 # ==============================================================================
@@ -118,7 +119,6 @@ def extract_weighted_items(concept_tree, block_name):
             continue
             
     return items
-
 
 # ==============================================================================
 # 2. ADVANCED METRICS (CCR & SFS) - [PAPER COMPLIANT]
@@ -270,7 +270,7 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
       spec_a, spec_b, spec_g: Strings containing the S-Expressions.
       map_g_to_a, map_g_to_b: Dictionaries mapping generic terms to specific terms.
     """
-    
+    start_time = time.time()
     # 1. PARSE S-EXPRESSIONS
     try:
         # We take [0] because parse returns a list of expressions
@@ -376,6 +376,11 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
         
     # ccr, sfs = calculate_hybrid_metrics(renamed_tree_a, renamed_tree_b, stats)
     metrics = calculate_main_metrics(renamed_tree_a, renamed_tree_b, stats)
+    
+    # Logging the time taken for the colimit computation
+    duration = time.time() - start_time
+    monitor.log_phase("3_Colimit_Computation", duration)
+    monitor.end_pipeline(quality_metrics=metrics)
         
     return f"""(Concept BlendedConcept 
             (specs
@@ -387,7 +392,7 @@ def compute_colimit(spec_a, spec_b, spec_g, map_g_to_a, map_g_to_b):
         ))
             
         ---------------------------------------
-               Output Metrics
+               Output Quality Metrics
         ---------------------------------------
         (metrics
              (InfoValue(Richness): {metrics['Richness']:.2f})
