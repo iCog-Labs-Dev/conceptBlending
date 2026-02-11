@@ -7,8 +7,7 @@ import os
 from hyperon import *
 from hyperon.ext import register_atoms
 from hyperon.stdlib import ValueAtom, OperationAtom
-
-from libs.performance_monitor import monitor
+# from libs.performance_monitor import monitor
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
@@ -17,6 +16,7 @@ if current_dir not in sys.path:
 try:
     from libs.agents.gpt_agent import prompt_agent, context_preprocessing_agent    
     from libs.colimit import compute_colimit
+    from libs.performance_monitor import monitor
 except ImportError as e:
     sys.exit(1)
 
