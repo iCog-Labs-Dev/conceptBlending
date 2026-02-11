@@ -92,7 +92,18 @@ def py_generate_gen(spec1_atom, spec2_atom):
     Calls GPT to find the Generalization (Shared Interface).
     MeTTa Call: (llm:generate-gen $specA $specB)
     """
-    return prompt_agent(metta_parser, "generalization_helper", spec1_atom, spec2_atom)
+    start_time = time.time()
+    try:
+        result = prompt_agent(metta_parser, "generalization_helper", spec1_atom, spec2_atom)
+        monitor.log_llm_attempt(success=True)
+        return result
+    except:
+        monitor.log_llm_attempt(success=False)
+        return [ValueAtom('(Error "Gen Failed")')]
+    finally:
+        duration = time.time() - start_time
+        monitor.log_phase("2_Generalization", duration)
+    # return prompt_agent(metta_parser, "generalization_helper", spec1_atom, spec2_atom)
 
 def py_find_morphisms(spec_g, spec_target):
     """
@@ -101,10 +112,20 @@ def py_find_morphisms(spec_g, spec_target):
     MeTTa Call: (llm:find-morph $specG $specA)
     """
     print("   -> [Agent] Finding Morphisms (Mapping G -> Target)...")
-    result_string = prompt_agent(metta_parser, "morphism_finder", spec_g, spec_target)
+    # result_string = prompt_agent(metta_parser, "morphism_finder", spec_g, spec_target)
     
-    # Wrap in ValueAtom so MeTTa treats it as a single string object, not code
-    return [ValueAtom(result_string)]
+    print("   -> [Agent] Finding Morphisms (Mapping G -> Target)...")
+    start_time = time.time()
+    try:
+        result_string = prompt_agent(metta_parser, "morphism_finder", spec_g, spec_target)
+        monitor.log_llm_attempt(success=True)
+        return [ValueAtom(result_string)]
+    except:
+        monitor.log_llm_attempt(success=False)
+        return [ValueAtom('(Error "Morphism Failed")')]
+    finally:
+        duration = time.time() - start_time
+        monitor.log_phase("3_Morphism_Search", duration)
 
 # =========================================================
 # 4. WRAPPERS: MATH ENGINE (COLIMIT)
