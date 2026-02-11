@@ -163,6 +163,23 @@ def py_log(msg):
     print(str(msg).strip('"'))
     return [ValueAtom(True)]
 
+def py_start_monitor():
+    """Starts the Performance Monitor"""
+    monitor.start_pipeline()
+    print("\n[Performance Monitor] Started.")
+    return [ValueAtom(True)]
+
+def py_end_monitor():
+    """Stops the Monitor and Prints Report"""
+    
+    report = monitor.get_report()
+    print("\n" + "="*50)
+    print(" PIPELINE PERFORMANCE REPORT ")
+    print("="*50)
+    print(json.dumps(report, indent=2))
+    print("="*50 + "\n")
+    return [ValueAtom(True)]
+
 # =========================================================
 # 6. REGISTRATION (EXPOSING TO METTA)
 # =========================================================
@@ -174,7 +191,10 @@ def operation_atoms():
         "llm:generate-gen":  OperationAtom("llm:generate-gen",  py_generate_gen,  unwrap=False),
         "llm:find-morph":    OperationAtom("llm:find-morph",    py_find_morphisms, unwrap=False),
         "math:colimit":      OperationAtom("math:colimit",      py_compute_colimit, unwrap=False),
-        "util:log":          OperationAtom("util:log",          py_log, unwrap=False)
+        "util:log":          OperationAtom("util:log",          py_log, unwrap=False),
+        
+        "util:start-monitor": OperationAtom("util:start-monitor", py_start_monitor, unwrap=False),
+        "util:end-monitor":   OperationAtom("util:end-monitor",   py_end_monitor, unwrap=False)
     }
     
 if "extensions_loaded" not in globals():
