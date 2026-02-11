@@ -1,11 +1,14 @@
 import json
 import re
 import ast
+import time
 import sys
 import os
 from hyperon import *
 from hyperon.ext import register_atoms
 from hyperon.stdlib import ValueAtom, OperationAtom
+
+from libs.performance_monitor import monitor
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
@@ -63,12 +66,26 @@ def py_generate_spec(c1_atom, c2_atom):
     MeTTa Call: (llm:generate-spec house boat)
     """
     # Optional: Run preprocessing context agent first if needed
+    start_time = time.time()
     try:
-        context_preprocessing_agent(metta_parser, c1_atom, c2_atom)
-    except:
-        pass 
+        try:
+           context_preprocessing_agent(metta_parser, c1_atom, c2_atom)
+        except:
+            pass
+        result = prompt_agent(metta_parser, "algspec_builder", c1_atom, c2_atom)
         
-    return prompt_agent(metta_parser, "algspec_builder", c1_atom, c2_atom)
+        # Log Success
+        monitor.log_llm_attempt(success=True)
+        return result
+    except Exception as e:
+        monitor.log_llm_attempt(success=False)
+        return [ValueAtom(f'(Error "{str(e)}")')]
+    
+    finally:
+        # Log Latency
+        duration = time.time() - start_time
+        monitor.log_phase("1_Spec_Generation", duration)
+    # return prompt_agent(metta_parser, "algspec_builder", c1_atom, c2_atom)
 
 def py_generate_gen(spec1_atom, spec2_atom):
     """
