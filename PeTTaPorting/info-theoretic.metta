@@ -135,7 +135,7 @@
         ; ($_ (println! Starting-mu-emergence))
         (($propertiesvalues $properties) ((get-values $properties-max) (get-properties $properties-max)))
         ; ($_ (println! (Properties-values $propertiesvalues)))
-        ($result (list-substract $candidate-degrees $propertiesvalues $properties))
+        ($result (list-subtract $candidate-degrees $propertiesvalues $properties))
         ; ($_ (println! (Mu-emergence-end $result)))
     )
         $result
