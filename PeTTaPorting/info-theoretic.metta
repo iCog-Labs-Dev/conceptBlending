@@ -427,9 +427,11 @@
 
 (=(check-non-dominated $indiv $candidates)
     (let* (
-        ($indiv-obj (index-atom $indiv 1))
-        ($unzipped-candis (unzip-list $candidates))
-        ($candis-objs  (index-atom $unzipped-candis 1))
+        ($inner-indiv (car-atom $indiv))
+        ($indiv-obj (index-atom $inner-indiv 1))
+        ($inner-candis (let $inner-unzipped-candis (unzip-list $candidates) (car-atom $inner-unzipped-candis)))
+        ($unzipped-inner-candis (unzip-list $inner-candis))
+        ($candis-objs  (index-atom $unzipped-inner-candis 1))
         ($filtered-candis-objs (filter-list $candis-objs $indiv-obj))
         ($truthvalue (non-deter-non-dominated-helper $indiv-obj $filtered-candis-objs))
         ($result (if $truthvalue $indiv (empty)))
@@ -444,10 +446,6 @@
         (check-non-dominated (superpose $candidates) $candidates)
     )
 )
-
-; (= (candidates-list) (((1 1 1 1 1 1) (7 9.1)) ((1 0 1 0 1 0) (2 3)) ((1 1 0 0 1 1) (6 8)) ((1 1 1 0 0 0) (2 3)) ((1 1 0 0 1 1) (4 6)) ((1 1 1 1 1 0) (8 9)) ((0 0 0 0 0 1) (3 5)) ((0 0 0 0 1 1) (4 6))))
-; (=(can) ((((0.32232694064146683 1 0 1 1 1 1 0) (0.039999999999999994 0.4386171638965606))) (((0.355600784118316 1 0 0.340925989026196 0 1 0 0.6018432294056829) (0.007499999999999999 0.4410333294915798)))))
-; !(filter-non-dominated (can))
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1
