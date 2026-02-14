@@ -1,4 +1,4 @@
-!(import! op-constraints/common-utils)
+; !(import! op-constraints/common-utils)
 
 (= (is-relation-part-of $term $context)
     (let* (

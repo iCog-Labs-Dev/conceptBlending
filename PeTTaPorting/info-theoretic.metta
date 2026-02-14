@@ -1,7 +1,7 @@
 !(import! &self utils/list-op-utils)
 !(import! &self utils/info-theoretic-utils)
 !(import! &self op-constraints/op-evaluation)
-; !(import! &self libs/agents/llm_agent)
+!(import! &self libs/agents/gpt_agents)
 !(import! &self "utils/uppercase_changer.py")
 ; a temporary representation of the function Error
 (=(Error $atom $message) 
@@ -112,26 +112,6 @@
         (max-elements $properties1values $properties2values $properties)
     )
 )
-
-(= (spiderman)
-   (Concept Spider@Man
-     (Property
-       (web-creation 0.1)
-       (intelligence 0.3)
-       (strength 0.6)
-       (mobility 0.8))))
-
-(= (batman)
-   (Concept Bat@Man
-     (Property
-       (web-creation 0.2)
-       (intelligence 0.4)
-       (strength 0.5)
-       (mobility 0.9))))
-
-; !(property-max (spiderman) (batman))
-
-; !(property-min (spiderman) (batman))
 
 (= (mu-emergence $candidate-degrees $properties-max)
     (let* (
@@ -420,14 +400,6 @@
     )
 )
 
-; ; (= (objs-list) ((7 9.1) (2 3) (6 8) (2 3) (4 6) (8 9) (3 5) (4 6)))
-; ; !(non-dominated-sort-helper (objs-list) (objs-list) 0)
-; ; !(non-dominated-sort (objs-list) (non-dominated-sort-helper (objs-list) (objs-list) 0) 0 ())
-
-; ; !(non-deter-non-dominated-sort (objs-list))
-
-
-
 (=(check-non-dominated $indiv $candidates)
     (let* (
         ($inner-indiv (car-atom $indiv))
@@ -503,19 +475,51 @@
     )
 )
 
+(= (format-result $target $text)
+   (if (== $text NA)
+       ($target nA)
+       ($target $text)
+   )
+)
+
+(= (fetch-context $concept)
+   (collapse(match &space
+       (surfaceText ($rel $concept $target) $text)
+       (format-result $target $text)
+   ))
+)
+
+(= (context-preprocesser $input1 $input2)
+    (let ($context1 $context2) (collapse(superpose((fetch-context $input1) (fetch-context $input2))))
+        (let $_ (println! (Contexts (Bat Context $context1 Man Context $context2))) 
+            (gpt-context-preprocessing $input1 $context1 $input2 $context2)
+        )
+    )
+)
 ; ;;;; Vital Relation Extraction ;;;;
 (= (vit-rel-extraction $input1 $input2)
-    (let ($vital-relation-1 $vital-relation-2) (gpt_vital_relation $input1 $input2)
-        (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))
+    (let $context (context-preprocesser $input1 $input2) 
+        (let $_ (println! (Context $context))
+            (let ($vital-relation-1 $vital-relation-2) (gpt-vital-relation $input1 $input2 $context)
+        (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))))
     )
 )
 
 ; ;;;; Vector Extraction ;;;;
 (= (vec-extraction $input1 $input2)
     (let $vital-relations (vit-rel-extraction $input1 $input2)
-        (let $vec-concepts (gpt_vector $input1 $input2 $vital-relations) $vec-concepts)
+        (let $_ (println! (Vital-relations $vital-relations))
+            (let $vec-concepts (gpt-vector $input1 $input2 $vital-relations) $vec-concepts)
+        )
     )
 )
+
+; !(vec-extraction bat man)
+!(context-preprocesser bat man)
+; !(gpt-vital-relation Bat Man)
+
+(= (Input1) Bat)
+(= (Input2) Man)
 
 ; ;;;; Add vectorized concepts to self space ;;;;
 (= (add-concepts)
@@ -523,6 +527,11 @@
         (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
     )
 )
+
+; !(add-concepts)
+
+; !(concept1)
+; !(concept2)
 
 (= (multi-objective-check $best-sample-with-fitness)
     (let $one-sample (index-atom $best-sample-with-fitness 0)
@@ -638,3 +647,15 @@
         )
     )
 )
+
+
+(= (blend) (Blend spiderMan (Property (web_creation (spider)) (intelligence) (physical_strength) (mobility) (predatory_behavior (spider)) (social_structure) (symbolism) (tool_use)) (Relations (formOf spiderman) (isA human) (isA superhero)))
+)
+
+(= (concept1) (Concept man (Property (mobility 0.9) (intelligence 0.9) (web_creation 0.0) (social_structure 0.8) (predatory_behavior 0.2) (communication 0.9) (symbolism 0.7) (physical_strength 0.7)) (Relations (relatedTo person) (relatedTo man) (relatedTo boy)))
+)
+
+(= (concept2) (Concept spider (Property (web_creation 1.0) (intelligence 0.4) (physical_strength 0.6) (mobility 0.8) (predatory_behavior 1.0) (social_structure 0.2) (symbolism 0.7) (communication 0.1)) (Relations (capableOf spin_webs) (relatedTo spider) (isA arachnid)))
+)
+
+; !(op-evaluater (blend) (concept1) (concept2))
