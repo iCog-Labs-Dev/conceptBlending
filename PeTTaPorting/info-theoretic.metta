@@ -1,5 +1,8 @@
 !(import! &self utils/list-op-utils)
 !(import! &self utils/info-theoretic-utils)
+!(import! &self op-constraints/op-evaluation)
+; !(import! &self libs/agents/llm_agent)
+!(import! &self "utils/uppercase_changer.py")
 ; a temporary representation of the function Error
 (=(Error $atom $message) 
     $message)
@@ -470,8 +473,29 @@
     )    
 )
 
+(= (py-str-helper-h () $outp) $outp)
+
+(= (py-str-helper-h $L $outp)
+   (let* (($head (car-atom $L))
+          ($tail (cdr-atom $L))
+          ($outp2
+            (if (== $outp "")
+                ;; first token → no leading space
+                (py-call (operator.add $outp (py-call (str $head))))
+                ;; subsequent tokens → prepend space
+                (py-call (operator.add
+                          (py-call (operator.add $outp " "))
+                          (py-call (str $head)))))))
+     (py-str-helper-h $tail $outp2)))
+
+(= (py-str-h $L)
+   (py-str-helper-h $L ""))
+(= (uppercase-converter $arg) (let $str-arg (py-str-h $arg) (py-call (uppercase_changer.upper_to_small_case $str-arg))))
+
+
+
 (= (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend $blendproperties))
-    (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations $input1) (get-concept-relations $input2) (get-concept-relations $blend))))
+    (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations (uppercase-converter ($input1))) (get-concept-relations (uppercase-converter ($input2))) (get-concept-relations (uppercase-converter ($blend))))))
         (let ((Concept $conpair1 $propsc1) (Concept $conpair2 $propsc2)) ($concept1 $concept2)
             (let ($formattedcon1 $formattedcon2 $formattedblend) (collapse(superpose((let $conce1rels (cons-atom Relations $con1rels) (Concept $input1 $propsc1 $conce1rels)) 
                                                                                     (let $conce2rels (cons-atom Relations $con2rels) (Concept $input2 $propsc2 $conce2rels))   
@@ -597,7 +621,7 @@
 
 (= (blend $GAorCMA $eval)
     (let $final-pop ($GAorCMA)                                    ;Moedd-cma-gen
-        (let $best-sample-with-fitness (index-atom $final-pop (- (Moedd-cma-gen) 1))
+        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
             (let $multi-objective-check-result (multi-objective-check $best-sample-with-fitness)
                 (let $concept-pair (let (Concept $x $y) (testconcept1) $x)
                     (let $network (gpt-network-selector $concept-pair)

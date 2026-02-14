@@ -136,7 +136,7 @@
 ; The expected output is the max number from the list
 
 
-(= (get-concepts-relations $concept)
+(= (get-concept-relations $concept)
     (collapse(match &space ($rel $concept $var) ($rel $var)))
 )
 ; Returns a list of relation expressions like (isa feline) (hasa whiskers) ...

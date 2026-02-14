@@ -35,18 +35,19 @@
 !(let $temp (static-import! &space concept-atomspace/synonym-py-usedfor-br) (empty))
 !(let $temp (static-import! &space concept-atomspace/usedfor-rt-dbpedia-go) (empty))
 
-!(let $temp (static-import! &space concept-atomspace/additionals) (empty))
+; ; !(let $temp (static-import! &space concept-atomspace/additionals) (empty))
 
-!(import! &self "op-helper-codes.py")
+!(import! &self "op-constraints/op-helper-codes.py")
 
-!(import! &self common-utils)
+!(import! &self op-constraints/common-utils)
 
-!(import! &self integration)
-!(import! &self metonymy)
-!(import! &self unpacking)
-!(import! &self web)
-!(import! &self topology)
-!(import! &self good-reason)
+!(import! &self op-constraints/integration)
+!(import! &self op-constraints/metonymy)
+!(import! &self op-constraints/unpacking)
+!(import! &self op-constraints/web)
+!(import! &self op-constraints/topology)
+!(import! &self op-constraints/good-reason)
+
 
 (= (op-evaluater $blend $concept1 $concept2)
     (let*
@@ -78,4 +79,4 @@
 (= (concept2) (Concept spider (Property (web_creation 1.0) (intelligence 0.4) (physical_strength 0.6) (mobility 0.8) (predatory_behavior 1.0) (social_structure 0.2) (symbolism 0.7) (communication 0.1)) (Relations (capableOf spin_webs) (relatedTo spider) (isA arachnid)))
 )
 
-!(op-evaluater (blend) (concept1) (concept2))
+; !(op-evaluater (blend) (concept1) (concept2))

@@ -325,10 +325,10 @@
         )
 )
 
-(= (Eval) False)
+(= (Eval) True)
 
 ; !(cma-es-main-loop)
-; !(blend cma-es-main-loop (Eval))
+!(blend cma-es-main-loop (Eval))
 
 !(bind! &multi-single-iteration-cma-es-inputspace (get-space))
 (= (add-to-multi-single-iteration-cma-es-inputspace)
@@ -417,4 +417,4 @@
 )
 
 ; !(moedd-cma-es-main-loop)
-!(blend moedd-cma-es-main-loop (Eval))
+; !(blend moedd-cma-es-main-loop (Eval))

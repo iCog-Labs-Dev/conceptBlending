@@ -1,3 +1,64 @@
+!(import! op-constraints/common-utils)
+
+(= (is-relation-part-of $term $context)
+    (let* (
+        ($res (collapse(match &space (relation (PartOf $term $context) PartOf) ($term $context))))
+        )
+        (if (> (size-atom $res) 0) True False)
+    )
+)
+
+(=(is-abbreviation $term) 
+    (let* (
+        ($relation (collapse(match &space (target (IsA $term $fullformed) $abbriv) (car-atom $abbriv))))
+        ($result (if (== (abbreviation) $relation) True False))
+    )
+    $result
+    )
+)
+
+(= (rel-exists-HasA $term $context)
+    (let* (
+        ($res (collapse(match &space (relation (HasA $context $term) HasA) ($context $term))))
+        )
+        (if (> (size-atom $res) 0) True False)
+    )
+)
+
+(= (rel-exists-LocatedNear $term $context)
+    (let* (
+        ($res (collapse(match &space (relation (LocatedNear $term $context) LocatedNear) ($term $context))))
+        )
+        (if (> (size-atom $res) 0) True False)
+    )
+)
+
+(=(rel-exists-SymbolOf $term $context)
+    (let* (
+        ($res (collapse(match &space (relation (SymbolOf $term $context) SymbolOf) ($term $context))))
+        )
+        (if (> (size-atom $res) 0) True False)
+    )
+)
+
+(=(is-relation-metonymy $term1 $term2)
+    (let* (
+        ($partof (is-relation-part-of $term1 $term2))
+        ($HasA (rel-exists-HasA $term1 $term2))
+        ($LocatedNear (rel-exists-LocatedNear $term1 $term2))
+        ($SymbolOf (rel-exists-SymbolOf $term1 $term2))
+        ($result (if (or $partof (or $HasA (or $LocatedNear $SymbolOf))) True False))
+    )
+    $result
+    ))
+
+(= (is-characteristic-part $relation $blend-properties $bled-name) 
+    (if (is-list-member (index-atom $relation 1) $blend-properties)
+        True
+        (is-relation-part-of (index-atom $relation 1) $bled-name)
+    )
+)
+
 (= (is-semantically-compressed $relation $blend-properties $blend-name $detect-abbreviations $detect-characteristic-parts) 
 
     (let* (

@@ -1,5 +1,5 @@
-!(import! &self ../libs/agents/llm_agent)
-!(import! &self "op-helper-codes.py")
+!(import! &self libs/agents/llm_agent)
+!(import! &self "op-constraints/op-helper-codes.py")
 
 (=(is-property-justified $concept $property)
     (let* (
@@ -93,7 +93,7 @@
     (let ($blend-name $blend-context) ((blend-name $blend) (blend-context $blend)) 
         (let $default-prompt (default-prompt $properties $blend-name $blend-context) 
             ; (good-reason-llm $default-prompt)
-            (useGenAI (py-str $default-prompt))
+            (useGPT (py-str $default-prompt))
         )
     )
 )
