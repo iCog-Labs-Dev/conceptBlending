@@ -101,7 +101,7 @@
     )
 )
 
-(=(list-substract $candidatedegreeval $propertiesvalues $properties)
+(=(list-subtract $candidatedegreeval $propertiesvalues $properties)
     (collapse(
         superpose(
             ((index-atom $properties 0) (let $num (chain (- (index-atom $candidatedegreeval 0) (index-atom $propertiesvalues 0)) $x $x) (max-atom ($num 0))))
