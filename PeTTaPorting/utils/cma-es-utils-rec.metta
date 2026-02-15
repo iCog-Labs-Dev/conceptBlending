@@ -136,7 +136,7 @@
         )
     )
 )
-!(generate-toy-list 5)
+;!(generate-toy-list 5)
 
 (= (zeros-vec $length)
     (let $toy-list (generate-toy-list $length) (map-atom $toy-list $x 0))
@@ -145,6 +145,7 @@
 
 ; !(zeros-vec 8)
 
+###################################################
 (= (range $lb $ub)
     (let $x (- $ub $lb) (
             collapse(
@@ -181,6 +182,7 @@
     )
 )
 
+####################################
 (= (vector-op $vector1 $vector2 $op)
     (
         if (== (get-type $vector2) Number)
@@ -219,6 +221,7 @@
 
 ;  !(inner-product (1 2 3) (2 3 4))
 
+###########################################
 (= (mat-vec-op $matrice $vector $op)
     (let ($length1 $length2) ((size-atom $matrice) (size-atom $vector))
         (if (not (== $length1 $length2))
@@ -245,6 +248,7 @@
 
 !(mat-vec-op ((1 2 3)(4 5 6)(7 8 9)) (1 0 1) +)
 
+#########################################
 (= (mat-mat-eles-op $mat1 $mat2 $op)
     (if (== (get-type $mat2) Number)
     $mat1
@@ -299,6 +303,7 @@
 
 ; !(mat-mat-eles-op ((1 2 3)(4 5 6)(7 8 9)) ((9 8 7)(6 5 4)(3 2 1)) *)
 
+###############################################
 (= (outer-product $vector1 $vector2)
     (let ($vec1-size $vec2-size) ((size-atom $vector1) (size-atom $vector2))
         (
@@ -378,7 +383,7 @@
     (map-atom $matrice $x (vec-clip $x $lb $ub))
 )
 
-
+##################################
 (= (add-lmat-to-lspace $mat $lspace)
     (collapse
         (superpose
@@ -584,6 +589,7 @@
    (inverse-product-rec $i $j $lspace $mspace $j)
 )
 
+############################
 (= (inverse-cells-product $i $j $lspace $mspace)
     (collapse
         (superpose
@@ -604,6 +610,8 @@
     (sqrt-math -2)
 )
 
+
+#####################
 (= (l00 $cov-matrice $lspace)
     (let $a0 (index-atom $cov-matrice 0)
         (let $a00 (index-atom $a0 0)
@@ -614,6 +622,7 @@
     )
 )
 
+##########################
 (= (l10 $cov-matrice $lspace)
     (let ($a1 $l00) (collapse(superpose((index-atom $cov-matrice 1) (match $lspace (cell l00 $x) $x))))
         (let $a10 (index-atom $a1 0)
@@ -632,6 +641,7 @@
 ;     )
 ; )
 
+################
 (=(l11 $cov-matrice $lspace)
     (let* (
         ($a1 (index-atom $cov-matrice 1))
@@ -1066,43 +1076,40 @@
 
 ; !(chol-decomp ((1 0 1) (0 1 1) (0 0 1)) &self)
 
-(= (vec-inf-checker $vec)
-    (let $length (size-atom $vec)
-        (superpose
-            (
-                (if (>= (- $length 1) 0) (let $ele0 (index-atom $vec 0) (let $res (isinf-math $ele0) (if $res True (empty)))) (empty))
-                (if (>= (- $length 2) 0) (let $ele1 (index-atom $vec 1) (let $res (isinf-math $ele1) (if $res True (empty)))) (empty))
-                (if (>= (- $length 3) 0) (let $ele2 (index-atom $vec 2) (let $res (isinf-math $ele2) (if $res True (empty)))) (empty))
-                (if (>= (- $length 4) 0) (let $ele3 (index-atom $vec 3) (let $res (isinf-math $ele3) (if $res True (empty)))) (empty))
-                (if (>= (- $length 5) 0) (let $ele4 (index-atom $vec 4) (let $res (isinf-math $ele4) (if $res True (empty)))) (empty))
-                (if (>= (- $length 6) 0) (let $ele5 (index-atom $vec 5) (let $res (isinf-math $ele5) (if $res True (empty)))) (empty))
-                (if (>= (- $length 7) 0) (let $ele6 (index-atom $vec 6) (let $res (isinf-math $ele6) (if $res True (empty)))) (empty))
-                (if (>= (- $length 8) 0) (let $ele7 (index-atom $vec 7) (let $res (isinf-math $ele7) (if $res True (empty)))) (empty))
-                (if (>= (- $length 9) 0) (let $ele8 (index-atom $vec 8) (let $res (isinf-math $ele8) (if $res True (empty)))) (empty))
-                (if (>= (- $length 10) 0) (let $ele9 (index-atom $vec 9) (let $res (isinf-math $ele9) (if $res True (empty)))) (empty))
-            )
-        )
-    )
-)
+######################################
 
-(= (vec-NaN-checker $vec)
-    (let $length (size-atom $vec)
-        (superpose
-            (
-                (if (>= (- $length 1) 0) (let $ele0 (index-atom $vec 0) (let $res (isnan-math $ele0) (if $res True (empty)))) (empty))
-                (if (>= (- $length 2) 0) (let $ele1 (index-atom $vec 1) (let $res (isnan-math $ele1) (if $res True (empty)))) (empty))
-                (if (>= (- $length 3) 0) (let $ele2 (index-atom $vec 2) (let $res (isnan-math $ele2) (if $res True (empty)))) (empty))
-                (if (>= (- $length 4) 0) (let $ele3 (index-atom $vec 3) (let $res (isnan-math $ele3) (if $res True (empty)))) (empty))
-                (if (>= (- $length 5) 0) (let $ele4 (index-atom $vec 4) (let $res (isnan-math $ele4) (if $res True (empty)))) (empty))
-                (if (>= (- $length 6) 0) (let $ele5 (index-atom $vec 5) (let $res (isnan-math $ele5) (if $res True (empty)))) (empty))
-                (if (>= (- $length 7) 0) (let $ele6 (index-atom $vec 6) (let $res (isnan-math $ele6) (if $res True (empty)))) (empty))
-                (if (>= (- $length 8) 0) (let $ele7 (index-atom $vec 7) (let $res (isnan-math $ele7) (if $res True (empty)))) (empty))
-                (if (>= (- $length 9) 0) (let $ele8 (index-atom $vec 8) (let $res (isnan-math $ele8) (if $res True (empty)))) (empty))
-                (if (>= (- $length 10) 0) (let $ele9 (index-atom $vec 9) (let $res (isnan-math $ele9) (if $res True (empty)))) (empty))
-            )
-        )
+;; Base Case: If the vector is empty, there are no infinite values.
+(= (vec-inf-checker ()) (empty))
+
+;; Recursive Step: Check the head, if not inf, check the tail.
+(= (vec-inf-checker $vec)
+   (let* (($head (car-atom $vec))
+          ($tail (cdr-atom $vec))
+          ($res (isinf-math $head)))
+     (if $res True (vec-inf-checker $tail))
+         
+         )
     )
-)
+
+;; --- Test Case ---
+
+!(isinf-math 1)
+!(vec-inf-checker (1 2 3))    ;; Returns [] (meaning no infinity found)
+;!(vec-inf-checker (1 inf 3))  ;; Returns [True]
+
+
+;; Base case: reached the end of the vector
+(= (vec-NaN-checker ()) (empty))
+
+;; Recursive step: check the head, then the tail
+(= (vec-NaN-checker $vec)
+   (let* (($head (car-atom $vec))
+          ($tail (cdr-atom $vec))
+          ($res (isnan-math $head)))
+     (if $res
+         True
+         (vec-NaN-checker $tail))))
+
 
 (= (Pos-definitness-checker $mat)
     (let $res 
@@ -1127,7 +1134,7 @@
         (if (== $res ()) True False)
     )
 )
-
+!(Pos-definitness-checker ((1 2 3) (1 2 3)))
 (= (-ve $number)
     (- 0.0 $number)
 )
