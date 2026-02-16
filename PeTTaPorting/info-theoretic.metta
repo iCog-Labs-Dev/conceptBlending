@@ -465,7 +465,7 @@
 
 
 (= (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend $blendproperties))
-    (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations (uppercase-converter ($input1))) (get-concept-relations (uppercase-converter ($input2))) (get-concept-relations (uppercase-converter ($blend))))))
+    (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations ($input1)) (get-concept-relations ($input2)) (get-concept-relations ($blend)))))
         (let ((Concept $conpair1 $propsc1) (Concept $conpair2 $propsc2)) ($concept1 $concept2)
             (let ($formattedcon1 $formattedcon2 $formattedblend) (collapse(superpose((let $conce1rels (cons-atom Relations $con1rels) (Concept $input1 $propsc1 $conce1rels)) 
                                                                                     (let $conce2rels (cons-atom Relations $con2rels) (Concept $input2 $propsc2 $conce2rels))   
@@ -482,48 +482,56 @@
    )
 )
 
-(= (fetch-context $concept)
-   (collapse(match &space
+(= (fetch-context $concept $n)
+   (let $contexts (collapse(match &space
        (surfaceText ($rel $concept $target) $text)
        (format-result $target $text)
-   ))
+   )) (first-n-elements $contexts $n))
 )
 
-(= (context-preprocesser $input1 $input2)
-    (let ($context1 $context2) (collapse(superpose((fetch-context $input1) (fetch-context $input2))))
-        (let $_ (println! (Contexts (Bat Context $context1 Man Context $context2))) 
+; !(fetch-context bat 10)
+; !(fetch-context man 10)
+(= (context-preprocesser $input1 $input2 $n)
+    (let ($context1 $context2) (collapse(superpose((fetch-context $input1 $n) (fetch-context $input2 $n))))
+        ; (let $_ (println! (Contexts (Bat Context $context1 Man Context $context2))) 
             (gpt-context-preprocessing $input1 $context1 $input2 $context2)
-        )
+        ; )
     )
 )
 ; ;;;; Vital Relation Extraction ;;;;
-(= (vit-rel-extraction $input1 $input2)
-    (let $context (context-preprocesser $input1 $input2) 
-        (let $_ (println! (Context $context))
+(= (vit-rel-extraction $input1 $input2 $n)
+    (let $context (context-preprocesser $input1 $input2 $n) 
+        ; (let $_ (println! (Context $context))
             (let ($vital-relation-1 $vital-relation-2) (gpt-vital-relation $input1 $input2 $context)
-        (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))))
+        (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations)))
+        ; )
     )
 )
 
 ; ;;;; Vector Extraction ;;;;
-(= (vec-extraction $input1 $input2)
-    (let $vital-relations (vit-rel-extraction $input1 $input2)
-        (let $_ (println! (Vital-relations $vital-relations))
-            (let $vec-concepts (gpt-vector $input1 $input2 $vital-relations) $vec-concepts)
-        )
+(= (vec-extraction $input1 $input2 $n)
+    (let $vital-relations (vit-rel-extraction $input1 $input2 $n)
+        ; (let $_ (println! (Vital-relations $vital-relations))
+            (let $vec-concepts (gpt-vector-extraction $input1 $input2 $vital-relations) $vec-concepts)
+        ; )
     )
 )
 
 ; !(vec-extraction bat man)
-!(context-preprocesser bat man)
-; !(gpt-vital-relation Bat Man)
+; !(context-preprocesser bat man 10)
+; !(vit-rel-extraction bat man 10)
+; !(vec-extraction bat man 10)
 
-(= (Input1) Bat)
-(= (Input2) Man)
+
+; (= (Input1) bat)
+; (= (Input2) man)
+
+; ;;;; Amount of contexts to load form the concept-atomspace for both concepts
+; (= (Context-param) 10)
 
 ; ;;;; Add vectorized concepts to self space ;;;;
 (= (add-concepts)
-    (let ($concept1 $concept2) (vec-extraction (Input1) (Input2))
+    (let ($concept1 $concept2) (vec-extraction (Input1) (Input2) (Context-param))
         (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
     )
 )
@@ -626,20 +634,22 @@
     (map-atom $best-sample-with-fitness $single-best-blend (multi-objective-blend-single $single-best-blend $concept-pair $network $eval)))
 
 
-(= (blend $GAorCMA $eval)
-    (let $final-pop ($GAorCMA)                                    ;Moedd-cma-gen
-        (let $best-sample-with-fitness (index-atom $final-pop (- (GENERATIONS) 1))
-            (let $multi-objective-check-result (multi-objective-check $best-sample-with-fitness)
-                (let $concept-pair (let (Concept $x $y) (testconcept1) $x)
-                    (let $network (gpt-network-selector $concept-pair)
-                        (if (not (== $network None))
-                            (if $multi-objective-check-result
-                                (let $_ (println! (Multi-objective check result: $multi-objective-check-result | Selected Network: $network)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval))
-                                ; (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval)
-                                (let $_ (println! (Multi-objective check result: $multi-objective-check-result | Selected Network: $network)) (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval))
+(= (blend $SCMAorMCMA $eval)
+    (let $generations (if (== $SCMAorMCMA moedd-cma-es-main-loop) Moedd-cma-gen GENERATIONS)
+        (let $final-pop ($SCMAorMCMA)                                    ;Moedd-cma-gen
+            (let $best-sample-with-fitness (index-atom $final-pop (- ($generations) 1))
+                (let $_ (println! (Best-sample $best-sample-with-fitness))
+                    (let $concept-pair (let (Concept $x $y) (testconcept1) $x)
+                        (let $network (gpt-network-selector $concept-pair)
+                            (if (not (== $network None))
+                                (if (== $SCMAorMCMA moedd-cma-es-main-loop)
+                                    (let $_ (println! (Type of CMA-ES: Multi-Objective CMA-ES | Selected Network: $network)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval))
+                                    ; (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval)
+                                    (let $_ (println! (Type of CMA-ES: Single-Objective CMA-ES | Selected Network: $network)) (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval))
 
+                                )
+                                (Error $network NoNetworkSelected)
                             )
-                            (Error $network NoNetworkSelected)
                         )
                     )
                 )
@@ -649,13 +659,13 @@
 )
 
 
-(= (blend) (Blend spiderMan (Property (web_creation (spider)) (intelligence) (physical_strength) (mobility) (predatory_behavior (spider)) (social_structure) (symbolism) (tool_use)) (Relations (formOf spiderman) (isA human) (isA superhero)))
-)
+; (= (blend) (Blend spiderMan (Property (web_creation (spider)) (intelligence) (physical_strength) (mobility) (predatory_behavior (spider)) (social_structure) (symbolism) (tool_use)) (Relations (formOf spiderman) (isA human) (isA superhero)))
+; )
 
-(= (concept1) (Concept man (Property (mobility 0.9) (intelligence 0.9) (web_creation 0.0) (social_structure 0.8) (predatory_behavior 0.2) (communication 0.9) (symbolism 0.7) (physical_strength 0.7)) (Relations (relatedTo person) (relatedTo man) (relatedTo boy)))
-)
+; (= (concept1) (Concept man (Property (mobility 0.9) (intelligence 0.9) (web_creation 0.0) (social_structure 0.8) (predatory_behavior 0.2) (communication 0.9) (symbolism 0.7) (physical_strength 0.7)) (Relations (relatedTo person) (relatedTo man) (relatedTo boy)))
+; )
 
-(= (concept2) (Concept spider (Property (web_creation 1.0) (intelligence 0.4) (physical_strength 0.6) (mobility 0.8) (predatory_behavior 1.0) (social_structure 0.2) (symbolism 0.7) (communication 0.1)) (Relations (capableOf spin_webs) (relatedTo spider) (isA arachnid)))
-)
+; (= (concept2) (Concept spider (Property (web_creation 1.0) (intelligence 0.4) (physical_strength 0.6) (mobility 0.8) (predatory_behavior 1.0) (social_structure 0.2) (symbolism 0.7) (communication 0.1)) (Relations (capableOf spin_webs) (relatedTo spider) (isA arachnid)))
+; )
 
 ; !(op-evaluater (blend) (concept1) (concept2))

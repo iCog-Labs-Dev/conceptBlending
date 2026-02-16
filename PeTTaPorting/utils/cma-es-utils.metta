@@ -204,13 +204,6 @@
     )
 )
 
-(= (zeros-vec $length)
-    (let $toy-list (generate-toy-list $length) (map-atom $toy-list $x 0))
-)
-
-
-; !(zeros-vec 8)
-
 (= (range $lb $ub)
     (let $x (- $ub $lb) (
             collapse(

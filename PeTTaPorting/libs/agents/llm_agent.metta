@@ -67,6 +67,7 @@
           ($responses (py-call (getattr $client "responses")))
           ($create (py-call (getattr $responses "create")))
           ($mydict (py-str  ("{'model':'gpt-4o','input':\"" $prompt "\", 'temperature':0}")))
+         ;  ($_ (println! (Prompt $mydict)))
           ($kwargs (once (py-eval $mydict)))
           ($res (py-call (builtins.apply_kwargs $create $kwargs)))
           ($output (py-call (getattr $res "output")))

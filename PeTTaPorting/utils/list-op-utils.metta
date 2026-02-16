@@ -254,3 +254,27 @@
     )
 )
 
+(= (zeros-vec $length)
+    (let $toy-list (generate-toy-list $length) (map-atom $toy-list $x 0))
+)
+
+; !(zeros-vec 8)
+
+(= (first-n-elements-helper $list $n)
+   (if (<= $n 0)
+      ()
+      (let*
+         (
+            ($head (car-atom $list))
+            ($tail (cdr-atom $list))
+            ($new-n (- $n 1))
+            ($res (first-n-elements-helper $tail $new-n))
+         )
+         (cons-atom $head $res)
+      )
+   )
+)
+
+(= (first-n-elements $list $n)
+   (let $nn (if (> $n (size-atom $list)) (size-atom $list) $n) (first-n-elements-helper $list $nn))
+)

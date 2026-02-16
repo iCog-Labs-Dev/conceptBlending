@@ -2,10 +2,8 @@
 !(import! &self utils/random-list-utils)
 !(import! &self utils/cma-es-utils)
 !(import! &self info-theoretic)
-!(import! &self libs/agents/gpt_agents)
+; !(import! &self libs/agents/gpt_agents)
 !(import! &self "utils/numpy_methods.py")
-
-
 
 (=(add-reduct $space $atom)
     (let $result $atom (add-atom $space $atom))
@@ -19,8 +17,8 @@
     (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
 )
 
-(= (Input1) Bat)
-(= (Input2) Man)
+(= (Input1) bat)
+(= (Input2) man)
 
 ;;;; PARAMETERS ;;;;
 ;;;; DIMENSION, INITIAL MEAN, COVARIANCE, AND STEP SIZE
@@ -325,10 +323,10 @@
         )
 )
 
-(= (Eval) True)
+(= (Eval) False)
 
 ; !(cma-es-main-loop)
-!(blend cma-es-main-loop (Eval))
+; !(blend cma-es-main-loop (Eval))
 
 !(bind! &multi-single-iteration-cma-es-inputspace (get-space))
 (= (add-to-multi-single-iteration-cma-es-inputspace)
@@ -417,5 +415,4 @@
 )
 
 ; !(moedd-cma-es-main-loop)
-; !(blend moedd-cma-es-main-loop (Eval))
-
+!(blend moedd-cma-es-main-loop (Eval))

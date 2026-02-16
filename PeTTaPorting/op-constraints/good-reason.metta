@@ -1,5 +1,5 @@
-!(import! &self libs/agents/llm_agent)
-!(import! &self "op-constraints/op-helper-codes.py")
+; !(import! &self libs/agents/llm_agent)
+; !(import! &self "op-constraints/op-helper-codes.py")
 
 (=(is-property-justified $concept $property)
     (let* (
