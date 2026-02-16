@@ -1712,36 +1712,22 @@
     (unique-atom $list)
 )
 
+
+#####done
+(= (unionize () $acc) (custom-unique-atom $acc))
 (= (unionize $list $acc)
-    (if (== $list ())
-        $acc
-        (let* (
-            ($ht (decons-atom $list))
-            (($head $tail) $ht)
-            ($head-length (size-atom $head))
-        )
+   (let* (($ht (decons-atom $list))
+          (($head $tail) $ht))
+     (if (== (size-atom $head) 1)
+         ;; If head is (x), treat x as an element
+         (unionize $tail (cons-atom (car-atom $head) $acc))
+         ;; If head is (x y ...), merge lists
+         (unionize $tail (custom-union-atom $head $acc)))))
 
-        (if (== $head-length 1)
+;; --- Test ---
+;!(unionize ((1 2) (c a)) ())
+;; Output: (a c 2 1) (order depends on your custom-union implementation)
 
-            (let* (
-                ($new-head (car-atom $head))
-                ($new-acc (cons-atom $new-head $acc))
-                ($tail-res (eval (unionize $tail $new-acc)))
-                ($result (custom-unique-atom $tail-res))
-            )
-             $result)
-
-            (let* (
-                ($new-acc (custom-union-atom $head $acc))
-                ($tail-res (eval (unionize $tail $new-acc)))
-                ($result (custom-unique-atom $tail-res))
-            )
-            $result)
-        ))
-    )
-)
-
-; !(unionize ((1 2) (c a)) ())
 
 (= (pair-index-fitness $inds $fits)
    (map-atom $inds $i
