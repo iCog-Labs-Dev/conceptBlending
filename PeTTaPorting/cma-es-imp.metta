@@ -10,12 +10,12 @@
 )
 
 ;;;; INPUT CONCEPTS ;;;;
-(= (testconcept1) 
-    (Concept Man@Bat (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
-)
-(= (testconcept2) 
-    (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
-)
+; (= (testconcept1) 
+;     (Concept Man@Bat (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+; )
+; (= (testconcept2) 
+;     (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+; )
 
 (= (Input1) bat)
 (= (Input2) man)
@@ -276,17 +276,9 @@
     (collapse (match $space $X (remove-atom $space $X)))
 )
 
-(= (add-concepts)
-    (let $concept1 (testconcept1)
-        (let $concept2 (testconcept2)
-            (collapse(superpose((add-atom &concept-space (= (concept1) $concept1)) (add-atom &concept-space (= (concept2) $concept2)))))
-        )
-    )
-)
-
 
 !(add-to-single-cma-es-inputspace)
-; !(add-concepts)
+!(add-concepts)
 
 !(bind! &rmspace (new-space))
 !(bind! &cispace1 (new-space))
@@ -319,7 +311,7 @@
 
 (= (cma-es-main-loop)
     (let $iters (generate-toy-list (GENERATIONS))  
-        (map-atom $iters $iter (cma-es-single-iteration population-fitness-score-test))
+        (map-atom $iters $iter (cma-es-single-iteration population-fitness-score))
         )
 )
 
@@ -372,7 +364,7 @@
             ($_ (println! (ref-point $ref-point | Generation $gen | Population Size (size-atom $pop))))
             ($add (add-atom &self (= (scalarized-fitness $samples $iter)
                                         (let* (
-                                            ($objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample)))
+                                            ($objs (map-atom $samples $sample (objectives (concept1) (concept2) $sample)))
                                             ($weight (index-atom $weights $iter))
                                             ($result ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
                                         )
@@ -390,13 +382,13 @@
             ($_ (println! (Generation $gen | Population $filtered-pop)))
             ($clean (collapse(match &self (= (scalarized-fitness $samples $iter)
                                         (let* (
-                                            ($objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample)))
+                                            ($objs (map-atom $samples $sample (objectives (concept1) (concept2) $sample)))
                                             ($weight (index-atom $weights $iter))
                                             ($result ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
                                         )
                                         $result )) (remove-atom &self (= (scalarized-fitness $samples $iter)
                                         (let* (
-                                            ($objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample)))
+                                            ($objs (map-atom $samples $sample (objectives (concept1) (concept2) $sample)))
                                             ($weight (index-atom $weights $iter))
                                             ($result ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
                                         )

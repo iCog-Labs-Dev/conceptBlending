@@ -527,7 +527,7 @@
 ; (= (Input2) man)
 
 ; ;;;; Amount of contexts to load form the concept-atomspace for both concepts
-; (= (Context-param) 10)
+(= (Context-param) 10)
 
 ; ;;;; Add vectorized concepts to self space ;;;;
 (= (add-concepts)
@@ -552,11 +552,11 @@
     (let $best-fitness (index-atom $best-sample-with-fitness 1)
         (if (>= $best-fitness 0)
                 (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
-                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (testconcept1) (testconcept2)))
+                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
                         (let $blend ($network $concept-pair $best-cand-mu-emergence)
                             (if (== $eval True) 
-                            (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (testconcept1) $best-candidate))
-                                (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (testconcept1) (testconcept2))
+                            (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
+                                (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
                                     (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
                                         (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
                                             (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
@@ -590,15 +590,15 @@
     ((if (> $scalarized-fitness 0)
                         ;; -- PATH A: Fitness is positive, attempt blend --
                         (let $best-candidate (let $unscalarized-zip (index-atom $single-best-blend 0) (let ($props $unscalarized-fitness-score) $unscalarized-zip $props))
-                            (let $_ (println! (best single-candidate: $best-candidate))
-                                (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (testconcept1) (testconcept2)))
+                            (let $_ (println! (best single-candidate: $best-candidate concept1: (eval (concept1))))
+                                (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (eval (concept1)) (eval (concept2))))
                                     (let $_ (println! (best candidate mu emergence: $best-cand-mu-emergence))
                                         (let $blend ($network $concept-pair $best-cand-mu-emergence)
                                             (let $_ (println! (blend: $blend))
                                                 (if $eval
                                                     ;; -- Sub-Path A1: Eval is True --
-                                                    (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (testconcept1) $best-candidate))
-                                                        (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (testconcept1) (testconcept2))
+                                                    (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
+                                                        (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
                                                             (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
                                                                 (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
                                                                     (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
@@ -625,7 +625,7 @@
                             )
                         )
                         ;; -- PATH B: Fitness is <= 0 (Skip this item) --
-                        (println! (Blend ignored. Fitness cannot be less than zero! Scalarized-fitness: $scalarized-fitness Blend: $single-best-blend))
+                        (Candidate property vector: $single-best-blend || fitness value: $scalarized-fitness || NegativeMu-hqblendValue)
                     )))
 )
 
@@ -639,11 +639,11 @@
         (let $final-pop ($SCMAorMCMA)                                    ;Moedd-cma-gen
             (let $best-sample-with-fitness (index-atom $final-pop (- ($generations) 1))
                 (let $_ (println! (Best-sample $best-sample-with-fitness))
-                    (let $concept-pair (let (Concept $x $y) (testconcept1) $x)
+                    (let $concept-pair (let (Concept $x $y) (concept1) $x)
                         (let $network (gpt-network-selector $concept-pair)
                             (if (not (== $network None))
                                 (if (== $SCMAorMCMA moedd-cma-es-main-loop)
-                                    (let $_ (println! (Type of CMA-ES: Multi-Objective CMA-ES | Selected Network: $network)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval))
+                                    (let $_ (println! (Type of CMA-ES: Multi-Objective CMA-ES | Selected Network: $network | Concept-pair: $concept-pair)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval))
                                     ; (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval)
                                     (let $_ (println! (Type of CMA-ES: Single-Objective CMA-ES | Selected Network: $network)) (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval))
 
