@@ -1,11 +1,13 @@
 import json
 import re
 import ast
+import time
 import sys
 import os
 from hyperon import *
 from hyperon.ext import register_atoms
 from hyperon.stdlib import ValueAtom, OperationAtom
+# from libs.performance_monitor import monitor
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
@@ -14,6 +16,7 @@ if current_dir not in sys.path:
 try:
     from libs.agents.gpt_agent import prompt_agent, context_preprocessing_agent    
     from libs.colimit import compute_colimit
+    from libs.performance_monitor import monitor
 except ImportError as e:
     sys.exit(1)
 
@@ -63,19 +66,44 @@ def py_generate_spec(c1_atom, c2_atom):
     MeTTa Call: (llm:generate-spec house boat)
     """
     # Optional: Run preprocessing context agent first if needed
+    start_time = time.time()
     try:
-        context_preprocessing_agent(metta_parser, c1_atom, c2_atom)
-    except:
-        pass 
+        try:
+           context_preprocessing_agent(metta_parser, c1_atom, c2_atom)
+        except:
+            pass
+        result = prompt_agent(metta_parser, "algspec_builder", c1_atom, c2_atom)
         
-    return prompt_agent(metta_parser, "algspec_builder", c1_atom, c2_atom)
+        # Log Success
+        monitor.log_llm_attempt(success=True)
+        return result
+    except Exception as e:
+        monitor.log_llm_attempt(success=False)
+        return [ValueAtom(f'(Error "{str(e)}")')]
+    
+    finally:
+        # Log Latency
+        duration = time.time() - start_time
+        monitor.log_phase("1_Spec_Generation", duration)
+    # return prompt_agent(metta_parser, "algspec_builder", c1_atom, c2_atom)
 
 def py_generate_gen(spec1_atom, spec2_atom):
     """
     Calls GPT to find the Generalization (Shared Interface).
     MeTTa Call: (llm:generate-gen $specA $specB)
     """
-    return prompt_agent(metta_parser, "generalization_helper", spec1_atom, spec2_atom)
+    start_time = time.time()
+    try:
+        result = prompt_agent(metta_parser, "generalization_helper", spec1_atom, spec2_atom)
+        monitor.log_llm_attempt(success=True)
+        return result
+    except:
+        monitor.log_llm_attempt(success=False)
+        return [ValueAtom('(Error "Gen Failed")')]
+    finally:
+        duration = time.time() - start_time
+        monitor.log_phase("2_Generalization", duration)
+    # return prompt_agent(metta_parser, "generalization_helper", spec1_atom, spec2_atom)
 
 def py_find_morphisms(spec_g, spec_target):
     """
@@ -84,10 +112,20 @@ def py_find_morphisms(spec_g, spec_target):
     MeTTa Call: (llm:find-morph $specG $specA)
     """
     print("   -> [Agent] Finding Morphisms (Mapping G -> Target)...")
-    result_string = prompt_agent(metta_parser, "morphism_finder", spec_g, spec_target)
+    # result_string = prompt_agent(metta_parser, "morphism_finder", spec_g, spec_target)
     
-    # Wrap in ValueAtom so MeTTa treats it as a single string object, not code
-    return [ValueAtom(result_string)]
+    print("   -> [Agent] Finding Morphisms (Mapping G -> Target)...")
+    start_time = time.time()
+    try:
+        result_string = prompt_agent(metta_parser, "morphism_finder", spec_g, spec_target)
+        monitor.log_llm_attempt(success=True)
+        return [ValueAtom(result_string)]
+    except:
+        monitor.log_llm_attempt(success=False)
+        return [ValueAtom('(Error "Morphism Failed")')]
+    finally:
+        duration = time.time() - start_time
+        monitor.log_phase("3_Morphism_Search", duration)
 
 # =========================================================
 # 4. WRAPPERS: MATH ENGINE (COLIMIT)
@@ -125,6 +163,23 @@ def py_log(msg):
     print(str(msg).strip('"'))
     return [ValueAtom(True)]
 
+def py_start_monitor():
+    """Starts the Performance Monitor"""
+    monitor.start_pipeline()
+    print("\n[Performance Monitor] Started.")
+    return [ValueAtom(True)]
+
+def py_end_monitor():
+    """Stops the Monitor and Prints Report"""
+    
+    report = monitor.get_report()
+    print("\n" + "="*50)
+    print(" PIPELINE PERFORMANCE REPORT ")
+    print("="*50)
+    print(json.dumps(report, indent=2))
+    print("="*50 + "\n")
+    return [ValueAtom(True)]
+
 # =========================================================
 # 6. REGISTRATION (EXPOSING TO METTA)
 # =========================================================
@@ -136,7 +191,10 @@ def operation_atoms():
         "llm:generate-gen":  OperationAtom("llm:generate-gen",  py_generate_gen,  unwrap=False),
         "llm:find-morph":    OperationAtom("llm:find-morph",    py_find_morphisms, unwrap=False),
         "math:colimit":      OperationAtom("math:colimit",      py_compute_colimit, unwrap=False),
-        "util:log":          OperationAtom("util:log",          py_log, unwrap=False)
+        "util:log":          OperationAtom("util:log",          py_log, unwrap=False),
+        
+        "util:start-monitor": OperationAtom("util:start-monitor", py_start_monitor, unwrap=False),
+        "util:end-monitor":   OperationAtom("util:end-monitor",   py_end_monitor, unwrap=False)
     }
     
 if "extensions_loaded" not in globals():

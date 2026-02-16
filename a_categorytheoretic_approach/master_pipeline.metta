@@ -6,6 +6,7 @@
 !(import! &self extensions)
 !(import! &self kb:knowledge_base)
 
+!(util:start-monitor)
 ; 2. DEFINE WRAPPERS
 (= (generate_specs $c1 $c2)
    (let $context1 (main-fetch $c1)
@@ -37,7 +38,8 @@
 
 !(util:log ">>> [PHASE 1] Generating Specifications...")
 
-!(let $specs (generate_specs virus software)
+; !(let $specs (generate_specs virus software)
+!(let $specs (generate_specs house boat)
    (let ($specA $specB) $specs
       
       ; STEP 1: Add to AtomSpace
@@ -83,3 +85,4 @@
    )
 )
 !(util:log "\n>>> PIPELINE FINISHED.")
+!(util:end-monitor)
