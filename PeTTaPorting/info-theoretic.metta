@@ -366,7 +366,7 @@
 )
 
 (= (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend $blendproperties))
-    (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations $input1 10) (get-concept-relations $input2 10) (get-concept-relations $blend 10))))
+    (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations $input1 &space 5) (get-concept-relations $input2 &space 5) (get-concept-relations $blend &space 5))))
         (let ((Concept $conpair1 $propsc1) (Concept $conpair2 $propsc2)) ($concept1 $concept2)
             (let ($formattedcon1 $formattedcon2 $formattedblend) (collapse(superpose((let $conce1rels (cons-atom Relations $con1rels) (Concept $input1 $propsc1 $conce1rels)) 
                                                                                     (let $conce2rels (cons-atom Relations $con2rels) (Concept $input2 $propsc2 $conce2rels))   
@@ -376,33 +376,14 @@
     )
 )
 
-(= (format-result $target $text $rel $concept)
-   (if (== $text NA)
-       ($concept $rel $target)
-       ($concept $rel $target $text)
-   )
-)
-
-(= (fetch-context $concept $n)
-   (let $contexts (collapse(match &space
-       (surfaceText ($rel $concept $target) $text)
-       (format-result $target $text $rel $concept)
-   )) (first-n-elements $contexts $n))
-)
-
-; Returns a list of relation expressions like (isa feline) (hasa whiskers) ...
-(= (get-concept-relations $concept $n)
-    (let $rels (collapse(match &space ($rel $concept $var) ($rel $var))) (first-n-elements $rels $n))
-)
-
-(= (context-preprocesser $input1 $input2 $n)
-    (let ($context1 $context2) (collapse(superpose((fetch-context $input1 $n) (fetch-context $input2 $n))))
+(= (context-preprocesser $input1 $input2 $space $n)
+    (let ($context1 $context2) (collapse(superpose((fetch-context $input1 $space $n) (fetch-context $input2 $space $n))))
         (gpt-context-preprocessing $input1 $context1 $input2 $context2)
     )
 )
 ; ;;;; Vital Relation Extraction ;;;;
-(= (vit-rel-extraction $input1 $input2 $n)
-    (let $context (context-preprocesser $input1 $input2 $n) 
+(= (vit-rel-extraction $input1 $input2 $space $n)
+    (let $context (context-preprocesser $input1 $input2 $space $n) 
         (let ($vital-relation-1 $vital-relation-2) (gpt-vital-relation $input1 $input2 $context)
             (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))
         )
@@ -410,8 +391,8 @@
 )
 
 ; ;;;; Vector Extraction ;;;;
-(= (vec-extraction $input1 $input2 $n)
-    (let $vital-relations (vit-rel-extraction $input1 $input2 $n)
+(= (vec-extraction $input1 $input2 $space $n)
+    (let $vital-relations (vit-rel-extraction $input1 $input2 $space $n)
         (let $vec-concepts (gpt-vector-extraction $input1 $input2 $vital-relations) $vec-concepts)
     )
 )
@@ -419,9 +400,13 @@
 ; ;;;; Amount of contexts to load form the concept-atomspace for both concepts
 (= (Context-param) 10)
 
+;;;; The atomspace containg the concept-atomspace knowledge base
+(= (kbspace) &space)
+
+
 ; ;;;; Add vectorized concepts to self space ;;;;
 (= (add-concepts)
-    (let ($concept1 $concept2) (vec-extraction (Input1) (Input2) (Context-param))
+    (let ($concept1 $concept2) (vec-extraction (Input1) (Input2) (kbspace) (Context-param))
         (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
     )
 )
@@ -446,7 +431,7 @@
                                             (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
                                                 (let $op-res (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
                                                     (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) $op-res
-                                                        (Formed Blend: $blend-name
+                                                        (Formed Blend: $blend
                                                         Evaluation-Metrics:
                                                         Integration: $integration-res
                                                         Good-reason: $good-reason-res
@@ -477,7 +462,7 @@
     ((if (> $scalarized-fitness 0)
                         ;; -- PATH A: Fitness is positive, attempt blend --
                         (let $best-candidate (let $unscalarized-zip (index-atom $single-best-blend 0) (let ($props $unscalarized-fitness-score) $unscalarized-zip $props))
-                            (let $_ (println! (best single-candidate: $best-candidate concept1: (eval (concept1))))
+                            (let $_ (println! (best single-candidate: $best-candidate))
                                 (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (eval (concept1)) (eval (concept2))))
                                     (let $_ (println! (best candidate mu emergence: $best-cand-mu-emergence))
                                         (let $blend ($network $concept-pair $best-cand-mu-emergence)
@@ -488,15 +473,17 @@
                                                         (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
                                                             (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
                                                                 (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
-                                                                    (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                                        (Formed Blend: $blend-name
-                                                                        Evaluation-Metrics:
-                                                                        Integration: $integration-res
-                                                                        Good-reason: $good-reason-res
-                                                                        Unpacking: $unpacking-res
-                                                                        Web: $web-res
-                                                                        Topology: $topology-res
-                                                                        Metonymy: $metonymy-res)
+                                                                    (let $res-op (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                                                                        (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) $res-op
+                                                                            (Formed Blend: $blend
+                                                                            Evaluation-Metrics:
+                                                                            Integration: $integration-res
+                                                                            Good-reason: $good-reason-res
+                                                                            Unpacking: $unpacking-res
+                                                                            Web: $web-res
+                                                                            Topology: $topology-res
+                                                                            Metonymy: $metonymy-res)
+                                                                        )
                                                                     )
                                                                 )
                                                             )

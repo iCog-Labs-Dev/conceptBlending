@@ -1,5 +1,5 @@
 (=(get-expand-provenance $list)
-    (map-atom $list $source-word (py-call (op-helper-codes.get_word_associations $source-word)) )
+    (map-atom $list $source-word (get-provenances $source-word &space 5) )
 )
 
 (= (evaluate-property ($prop-name $provenance-list) $blend-name)
@@ -31,7 +31,7 @@
     )
 )
 
-(= (unpacking-op $good-blend )
+(= (unpacking-op $good-blend)
     (let ($props $blend-name) ((properties-list $good-blend) (blend-name $good-blend))
         (let $mapped-props (map-atom $props $prop  (if (> (size-atom $prop) 1) $prop ((car-atom $prop) ())))
             (let $scores (map-atom $mapped-props $p (evaluate-property $p $blend-name))

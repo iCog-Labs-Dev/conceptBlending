@@ -81,3 +81,5 @@
         )
     )
 )
+
+; !(py-call (op-helper-codes.get_word_associations bat))

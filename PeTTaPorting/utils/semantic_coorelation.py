@@ -10,9 +10,9 @@ _sentence_model = None
 def get_sentence_model():
     global _sentence_model
     if _sentence_model is None:
-        print("Loading sentence transformer model...")
+        # print("Loading sentence transformer model...")
         _sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
-        print("Model loaded.")
+        # print("Model loaded.")
     return _sentence_model
 
 def parse_to_list(s: str):

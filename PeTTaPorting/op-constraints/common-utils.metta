@@ -134,3 +134,32 @@
 (= (max-in-list ($x)) $x)
 (= (max-in-list $list) (max-of-two (car-atom $list) (max-in-list (cdr-atom $list))))
 ; The expected output is the max number from the list
+
+(= (first-n-elements-helper-op $list $n)
+   (if (<= $n 0)
+      ()
+      (let*
+         (
+            ($head (car-atom $list))
+            ($tail (cdr-atom $list))
+            ($new-n (- $n 1))
+            ($res (first-n-elements-helper $tail $new-n))
+         )
+         (cons-atom $head $res)
+      )
+   )
+)
+
+(= (first-n-elements-op $list $n)
+   (let $nn (if (> $n (size-atom $list)) (size-atom $list) $n) (first-n-elements-helper $list $nn))
+)
+
+(= (Provrelations) (isA relatedTo hasProperty synonym))
+
+(= (get-provenances $concept $space $n)
+    (let $relations (Provrelations) 
+        (let $result (map-atom $relations $relation (first-n-elements-op (collapse(match $space ($relation $concept $target) $target)) $n))
+            (let $fresult (foldl-atom $result () $acc $x (union-atom $acc $x)) (unique-atom $fresult))
+        )
+    )
+)
