@@ -5,11 +5,11 @@
 3. Enrich the result by integrating deeper meaning.
 
 ### INPUTS:
-- Concept Pair: $concept-pair (format: Concept1@Concept2)
+- Concept Pair: $concept-pair (format: concept1@concept2)
 - Property Vector: $property-vector (list of 8 properties with degrees)
 
 ### Instructions:
-- Parse Concept1 and Concept2 from the `Concept1@Concept2` input.
+- Parse concept1 and concept2 from the `concept1@concept2` input.
 - Use the **property vector** to understand conceptual relevance.
 - Give more weight to **properties with degree > 0**, but consider all 8 for completeness.
 - Ensure both expansions share a **common conceptual frame**.
@@ -21,11 +21,11 @@
 
 ### Output Format:
 Return only:
-- "(singleScope (expand Concept1 Concept2) BlendedConcept1 (extended Elaboration1))"
+- "(SingleScope (expand concept1 concept2) blendedconcept (extended Elaboration1))"
 
 ### Examples:
-- "(singleScope (expand warStrategy) tacticalOperations (extended strategicWarfare))"  
-- "(singleScope (expand videoGames) tacticalSimulation (extended interactiveWargaming))"  
+- "(SingleScope (expand warStrategy) tacticaloperations (extended strategicWarfare))"  
+- "(SingleScope (expand videoGames) tacticalsimulation (extended interactiveWargaming))"  
 
 ### Output Rules:
 - DO NOT use quotes, backticks, or additional text.

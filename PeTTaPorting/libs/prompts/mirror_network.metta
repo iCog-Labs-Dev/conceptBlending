@@ -5,28 +5,28 @@
     3. Generate a structured, elaborated representation of the mirrored concept. 
     
     ### INPUTS: 
-    - Concept Pair: $concept-pair (format: Concept1@Concept2) 
+    - Concept Pair: $concept-pair (format: concept1@concept2) 
     - Property Vector: $property-vector (8 properties with relevance degrees) 
     
     ### Instructions: 
-    - Split the concept pair using <@> into Concept1 and Concept2. 
+    - Split the concept pair using <@> into concept1 and concept2. 
     - Use the **property vector** to identify meaningful structural parallels. 
     - **Emphasize properties with a degree > 0** — they hold emergent, relevant insights. 
     - All properties should be referenced, but those above 0 contribute more to the blend. 
     
     ### Method: 
-    - **Composition**: Map structural or behavioral parallels between Concept1 and Concept2. 
+    - **Composition**: Map structural or behavioral parallels between concept1 and concept2. 
     - **Completion**: Fill in missing or implicit structural roles. 
     - **Elaboration**: Extend the mirrored mapping into a more abstract or insightful idea. 
     
     ### Output Format: 
     Return only: 
-    "(Mirror (expand Concept1 Concept2) BlendedConcept (extended deeperInterpretation))" 
+    "(Mirror (expand concept1 concept2) blendedconcept (extended deeperInterpretation))" 
     
     ### Examples: 
-    - "(Mirror (expand immuneSystem cybersecurity) adaptiveDefense (extended threatDetection))" 
-    - "(Mirror (expand neuralNetwork socialNetwork) connectivityDynamics (extended informationExchange))" 
-    - "(Mirror (expand river trafficFlow) fluidMovement (extended continuousNavigation))" 
+    - "(Mirror (expand immuneSystem cybersecurity) adaptivedefense (extended threatDetection))" 
+    - "(Mirror (expand neuralNetwork socialNetwork) connectivitydynamics (extended informationExchange))" 
+    - "(Mirror (expand river trafficFlow) fluidmovement (extended continuousNavigation))" 
     
     ### Output Rules: 
     - DO NOT include quotes, backticks, or explanations. 

@@ -34,13 +34,13 @@ _sentence_model = None
 def get_sentence_model():
     global _sentence_model
     if _sentence_model is None:
-        print("Loading sentence transformer model...")
+        # print("Loading sentence transformer model...")
         _sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
-        print("Model loaded.")
+        # print("Model loaded.")
     return _sentence_model
 
 def compute_average_pairwise_similarity(properties):
-    print(f"Computing average pairwise similarity for properties: {properties}")
+    # print(f"Computing average pairwise similarity for properties: {properties}")
     model = get_sentence_model()
     threshold = 0.5
 
@@ -52,7 +52,7 @@ def compute_average_pairwise_similarity(properties):
     
     embeddings = model.encode(properties_clean, convert_to_numpy=True)
     sim_matrix = cosine_similarity(embeddings)
-    print(f"Similarity matrix:\n{sim_matrix}")
+    # print(f"Similarity matrix:\n{sim_matrix}")
     pairwise = []
 
     for i in range(n):
@@ -60,5 +60,5 @@ def compute_average_pairwise_similarity(properties):
             pairwise.append(sim_matrix[i][j])
 
     score = float(np.mean(pairwise)) if pairwise else 0.0
-    print(f"Average pairwise similarity score: {score}")
+    # print(f"Average pairwise similarity score: {score}")
     return score

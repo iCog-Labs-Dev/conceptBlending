@@ -30,7 +30,7 @@
 (= (e) 2.71828)
 
 ;;;; STRATEGY PARAMETERS ;;;;
-(= (GENERATIONS) 30)
+(= (GENERATIONS) 50)
 (= (POPULATION_SIZE) 0)
 (= (lambda_) (if (<= (POPULATION_SIZE) 0) (+ 4 (round-math (* 3 (log-math (e) (dim))))) (POPULATION_SIZE)))
 (= (mu) (/ (lambda_) 2))
@@ -51,7 +51,7 @@
 
 ;;;; POPULATION FITNESS SCORE CALCULATION ;;;;
 (= (population-fitness-score $population)
-    (map-atom $population $x (mu-hqblend $x (concept1) (concept2)))
+    (map-atom $population $x (mu-hqblend $x (eval (concept1)) (eval (concept2))))
 )
 
 ;;;; POPULATION FITNESS SCORE CALCULATION FOR TESTING ;;;;
@@ -66,8 +66,6 @@
     $result
     )
 )
-
-; !(population-fitness-score-test ((1 0 1 0 1 0 1 0) (0 1 0 1 0 1 0 1) (1 1 0 1 1 0 1 0) (0 0 1 1 0 0 1 0) (1 0 1 1 1 1 0 1) (1 1 1 1 1 0 0 1) (0 0 0 1 1 0 1 1) (1 1 0 0 0 0 1 1)))
 
 (= (update-mean $samples $mu $weights $fitness-fn)
   (let $fitness-score ($fitness-fn $samples)
@@ -85,9 +83,6 @@
   )
 )
 
-; !(update-mean ((2 0) (4 4) (8 2)) 3 (0.5 0.3 0.2) (population-fitness-score-test))
-
-
 (= (moedd-update-mean $samples $mu $weights $fitness-fn $iter)
   (let ($unscalarized-fit-score $scalarized-fit-score) ($fitness-fn $samples $iter)
     (let $fit-ind-pairs (pair-index-fitness (make-indices $scalarized-fit-score) $scalarized-fit-score)
@@ -99,13 +94,6 @@
     )
   )
 )
-
-(= (mock-moedd-fitness $samples $iter)
-    ((10 20 30) (0.1 0.2 0.3))
-)
-
-; Test moedd-update-mean selection behavior
-; !(moedd-update-mean ((1 2) (3 4) (5 6)) 2 (0.6 0.4) mock-moedd-fitness 0)
     
 
 (= (update-mean-test $samples $mu $weights)
@@ -124,15 +112,10 @@
   )
 )
 
-; !(update-mean-test ((2 0) (4 4) (8 2)) 3 (0.5 0.3 0.2))  
-
 
 (= (y $new-mean $old-mean $step-size)
   (let $mean-diff (vector-op $new-mean $old-mean -) (scalar-op $mean-diff $step-size /))
 )
-
-; !(y (0.3 0.4 0.6 0.2 0.8 0.1 0.5 0.8) (0.2 0.7 0.3 0.6 0.8 0.3 0.9 0.4) 0.34)
-
 
 (= (new-p-sigma $c-sigma $p-sigma $mu-eff $c-inv-sqrt $y)
        (let* (
@@ -142,10 +125,6 @@
             (vector-op $m1-sigma-p-sigma $vec-mul-b2 +)
         )
 )
-
-; !(new-p-sigma 0.3196142529106335 (0 0) 3.1672992814107035 ((0 0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0) (0 0 0 0) (0 0 0) (0 0) (0)) (0.629276773868858 0.7029813694774427 0.17915574673512397 0.021359372554875078 0.5556770423164838 -1.1102230246251565e-16 -1.3877787807814457e-17 -5.551115123125783e-17))
-; !(mat-mat-mul (identity-matrice 3) (0.5 0.4 0.6))
-;  !(new-p-sigma 0.3 (0.1 0.2 0.3) 2 (identity-matrice 3) (0.5 0.4 0.6))
 
 ; ; ;;;; STEP SIZE ADAPTATION ;;;;
 
@@ -162,17 +141,12 @@
         )
 
 )
-; !(new-step-size 1 0.3196142529106335 1.3196142529106334 8 (0 0) 3.1672992814107035 ((0 0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0) (0 0 0 0) (0 0 0) (0 0) (0)) (0.629276773868858 0.7029813694774427 0.17915574673512397 0.021359372554875078 0.5556770423164838 -1.110223024625156516 -1.387778780781445717 -5.55111512312578317))
 
-
-; !(new-step-size 0.5 0.3 1.5 3 (0.2 0.4 0.6) 2 (identity-matrice 3) (0.5 0.4 0.6))
 ; ; ;;;; COVARIANCE EVOLUTION PATH ADAPTATION ;;;;
 
 (= (h-sigma $p-sigma $c-sigma $gen)
     (1or0 (< (/ (l2-norm $p-sigma) (sqrt-math (- 1 (pow-math (- 1 $c-sigma) (* 2 (+ $gen 1)))))) (+ 1.4 (/ 2 (+ (dim) 1)))))
 )
-
-; !(h-sigma (0.2 0.3 0.4) 0.3 5)
 
 (= (p-c $prev-p-c $new-p-sigma $c-sigma $gen $y)
     (let $h-sigma (h-sigma $new-p-sigma $c-sigma $gen)
@@ -180,13 +154,9 @@
     )
 )
 
-; !(p-c (0.2 0.3 0.4) (0.5 0.6 0.7) 0.4 5 (0.1 0.2 0.3))
-
 (= (delta $selected $old-mean)
  (mat-mat-eles-op $selected ($old-mean) -)
 )
-
-; !(delta ((0.5 0.6 0.7) (0.2 0.3 0.4) (0.1 0.2 0.3)) (0.2 0.3 0.4))
 
 (= (rank-mu $weights $selected $old-mean)
     (let $delta (delta $selected $old-mean)
@@ -198,8 +168,6 @@
     )
 )
 
-;  !(rank-mu (0.4 0.3 0.3) ((0.5 0.6 0.7) (0.2 0.3 0.4) (0.1 0.2 0.3)) (0.2 0.3 0.4))
-
 (= (new-cov $prev-cov $prev-p-c $new-p-sigma $c-sigma $gen $y $weights $selected $old-mean)
     (let ($new-p-c $rank-mu) ((p-c $prev-p-c $new-p-sigma $c-sigma $gen $y) (rank-mu $weights $selected $old-mean))
         (let ($c1 $c-mu) ((c1) (c_mu))
@@ -209,8 +177,6 @@
         )
     )
 )
-
-; !(new-cov (identity-matrice 3) (0.2 0.3 0.4) (0.5 0.6 0.7) 0.4 5 (0.1 0.2 0.3) (0.4 0.3 0.3) ((0.5 0.6 0.7) (0.2 0.3 0.4) (0.1 0.2 0.3)) (0.2 0.3 0.4))
 
 (= (Thetha) 5.0)
 
@@ -232,14 +198,6 @@
     )
 )
 
-; !(pbi-scalarization (3 4) (1 2) (0.5 0.5))
-
-; (= (max-best-nd $best-nds $ref $iter $weights)
-;     (let $weight (index-atom $weights $iter) 
-;     (let $res (map-atom $best-nds $best-nd (pbi-scalarization (index-atom $best-nd 1) $ref $weight))
-;     (let ($zipped-res $max-val) ((zip-list $best-nds $res) (max-atom $res)) (max-best-nd-helper $max-val $zipped-res))))
-; )
-
 (=(max-best-nd $best-nds $ref $iter $weights) 
     (let* (
         ($weight (index-atom $weights $iter))
@@ -253,15 +211,6 @@
     $result
     )
 )
-
-;    !(max-best-nd (
-;       ((b) (0.4 0.6))
-;       ((c) (0.6 0.4))
-;       ((d) (0.8 0.2)))
-
-;    (0 0)
-;    1
-;    ((0.2 0.8) (0.5 0.5) (0.8 0.2)))
 
 !(bind! &single-cma-es-inputspace (new-space))
 (= (add-to-single-cma-es-inputspace)
@@ -287,7 +236,7 @@
 
 (= (cma-es-single-iteration $fitness-fn)
     (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen $stall) (match &single-cma-es-inputspace (Inputs $x) $x)
-        (if (>= $stall 5)                         ; patience = 5 gens
+        (if (and (>= $stall 5) (>= $best-fitness 0.05))
           ($best-pop $best-fitness)             
           (let*
             (
@@ -315,10 +264,10 @@
         )
 )
 
-(= (Eval) False)
+(= (Eval) True)
 
 ; !(cma-es-main-loop)
-; !(blend cma-es-main-loop (Eval))
+!(blend cma-es-main-loop (Eval))
 
 !(bind! &multi-single-iteration-cma-es-inputspace (get-space))
 (= (add-to-multi-single-iteration-cma-es-inputspace)
@@ -407,4 +356,5 @@
 )
 
 ; !(moedd-cma-es-main-loop)
-!(blend moedd-cma-es-main-loop (Eval))
+; !(blend moedd-cma-es-main-loop (Eval))
+

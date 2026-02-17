@@ -72,12 +72,12 @@
             ($_ (println! (Good-reason Value: $good-reason-res)))
         )
         (
-            Evaluating Integration OP:- $integration-res
-            Evaluating Metonymy OP:- $metonymy-res
-            Evaluating Unpacking OP:- $unpacking-res
-            Evaluating Web OP:- $web-res
-            Evaluating Topology OP:- $topology-res
-            Evaluating Good-Reason OP:- $good-reason-res
+            $integration-res
+            $metonymy-res
+            $unpacking-res
+            $web-res
+            $topology-res
+            $good-reason-res
         )
     )
 )

@@ -5,7 +5,7 @@
 3. Generate a concise, single-term elaboration.
 
 ### INPUTS:
-- Concept Pair: $concept-pair (format: Concept1@Concept2)
+- Concept Pair: $concept-pair (format: concept1@concept2)
 - Property Vector: $property-vector (tuple of 8 properties with degrees)
 
 ### Method:
@@ -15,18 +15,18 @@
 - However, **all properties should be acknowledged** when reasoning.
 
 ### Blending Steps:
-- **Composition** – Identify the **vital relation** between Concept1 and Concept2.
+- **Composition** – Identify the **vital relation** between concept1 and concept2.
 - **Completion** – Add relevant **background knowledge** to enhance the blend.
 - **Elaboration** – Produce a **single-term abstraction** that fuses the concepts meaningfully.
 
 ### Format:
 Return only:
-"(simplexBlend (expand Concept1 Concept2) BlendedConcept (extended AbstractedElaboration))"
+"(Simplex (expand concept1 concept2) blendedconcept (extended AbstractedElaboration))"
 
 ### Examples:
-- "(Simplex (expand electricity waterFlow) circuitHydraulics (extended energyFlowMechanics))"
+- "(Simplex (expand electricity waterFlow) circuithydraulics (extended energyFlowMechanics))"
 - "(Simplex (expand genetics computing) bioinformatics (extended computationalEvolution))"
-- "(Simplex (expand painting music) visualSymphony (extended rhythmicColorTheory))"
+- "(Simplex (expand painting music) visualsymphony (extended rhythmicColorTheory))"
 
 ### Output Rules:
 - DO NOT include quotes, backticks, or brackets around the output.

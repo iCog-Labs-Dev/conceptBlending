@@ -6,11 +6,11 @@
 3. Elaborate the final blend by adding deeper emergent insight.
 
 ### INPUTS:
-- Concept Pair: $concept-pair (format: Concept1@Concept2)
+- Concept Pair: $concept-pair (format: concept1@concept2)
 - Property Vector: $property-vector (8 properties with degrees)
 
 ### Instructions:
-- Parse Concept1 and Concept2 from the concept pair string.
+- Parse concept1 and concept2 from the concept pair string.
 - Use the property vector to understand feature relevance.
 - Focus especially on **properties with degree > 0** — they carry emergent weight.
 - Blend the concepts through independent expansion, conflict resolution, and abstraction.
@@ -22,13 +22,13 @@
 
 ### Output Format:
 Return only one line like this:
-"(doubleScope (expand Concept1 Concept2) BlendedConcept (extended ElaboratedConcept))"
+"(doubleScope (expand Concept1 Concept2) blendedconcept (extended ElaboratedConcept))"
 
 ### Example:
-- "(doubleScope (expand emotion mathematics) emotionalQuantification (extended affectiveComputationalFramework))"
+- "(doubleScope (expand emotion mathematics) emotionalquantification (extended affectiveComputationalFramework))"
 
 ### Output Rules:
 - DO NOT use quotes, backticks, or extra explanation.
-- For the BlendedConcept, consider just combining the two concepts(during combining, you should chose the best order of the concepts so that the formed combination gives correct meaning) if it gives a clearer insight, instead of trying to find a complex synthesis.
+- For the BlendedConcept, consider just combining the two concepts(during combining, you should choose the best order of the concepts so that the formed combination gives correct meaning, e.g you should prefer batman instead of manbat) if it gives a clearer insight, instead of trying to find a complex synthesis.
 - Return only a single valid MeTTa expression in the format specified.)
 )

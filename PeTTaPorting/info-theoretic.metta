@@ -10,15 +10,15 @@
 (= (get-prop-value-pairs $concept)
     (let (Concept $x $y) $concept (cdr-atom $y))
 )
-;  !(get-prop-value-pairs (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
+
 (= (get-property $prop-value-pair)
     (let ($x $y) $prop-value-pair $x)
 )
-; !(get-property (web-creation 0.1))
+
 (= (get-properties $prop-value-pairs)
     (map-atom $prop-value-pairs get-property)
 )
-; !(get-properties ((web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)))
+
 (= (get-value $property)
     (let ($x $y) $property $y)
 )
@@ -26,53 +26,45 @@
 (= (get-values $properties)
     (map-atom $properties get-value)
 )
-; !(get-values ((web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)))
 
 ; ###################### Calculate product of two properites ##########################
 
 (= (property-product $properties1 $properties2)
-    (let
-        ($property1values $property2values $properties)
-        (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1))))
-        (list-multiply $property1values $property2values $properties)
+    (let ($property1values $property2values $properties)
+            (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1))))
+                (list-multiply $property1values $property2values $properties)
     )
 )
 
-; ! (property-product ((web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8)) ((web-creation 0.2) (intelligence 0.4) (physical-strength 0.5) (mobility 0.9)))
 ; ###################### Calculate Number of properties #####################
 
-
 (= (get-number-of-properties $concept)
-    (let* (
-        ($a $concept)
-        ($b (superpose $a))
-    )
-        (if (is-expr $b)
-            (let $c (cdr-atom $b)
-                (size-atom $c))
-                (empty)
+    (let*
+        (
+            ($a $concept)
+            ($b (superpose $a))
         )
-    
-     )
+        (if (is-expr $b)
+            (let $c (cdr-atom $b) (size-atom $c))
+            (empty)
+        )
+    )
 )
 
-; !(get-number-of-properties (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
 
-(=(decimal $number)
+(= (decimal $number)
     (+ $number 0.0)
 )
 
-(=(property-probability $concept)
-    (let*(
-        ($numberofprops (get-number-of-properties $concept))
-        ($probability (/ 1.0 (decimal $numberofprops)))
-    )
-    $probability
+(= (property-probability $concept)
+    (let*
+        (
+            ($numberofprops (get-number-of-properties $concept))
+            ($probability (/ 1.0 (decimal $numberofprops)))
+        )
+        $probability
     )
 )
-
-; !(property-probability (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
-
 
 ; ###################### Calculate Degree function ##########################
 
@@ -80,144 +72,98 @@
    (py-call (round $number $digits))
 )
 
-(=(property-degree $concept)
-    (let*(
-        ($probability (property-probability $concept))
-        ($degree (* -1 (log 10 $probability)))
-    )
+(= (property-degree $concept)
+    (let*
+        (
+            ($probability (property-probability $concept))
+            ($degree (* -1 (log 10 $probability)))
+        )
         (py-round $degree 2)
     )
 )
 
 ; ###################### Calculate min and max for Concepts ##########################
 
-;  !(property-degree (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
-
 (=(property-min $concept $concept2)
-    (let*(
-        (($properties1 $properites2) (collapse(superpose ((get-prop-value-pairs $concept) (get-prop-value-pairs $concept2)))))
-        (($properties1values $properties2values $properties) (collapse (superpose ((get-values $properties1) (get-values $properites2) (get-properties $properties1)))))
-
-    )
+    (let*
+        (
+            (($properties1 $properites2) (collapse(superpose ((get-prop-value-pairs $concept) (get-prop-value-pairs $concept2)))))
+            (($properties1values $properties2values $properties) (collapse (superpose ((get-values $properties1) (get-values $properites2) (get-properties $properties1)))))
+        )
         (min-elements $properties1values $properties2values $properties)
     )
 )
 
-(=(property-max $concept1 $concept2)
-    (let*(
-        (($properties1 $properties2) (collapse(superpose((get-prop-value-pairs $concept1) (get-prop-value-pairs $concept2)))))
-        ; ($_ (println! (pmax $properties1 $properties2)))
-        (($properties1values $properties2values $properties) (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1)))))
-    )
+(= (property-max $concept1 $concept2)
+    (let*
+        (
+            (($properties1 $properties2) (collapse(superpose((get-prop-value-pairs $concept1) (get-prop-value-pairs $concept2)))))
+            (($properties1values $properties2values $properties) (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1)))))
+        )
         (max-elements $properties1values $properties2values $properties)
     )
 )
 
 (= (mu-emergence $candidate-degrees $properties-max)
-    (let* (
-        ; ($_ (println! Starting-mu-emergence))
-        (($propertiesvalues $properties) ((get-values $properties-max) (get-properties $properties-max)))
-        ; ($_ (println! (Properties-values $propertiesvalues)))
-        ($result (list-subtract $candidate-degrees $propertiesvalues $properties))
-        ; ($_ (println! (Mu-emergence-end $result)))
-    )
+    (let* 
+        (
+            (($propertiesvalues $properties) ((get-values $properties-max) (get-properties $properties-max)))
+            ($result (list-subtract $candidate-degrees $propertiesvalues $properties))
+        )
         $result
     )
 )
 
-;  !(mu-emergence (0.5 0.3 0.2 0.9) ((web-creation 0.1) (intelligence 0.3) (strength 0.5) (mobility 0.8)) )
-
 ; ###################### Calculate mu hq blend ##########################
 
 (= (mu-hqblend $candidate-degrees $concept1 $concept2)
-    (let*(
-        ($properties-max (property-max $concept1 $concept2))
-        ($properties-min (property-min $concept1 $concept2))
-        ($mu-emer (mu-emergence $candidate-degrees $properties-max))
-        
-        ($product-emer-min (property-product $mu-emer $properties-min))
-        
-        ($product-emer-min-nums (get-values $product-emer-min))
-        ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
-        ($num-properties (size-atom $product-emer-min))
-        ($1-over-prop (/ 1.0 (decimal $num-properties)))
-        ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
-    )
+    (let*
+        (
+            ($properties-max (property-max $concept1 $concept2))
+            ($properties-min (property-min $concept1 $concept2))
+            ($mu-emer (mu-emergence $candidate-degrees $properties-max))
+            
+            ($product-emer-min (property-product $mu-emer $properties-min))
+            
+            ($product-emer-min-nums (get-values $product-emer-min))
+            ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
+            ($num-properties (size-atom $product-emer-min))
+            ($1-over-prop (/ 1.0 (decimal $num-properties)))
+            ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
+        )
         (min-atom ($1-over-prop-summation))
     )
 )
 
-;  !(mu-hqblend (0.5 0.3 0.2 0.9) (batman) (spiderman) )
-
-(= (cons-blend-properties $concept1 $blend-prop-values)
-    (let (Concept $concpair $properties) $concept1
-        (let ($length $props) ((size-atom $blend-prop-values) (cdr-atom $properties))
-            (collapse(superpose
-                (
-                    (if (>= (- $length 1) 0) (let $prop0 (index-atom $props 0) (let ($prop0name $blendprop0val) ((car-atom $prop0) (index-atom $blend-prop-values 0)) ($prop0name $blendprop0val))) (empty))
-                    (if (>= (- $length 2) 0) (let $prop1 (index-atom $props 1) (let ($prop1name $blendprop1val) ((car-atom $prop1) (index-atom $blend-prop-values 1)) ($prop1name $blendprop1val))) (empty))
-                    (if (>= (- $length 3) 0) (let $prop2 (index-atom $props 2) (let ($prop2name $blendprop2val) ((car-atom $prop2) (index-atom $blend-prop-values 2)) ($prop2name $blendprop2val))) (empty))
-                    (if (>= (- $length 4) 0) (let $prop3 (index-atom $props 3) (let ($prop3name $blendprop3val) ((car-atom $prop3) (index-atom $blend-prop-values 3)) ($prop3name $blendprop3val))) (empty))
-                    (if (>= (- $length 5) 0) (let $prop4 (index-atom $props 4) (let ($prop4name $blendprop4val) ((car-atom $prop4) (index-atom $blend-prop-values 4)) ($prop4name $blendprop4val))) (empty))
-                    (if (>= (- $length 6) 0) (let $prop5 (index-atom $props 5) (let ($prop5name $blendprop5val) ((car-atom $prop5) (index-atom $blend-prop-values 5)) ($prop5name $blendprop5val))) (empty))
-                    (if (>= (- $length 7) 0) (let $prop6 (index-atom $props 6) (let ($prop6name $blendprop6val) ((car-atom $prop6) (index-atom $blend-prop-values 6)) ($prop6name $blendprop6val))) (empty))
-                    (if (>= (- $length 8) 0) (let $prop7 (index-atom $props 7) (let ($prop7name $blendprop7val) ((car-atom $prop7) (index-atom $blend-prop-values 7)) ($prop7name $blendprop7val))) (empty))
-                    (if (>= (- $length 9) 0) (let $prop8 (index-atom $props 8) (let ($prop8name $blendprop8val) ((car-atom $prop8) (index-atom $blend-prop-values 8)) ($prop8name $blendprop8val))) (empty))
-                    (if (>= (- $length 10) 0) (let $prop9 (index-atom $props 9) (let ($prop9name $blendprop9val) ((car-atom $prop9) (index-atom $blend-prop-values 9))($prop9name $blendprop9val))) (empty))
-                )
-            ))
-        )
-    )    
-)
-
-;!(cons-blend-properties (spiderman) (0.15 0.35 0.55 0.85))
-
-(=(sum-list $list)
+(= (sum-list $list)
     (foldl-atom $list 0 $acc $x (+ $acc $x))
 )
 
-; !(sum-list (1 2 3 4 5))
+(= (log2 $num) (log-math 2 $num))
 
+(= (-vee $num) (- 0.0 $num))
 
-(=(log2 $num) (log-math 2 $num))
-
-; !(log2 8)
-
-(=(-vee $num) (- 0.0 $num))
-
-; !(-vee 5)
-
-(=(shannon-entropy $p) (if (or (<= $p 0) (>= $p 1))
-    0
-    (* $p (log2 $p))
-
-))
-
-; !(shannon-entropy 0.5)
-
-(=(binary-shannon-entropy $p)
+(= (shannon-entropy $p) 
     (if (or (<= $p 0) (>= $p 1))
-    0
-    (- (* (-vee $p) (log2 $p)) (* (- 1 $p) (log2 (- 1 $p)))
+        0
+        (* $p (log2 $p))
     )
 )
+
+(= (binary-shannon-entropy $p)
+    (if (or (<= $p 0) (>= $p 1))
+        0
+        (- (* (-vee $p) (log2 $p)) (* (- 1 $p) (log2 (- 1 $p))))
+    )   
 )
 
-; !(binary-shannon-entropy 0.5)
-
-(=(custom-cons-atom $elem $list)
+(= (custom-cons-atom $elem $list)
     (cons-atom $elem $list)
 )
 
-; !(test (custom-cons-atom 42 (1 2 3)) (42 1 2 3))
-
-(=(compute-entropy $list)
-    (foldl-atom $list 0 $acc $x (- $acc (shannon-entropy $x))
+(= (compute-entropy $list)
+    (foldl-atom $list 0 $acc $x (- $acc (shannon-entropy $x)))
 )
-)
-
-; !(test (compute-entropy (0.5 0.5)) 1.0)
-
 
 (= (joint-entropy-pairwise $pi $pj $mode)
         (let $p11 (if (== $mode min) (let $pp11 (min-atom($pi $pj))  $pp11) (let $pp11 (* $pi $pj) $pp11)) 
@@ -239,26 +185,21 @@
     (collapse (joint-entropy-pairwise $i (superpose $list) $mode))
 )
 
-;  !(joint-entropy-compute-helper 0.9 (0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
-; !(joint-entropy-compute-helper 0.9 (0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
-
-
-
 (=(joint-entropy-compute $candidate $mode)
-    (if (== $candidate ()) () (let* (
-          ($head (car-atom $candidate))
-          ($tail (cdr-atom $candidate))
-          ($jentropy (if (== $tail ()) () (joint-entropy-compute-helper $head $tail $mode)))
-          ($tentropy (eval (joint-entropy-compute $tail $mode)))
-          ($result (union-atom $jentropy $tentropy))
+    (if (== $candidate ()) 
+        ()
+        (let* 
+            (
+                ($head (car-atom $candidate))
+                ($tail (cdr-atom $candidate))
+                ($jentropy (if (== $tail ()) () (joint-entropy-compute-helper $head $tail $mode)))
+                ($tentropy (eval (joint-entropy-compute $tail $mode)))
+                ($result (union-atom $jentropy $tentropy))
+            )
+            $result
+        )
     )
-    $result
-    ))
 )
-
-; !(joint-entropy-compute (0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7) min)
-; !(joint-entropy-pairwise 0.9 0.9 min) ; (0.46899559358928117)
-; !(joint-entropy-compute-helper 0.9 (0.9 0.0 0.8 0.2 0.9 0.7 0.7) min) ; ((0.46899559358928117 0.46899559358928117 0.9219280948873622 1.1567796494470395 0.46899559358928117 1.1567796494470395 1.1567796494470395))
 
 (= (total-correlation-entropy $candidate $mode)
         (let (map-atom $candidate $elem (binary-shannon-entropy $elem)) $indiv-entropy
@@ -281,37 +222,20 @@
         )
 )
 
-;  !(total-correlation-entropy (0.9 0.0 0.8 0.2 0.9 0.7 ) min)
-
 (= (Alpha) 0.3)
 
-; (= (coherence $props $degrees)
-;     (let $tc (total-correlation-entropy $degrees min)
-;         (let $tv (isnan-math $tc)
-;             (let $ftc (if $tv 0 $tc)
-;                 (let $sim (semantic-correlation $props $degrees) (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim)))        
-;             )        
-;         )
-;     )
-; )
-
-(=(coherence $props $degrees) 
+(= (coherence $props $degrees) 
     (let* (
-        ($tc (total-correlation-entropy $degrees min))
-        ($tv (isnan-math $tc))
-        ($ftc (if $tv 0 $tc))
-        ($sim (semantic-correlation $props $degrees))
-        ; ($_ (println! ("Total Correlation: " $ftc " Semantic Similarity: " $sim)))
-    )
+            ($tc (total-correlation-entropy $degrees min))
+            ($tv (isnan-math $tc))
+            ($ftc (if $tv 0 $tc))
+            ($sim (semantic-correlation $props $degrees))
+        )
         (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim))        
     )
 )
 
-
-; !(coherence (intelligence physical-strength agility) (0.3 0.7 0.6))
-
-
-(=(objectives $concept1 $concept2 $candidate-degree)
+(= (objectives $concept1 $concept2 $candidate-degree)
     (let* (
         ($prop-val-pairs (get-prop-value-pairs $concept1))
         ($props (get-properties $prop-val-pairs))
@@ -320,8 +244,6 @@
         (collapse(superpose((mu-hqblend $candidate-degree $concept1 $concept2) (coherence $props $candidate-degree)))
     ))
 )
-
-; !(objectives (spiderman) (batman) (0.5 0.3 0.2 0.9))
 
 (= (dominates $u $v)
     (and (all-true (compare-lists $u $v >=)) (any-true (compare-lists $u $v >)))
@@ -443,29 +365,8 @@
     )    
 )
 
-(= (py-str-helper-h () $outp) $outp)
-
-(= (py-str-helper-h $L $outp)
-   (let* (($head (car-atom $L))
-          ($tail (cdr-atom $L))
-          ($outp2
-            (if (== $outp "")
-                ;; first token → no leading space
-                (py-call (operator.add $outp (py-call (str $head))))
-                ;; subsequent tokens → prepend space
-                (py-call (operator.add
-                          (py-call (operator.add $outp " "))
-                          (py-call (str $head)))))))
-     (py-str-helper-h $tail $outp2)))
-
-(= (py-str-h $L)
-   (py-str-helper-h $L ""))
-(= (uppercase-converter $arg) (let $str-arg (py-str-h $arg) (py-call (uppercase_changer.upper_to_small_case $str-arg))))
-
-
-
 (= (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend $blendproperties))
-    (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations ($input1)) (get-concept-relations ($input2)) (get-concept-relations ($blend)))))
+    (let ($con1rels $con2rels $blenrels) (collapse(superpose((get-concept-relations $input1 10) (get-concept-relations $input2 10) (get-concept-relations $blend 10))))
         (let ((Concept $conpair1 $propsc1) (Concept $conpair2 $propsc2)) ($concept1 $concept2)
             (let ($formattedcon1 $formattedcon2 $formattedblend) (collapse(superpose((let $conce1rels (cons-atom Relations $con1rels) (Concept $input1 $propsc1 $conce1rels)) 
                                                                                     (let $conce2rels (cons-atom Relations $con2rels) (Concept $input2 $propsc2 $conce2rels))   
@@ -475,56 +376,45 @@
     )
 )
 
-(= (format-result $target $text)
+(= (format-result $target $text $rel $concept)
    (if (== $text NA)
-       ($target nA)
-       ($target $text)
+       ($concept $rel $target)
+       ($concept $rel $target $text)
    )
 )
 
 (= (fetch-context $concept $n)
    (let $contexts (collapse(match &space
        (surfaceText ($rel $concept $target) $text)
-       (format-result $target $text)
+       (format-result $target $text $rel $concept)
    )) (first-n-elements $contexts $n))
 )
 
-; !(fetch-context bat 10)
-; !(fetch-context man 10)
+; Returns a list of relation expressions like (isa feline) (hasa whiskers) ...
+(= (get-concept-relations $concept $n)
+    (let $rels (collapse(match &space ($rel $concept $var) ($rel $var))) (first-n-elements $rels $n))
+)
+
 (= (context-preprocesser $input1 $input2 $n)
     (let ($context1 $context2) (collapse(superpose((fetch-context $input1 $n) (fetch-context $input2 $n))))
-        ; (let $_ (println! (Contexts (Bat Context $context1 Man Context $context2))) 
-            (gpt-context-preprocessing $input1 $context1 $input2 $context2)
-        ; )
+        (gpt-context-preprocessing $input1 $context1 $input2 $context2)
     )
 )
 ; ;;;; Vital Relation Extraction ;;;;
 (= (vit-rel-extraction $input1 $input2 $n)
     (let $context (context-preprocesser $input1 $input2 $n) 
-        ; (let $_ (println! (Context $context))
-            (let ($vital-relation-1 $vital-relation-2) (gpt-vital-relation $input1 $input2 $context)
-        (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations)))
-        ; )
+        (let ($vital-relation-1 $vital-relation-2) (gpt-vital-relation $input1 $input2 $context)
+            (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))
+        )
     )
 )
 
 ; ;;;; Vector Extraction ;;;;
 (= (vec-extraction $input1 $input2 $n)
     (let $vital-relations (vit-rel-extraction $input1 $input2 $n)
-        ; (let $_ (println! (Vital-relations $vital-relations))
-            (let $vec-concepts (gpt-vector-extraction $input1 $input2 $vital-relations) $vec-concepts)
-        ; )
+        (let $vec-concepts (gpt-vector-extraction $input1 $input2 $vital-relations) $vec-concepts)
     )
 )
-
-; !(vec-extraction bat man)
-; !(context-preprocesser bat man 10)
-; !(vit-rel-extraction bat man 10)
-; !(vec-extraction bat man 10)
-
-
-; (= (Input1) bat)
-; (= (Input2) man)
 
 ; ;;;; Amount of contexts to load form the concept-atomspace for both concepts
 (= (Context-param) 10)
@@ -535,11 +425,6 @@
         (superpose((add-atom &self (= (concept1) $concept1)) (add-atom &self (= (concept2) $concept2))))
     )
 )
-
-; !(add-concepts)
-
-; !(concept1)
-; !(concept2)
 
 (= (multi-objective-check $best-sample-with-fitness)
     (let $one-sample (index-atom $best-sample-with-fitness 0)
@@ -552,29 +437,31 @@
     (let $best-fitness (index-atom $best-sample-with-fitness 1)
         (if (>= $best-fitness 0)
                 (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
-                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (concept1) (concept2)))
+                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (eval (concept1)) (eval (concept2))))
                         (let $blend ($network $concept-pair $best-cand-mu-emergence)
                             (if (== $eval True) 
-                            (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
-                                (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
-                                    (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
-                                        (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
-                                            (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                (Formed Blend: $blend-name
-                                                Evaluation-Metrics:
-                                                Integration: $integration-res
-                                                Good-reason: $good-reason-res
-                                                Unpacking: $unpacking-res
-                                                Web: $web-res
-                                                Topology: $topology-res
-                                                Metonymy: $metonymy-res
+                                (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
+                                    (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
+                                        (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
+                                            (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
+                                                (let $op-res (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                                                    (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) $op-res
+                                                        (Formed Blend: $blend-name
+                                                        Evaluation-Metrics:
+                                                        Integration: $integration-res
+                                                        Good-reason: $good-reason-res
+                                                        Unpacking: $unpacking-res
+                                                        Web: $web-res
+                                                        Topology: $topology-res
+                                                        Metonymy: $metonymy-res
+                                                        )                                                                
+                                                    )
                                                 )
                                             )
                                         )
                                     )
                                 )
-                            )
-                            $blend
+                                $blend
                             )
                         )
                     )
@@ -597,8 +484,8 @@
                                             (let $_ (println! (blend: $blend))
                                                 (if $eval
                                                     ;; -- Sub-Path A1: Eval is True --
-                                                    (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (concept1) $best-candidate))
-                                                        (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (concept1) (concept2))
+                                                    (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
+                                                        (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
                                                             (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
                                                                 (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
                                                                     (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
@@ -636,7 +523,7 @@
 
 (= (blend $SCMAorMCMA $eval)
     (let $generations (if (== $SCMAorMCMA moedd-cma-es-main-loop) Moedd-cma-gen GENERATIONS)
-        (let $final-pop ($SCMAorMCMA)                                    ;Moedd-cma-gen
+        (let $final-pop ($SCMAorMCMA)
             (let $best-sample-with-fitness (index-atom $final-pop (- ($generations) 1))
                 (let $_ (println! (Best-sample $best-sample-with-fitness))
                     (let $concept-pair (let (Concept $x $y) (concept1) $x)
@@ -644,8 +531,7 @@
                             (if (not (== $network None))
                                 (if (== $SCMAorMCMA moedd-cma-es-main-loop)
                                     (let $_ (println! (Type of CMA-ES: Multi-Objective CMA-ES | Selected Network: $network | Concept-pair: $concept-pair)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval))
-                                    ; (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval)
-                                    (let $_ (println! (Type of CMA-ES: Single-Objective CMA-ES | Selected Network: $network)) (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval))
+                                    (let $_ (println! (Type of CMA-ES: Single-Objective CMA-ES | Selected Network: $network | Concept-pair: $concept-pair)) (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval))
 
                                 )
                                 (Error $network NoNetworkSelected)
@@ -657,15 +543,3 @@
         )
     )
 )
-
-
-; (= (blend) (Blend spiderMan (Property (web_creation (spider)) (intelligence) (physical_strength) (mobility) (predatory_behavior (spider)) (social_structure) (symbolism) (tool_use)) (Relations (formOf spiderman) (isA human) (isA superhero)))
-; )
-
-; (= (concept1) (Concept man (Property (mobility 0.9) (intelligence 0.9) (web_creation 0.0) (social_structure 0.8) (predatory_behavior 0.2) (communication 0.9) (symbolism 0.7) (physical_strength 0.7)) (Relations (relatedTo person) (relatedTo man) (relatedTo boy)))
-; )
-
-; (= (concept2) (Concept spider (Property (web_creation 1.0) (intelligence 0.4) (physical_strength 0.6) (mobility 0.8) (predatory_behavior 1.0) (social_structure 0.2) (symbolism 0.7) (communication 0.1)) (Relations (capableOf spin_webs) (relatedTo spider) (isA arachnid)))
-; )
-
-; !(op-evaluater (blend) (concept1) (concept2))

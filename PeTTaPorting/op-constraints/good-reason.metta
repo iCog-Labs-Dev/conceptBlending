@@ -93,7 +93,7 @@
     (let ($blend-name $blend-context) ((blend-name $blend) (blend-context $blend)) 
         (let $default-prompt (default-prompt $properties $blend-name $blend-context) 
             ; (good-reason-llm $default-prompt)
-            (useGPT (py-str $default-prompt))
+            (eval (useGPT (py-str $default-prompt)))
         )
     )
 )
@@ -104,6 +104,7 @@
         (let* 
             (
                 ($llm-justification (llm-justification $emergents-list $blend))
+                ; ($_ (println! (LLM justification: $llm-justification)))
                 ($llm-result (py-call (op-helper-codes.llm_result ($llm-justification))))
 
                 ($sum-op-llm-justification (sum-op $llm-result))
