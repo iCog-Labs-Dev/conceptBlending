@@ -125,7 +125,7 @@
 
 ;!(identity-matrice 3)
 
-;; Generates list of N ones
+;; ###done
 (= (generate-toy-list $n)
 
     (if (<= $n 0)
@@ -240,7 +240,7 @@
          )))
 
 ;; --- Test ---
-!(mat-mat-eles-op ((1 2) (5 9)) (( 8 7) ( 2 1)) *)
+;!(mat-mat-eles-op ((1 2) (5 9)) (( 8 7) ( 2 1)) *)
 ;; Output: ((9 16 21) (24 25 24) (21 16 9))
 ############done
 ;; 1. Helper: Scalar multiplication
@@ -298,51 +298,53 @@
     (map-atom $matrice $x (vec-clip $x $lb $ub))
 )
 
+;; --- Internal Helper 1: Handles Columns (Triangular) ---
+(= (add-row-internal $row $r-idx $c-idx $lspace)
+   (if (or (== $row ()) (> $c-idx $r-idx))
+       ()
+       (let* (($val (car-atom $row))
+              ($rest (cdr-atom $row))
+              ;; Creates the label l00, l10, etc.
+              ($label (format-args l{}{} ($r-idx $c-idx)))
+              ($void (add-atom $lspace (cell $label $val)))
+              ($next-c (+ $c-idx 1)))
+         (add-row-internal $rest $r-idx $next-c $lspace))))
+
+;; --- Internal Helper 2: Handles Rows ---
+(= (add-rows-recursive $mat $r-idx $lspace)
+   (if (== $mat ())
+       ()
+       (let* (($row (car-atom $mat))
+              ($rest (cdr-atom $mat))
+              ($void (add-row-internal $row $r-idx 0 $lspace))
+              ($next-r (+ $r-idx 1)))
+         (add-rows-recursive $rest $next-r $lspace))))
+
+;; --- Main Function: Only 2 Inputs ---
 #######done
-;; 1. Internal Row Helper (Column counter $j)
-(= (add-row-internal () $lspace $i $j) ())
-(= (add-row-internal $row $lspace $i $j)
-   (let* (($val (car-atom $row))
-          ($tail (cdr-atom $row))
-          ($label (format-args l{}{} ($i $j)))
-          ($dummy (add-atom $lspace (cell $label $val)))
-          ($next-j (+ $j 1)))
-     (add-row-internal $tail $lspace $i $next-j)))
-
-;; 2. Internal Matrix Helper (Row counter $i)
-(= (add-lmat-internal () $lspace $i) ())
-(= (add-lmat-internal $mat $lspace $i)
-   (let* (($row (car-atom $mat))
-          ($rest (cdr-atom $mat))
-          ($ignore (add-row-internal $row $lspace $i 0))
-          ($next-i (+ $i 1)))
-     (add-lmat-internal $rest $lspace $next-i)))
-
-;; 3. Main Wrapper (The 2-argument function you wanted)
 (= (add-lmat-to-lspace $mat $lspace)
-   (add-lmat-internal $mat $lspace 0))
+   (add-rows-recursive $mat 0 $lspace))
 
-;; --- Setup and Test ---
-;!(bind! &lspace (new-space))
+;; --- Execution ---
+!(bind! &lspace (new-space))
+!(add-lmat-to-lspace ((1 2 3) (4 5 6) (7 8 9)) &lspace)
+!(let $result (collapse (match &lspace $x $x)) $result)
 
-;; Now it only takes two arguments!
-;!(add-lmat-to-lspace ((1 2 3) (4 5 6) (7 90 9)) &lspace)
-
-;; View the results
-;!(let $result (collapse (match &lspace $val $val)) $result)
-
-#####
+##### done
 (= (call-lik $lspace $i $k)
-   (let $str (format-args l{}{} ($i $k)) (match $lspace (cell $Str $x) $x))
+   (let $label (format-args l{}{} ($i $k))
+      (match $lspace (cell $label $x) $x)
+   )
 )
-
-#####
+#####done
 (= (call-ljk $lspace $j $k)
-    (let $str (format-args l{}{} ($j $k)) (match $lspace (cell $str $x) $x))
+    (let $label (format-args l{}{} ($j $k)) 
+        (match $lspace (cell $label $x) $x))
 )
 
+####done
 (= (call-mkj $mspace $k $j)
-(let $str (format-args l{}{} ($k $j)) (match $mspace (cell $str $x) $x))
+(let $label (format-args l{}{} ($k $j)) (match $mspace (cell $label $x) $x))
     
 )
 
@@ -409,24 +411,35 @@
 
 #####################
 (= (l00 $cov-matrice $lspace)
-    (let $a0 (index-atom $cov-matrice 0)
-        (let $a00 (index-atom $a0 0)
-            (let $l00 (sqrt-math $a00)
-                (let $add (add-atom $lspace (cell l00 $l00)) $l00)
-            )
-        )
-    )
-)
-
+    (let* (($a0 (index-atom $cov-matrice 0))
+            ($a00 (index-atom $a0 0))
+           ($l00 (sqrt-math $a00))
+           ;; Generate the label "l00" dynamically
+           ($label (format-args l{}{} (0 0)))
+           ($void (add-atom $lspace (cell $label $l00)))
+           
+           ) $l00)
+ )
 ##########################
+
 (= (l10 $cov-matrice $lspace)
-    (let ($a1 $l00) (collapse(superpose((index-atom $cov-matrice 1) (match $lspace (cell l00 $x) $x))))
-        (let $a10 (index-atom $a1 0)
-            (let $l10 (/ $a10 $l00)
-                (let $add (add-atom $lspace (cell l10 $l10)) $l10)
-            )
-        )
+    (let* (
+        ;; 1. Get the value of L00 from the space using dynamic label
+        ($l00 (match $lspace (cell (format-args l{}{} (0 0)) $x) $x))
+        
+        ;; 2. Get A10 from the covariance matrix
+        ($a1 (index-atom $cov-matrice 1))
+        ($a10 (index-atom $a1 0))
+        
+        ;; 3. Calculate L10 = A10 / L00
+        ($val (/ $a10 $l00))
+        
+        ;; 4. Generate the label "l10" and add to space
+        ($label (format-args l{}{} (1 0)))
+        ($void (add-atom $lspace (cell $label $val)))
     )
+    ;; Return the calculated value
+    $val)
 )
 
 ; (= (l11 $cov-matrice $lspace)
@@ -438,30 +451,49 @@
 ; )
 
 ################
-(=(l11 $cov-matrice $lspace)
+
+(= (l11 $cov-matrice $lspace)
     (let* (
+        ($label1 (format-args l{}{} (1 0)))
+        ;; 1. Fetch L10 from the space dynamically
+        ($l10 (match $lspace (cell $label1 $x) $x))
+        
+        ;; 2. Get A11 from the matrix
         ($a1 (index-atom $cov-matrice 1))
-        ($l10 (match $lspace (cell l10 $x) $x))
         ($a11 (index-atom $a1 1))
-        ($l11 (sqrt-math (- $a11 (pow-math $l10 2))))
-        ($add (add-atom $lspace (cell l11 $l11)))
-
+        
+        ;; 3. Calculate L11 = sqrt(A11 - L10^2)
+        ($val (sqrt-math (- $a11 (pow-math $l10 2))))
+        
+        ;; 4. Generate label "l11" and store the value
+        ($label (format-args l{}{} (1 1)))
+        ($void (add-atom $lspace (cell $label $val)))
     )
-    $l11
-    )
-
+    ;; Return the result
+    $val)
 )
+
 
 (= (l20 $cov-matrice $lspace)
-    (let ($a2 $l00) (collapse(superpose((index-atom $cov-matrice 2) (match $lspace (cell l00 $x) $x))))
-        (let $a20 (index-atom $a2 0)
-            (let $l20 (/ $a20 $l00)
-                (let $add (add-atom $lspace (cell l20 $l20)) $l20)
-            )
-        )
+    (let* (
+        ;; 1. Retrieve l00 from space using dynamic label
+        ($label1 (format-args l{}{} (0 0)))
+        ($l00 (match $lspace (cell $label1 $x) $x))
+        
+        ;; 2. Get A20 from the matrix
+        ($a2 (index-atom $cov-matrice 2))
+        ($a20 (index-atom $a2 0))
+        
+        ;; 3. Calculate L20 = A20 / L00
+        ($val (/ $a20 $l00))
+        
+        ;; 4. Store with dynamic label l20
+        ($label (format-args l{}{} (2 0)))
+        ($void (add-atom $lspace (cell $label $val)))
     )
+    ;; Return the result
+    $val)
 )
-
 (= (l21 $cov-matrice $lspace)
     (let ($a2 $l10 $l11 $l20) (collapse(superpose((index-atom $cov-matrice 2) (match $lspace (cell l10 $x) $x) (match $lspace (cell l11 $x) $x) (match $lspace (cell l20 $x) $x))))
         (let $a21 (index-atom $a2 1)
@@ -870,7 +902,7 @@
 )
 )
 
-; !(chol-decomp ((1 0 1) (0 1 1) (0 0 1)) &self)
+;!(chol-decomp ((1 0 1) (0 1 1) (0 0 1)) &self)
 
 #####################done
 (= (vec-inf-checker $vec)
@@ -884,6 +916,9 @@
          
          )
     ))
+
+
+
 
 ;; --- Test Case ---
 
@@ -901,48 +936,32 @@
           
      (if $res True (vec-NaN-checker $tail))))
 )
-;!(vec-NaN-checker (1 2 3))
+!(vec-NaN-checker (1 2 3))
 
+######done
 (= (Pos-definitness-checker $mat)
-    (let $res 
-        (let $rows (size-atom $mat)
-            (collapse
-                (superpose
-                    (
-                        (if (>= (- $rows 1) 0) (superpose((vec-NaN-checker (index-atom $mat 0)) (vec-inf-checker (index-atom $mat 0)))) (empty))
-                        (if (>= (- $rows 2) 0) (superpose((vec-NaN-checker (index-atom $mat 1)) (vec-inf-checker (index-atom $mat 1)))) (empty))
-                        (if (>= (- $rows 3) 0) (superpose((vec-NaN-checker (index-atom $mat 2)) (vec-inf-checker (index-atom $mat 2)))) (empty))
-                        (if (>= (- $rows 4) 0) (superpose((vec-NaN-checker (index-atom $mat 3)) (vec-inf-checker (index-atom $mat 3)))) (empty))
-                        (if (>= (- $rows 5) 0) (superpose((vec-NaN-checker (index-atom $mat 4)) (vec-inf-checker (index-atom $mat 4)))) (empty))
-                        (if (>= (- $rows 6) 0) (superpose((vec-NaN-checker (index-atom $mat 5)) (vec-inf-checker (index-atom $mat 5)))) (empty))
-                        (if (>= (- $rows 7) 0) (superpose((vec-NaN-checker (index-atom $mat 6)) (vec-inf-checker (index-atom $mat 6)))) (empty))
-                        (if (>= (- $rows 8) 0) (superpose((vec-NaN-checker (index-atom $mat 7)) (vec-inf-checker (index-atom $mat 7)))) (empty))
-                        (if (>= (- $rows 9) 0) (superpose((vec-NaN-checker (index-atom $mat 8)) (vec-inf-checker (index-atom $mat 8)))) (empty))
-                        (if (>= (- $rows 10) 0) (superpose((vec-NaN-checker (index-atom $mat 9)) (vec-inf-checker (index-atom $mat 9)))) (empty))
-                    )
-                )
-            )
-        )
-        (if (== $res ()) True False)
-    )
-)
-;!(Pos-definitness-checker ((1 2 3)))
-(= (Pos-definitness-checker1 $mat)
    (if (== $mat ())
-       True  ;; Base Case: All rows passed!
-
+       True  ;; Base case: All rows passed!
        (let* (($row (car-atom $mat))
-              ($tail (cdr-atom $mat))
-              ($res ((vec-inf-checker $row) (vec-NaN-checker $row))  (if (== $res ()) True (Pos-definitness-checker1 $tail)))
-         )
-         (if (== $res (())) True $res
-             
+              ($rest (cdr-atom $mat))
+              ;; Collapse row checks. If row is clean, this is ().
+              
+              ($row-errors (collapse (superpose ((vec-NaN-checker $row) 
+                                                 (vec-inf-checker $row))))))
+         (if (== $row-errors ())
+             (Pos-definitness-checker $rest) ;; Row clean, check the rest
+             False                           ;; Issue found, stop and return False
          )
        )
    )
 )
+
+;; --- Test ---
+
+;!(Pos-definitness-checker ((1 2 3)))
+
 ;!(==(()) (()))
-;!(Pos-definitness-checker1 ((1 2 3)))
+
 (= (-ve $number)
     (- 0.0 $number)
 )
@@ -955,13 +974,14 @@
     (/ (to-float $num) $denom)
 )
 
-
+##done
 (= (m00 $lspace $mspace)
     (let* (
-        ($l00 (match $lspace (cell l00 $x) $x))
+        ($label (format-args m{}{} (0 0)))
+        ($l00 (match $lspace (cell $label $x) $x))
         ($lspace1 (collapse(get-atoms $lspace)))
         ($m00 (div 1 $l00))
-        ($add (add-atom $mspace (cell m00 $m00)))
+        ($add (add-atom $mspace (cell $label $m00)))
     )
     $m00)
 )
@@ -977,22 +997,26 @@
 )
 
 
-
+####done
 (= (m11 $lspace $mspace)
     (let* (
-        ($l11 (match $lspace (cell l11 $x) $x))
+        ($labell (format-args l{}{} (1 1)))
+        ($labelm (format-args m{}{} (1 1)))
+        ($l11 (match $lspace (cell $labell $x) $x))
         ($m11 (div 1.0 $l11))
-        ($add (add-atom $mspace (cell m11 $m11)))
+        ($add (add-atom $mspace (cell $labelm $m11)))
     )
     $m11)
 )
 
-
+####done
 (= (m20 $lspace $mspace)
     (let* (
-        ($l22 (match $lspace (cell l22 $x) $x))
+        ($labell (format-args l{}{} (2 2)))
+        ($labelm (format-args m{}{} (2 0)))
+        ($l22 (match $lspace (cell $labell $x) $x))
         ($m20 (-ve (div (sum (inverse-cells-product 2 0 $lspace $mspace)) $l22)))
-        ($add (add-atom $mspace (cell m20 $m20)))
+        ($add (add-atom $mspace (cell $labelm $m20)))
     )
     $m20)
 )
@@ -1010,29 +1034,38 @@
     $m21)
 )
 
+#####done
 (= (m22 $lspace $mspace)
     (let* (
-        ($l22 (match $lspace (cell l22 $x) $x))
+        ($labell (format-args l{}{} (2 2)))
+        ($labelm (format-args m{}{} (2 2)))
+        ($l22 (match $lspace (cell $labell $x) $x))
         ($m22 (div 1.0 $l22))
-        ($add (add-atom $mspace (cell m22 $m22)))
+        ($add (add-atom $mspace (cell $labelm $m22)))
     )
     $m22)
 )
 
+####done
 (= (m30 $lspace $mspace)
     (let* (
-        ($l33 (match $lspace (cell l33 $x) $x))
+        ($labell (format-args l{}{} (3 3)))
+        ($labelm (format-args m{}{} (3 0)))
+        ($l33 (match $lspace (cell $labell $x) $x))
         ($m30 (-ve (div (sum (inverse-cells-product 3 0 $lspace $mspace)) $l33)))
-        ($add (add-atom $mspace (cell m30 $m30)))
+        ($add (add-atom $mspace (cell $labelm $m30)))
     )
     $m30)
 )
 
+####done
 (= (m31 $lspace $mspace)
     (let* (
-        ($l33 (match $lspace (cell l33 $x) $x))
+        ($labell (format-args l{}{} (3 3)))
+        ($labelm (format-args m{}{} (3 1)))
+        ($l33 (match $lspace (cell $labell $x) $x))
         ($m31 (-ve (div (sum (inverse-cells-product 3 1 $lspace $mspace)) $l33)))
-        ($add (add-atom $mspace (cell m31 $m31)))
+        ($add (add-atom $mspace (cell $labelm $m31)))
     )
     $m31)
 )
@@ -1049,38 +1082,48 @@
     $m32)
 )
 
+#########done
 (= (m33 $lspace $mspace)
     (let* (
-        ($l33 (match $lspace (cell l33 $x) $x))
+        ($labell (format-args l{}{} (3 3)))
+        ($labelm (format-args m{}{} (3 3)))
+        ($l33 (match $lspace (cell $labell $x) $x))
         ($m33 (div 1.0 $l33))
-        ($add (add-atom $mspace (cell m33 $m33)))
+        ($add (add-atom $mspace (cell $labelm $m33)))
     )
     $m33)
 )
-
+#####done
 (= (m40 $lspace $mspace)
     (let* (
-        ($l44 (match $lspace (cell l44 $x) $x))
+        ($labell (format-args l{}{} (4 4)))
+        ($labelm (format-args m{}{} (4 0)))
+        ($l44 (match $lspace (cell $labell $x) $x))
         ($m40 (-ve (div (sum (inverse-cells-product 4 0 $lspace $mspace)) $l44)))
-        ($add (add-atom $mspace (cell m40 $m40)))
+        ($add (add-atom $mspace (cell $labelm $m40)))
     )
     $m40)
 )
 
+#####done
 (= (m41 $lspace $mspace)
     (let* (
-        ($l44 (match $lspace (cell l44 $x) $x))
+        ($labell (format-args l{}{} (4 4)))
+        ($labelm (format-args m{}{} (4 1)))
+        ($l44 (match $lspace (cell $labell $x) $x))
         ($m41 (-ve (div (sum (inverse-cells-product 4 1 $lspace $mspace)) $l44)))
-        ($add (add-atom $mspace (cell m41 $m41)))
+        ($add (add-atom $mspace (cell $labelm $m41)))
     )
     $m41)
 )
 
 (= (m42 $lspace $mspace)
     (let* (
-        ($l44 (match $lspace (cell l44 $x) $x))
+        ($labell (format-args l{}{} (4 4)))
+        ($labelm (format-args m{}{} (4 2)))
+        ($l44 (match $lspace (cell $labell $x) $x))
         ($m42 (-ve (div (sum (inverse-cells-product 4 2 $lspace $mspace)) $l44)))
-        ($add (add-atom $mspace (cell m42 $m42)))
+        ($add (add-atom $mspace (cell $labelm $m42)))
     )
     $m42)
 )
@@ -1292,7 +1335,7 @@
     $m77)
 )
 
-#######done
+#######done 
 ;; --- Helper: Generate columns for a specific row ---
 (= (gen-inverse-cols $row-idx $num-cols $lspace $mspace)
    (if (== $num-cols 0)
@@ -1315,13 +1358,14 @@
               ($current-row (gen-inverse-cols $row-idx $num-cols $lspace $mspace)))
          (cons-atom $current-row $rest-rows))))
 
-;; --- Optimized Inverse Wrapper ---
+;; --- Inverse Wrapper ---
 ######done
 (= (inverse-lmatrice $lmatrice $lspace $mspace)
    (let* (($add  (add-lmat-to-lspace $lmatrice $lspace))
           ($rows (size-atom $lmatrice))
           ($cols (size-atom (index-atom $lmatrice 0))))
      (gen-inverse-rows $rows $cols $lspace $mspace)))
+###############################################################################
 
 ;; --- Setup and Test ---
 !(bind! &space1 (new-space))
@@ -1476,6 +1520,7 @@
 ;; --- Test ---
 ;!(mat-mat-mul ((1 2)) ((3 4 5) (6 5 4)))
 ;!(mat-mat-mul ((1 2) (4 5)) ((3 4 5) (6 5 4)))
+
 
 
 (= (random-multivariate $mean $cov-matrice $lambda_ $lspace)
