@@ -152,7 +152,7 @@
        (let $res (range (+ $lb 1) $ub) (cons-atom $lb $res)) ;; Base case: if lower bound meets upper bound, stop.
        ))
 
-;; --- Test ---
+
 ;!(range 1 6)
 ###done
 (= (scalar-op $vector $num $op)
@@ -172,8 +172,8 @@
     )
 )
 
-####################################
-;; Main Recursive Function
+#######done
+;vector operations: element-wise operations on two vectors of the same size
 (= (vector-op $v1 $v2 $op)
    (if (or (== $v1 ()) (== $v2 ()))
        ;; Base Case: If both are empty, we're done. 
@@ -200,6 +200,7 @@
 
 
 #####done
+;inner product: element-wise multiplication followed by sum
 (= (inner-product $vec1 $vec2)
     
         (let $product (vector-op $vec1 $vec2 *) 
@@ -210,6 +211,7 @@
 ;!(inner-product (1 2 3) (2 3 4))
 
 #################done
+;matrix-vector operations: apply vector operation to each row of the matrix
 (= (mat-vec-op $mat $vec $op)
    (if (or (== $mat ()) (== $vec ()))
        () ;; Single exit point: if either is empty, return empty list
@@ -224,6 +226,7 @@
 
 
 ##############done
+;matrix-matrix operations: apply vector operation to each row of the first matrix and corresponding column of the second matrix
 (= (mat-mat-eles-op $mat1 $mat2 $op)
    (if (or (== $mat1 ()) (== $mat2 ()))
        () ;; Base case: stop when lists are empty
@@ -243,14 +246,7 @@
 ;!(mat-mat-eles-op ((1 2) (5 9)) (( 8 7) ( 2 1)) *)
 ;; Output: ((9 16 21) (24 25 24) (21 16 9))
 ############done
-;; 1. Helper: Scalar multiplication
-(= (mult-scalar-vec $s ()) ())
-(= (mult-scalar-vec $s $vec)
-   (let* (($x (car-atom $vec))
-          ($xs (cdr-atom $vec))
-          ($mul (* $s $x))
-          ($res (mult-scalar-vec $s $xs)))
-     (cons-atom $mul $res)))
+;
 
 ;; 2. Main Function: Unified Pattern
 ;; We remove the separate (= (outer-product () $vec2) ()) 
@@ -258,9 +254,10 @@
 (= (outer-product $vec1 $vec2)
    (if (or (== $vec1 ()) (== $vec2 ()))
        ()
+       
        (let* (($x (car-atom $vec1))
               ($xs (cdr-atom $vec1))
-              ($row (mult-scalar-vec $x $vec2))
+              ($row (scalar-op $vec2 $x *))
               ($res (outer-product $xs $vec2)))
          (cons-atom $row $res))))
 
