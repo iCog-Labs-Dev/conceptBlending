@@ -47,7 +47,7 @@ def semantic_similarity(properties, degrees):
     degrees = [float(d) for d in degrees]
 
     # clean properties by replacing '-' with ' '
-    properties_clean = [prop.replace('-', ' ') for prop in properties]
+    properties_clean = [prop.replace('-', ' ').replace('_', ' ') for prop in properties]
 
     # filter properties and degrees by threshold
     filtered = [(p, d) for p, d in zip(properties_clean, degrees) if d >= threshold]

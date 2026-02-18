@@ -3,6 +3,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import requests
+from openai import OpenAI
 
 def get_word_associations(word):
     url = f"https://api.datamuse.com/words?rel_trg={word}&max=10"
@@ -30,6 +31,8 @@ def llm_result(response):
 
 
 _sentence_model = None
+# _openai_client = None
+
 
 def get_sentence_model():
     global _sentence_model
@@ -38,6 +41,15 @@ def get_sentence_model():
         _sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
         # print("Model loaded.")
     return _sentence_model
+
+# def get_sentence_model():
+#     global _sentence_model, _openai_client
+#     if _sentence_model is None:
+#         # Initialize OpenAI client once
+#         _openai_client = OpenAI()
+#         _sentence_model = "text-embedding-3-large"  # OpenAI embedding model
+#     return _sentence_model
+
 
 def compute_average_pairwise_similarity(properties):
     # print(f"Computing average pairwise similarity for properties: {properties}")
@@ -51,6 +63,15 @@ def compute_average_pairwise_similarity(properties):
         return 0.0
     
     embeddings = model.encode(properties_clean, convert_to_numpy=True)
+    
+    # Get embeddings from OpenAI
+    # response = _openai_client.embeddings.create(
+    #     model=model,
+    #     input=list(properties_clean)
+    # )
+    # embeddings = np.array([item.embedding for item in response.data])
+
+
     sim_matrix = cosine_similarity(embeddings)
     # print(f"Similarity matrix:\n{sim_matrix}")
     pairwise = []
