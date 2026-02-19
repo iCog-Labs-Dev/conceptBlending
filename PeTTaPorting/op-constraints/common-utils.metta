@@ -12,8 +12,6 @@
 (: to-float (-> Number Number))
 (= (to-float-op $x) (+ $x 0.0))
 
-(= (detect-abbreviations) True )
-
 (= (detect-characteristic-parts) True )
 
 (= (size-checker $x)

@@ -1,91 +1,36 @@
 ; !(import! op-constraints/common-utils)
 
-(= (is-relation-part-of $term $context)
-    (let* (
-        ($res (collapse(match &space (relation (PartOf $term $context) PartOf) ($term $context))))
-        )
-        (if (> (size-atom $res) 0) True False)
+(= (rel-score $target $blend-name)
+    (let $res (py-call (op-helper-codes.compute_average_pairwise_similarity ( $target $blend-name)))
+        (if (> $res 0.2) True False)
     )
 )
 
-(=(is-abbreviation $term) 
-    (let* (
-        ($relation (collapse(match &space (target (IsA $term $fullformed) $abbriv) (car-atom $abbriv))))
-        ($result (if (== (abbreviation) $relation) True False))
-    )
-    $result
-    )
+(= (is-characteristic-part $target $blend-properties)
+    (is-list-member $target $blend-properties)
 )
 
-(= (rel-exists-HasA $term $context)
-    (let* (
-        ($res (collapse(match &space (relation (HasA $context $term) HasA) ($context $term))))
-        )
-        (if (> (size-atom $res) 0) True False)
-    )
-)
-
-(= (rel-exists-LocatedNear $term $context)
-    (let* (
-        ($res (collapse(match &space (relation (LocatedNear $term $context) LocatedNear) ($term $context))))
-        )
-        (if (> (size-atom $res) 0) True False)
-    )
-)
-
-(=(rel-exists-SymbolOf $term $context)
-    (let* (
-        ($res (collapse(match &space (relation (SymbolOf $term $context) SymbolOf) ($term $context))))
-        )
-        (if (> (size-atom $res) 0) True False)
-    )
-)
-
-(=(is-relation-metonymy $term1 $term2)
-    (let* (
-        ($partof (is-relation-part-of $term1 $term2))
-        ($HasA (rel-exists-HasA $term1 $term2))
-        ($LocatedNear (rel-exists-LocatedNear $term1 $term2))
-        ($SymbolOf (rel-exists-SymbolOf $term1 $term2))
-        ($result (if (or $partof (or $HasA (or $LocatedNear $SymbolOf))) True False))
-    )
-    $result
-    ))
-
-(= (is-characteristic-part $relation $blend-properties $bled-name) 
-    (if (is-list-member (index-atom $relation 1) $blend-properties)
+(= (is-semantically-compressed $target $blend-properties $blend-name $detect-characteristic-parts) 
+    (if (rel-score $target $blend-name)
         True
-        (is-relation-part-of (index-atom $relation 1) $bled-name)
-    )
-)
-
-(= (is-semantically-compressed $relation $blend-properties $blend-name $detect-abbreviations $detect-characteristic-parts) 
-
-    (let* (
-        ($is-abbrev (is-abbreviation (car-atom $relation)))
-        )
-        (if (and $detect-abbreviations $is-abbrev)
+        (if (and $detect-characteristic-parts (is-characteristic-part $target $blend-properties))
             True
-            (if (is-relation-metonymy (car-atom $relation) (index-atom $relation 1))
-                True
-                (if (and $detect-characteristic-parts (is-characteristic-part $relation $blend-properties $blend-name))
-                    True
-                    False
-                )
-            )
+            False
         )
     )
 )
-(= (compression-indicators) (Syn Metonym Short_HasPart Abbr Contraction))
+
+(= (metonymy-indicators) (relatedTo synonym formOf hasA partOf atLocation))
 
 (= (count-compressed-relations $relations $blend-properties $blend-name $acc)
     (if (< (size-atom $relations) 1)
         $acc
         (let* (($current-rel (car-atom $relations))
                ($remaining-rels (cdr-atom $relations))
-               ($is-compressed (is-list-member (car-atom $current-rel) (compression-indicators)))
-               ($is-semantically-compressed (is-semantically-compressed $current-rel $blend-properties $blend-name (detect-abbreviations) (detect-characteristic-parts)))
-               ($new-acc (if (or $is-compressed $is-semantically-compressed)
+               ($target (index-atom $current-rel 1))
+               ($is-met-indicator (is-list-member (car-atom $current-rel) (metonymy-indicators)))
+               ($is-semantically-compressed (if $is-met-indicator (is-semantically-compressed $target $blend-properties $blend-name (detect-characteristic-parts)) False))
+               ($new-acc (if $is-semantically-compressed
                            (+ $acc 1)
                              $acc))
                 )
