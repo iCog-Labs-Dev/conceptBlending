@@ -76,3 +76,7 @@
        )
     )
 )
+
+(= (prepare-network-call $str2)
+    (py-call (operator.add gpt_agents. $str2))
+)

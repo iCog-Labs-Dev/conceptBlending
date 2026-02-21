@@ -2,12 +2,12 @@
 
 (= (rel-score $target $blend-name)
     (let $res (py-call (op-helper-codes.compute_average_pairwise_similarity ( $target $blend-name)))
-        (if (> $res 0.2) True False)
+        (if (> $res (met-sim-threshold)) True False)
     )
 )
 
 (= (is-characteristic-part $target $blend-properties)
-    (is-list-member $target $blend-properties)
+    (let $blend-prop-names (map-atom $blend-properties $prop (car-atom $prop)) (is-list-member $target $blend-prop-names))
 )
 
 (= (is-semantically-compressed $target $blend-properties $blend-name $detect-characteristic-parts) 
@@ -55,3 +55,5 @@
     )
   )
 )
+
+(= (met-sim-threshold) 0.2)

@@ -1,6 +1,6 @@
 !(bind! &concept-space (new-space))
 
-(= (similarity_threshold) 0.15)
+(= (similarity-threshold) 0.4)
 
 (= (find-similar-known-relation $rel $knowns)
    (if (== (size-atom $knowns) 0)
@@ -13,7 +13,7 @@
            ($target-similarity (let ($rel-target $known-head-target) ((index-atom $rel 1) (index-atom $head 1)) (py-call (op-helper-codes.compute_average_pairwise_similarity ( $rel-target $known-head-target)))))
             ; ($_ (println! (relation target and head target ((index-atom $rel 1) (index-atom $head 1)) similarity $target-similarity)))
          )
-         (if (and (> $type-similarity (similarity_threshold)) (> $target-similarity (similarity_threshold)))
+         (if (and (> $type-similarity (similarity-threshold)) (> $target-similarity (similarity-threshold)))
             $head
              (find-similar-known-relation $rel $tail)
         )

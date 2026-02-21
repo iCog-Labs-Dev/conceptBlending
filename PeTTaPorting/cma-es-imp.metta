@@ -17,7 +17,7 @@
 ;     (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
 ; )
 
-(= (Input1) bat)
+(= (Input1) spider)
 (= (Input2) man)
 
 ;;;; PARAMETERS ;;;;

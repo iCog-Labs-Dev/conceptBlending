@@ -58,7 +58,7 @@
             ($metonymy-res (metonymy-op $blend))
             ($_ (println! (Metonymy-op Value: $metonymy-res)))
             ($_ (println! (Calc Unpacking-op Value)))
-            ($unpacking-res (unpacking-op $blend))
+            ($unpacking-res (unpacking-op $blend $concept1 $concept2))
             ($_ (println! (Unpacking Value: $unpacking-res)))
             ($_ (println! (Calc Web-op Value)))
             ($web-res (web-op (cross_mappings) $blend))
@@ -66,9 +66,9 @@
             ($_ (println! (Calc Topology-op Value)))
             ($topology-res (topology-op $blend $concept1 $concept2))
             ($_ (println! (Toplogy-op Value: $topology-res)))
-            ($_ (println! (Calc Good-reason Value)))
-            ($good-reason-res (good-reason-op $blend))
-            ($_ (println! (Good-reason Value: $good-reason-res)))
+            ; ($_ (println! (Calc Good-reason Value)))
+            ; ($good-reason-res (good-reason-op $blend))
+            ; ($_ (println! (Good-reason Value: $good-reason-res)))
         )
         (
             $integration-res
@@ -76,7 +76,7 @@
             $unpacking-res
             $web-res
             $topology-res
-            $good-reason-res
+            ; $good-reason-res
         )
     )
 )

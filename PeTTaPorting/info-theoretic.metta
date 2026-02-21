@@ -3,6 +3,7 @@
 !(import! &self op-constraints/op-evaluation)
 !(import! &self libs/agents/gpt_agents)
 !(import! &self "utils/uppercase_changer.py")
+!(import! &self "libs/agents/gpt_agents.py")
 ; a temporary representation of the function Error
 (=(Error $atom $message) 
     $message)
@@ -378,13 +379,13 @@
 
 (= (context-preprocesser $input1 $input2 $space $n)
     (let ($context1 $context2) (collapse(superpose((fetch-context $input1 $space $n) (fetch-context $input2 $space $n))))
-        (gpt-context-preprocessing $input1 $context1 $input2 $context2)
+        (sread (py-call (gpt_agents.gpt_context_preprocessing $input1 $context1 $input2 $context2)))
     )
 )
 ; ;;;; Vital Relation Extraction ;;;;
 (= (vit-rel-extraction $input1 $input2 $space $n)
-    (let $context (context-preprocesser $input1 $input2 $space $n) 
-        (let ($vital-relation-1 $vital-relation-2) (gpt-vital-relation $input1 $input2 $context)
+    (let $context (context-preprocesser $input1 $input2 $space $n)
+        (let ($vital-relation-1 $vital-relation-2) (sread (py-call (gpt_agents.gpt_vital_relation $input1 $input2 $context)))
             (let $vital-relations (union-atom $vital-relation-1 $vital-relation-2) (unique-atom $vital-relations))
         )
     )
@@ -393,7 +394,7 @@
 ; ;;;; Vector Extraction ;;;;
 (= (vec-extraction $input1 $input2 $space $n)
     (let $vital-relations (vit-rel-extraction $input1 $input2 $space $n)
-        (let $vec-concepts (gpt-vector-extraction $input1 $input2 $vital-relations) $vec-concepts)
+        (sread (py-call (gpt_agents.gpt_vector_extraction $input1 $input2 $vital-relations)))
     )
 )
 
@@ -411,6 +412,8 @@
     )
 )
 
+; !(add-concepts)
+
 (= (multi-objective-check $best-sample-with-fitness)
     (let $one-sample (index-atom $best-sample-with-fitness 0)
         (let $first-atom (car-atom $one-sample)
@@ -423,18 +426,18 @@
         (if (>= $best-fitness 0)
                 (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
                     (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (eval (concept1)) (eval (concept2))))
-                        (let $blend ($network $concept-pair $best-cand-mu-emergence)
+                        (let $blend (sread (py-call ($network $concept-pair $best-cand-mu-emergence)))
                             (if (== $eval True) 
-                                (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
+                                (let ($blend-name $blendprops) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
                                     (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
-                                        (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
-                                            (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
+                                        ; (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
+                                            (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blendprops))
                                                 (let $op-res (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                    (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) $op-res
+                                                    (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res) $op-res
                                                         (Formed Blend: $blend
                                                         Evaluation-Metrics:
                                                         Integration: $integration-res
-                                                        Good-reason: $good-reason-res
+                                                        ; Good-reason: $good-reason-res
                                                         Unpacking: $unpacking-res
                                                         Web: $web-res
                                                         Topology: $topology-res
@@ -443,7 +446,7 @@
                                                     )
                                                 )
                                             )
-                                        )
+                                        ; )
                                     )
                                 )
                                 $blend
@@ -465,20 +468,20 @@
                             (let $_ (println! (best single-candidate: $best-candidate))
                                 (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (eval (concept1)) (eval (concept2))))
                                     (let $_ (println! (best candidate mu emergence: $best-cand-mu-emergence))
-                                        (let $blend ($network $concept-pair $best-cand-mu-emergence)
+                                        (let $blend (sread (py-call ($network $concept-pair $best-cand-mu-emergence)))
                                             (let $_ (println! (blend: $blend))
                                                 (if $eval
                                                     ;; -- Sub-Path A1: Eval is True --
-                                                    (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
+                                                    (let ($blend-name $blendprops) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
                                                         (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
-                                                            (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
-                                                                (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
+                                                            ; (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
+                                                                (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blendprops))
                                                                     (let $res-op (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                                        (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) $res-op
+                                                                        (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res) $res-op
                                                                             (Formed Blend: $blend
                                                                             Evaluation-Metrics:
                                                                             Integration: $integration-res
-                                                                            Good-reason: $good-reason-res
+                                                                            ; Good-reason: $good-reason-res
                                                                             Unpacking: $unpacking-res
                                                                             Web: $web-res
                                                                             Topology: $topology-res
@@ -486,7 +489,7 @@
                                                                         )
                                                                     )
                                                                 )
-                                                            )
+                                                            ; )
                                                         )
                                                     )
                                                     ;; -- Sub-Path A2: Eval is False (Skip this item) --
@@ -514,14 +517,17 @@
             (let $best-sample-with-fitness (index-atom $final-pop (- ($generations) 1))
                 (let $_ (println! (Best-sample $best-sample-with-fitness))
                     (let $concept-pair (let (Concept $x $y) (concept1) $x)
-                        (let $network (gpt-network-selector $concept-pair)
-                            (if (not (== $network None))
-                                (if (== $SCMAorMCMA moedd-cma-es-main-loop)
-                                    (let $_ (println! (Type of CMA-ES: Multi-Objective CMA-ES | Selected Network: $network | Concept-pair: $concept-pair)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $network $eval))
-                                    (let $_ (println! (Type of CMA-ES: Single-Objective CMA-ES | Selected Network: $network | Concept-pair: $concept-pair)) (single-objective-blend $best-sample-with-fitness $concept-pair $network $eval))
-
+                        (let $network (sread (py-call (gpt_agents.gpt_network_selector $concept-pair)))
+                            (let $_ (println! (Network $network))
+                                (if (not (== $network None))
+                                    (let $prepared-network (prepare-network-call $network)
+                                        (if (== $SCMAorMCMA moedd-cma-es-main-loop)
+                                            (let $_ (println! (Type of CMA-ES: Multi-Objective CMA-ES | Selected Network: $prepared-network | Concept-pair: $concept-pair)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $prepared-network $eval))
+                                            (let $_ (println! (Type of CMA-ES: Single-Objective CMA-ES | Selected Network: $prepared-network | Concept-pair: $concept-pair)) (single-objective-blend $best-sample-with-fitness $concept-pair $prepared-network $eval))
+                                        )
+                                    )
+                                    (Error $network NoNetworkSelected)
                                 )
-                                (Error $network NoNetworkSelected)
                             )
                         )
                     )

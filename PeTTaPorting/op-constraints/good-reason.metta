@@ -93,7 +93,7 @@
     (let ($blend-name $blend-context) ((blend-name $blend) (blend-context $blend)) 
         (let $default-prompt (default-prompt $properties $blend-name $blend-context) 
             ; (good-reason-llm $default-prompt)
-            (eval (useGPT (py-str $default-prompt)))
+            (eval (sread (py-call (gpt_agents.use_GPT (py-str $default-prompt)))))
         )
     )
 )
@@ -124,6 +124,7 @@
     (let* 
         (
             ($blend-properties (properties-list $blend))
+            ($blend-withprovance ())
             ($emergents (custom-filter-atom $blend-properties  (Method <= size-atom 1)))
             ($emergent-count (size-atom $emergents))
         )
