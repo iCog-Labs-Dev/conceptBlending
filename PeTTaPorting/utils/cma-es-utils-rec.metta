@@ -14,8 +14,8 @@
         (py-call (quote (eval $str $dict $dict)))))
 
 ;; Inject helper functions into Python's builtins to handle *args and **kwargs
-;; !(py-eval "setattr(__import__('builtins'),'apply_kwargs',(lambda f,d: f(**d))) or 0")
-;; !(py-eval "setattr(__import__('builtins'),'apply_args',(lambda f,args: f(*args))) or 0")
+!(py-eval "setattr(__import__('builtins'),'apply_kwargs',(lambda f,d: f(**d))) or 0")
+!(py-eval "setattr(__import__('builtins'),'apply_args',(lambda f,args: f(*args))) or 0")
 
 ;; Wrapper for Numpy's max function
 (= (np-max $ref-point $objs-val $axis)
@@ -92,16 +92,17 @@
    (gen-matrix-rows 0 $dim))
 
 ;; Generates a list of size $n filled with 1s
-(= (generate-toy-list $n)
-    (if (<= $n 0)
-        ()  
-        (let $rest (generate-toy-list (- $n 1))
-             (cons-atom 1 $rest))))
+; (= (generate-toy-list $n)
+;     (if (<= $n 0)
+;         ()  
+;         (let $rest (generate-toy-list (- $n 1))
+;              (cons-atom 1 $rest))))
 
 ;; Generates a zero-initialized vector of a specific length
 (= (zeros-vec $length)
-    (let $toy-list (generate-toy-list $length) 
-         (map-atom $toy-list $x 0)))
+    (let $toy-list (eval (generate-toy-list $length))
+         (map-atom $toy-list $x 0)
+         ))
 
 ;; Generates a list of integers from $lb up to (but not including) $ub
 (= (range $lb $ub)
@@ -294,13 +295,16 @@
    (if (== $rows 0)
        ()
        (let* (($cols-row (zeros-vec $cols))
-              ($next (make-matrix (- $rows 1) $cols)))
+             ($next (make-matrix (- $rows 1) $cols)))
          (cons-atom $cols-row $next))))
+
+
 
 ;; Main Function
 (= (cholesky-decomposition $A)
    (let* (($n (size-atom $A))
-          ($L (make-matrix $n $n)))
+          ($L (make-matrix $n $n))
+          )
      (cholesky-loop $A $L 0 $n)))
 
 
@@ -418,6 +422,29 @@
               ($res (standard-normal $dim (- $lambda_ 1))))
          (cons-atom $row $res))))
 
+
+; (= (C-inv-sqrt $matrice $clspace $ilspace $mspace)
+;     (transpose-matrice (inverse-lmatrice (chol-decomp $matrice $clspace) $ilspace $mspace))
+; )
+
+(= (cleaner $lists $index)
+    (collapse (index-atom (superpose $lists) $index)))
+
+; !(cleaner (((5 4) 2)) 0)
+
+(= (match-val-best-nd $val $best-nd)
+    (let $obj (index-atom $best-nd 1) (if (== $val $obj) $best-nd (empty)))
+)
+
+(= (max-best-nd-helper $val $best-nds)
+    (let $res (collapse
+        (match-val-best-nd $val (superpose $best-nds))
+    )
+    (cleaner $res 0)
+    )
+)
+
+
 ;; ============================================================================
 ;; MATRIX MULTIPLICATION
 ;; ============================================================================
@@ -472,17 +499,20 @@
 (= (random-multivariate $mean $cov-matrix $lambda_)
    (let* (
        ;; Decompose Covariance into Lower Triangular L
+      ;  ($_ (println! (mean $mean)))
        ($L (cholesky-decomposition $cov-matrix))
-       
+      ;  ($_ (println! (Lower $L)))
        ;; Generate Standard Normal samples Z (shape: lambda x dim)
        ($Z (standard-normal (size-atom $mean) $lambda_))
-       
+      ;  ($_ (println! (Z $Z)))
        ;; Transform: Y = Z * L^T (Matrix multiplication handles the L * Z part)
        ($LT (transpose-matrix $L))
+      ;  ($_ (println! (LT $LT)))
        ($transformed (mat-mat-mul $Z $LT))
-       
+      ;  ($_ (println! (tranformed $transformed)))
        ;; Shift: Add mean vector to every sample
        ($final-samples (add-mean-to-samples $transformed $mean))
+      ;  ($_ (println! (final $final-samples)))
    )
    $final-samples))
 
@@ -597,9 +627,9 @@
 ;;  LIST & NONDETERMINISM HELPERS
 ;; ============================================================================
 
-;; Collapses a superposition of results at a specific index
-(= (cleaner $lists $index)
-    (collapse (index-atom (superpose $lists) $index)))
+; ;; Collapses a superposition of results at a specific index
+; (= (cleaner $lists $index)
+;     (collapse (index-atom (superpose $lists) $index)))
 
 ;; Custom Union: Merges lists or elements and ensures uniqueness
 (= (unionize () $acc) (unique-atom $acc))

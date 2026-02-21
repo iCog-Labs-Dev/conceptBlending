@@ -1,4 +1,4 @@
-!(import! &self utils/list-op-utils)
+!(import! &self utils/list-op-utils-rec)
 !(import! &self utils/info-theoretic-utils)
 ; a temporary representation of the function Error
 (=(Error $atom $message) 
@@ -427,9 +427,11 @@
 
 (=(check-non-dominated $indiv $candidates)
     (let* (
-        ($indiv-obj (index-atom $indiv 1))
-        ($unzipped-candis (unzip-list $candidates))
-        ($candis-objs  (index-atom $unzipped-candis 1))
+        ($inner-indiv (car-atom $indiv))
+        ($indiv-obj (index-atom $inner-indiv 1))
+        ($inner-candis (let $inner-unzipped-candis (unzip-list $candidates) (car-atom $inner-unzipped-candis)))
+        ($unzipped-inner-candis (unzip-list $inner-candis))
+        ($candis-objs  (index-atom $unzipped-inner-candis 1))
         ($filtered-candis-objs (filter-list $candis-objs $indiv-obj))
         ($truthvalue (non-deter-non-dominated-helper $indiv-obj $filtered-candis-objs))
         ($result (if $truthvalue $indiv (empty)))
@@ -437,7 +439,6 @@
     $result
     )
 )
-
 
 (= (filter-non-dominated $candidates)
     (collapse
