@@ -607,13 +607,13 @@
     (unique-atom $list)
 )
 ;; Custom Union: Merges lists or elements and ensures uniqueness
-(= (unionize () $acc) (unique-atom $acc))
+(= (unionize () $acc) (custom-unique-atom $acc))
 (= (unionize $list $acc)
    (let* (($ht (decons-atom $list))
           (($head $tail) $ht))
      (if (== (size-atom $head) 1)
          (unionize $tail (cons-atom (car-atom $head) $acc))
-         (unionize $tail (union-atom $head $acc)))))
+         (unionize $tail (custom-union-atom $head $acc)))))
 
 
 
@@ -724,6 +724,5 @@
 
 
 
-custom-union-atom
 
-custom-unique-atom
+
