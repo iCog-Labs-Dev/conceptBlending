@@ -1,8 +1,8 @@
 
 !(import! &self list-op-utils)
-;! (import! &self utils/cma-utils)
+! (import! &self utils/cma-utils)
 ; ;Evaluate expression via py-call:
-;!(import! &self "utils/numpy_methods.py")
+!(import! &self "utils/numpy_methods.py")
 
 ;; ============================================================================
 ;; PYTHON INTEROPERABILITY & NUMPY BRIDGE
@@ -46,6 +46,12 @@
 
 ;; Standard error reporting
 (= (Error $atom $message) $message)
+
+;; Standard nth element accessor
+(= (nth $list $n)
+   (if (== $n 0) 
+       (car-atom $list)
+       (nth (cdr-atom $list) (- $n 1))))
 
 (= (make-NaN)
     (sqrt-math -2)
@@ -104,7 +110,7 @@
 ;; Generates a zero-initialized vector of a specific length
 (= (zeros-vec $length)
     (let $toy-list (generate-toy-list $length) 
-         (map-atom $toy-list $x 0)))
+         (map-atom $toy-list $x 0.0)))
 
 ;; Generates a list of integers from $lb up to (but not including) $ub
 (= (range $lb $ub)
@@ -238,7 +244,9 @@
 ;; Replaces the value at index $j in a row
 (= (update-row-cell $row $j $val)
    (if (== $j 0)
-       (cons-atom $val (cdr-atom $row))
+     (let $rest (cdr-atom $row)
+          (cons-atom $val $rest))
+       
        (let* (($head (car-atom $row))
               ($tail (cdr-atom $row))
               ($updated-tail (update-row-cell $tail (- $j 1) $val)))
@@ -286,11 +294,7 @@
 ;; INITIALIZATION & ENTRY POINT
 ;; ----------------------------------------------------------------------------
 
-;; Standard nth element accessor
-(= (nth $list $n)
-   (if (== $n 0) 
-       (car-atom $list)
-       (nth (cdr-atom $list) (- $n 1))))
+
 
 ;; Creates an empty matrice of size $rows x $cols filled with 0s
 (= (make-matrice $rows $cols)
@@ -305,7 +309,6 @@
    (let* (($n (size-atom $A))
           ($L (make-matrice $n $n)))
      (cholesky-loop $A $L 0 $n)))
-
 
 ;; ============================================================================
 ;; NUMERICAL VALIDATION (Inf & NaN Checkers)
@@ -668,7 +671,7 @@
 ;; High-level function to find the inverse square root of a matrix
 ;; Step: Cholesky -> Invert Lower -> Transpose
 (= (C-inv-sqrt $matrice)
-    (transpose-matrice (inverse-lmatrice (chol-decomp $matrice))))
+    (transpose-matrice (inverse-lmatrice (cholesky-decomposition $matrice))))
 
 ;; --- Append ---
 ;; Standard tail-append to maintain row order during matrix construction
