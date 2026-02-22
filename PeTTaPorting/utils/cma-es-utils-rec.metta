@@ -47,6 +47,9 @@
 ;; Standard error reporting
 (= (Error $atom $message) $message)
 
+(= (make-NaN)
+    (sqrt-math -2)
+)
 ;; Applies Logarithm to every element in a vector
 (= (apply-log $vector $base)
    (map-atom $vector $x (log-math $base $x)))
@@ -467,7 +470,7 @@
           ($res (add-mean-to-samples $rest $mean)))
      (cons-atom $new-row $res)))
 
-;; Main Function: Generates $lambda_ samples from a Multivariate Normal distribution
+;; Generates $lambda_ samples from a Multivariate Normal distribution
 ;; Formula: Y = mean + L * Z, where L is the Cholesky factor of the Covariance matrice
 (= (random-multivariate $mean $cov-matrice $lambda_)
    (let* (
@@ -597,16 +600,19 @@
 ;;  LIST & NONDETERMINISM HELPERS
 ;; ============================================================================
 
-;; Collapses a superposition of results at a specific index
 
+
+;; Merges two lists using the grounded union-atom function
 (= (custom-union-atom $list1 $list2)
-    (union-atom $list1 $list2)
-)
+    (union-atom $list1 $list2))
 
+;; Ensures all elements in a list are unique
 (= (custom-unique-atom $list)
-    (unique-atom $list)
-)
-;; Custom Union: Merges lists or elements and ensures uniqueness
+    (unique-atom $list))
+
+;; Unionize: Recursively flattens and merges lists while ensuring uniqueness.
+;; If the head is a single element, it cons onto the accumulator; 
+;; if it's a list, it performs a set union.
 (= (unionize () $acc) (custom-unique-atom $acc))
 (= (unionize $list $acc)
    (let* (($ht (decons-atom $list))
@@ -616,113 +622,95 @@
          (unionize $tail (custom-union-atom $head $acc)))))
 
 
+;; ============================================================================
+;;  Search & Extraction
+;; ============================================================================
 
-         
-
-
-
+;; Checks if the second element (index 1) of a list matches $val.
+;; Returns the whole list if matched, otherwise an empty list.
 (= (match-val-best-nd $val $best-nd)
-    (let $obj (index-atom $best-nd 1) (if (== $val $obj) $best-nd (empty)))
-)
-;!(match-val-best-nd 1 (4 10 3))
+   (let $obj (index-atom $best-nd 1)
+    (if (== $val $obj)
+        $best-nd
+        ())))
 
+;; Linear search through a list of entries. Returns the first entry that matches $val.
 (= (max-best-nd-helper $val $best-nds)
-    (let $res (collapse
-        (match-val-best-nd $val (superpose $best-nds))
-    )
-    (cleaner $res 0)
-    )
-)
+   (if (== $best-nds ())
+      ()
+      (let* (($hd (car-atom $best-nds))
+             ($res (match-val-best-nd $val $hd)))
+       (if (== $res ())
+          (max-best-nd-helper $val (cdr-atom $best-nds))
+          $res))))
 
-(= (cleaner-helper $list $index)
-    (index-atom $list $index)
-)
-
+;; Cleaner: Maps through a list of lists and extracts the element at $index from each.
+;; This version collects ALL results into a resulting list.
 (= (cleaner $lists $index)
-    (collapse
-        (cleaner-helper (superpose $lists) $index)
-    )
-)
-
-!(cleaner (((5 4) 2)) 0)
-
-
+   (if (== $lists ())
+       ()  
+       (let* (($hd (car-atom $lists))
+              ($res (index-atom $hd $index))
+              ($remaining (cleaner (cdr-atom $lists) $index)))
+             (cons-atom $res $remaining))))
 
 
 
 
 
-##
+
+;; ============================================================================
+;;  Invert a Lower Triangular Matrice And Compute Its Inverse Square Root
+;; ============================================================================
+
+
+;; --- C-inv-sqrt ---
+;; High-level function to find the inverse square root of a matrix
+;; Step: Cholesky -> Invert Lower -> Transpose
 (= (C-inv-sqrt $matrice)
-    (transpose-matrice (inverse-lmatrice (chol-decomp $matrice)))
-)
+    (transpose-matrice (inverse-lmatrice (chol-decomp $matrice))))
 
-#########INverse of a Lower Triangular matrice (L^-1) using Forward Substitution
-;; --- Helper: Append to List ---
-;; Crucial for keeping rows in the correct order (0, 1, 2, 3)
+;; --- Append ---
+;; Standard tail-append to maintain row order during matrix construction
 (= (append () $item) ($item))
 (= (append $list $item)
    (let* (($head (car-atom $list))
           ($tail (cdr-atom $list))
           ($updated-tail (append $tail $item)))
-          (cons-atom $head $updated-tail)
-   ))
+         (cons-atom $head $updated-tail)))
 
-;; --- Helper: Summation for Forward Substitution ---
-;; Σ (L[i][k] * Inv[k][j]) for k from j to i-1
+;; --- Summation (Forward Substitution) ---
+;; Calculates Σ (L[i][k] * Inv[k][j]) for k from j to i-1
 (= (sum-prev $row $inv-matrice $i $j $k)
    (if (== $k $i)
        0.0
-       (+ (* (nth $row $k) (nth  (nth $inv-matrice $k) $j))
+       (+ (* (nth $row $k) (nth (nth $inv-matrice $k) $j))
           (sum-prev $row $inv-matrice $i $j (+ $k 1)))))
 
-;; --- Helper: Calculate a single element and build the row ---
+;; --- build-row ---
+;; Constructs a single row of the inverse matrix.
+;; Uses 1/L[i][i] for diagonals and the Forward Substitution formula for others.
 (= (build-row $row $inv-matrice $i $j $n)
    (if (== $j $n)
        ()
-       (let* (
-         ($val (if (> $j $i)
-                     0.0
-                     (if (== $i $j)
-                         (/ 1.0 (nth $row $i ))
-                         (/ (- 0.0 (sum-prev $row $inv-matrice $i $j $j)) (nth $row $i))
-                         
-                         )
-                         
-                         )
-                         )
-         ($new-row (build-row $row $inv-matrice $i (+ $j 1) $n))
-         )
+       (let* (($val (if (> $j $i)
+                        0.0
+                        (if (== $i $j)
+                            (/ 1.0 (nth $row $i))
+                            (/ (- 0.0 (sum-prev $row $inv-matrice $i $j $j)) (nth $row $i))))))
+             (cons-atom $val (build-row $row $inv-matrice $i (+ $j 1) $n)))))
 
-            (cons-atom $val $new-row)
-            )
-            )
-            )
-
-;; --- Main: Iterate through rows ---
+;; --- invert-rec ---
+;; Iterates through the rows of the input matrix to build the inverse matrix
 (= (invert-rec $m $inv $i $n)
    (if (== $i $n)
        $inv
-       (let* (
-            ($new-row (build-row (nth  $m $i) $inv $i 0 $n))
-            ($updated-inv (append $inv $new-row))
-            )
-            
-           (invert-rec $m $updated-inv (+ $i 1) $n)
-           
-           )
-           
-           ))
-
-;; --- Entry Point ---
-(= (invert-lower $matrice)
-   (let $n (size-atom $matrice)  (invert-rec $matrice () 0 $n))
-   )
-;; --- Test Execution ---
-!(invert-lower ((2 0 0 0) (3 1 0 0) (2 5 6 0) (4 3 2 7)))
+       (let* (($new-row (build-row (nth $m $i) $inv $i 0 $n))
+              ($updated-inv (append $inv $new-row)))
+             (invert-rec $m $updated-inv (+ $i 1) $n))))
 
 
-
-
-
-
+;; Dynamically determines matrix size and starts inversion
+(= (inverse-lmatrice $matrice)
+   (let $n (size-atom $matrice) 
+        (invert-rec $matrice () 0 $n)))
