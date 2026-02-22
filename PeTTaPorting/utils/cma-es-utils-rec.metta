@@ -697,8 +697,11 @@
                         0.0
                         (if (== $i $j)
                             (/ 1.0 (nth $row $i))
-                            (/ (- 0.0 (sum-prev $row $inv-matrice $i $j $j)) (nth $row $i))))))
-             (cons-atom $val (build-row $row $inv-matrice $i (+ $j 1) $n)))))
+                            (/ (- 0.0 (sum-prev $row $inv-matrice $i $j $j)) (nth $row $i)))))
+                            ($rest (build-row $row $inv-matrice $i (+ $j 1) $n)))
+             (cons-atom $val $rest)
+             
+             )))
 
 ;; --- invert-rec ---
 ;; Iterates through the rows of the input matrix to build the inverse matrix
@@ -714,3 +717,4 @@
 (= (inverse-lmatrice $matrice)
    (let $n (size-atom $matrice) 
         (invert-rec $matrice () 0 $n)))
+
