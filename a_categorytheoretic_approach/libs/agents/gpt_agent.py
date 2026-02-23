@@ -1,12 +1,14 @@
 import re
 from hyperon import *
-from .llmagent import GeminiAgent
+# from .llmagent import GeminiAgent
+from .llmagent import ChatGPTAgent
 from libs.prompts import (
     GENERALIZATION_PROMPT,
     SPEC_PROMPT,
     CONTEXT_PREPROCESSING_PROMPT,
     MORPHISM_PROMPT
 )
+agent = ChatGPTAgent(model="gpt-4o")
 from libs.validation import validate_syntax, validate_structure, validate_grounding
 
 def _extract_concept_and_context(concept_str: str) -> tuple[str, str]:
@@ -58,10 +60,11 @@ def context_preprocessing_agent(metta: MeTTa, *args):
         context2=context2,
     )
 
-    llm_agent = GeminiAgent()
+    # llm_agent = GeminiAgent()
     messages = [{"role": "user", "content": formatted_prompt}]
     print(f"   -> [Agent] Calling LLM for 'context_preprocessing'...")
-    response = llm_agent(messages, tools=[])
+    # response = llm_agent(messages, tools=[])
+    response = agent(messages)
     print(f"   -> LLM Response Received.")
     valid, result = validate_syntax(response)
     clean_response = result if valid else response
@@ -197,7 +200,7 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
             property_vector=property_vector,
         )
 
-    llm_agent = GeminiAgent()
+    # llm_agent = GeminiAgent()
     max_retries = 3
     messages = [{"role": "user", "content": formatted_prompt}]
     
@@ -206,7 +209,8 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
     for attempt in range(max_retries):
         if attempt > 0:
             print(f"   > [Self-Correction] Attempt {attempt+1}/{max_retries}...")
-        response = llm_agent(messages, tools=[])
+        # response = llm_agent(messages, tools=[])
+        response = agent(messages)
         print(f"   -> LLM Response Received.")
         # Validate Syntax (Parentheses)
         valid_syntax, result = validate_syntax(response)
@@ -226,8 +230,8 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
                 continue
             
             # is_grounded, msg_ground = validate_grounding(clean_code, context_str)
-            is_grounded, msg_ground = validate_grounding(clean_code, context_str, llm_agent=llm_agent)
-            
+            # is_grounded, msg_ground = validate_grounding(clean_code, context_str, llm_agent=llm_agent)
+            is_grounded, msg_ground = validate_grounding(clean_code, context_str, llm_agent=agent)
             if not is_grounded:
                 print(f"Grounding Error: {msg_ground}")
                 messages.append({"role": "user", "content": f"FACT ERROR: {msg_ground}. Only use terms found in the provided context. Do not hallucinate."})
