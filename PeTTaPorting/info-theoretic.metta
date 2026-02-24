@@ -1,4 +1,4 @@
-!(import! &self utils/list-op-utils)
+!(import! &self utils/list-op-utils-rec)
 !(import! &self utils/info-theoretic-utils)
 ; a temporary representation of the function Error
 (=(Error $atom $message) 
@@ -439,7 +439,6 @@
     $result
     )
 )
-
 
 (= (filter-non-dominated $candidates)
     (collapse
