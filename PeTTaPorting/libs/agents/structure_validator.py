@@ -19,9 +19,9 @@ def validate_gpt_output(output: str, method: str) -> bool:
     if not isinstance(output, str):
         return False
 
-    # Output must not be wrapped in backticks
-    if output.startswith("```") or output.endswith("```"):
-        return False
+    # # Output must not be wrapped in backticks
+    # if output.startswith("```") or output.endswith("```"):
+    #     return False
 
     # Trim whitespace
     output = output.strip()
@@ -46,6 +46,7 @@ def validate_gpt_output(output: str, method: str) -> bool:
 
         # Context preprocessing: exactly 8 sub-contexts
         "gpt_context_preprocessing": r"^\(Context(\s+\([^)]+\)){8}\)$",
+        "gpt_good_reason": r'^\s*(?:```[\s]*json[\s]*\n)?\s*\{\s*"result"\s*:\s*"\((?:[01](?:\s[01])*)\)"\s*,\s*"reason"\s*:\s*".*?"\s*\}\s*(?:\n?```)?\s*$'
     }
 
     pattern = patterns.get(method)

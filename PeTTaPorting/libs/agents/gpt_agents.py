@@ -6,6 +6,7 @@ from prompts.single_scope_network import SINGLE_SCOPE_PROMPT
 from prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
 from prompts.vital_relation_extraction import VITAL_RELATION_PROMPT
 from prompts.context_preprocessing import CONTEXT_PREPROCESSING_PROMPT
+from prompts.good_reason import GOOD_REASON
 from llm_agent import ChatGPTAgent
 from structure_validator import validate_gpt_output
 
@@ -13,6 +14,7 @@ from structure_validator import validate_gpt_output
 llm_agent = ChatGPTAgent()
 
 def use_GPT(prompt):
+    print(f"Using GPT with prompt:\n{prompt}\n")
     messages = [{"role": "system", "content": prompt}]
     return llm_agent(messages).content.strip()
 
@@ -24,7 +26,6 @@ def _call_with_validation(prompt: str, method: str, retries: int = 3):
     for attempt in range(1, retries + 1):
         messages = [{"role": "system", "content": prompt}]
         output = llm_agent(messages).content.strip()
-
         if validate_gpt_output(output, method):
             return output
         else:
@@ -35,6 +36,14 @@ def _call_with_validation(prompt: str, method: str, retries: int = 3):
 
     raise ValueError(f"Failed to generate valid {method} output after {retries} retries")
 
+def gpt_good_reason(blend, properties, context):
+    blend, properties, context = str(blend), str(properties), str(context)
+    prompt = GOOD_REASON.format(
+        blend=blend,
+        properties=properties,
+        context=context
+    )
+    return _call_with_validation(prompt, "gpt_good_reason")
 
 # -------------------------
 # Mirror Network

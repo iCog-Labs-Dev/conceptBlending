@@ -1,12 +1,18 @@
 ; !(import! &self libs/agents/llm_agent)
 ; !(import! &self "op-constraints/op-helper-codes.py")
 
-(=(is-property-justified $concept $property)
+(= (gr-similarity-checker $concept1 $concept2 $threshold)
+    (let $sim-val (py-call (op-helper-codes.compute_average_pairwise_similarity ($concept1 $concept2)))
+        (if (>= $sim-val $threshold) True False)
+    )
+)
+
+(=(is-property-justified $property $concept)
     (let* (
         ($cleaned-concept (if (== (get-metatype $concept) Symbol) $concept (car-atom $concept)))
         ($cleaned-property (if (== (get-metatype $property) Symbol) $property (car-atom $property)))
-        ($concept-properties (collapse(match &space (hasProperty $cleaned-concept $var) $var)))
-        ($direct (is-list-member $cleaned-property $concept-properties))
+        ($concept-properties (get-concept-relations-op $cleaned-concept &space 5 hasProperty))
+        ($direct (let $props-justification (map-atom $concept-properties $prop (gr-similarity-checker (index-atom $prop 1) $cleaned-property (gd-sim-threshold))) (is-list-member True $props-justification)))
     )
     $direct
     )
@@ -20,7 +26,7 @@
             ($tail (cdr-atom $provenance-sources))
             )
             (
-                if(is-property-justified ($property) $head)
+                if (is-property-justified $property $head)
                 1
                 (is-provenance-sources-justified $property $tail)
             )
@@ -29,88 +35,55 @@
 )
 
 
-(= (conceptnet-justification-helper $prop $blend)
+(= (conceptnet-justification-helper $prop $blend $blend-props-prov)
     (let ($blend-name $unwrapped-prop) ((blend-name $blend) (car-atom $prop))
         (if (is-property-justified $unwrapped-prop $blend-name)
             1
-            (is-provenance-sources-justified $unwrapped-prop (provenance-sources (properties-list $blend)))
+            (is-provenance-sources-justified $unwrapped-prop (provenance-sources $blend-props-prov))
         )
     )
 
 )
 
-(= (conceptnet-justification $properties $blend) 
-    (let $justfications (map-atom $properties $prop (conceptnet-justification-helper $prop $blend)) $justfications)
+(= (conceptnet-justification $properties $blend $blend-props-prov) 
+    (let $justfications (map-atom $properties $prop (conceptnet-justification-helper $prop $blend $blend-props-prov)) $justfications)
 )
 
-(= (default-prompt $properties $blend $context)
-   (
-    Evaluate the properties $properties in the blend concept $blend . \n
-    **Context:** $context \n \n
-    **Instructions:** \n
-    Please respond only in JSON format with the following fields: \n
-
-    result: a space-separated list of 1's and 0's enclosed in parentheses. Each position corresponds to the properties listed in the first sentence above (the $properties list), not the ones in the context. \n
-        - 1 = the property is justified in the blend. \n
-        - 0 = the property is not justified. \n
-
-    reason: a brief explanation supporting the justification pattern in result.
-    **Formatting rules:**
-    1. The result must be exactly in the form: "(1 0 1 0 ...)", No Python lists, commas, or other formats.
-    2. The number of entries in result must exactly match the number of properties in $properties .
-    3. The justification in reason must match the pattern in result.
-
-    **Example**
-    {
-        "result": "(1 0 1 0 1 1 1 0)",
-        "reason": "The first, third, fifth, sixth, and seventh properties logically follow from the combination of the source concepts, while the others do not."
-    }
-   )
-)
-
-
-(= (blend-context $blend)
-        (let* (
-            ($props (properties-list $blend))
-            ($blend-relations (relations-key-value-list $blend))
-            ($property-name-list (map-atom $props $x (car-atom $x)) )
-            ($mapRelations (map-atom $blend-relations $rel ((car-atom $rel) → (index-atom $rel 1))))
-            ($provenance-sources(provenance-sources $props))
-            
-            )
-            (
-                Properties: $property-name-list \n
-                Relations: $mapRelations \n
-                Sources: $provenance-sources \n
-            )
+(= (blend-context $blend $blend-props-prov)
+    (let* (
+        ($props (properties-list $blend))
+        ($blend-relations (relations-key-value-list $blend))
+        ($property-name-list (map-atom $props $x (car-atom $x)) )
+        ($mapRelations (map-atom $blend-relations $rel ((car-atom $rel) → (index-atom $rel 1))))
+        ($provenance-sources (provenance-sources $blend-props-prov))
+        
         )
-    
-)
-
-
-
-(= (llm-justification $properties $blend)
-    (let ($blend-name $blend-context) ((blend-name $blend) (blend-context $blend)) 
-        (let $default-prompt (default-prompt $properties $blend-name $blend-context) 
-            ; (good-reason-llm $default-prompt)
-            (eval (sread (py-call (gpt_agents.use_GPT (py-str $default-prompt)))))
+        (
+            Properties: $property-name-list
+            Relations: $mapRelations
+            Sources: $provenance-sources
         )
     )
 )
 
-(= (count-justified $emergents-list $blend)
-    (if (== $emergents-list ())
+
+
+(= (llm-justification $properties $blend $blend-props-prov)
+    (let ($blend-name $blend-context) ((blend-name $blend) (blend-context $blend $blend-props-prov)) 
+        (eval (py-call (gpt_agents.gpt_good_reason $blend-name $properties $blend-context))) 
+    )
+)
+
+(= (count-justified $props-list $blend $blend-props-prov)
+    (if (== $props-list ())
         0
         (let* 
             (
-                ($llm-justification (llm-justification $emergents-list $blend))
-                ; ($_ (println! (LLM justification: $llm-justification)))
+                ($llm-justification (llm-justification $props-list $blend $blend-props-prov))
                 ($llm-result (py-call (op-helper-codes.llm_result ($llm-justification))))
-
                 ($sum-op-llm-justification (sum-op $llm-result))
-                ($conceptnet-justification (conceptnet-justification $emergents-list $blend))
+                ($conceptnet-justification (conceptnet-justification $props-list $blend $blend-props-prov))
                 ($sum-op-conceptnet-justification (sum-op $conceptnet-justification))
-
             )
             (
                 $sum-op-conceptnet-justification $sum-op-llm-justification
@@ -120,20 +93,24 @@
 )
 
 
-(= (good-reason-op $blend)
+(= (good-reason-op $blend $concept1 $concept2)
     (let* 
         (
-            ($blend-properties (properties-list $blend))
-            ($blend-withprovance ())
-            ($emergents (custom-filter-atom $blend-properties  (Method <= size-atom 1)))
-            ($emergent-count (size-atom $emergents))
+            (($blend-props $c1-props $c2-props) (collapse(superpose((properties-list $blend) (properties-list $concept1) (properties-list $concept2)))))
+            (($input1 $input2) ((blend-name $concept1) (blend-name $concept2)))
+            ($blend-props-with-prov (provenance-helper ($input1 $c1-props) ($input2 $c2-props) $blend-props))
+            ($blend-props-above-threshold (greater-than-threshold-props $blend-props (gd-threshold)))
+            ($blend-props-above-threshold-count (size-atom $blend-props-above-threshold))
         )
         (
-            if (== $emergent-count 0)
-            1.0
-            (let $justified-counts (count-justified $emergents $blend)
-                (let ($conc-net-score $llm-score) (map-atom $justified-counts $count (/ $count $emergent-count)) (Conceptnet-score $conc-net-score LLM-score $llm-score))
+            if (== $blend-props-above-threshold-count 0)
+            0.0
+            (let $justified-counts (count-justified $blend-props-above-threshold $blend $blend-props-with-prov)
+                (let ($conc-net-score $llm-score) (map-atom $justified-counts $count (/ $count $blend-props-above-threshold-count)) (Conceptnet-score $conc-net-score LLM-score $llm-score))
             )
         )
     )
 )
+
+(= (gd-threshold) 0.5)
+(= (gd-sim-threshold) 0.15)

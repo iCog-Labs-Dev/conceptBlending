@@ -1,8 +1,7 @@
 !(import! &self utils/list-op-utils)
 !(import! &self utils/info-theoretic-utils)
 !(import! &self op-constraints/op-evaluation)
-!(import! &self libs/agents/gpt_agents)
-!(import! &self "utils/uppercase_changer.py")
+; !(import! &self libs/agents/gpt_agents)
 !(import! &self "libs/agents/gpt_agents.py")
 ; a temporary representation of the function Error
 (=(Error $atom $message) 
@@ -430,23 +429,21 @@
                             (if (== $eval True) 
                                 (let ($blend-name $blendprops) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
                                     (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
-                                        ; (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
-                                            (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blendprops))
-                                                (let $op-res (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                    (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res) $op-res
-                                                        (Formed Blend: $blend
-                                                        Evaluation-Metrics:
-                                                        Integration: $integration-res
-                                                        ; Good-reason: $good-reason-res
-                                                        Unpacking: $unpacking-res
-                                                        Web: $web-res
-                                                        Topology: $topology-res
-                                                        Metonymy: $metonymy-res
-                                                        )                                                                
-                                                    )
+                                        (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blendprops))
+                                            (let $op-res (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                                                (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) $op-res
+                                                    (Formed Blend: $blend
+                                                    Evaluation-Metrics:
+                                                    Integration: $integration-res
+                                                    Good-reason: $good-reason-res
+                                                    Unpacking: $unpacking-res
+                                                    Web: $web-res
+                                                    Topology: $topology-res
+                                                    Metonymy: $metonymy-res
+                                                    )                                                                
                                                 )
                                             )
-                                        ; )
+                                        )
                                     )
                                 )
                                 $blend
@@ -474,22 +471,20 @@
                                                     ;; -- Sub-Path A1: Eval is True --
                                                     (let ($blend-name $blendprops) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
                                                         (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
-                                                            ; (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
-                                                                (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blendprops))
-                                                                    (let $res-op (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                                        (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res) $res-op
-                                                                            (Formed Blend: $blend
-                                                                            Evaluation-Metrics:
-                                                                            Integration: $integration-res
-                                                                            ; Good-reason: $good-reason-res
-                                                                            Unpacking: $unpacking-res
-                                                                            Web: $web-res
-                                                                            Topology: $topology-res
-                                                                            Metonymy: $metonymy-res)
-                                                                        )
+                                                            (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blendprops))
+                                                                (let $res-op (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                                                                    (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) $res-op
+                                                                        (Formed Blend: $blend
+                                                                        Evaluation-Metrics:
+                                                                        Integration: $integration-res
+                                                                        Good-reason: $good-reason-res
+                                                                        Unpacking: $unpacking-res
+                                                                        Web: $web-res
+                                                                        Topology: $topology-res
+                                                                        Metonymy: $metonymy-res)
                                                                     )
                                                                 )
-                                                            ; )
+                                                            )
                                                         )
                                                     )
                                                     ;; -- Sub-Path A2: Eval is False (Skip this item) --
@@ -518,16 +513,14 @@
                 (let $_ (println! (Best-sample $best-sample-with-fitness))
                     (let $concept-pair (let (Concept $x $y) (concept1) $x)
                         (let $network (sread (py-call (gpt_agents.gpt_network_selector $concept-pair)))
-                            (let $_ (println! (Network $network))
-                                (if (not (== $network None))
-                                    (let $prepared-network (prepare-network-call $network)
-                                        (if (== $SCMAorMCMA moedd-cma-es-main-loop)
-                                            (let $_ (println! (Type of CMA-ES: Multi-Objective CMA-ES | Selected Network: $prepared-network | Concept-pair: $concept-pair)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $prepared-network $eval))
-                                            (let $_ (println! (Type of CMA-ES: Single-Objective CMA-ES | Selected Network: $prepared-network | Concept-pair: $concept-pair)) (single-objective-blend $best-sample-with-fitness $concept-pair $prepared-network $eval))
-                                        )
+                            (if (not (== $network None))
+                                (let $prepared-network (prepare-network-call $network)
+                                    (if (== $SCMAorMCMA moedd-cma-es-main-loop)
+                                        (let $_ (println! (Type of CMA-ES: Multi-Objective CMA-ES | Selected Network: $prepared-network | Concept-pair: $concept-pair)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $prepared-network $eval))
+                                        (let $_ (println! (Type of CMA-ES: Single-Objective CMA-ES | Selected Network: $prepared-network | Concept-pair: $concept-pair)) (single-objective-blend $best-sample-with-fitness $concept-pair $prepared-network $eval))
                                     )
-                                    (Error $network NoNetworkSelected)
                                 )
+                                (Error $network NoNetworkSelected)
                             )
                         )
                     )
@@ -536,3 +529,17 @@
         )
     )
 )
+
+
+; (= (blend) (Blend spiderman (Property (web_creation 1) (intelligence 1) (physical_strength 0.5) (mobility 1) (predatory_behavior 0.4) (social_structure 1) (symbolism 0.2) (tool_use 1)) (Relations (formOf spiderman) (isA human) (isA superhero)))
+; )
+
+; (= (concept1) (Concept man@spider (Property (mobility 0.9) (intelligence 0.9) (web_creation 0.0) (social_structure 0.8) (predatory_behavior 0.2) (communication 0.9) (symbolism 0.7) (physical_strength 0.7)) (Relations (relatedTo person) (relatedTo man) (relatedTo boy)))
+; )
+
+; (= (concept2) (Concept spider@man (Property (web_creation 1.0) (intelligence 0.4) (physical_strength 0.6) (mobility 0.8) (predatory_behavior 1.0) (social_structure 0.2) (symbolism 0.7) (communication 0.1)) (Relations (capableOf spin_webs) (relatedTo spider) (isA arachnid)))
+; )
+
+; !(op-evaluater (blend) (concept1) (concept2))
+
+; ; !(get-concept-relations spider &space 5)

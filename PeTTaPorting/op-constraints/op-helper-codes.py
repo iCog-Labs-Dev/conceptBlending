@@ -54,10 +54,8 @@ def get_sentence_model():
 def compute_average_pairwise_similarity(properties):
     # print(f"Computing average pairwise similarity for properties: {properties}")
     model = get_sentence_model()
-    threshold = 0.5
-
-    properties_clean = [str(prop).replace('-', ' ').replace('_', ' ') for prop in properties]
     
+    properties_clean = [str(prop).replace('-', ' ') for prop in properties]
     n = len(properties_clean)
     if n < 2: # need at least 2 items to compare
         return 0.0
@@ -83,3 +81,10 @@ def compute_average_pairwise_similarity(properties):
     score = float(np.mean(pairwise)) if pairwise else 0.0
     # print(f"Average pairwise similarity score: {score}")
     return score
+
+def split_at_symbol(text):
+    parts = text.split("@")
+    if len(parts) != 2:
+        raise ValueError("Input must contain exactly one '@' symbol.")
+    return f"({parts[0]} {parts[1]})"
+

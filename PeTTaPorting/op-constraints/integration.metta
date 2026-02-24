@@ -35,9 +35,6 @@
     )
 )
 
-; (= (props-coherence $props)
-; )
-
 (= (integration-op $blend)
     (let*
         (
@@ -48,7 +45,6 @@
             ($conflict-ratio (/ $conflicts (pow-math (size-atom $prop-names) 0.5)))
             ($conflict-res (max-atom (0.0 (- 1.0 $conflict-ratio))))
             ($coherence (py-call (op-helper-codes.compute_average_pairwise_similarity $prop-names)))
-            ($_ (println! (Props-coherence $coherence)))
             ($final-res (/ (+ $conflict-res $coherence) 2.0))
         )
         $final-res

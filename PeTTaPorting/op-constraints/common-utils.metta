@@ -9,7 +9,7 @@
     (cdr-atom $relations)
 )
 
-(: to-float (-> Number Number))
+(: to-float-op (-> Number Number))
 (= (to-float-op $x) (+ $x 0.0))
 
 (= (detect-characteristic-parts) True )
@@ -62,33 +62,7 @@
 )
 
 (= (provenance-sources $blend-properties)
-    (let $props-with-prov (custom-filter-atom $blend-properties (Method > size-atom 1)) (map-atom $props-with-prov $prop (index-atom $prop 1)))
-)
-
-(= (predefined-conflicts)
-    ((hot cold) (liquid solid) (alive dead) (floats metald) (floats sinks) (on off) (open close) (true false) (win lose))
-)
-
-(= (cross_mappings)(
-        (relation_type RelatedTo
-            (
-                (concept_a_relation (RelatedTo man))
-                (concept_b_relation (RelatedTo mammal))
-            )
-            (confidence 1.0)
-        )
-        (relation_type AtLocation
-            (
-                (concept_a_relation (AtLocation city))
-                (concept_b_relation (AtLocation cave))
-            )
-            (confidence 1.0)
-        )
-    )
-)
-
-(= (concept-relation-mapping ($relation $rel-type ($concept-a-relation $concept-b-relation) $confidence))
-    ($concept-a-relation $concept-b-relation)
+    (let $props-with-prov (custom-filter-atom $blend-properties (Method > size-atom 1)) (let $provenances (map-atom $props-with-prov $prop (index-atom $prop 1)) (unique-atom $provenances)))
 )
 
 (= (sum-op $lst)
@@ -103,7 +77,7 @@
 )
 
 (= (get-concept-relations-op $concept $space $n)
-    (let $relations (concept-relations)
+    (let $relations (concept-relations-op)
         (let $result (map-atom $relations $relation (first-n-elements (collapse(match $space ($relation $concept $target) ($relation $target))) $n))
             (let $fresult (foldl-atom $result () $acc $x (union-atom $acc $x)) (unique-atom $fresult))
         )
@@ -213,6 +187,49 @@
     )
 )
 
+;; ==========================================
+;;  Property Comparison Helper
+;; ==========================================
+;; Extracts property at index from both inputs and returns the winner.
+;; Format returned: (WinnerName PropName WinnerValue)
+(= (compare-concepts-prop-val ($input1 $props1) ($input2 $props2) $index)
+   (let* (($p1 (index-atom $props1 $index))
+          ($p2 (index-atom $props2 $index))
+          ($prop-name (car-atom $p1))
+          ($v1 (index-atom $p1 1))
+          ($v2 (index-atom $p2 1)))
+     (if (>= $v1 $v2) 
+         ($input1 $prop-name $v1) 
+         ($input2 $prop-name $v2))))
+
+;; ==========================================
+;; Provenance Implementation
+;; ==========================================
+
+(= (provenance-helper ($input1 $concept1props) ($input2  $concept2props) $blendprops)   
+   (provenance-recursive ($input1 $concept1props) ($input2  $concept2props) $blendprops 0)
+)
+
+(= (provenance-recursive ($input1 $concept1props) ($input2  $concept2props) $blendprops $idx)
+   (if (>= $idx (size-atom $blendprops))
+       () 
+       (let* 
+            (
+                (($gcn $gcp $gcpv) (compare-concepts-prop-val ($input1 $concept1props) ($input2  $concept2props) $idx))
+                ($blend-prop (index-atom $blendprops $idx))
+                ($blend-prop-name (car-atom $blend-prop))
+                ($blend-prop-val  (index-atom $blend-prop 1))
+                ($current-entry (if (>= $blend-prop-val $gcpv) 
+                                    ($blend-prop-name) 
+                                    ($blend-prop-name ($gcn))))
+                ($rest (provenance-recursive ($input1 $concept1props) ($input2  $concept2props) $blendprops (+ $idx 1)))
+            )
+            (cons-atom $current-entry $rest)
+       )
+    )
+)
+
+
 ; !(intersection-atom (4 5 6) (4 5 7 8))
 
-; !(greater-than-threshold-props ((intell 0.8) (pyhsic 0.7) (symoblo 0.3) (communic 0.2)) 0.1)
+; !(greater-than-threshold-props ((intell 0.8) (pyhsic 0.7) (symoblo 0.3) (communic 0.2)) 0.3)

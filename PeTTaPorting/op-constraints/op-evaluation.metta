@@ -51,24 +51,24 @@
 (= (op-evaluater $blend $concept1 $concept2)
     (let*
         (
-            ($_ (println! (Calc Integration-op value)))
+            ($_ (println! (Started Integration-op Evaluation)))
             ($integration-res (integration-op $blend))
-            ($_ (println! (Integration-op Value: $integration-res)))
-            ($_ (println! (Calc Metonymy-op Value)))
+            ($_ (println! (Finshed Integration-op Evaluation! Integration-op Value: $integration-res)))
+            ($_ (println! (Started Metonymy-op Evaluation)))
             ($metonymy-res (metonymy-op $blend))
-            ($_ (println! (Metonymy-op Value: $metonymy-res)))
-            ($_ (println! (Calc Unpacking-op Value)))
+            ($_ (println! (Finished Metonymy-op Evaluation! Metonymy-op Value: $metonymy-res)))
+            ($_ (println! (Started Unpacking-op Evaluation)))
             ($unpacking-res (unpacking-op $blend $concept1 $concept2))
-            ($_ (println! (Unpacking Value: $unpacking-res)))
-            ($_ (println! (Calc Web-op Value)))
-            ($web-res (web-op (cross_mappings) $blend))
-            ($_ (println! (Web-op Value: $web-res)))
-            ($_ (println! (Calc Topology-op Value)))
+            ($_ (println! (Finished Unpacking-op Evaluation! Unpacking-op Value: $unpacking-res)))
+            ($_ (println! (Started Web-op Evaluation)))
+            ($web-res (web-op $blend $concept1 $concept2))
+            ($_ (println! (Finished Web-op Evaluation! Web-op Value: $web-res)))
+            ($_ (println! (Started Topology-op Evaluation)))
             ($topology-res (topology-op $blend $concept1 $concept2))
-            ($_ (println! (Toplogy-op Value: $topology-res)))
-            ; ($_ (println! (Calc Good-reason Value)))
-            ; ($good-reason-res (good-reason-op $blend))
-            ; ($_ (println! (Good-reason Value: $good-reason-res)))
+            ($_ (println! (Finished Toplogy-op Evaluation! Topology-op Value: $topology-res)))
+            ($_ (println! (Started Good-reason-op Evaluation)))
+            ($good-reason-res (good-reason-op $blend $concept1 $concept2))
+            ($_ (println! (Finished Good-reason-op Evaluation! Good-reason-op Value: $good-reason-res)))
         )
         (
             $integration-res
@@ -76,7 +76,7 @@
             $unpacking-res
             $web-res
             $topology-res
-            ; $good-reason-res
+            $good-reason-res
         )
     )
 )
