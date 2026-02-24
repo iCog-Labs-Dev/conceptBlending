@@ -1,6 +1,6 @@
 
 !(import! &self list-op-utils)
-;! (import! &self utils/cma-utils)
+! (import! &self utils/cma-utils)
 ; ;Evaluate expression via py-call:
 !(import! &self "utils/numpy_methods.py")
 
@@ -47,6 +47,15 @@
 ;; Standard error reporting
 (= (Error $atom $message) $message)
 
+;; Standard nth element accessor
+(= (nth $list $n)
+   (if (== $n 0) 
+       (car-atom $list)
+       (nth (cdr-atom $list) (- $n 1))))
+
+(= (make-NaN)
+    (sqrt-math -2)
+)
 ;; Applies Logarithm to every element in a vector
 (= (apply-log $vector $base)
    (map-atom $vector $x (log-math $base $x)))
@@ -68,10 +77,10 @@
    (if (== $bool True) 1 0))
 
 ;; ============================================================================
-;; MATRIX & VECTOR GENERATION
+;; matrice & VECTOR GENERATION
 ;; ============================================================================
 
-;; Helper: Generates a single row for an identity matrix
+;; Helper: Generates a single row for an identity matrice
 (= (gen-row $r $c $dim)
    (if (== $c $dim)
        () 
@@ -79,17 +88,17 @@
               ($tail (gen-row $r (+ $c 1) $dim)))
          (cons-atom $val $tail))))
 
-;; Helper: Generates the rows for an identity matrix
-(= (gen-matrix-rows $r $dim)
+;; Helper: Generates the rows for an identity matrice
+(= (gen-matrice-rows $r $dim)
    (if (== $r $dim)
        ()
        (let* (($current-row (gen-row $r 0 $dim))
-              ($rest-rows (gen-matrix-rows (+ $r 1) $dim)))
+              ($rest-rows (gen-matrice-rows (+ $r 1) $dim)))
          (cons-atom $current-row $rest-rows))))
 
-;; Generates an Identity Matrix of size $dim x $dim
-(= (identity-matrix $dim)
-   (gen-matrix-rows 0 $dim))
+;; Generates an Identity matrice of size $dim x $dim
+(= (identity-matrice $dim)
+   (gen-matrice-rows 0 $dim))
 
 ;; Generates a list of size $n filled with 1s
 ; (= (generate-toy-list $n)
@@ -150,7 +159,7 @@
    (let $product (vector-op $vec1 $vec2 *) 
         (sum $product)))
 
-;; Computes the Outer Product: creates a matrix where M[i][j] = v1[i] * v2[j]
+;; Computes the Outer Product: creates a matrice where M[i][j] = v1[i] * v2[j]
 (= (outer-product $vec1 $vec2)
    (if (or (== $vec1 ()) (== $vec2 ()))
        ()
@@ -161,10 +170,10 @@
          (cons-atom $row $res))))
 
 ;; ============================================================================
-;; MATRIX OPERATIONS
+;; matrice OPERATIONS
 ;; ============================================================================
 
-;; Applies an operation to each row of a matrix using elements of a vector
+;; Applies an operation to each row of a matrice using elements of a vector
 (= (mat-vec-op $mat $vec $op)
    (if (or (== $mat ()) (== $vec ()))
        ()
@@ -188,11 +197,11 @@
               ($rest-mat (mat-mat-eles-op $tail1 $tail2 $op)))
          (cons-atom $new-row $rest-mat))))
 
-;; Applies an operation to every element in a matrix using a single scalar
-(= (mat-scalar-op $matrix $num $op)
-   (if (== (size-atom $matrix) 0)
-       (Error $matrix (EmptyMatrix))
-       (map-atom $matrix $x (scalar-op $x $num $op))))
+;; Applies an operation to every element in a matrice using a single scalar
+(= (mat-scalar-op $matrice $num $op)
+   (if (== (size-atom $matrice) 0)
+       (Error $matrice (Emptymatrice))
+       (map-atom $matrice $x (scalar-op $x $num $op))))
 
 ;; ============================================================================
 ;; CLIPPING UTILITIES (Bounds Constraints)
@@ -210,9 +219,9 @@
 (= (vec-clip $vec $lb $ub)
    (map-atom $vec $x (num-clip $x $lb $ub)))
 
-;; Clips all elements in a matrix
-(= (mat-clip $matrix $lb $ub)
-   (map-atom $matrix $x (vec-clip $x $lb $ub)))
+;; Clips all elements in a matrice
+(= (mat-clip $matrice $lb $ub)
+   (map-atom $matrice $x (vec-clip $x $lb $ub)))
 
 
 ;; ============================================================================
@@ -230,32 +239,34 @@
          (+ $prod $rest))))
 
 ;; ----------------------------------------------------------------------------
-;; MATRIX UPDATE UTILITIES
+;; matrice UPDATE UTILITIES
 ;; ----------------------------------------------------------------------------
 
 ;; Replaces the value at index $j in a row
 (= (update-row-cell $row $j $val)
    (if (== $j 0)
-       (cons-atom $val (cdr-atom $row))
+     (let $rest (cdr-atom $row)
+          (cons-atom $val $rest))
+       
        (let* (($head (car-atom $row))
               ($tail (cdr-atom $row))
               ($updated-tail (update-row-cell $tail (- $j 1) $val)))
          (cons-atom $head $updated-tail))))
 
-;; Replaces a whole row in a matrix at index $i
-(= (update-matrix-row $rows $i $new-row)
+;; Replaces a whole row in a matrice at index $i
+(= (update-matrice-row $rows $i $new-row)
    (let* (($head (car-atom $rows))
           ($tail (cdr-atom $rows)))
      (if (== $i 0)
          (cons-atom $new-row $tail)
-         (let $updated-tail (update-matrix-row $tail (- $i 1) $new-row)
+         (let $updated-tail (update-matrice-row $tail (- $i 1) $new-row)
            (cons-atom $head $updated-tail)))))
 
-;; Updates a specific cell (i, j) in the matrix
-(= (update-matrix-cell $rows $i $j $val)
+;; Updates a specific cell (i, j) in the matrice
+(= (update-matrice-cell $rows $i $j $val)
    (let* (($row (nth $rows $i))
           ($new-row (update-row-cell $row $j $val)))
-     (update-matrix-row $rows $i $new-row)))
+     (update-matrice-row $rows $i $new-row)))
 
 ;; ----------------------------------------------------------------------------
 ;; DECOMPOSITION LOOPS
@@ -271,7 +282,7 @@
               ($val (if (== $i $j)
                         (sqrt-math (- $aij $s))
                         (/ (- $aij $s) (nth (nth $L $j) $j))))
-              ($L-updated (update-matrix-cell $L $i $j $val)))
+              ($L-updated (update-matrice-cell $L $i $j $val)))
          (cholesky-j-loop $A $L-updated $i (+ $j 1) $n))))
 
 ;; Outer loop: Iterates through rows $i
@@ -284,14 +295,10 @@
 ;; INITIALIZATION & ENTRY POINT
 ;; ----------------------------------------------------------------------------
 
-;; Standard nth element accessor
-(= (nth $list $n)
-   (if (== $n 0) 
-       (car-atom $list)
-       (nth (cdr-atom $list) (- $n 1))))
 
-;; Creates an empty matrix of size $rows x $cols filled with 0s
-(= (make-matrix $rows $cols)
+
+;; Creates an empty matrice of size $rows x $cols filled with 0s
+(= (make-matrice $rows $cols)
    (if (== $rows 0)
        ()
        (let* (($cols-row (zeros-vec $cols))
@@ -306,7 +313,6 @@
           ($L (make-matrix $n $n))
           )
      (cholesky-loop $A $L 0 $n)))
-
 
 ;; ============================================================================
 ;; NUMERICAL VALIDATION (Inf & NaN Checkers)
@@ -334,7 +340,7 @@
              True 
              (vec-NaN-checker $tail)))))
 
-;; Checks the numerical integrity of a matrix.
+;; Checks the numerical integrity of a matrice.
 ;; Returns False if any row contains NaN or Inf.
 (= (Pos-definitness-checker $mat)
    (if (== $mat ())
@@ -367,7 +373,7 @@
 
 
 ;; ============================================================================
-;; MATRIX TRANSPOSITION HELPERS
+;; matrice TRANSPOSITION HELPERS
 ;; ============================================================================
 
 ;; Extracts the first element (head) of every row to form a new column
@@ -390,8 +396,8 @@
               ($val (cdr-atom $row)))
          (cons-atom $val $tail-rest))))
 
-;; Main Transpose Function: Flips a matrix over its diagonal
-(= (transpose-matrix $mat)
+;; Main Transpose Function: Flips a matrice over its diagonal
+(= (transpose-matrice $mat)
    (if (== $mat ())
        ()
        (let $first-row (car-atom $mat)
@@ -399,11 +405,11 @@
              ()
              (let* (($head (get-heads $mat))
                     ($tail (get-tails $mat))
-                    ($t (transpose-matrix $tail)))
+                    ($t (transpose-matrice $tail)))
                (cons-atom $head $t))))))
 
 ;; ============================================================================
-;; RANDOM MATRIX GENERATION (Standard Normal)
+;; RANDOM matrice GENERATION (Standard Normal)
 ;; ============================================================================
 
 ;; Generates a single row (vector) of size $dim filled with Gaussian values
@@ -414,7 +420,7 @@
               ($res (gen-gauss-row (- $dim 1))))
          (cons-atom $gauss $res))))
 
-;; Generates a matrix of $lambda_ rows, each of size $dim
+;; Generates a matrice of $lambda_ rows, each of size $dim
 (= (standard-normal $dim $lambda_)
    (if (<= $lambda_ 0)
        ()
@@ -446,29 +452,29 @@
 
 
 ;; ============================================================================
-;; MATRIX MULTIPLICATION
+;; matrice MULTIPLICATION
 ;; ============================================================================
 
 ;; Computes the dot product of two vectors
 (= (dot-product $v1 $v2)
    (sum (vector-op $v1 $v2 *)))
 
-;; Multiplies a single row by all columns of the second matrix (M2-Transposed)
-(= (row-times-matrix $row ()) ())
-(= (row-times-matrix $row $m2-t)
+;; Multiplies a single row by all columns of the second matrice (M2-Transposed)
+(= (row-times-matrice $row ()) ())
+(= (row-times-matrice $row $m2-t)
    (let* (($col (car-atom $m2-t))
           ($rest-cols (cdr-atom $m2-t))
           ($dot (dot-product $row $col))
-          ($res (row-times-matrix $row $rest-cols)))
+          ($res (row-times-matrice $row $rest-cols)))
      (cons-atom $dot $res)))
 
-;; Recursively processes each row of M1 to perform Matrix-Matrix Multiplication
-(= (matrix-mul-recursive () $m2-t) ())
-(= (matrix-mul-recursive $m1 $m2-t)
+;; Recursively processes each row of M1 to perform matrice-matrice Multiplication
+(= (matrice-mul-recursive () $m2-t) ())
+(= (matrice-mul-recursive $m1 $m2-t)
    (let* (($row (car-atom $m1))
           ($rest-m1 (cdr-atom $m1))
-          ($new-row (row-times-matrix $row $m2-t))
-          ($res (matrix-mul-recursive $rest-m1 $m2-t)))
+          ($new-row (row-times-matrice $row $m2-t))
+          ($res (matrice-mul-recursive $rest-m1 $m2-t)))
      (cons-atom $new-row $res)))
 
 ;; Main Multiplication Entry Point: Includes dimension validation
@@ -478,8 +484,8 @@
           ($m2-rows (size-atom $m2)))
      (if (not (== $m1-cols $m2-rows))
          (Error ($m1-cols $m2-rows) DimensionMismatch)
-         (let $m2-t (transpose-matrix $m2)
-           (matrix-mul-recursive $m1 $m2-t)))))
+         (let $m2-t (transpose-matrice $m2)
+           (matrice-mul-recursive $m1 $m2-t)))))
 
 ;; ============================================================================
 ;; MULTIVARIATE NORMAL SAMPLING
@@ -494,9 +500,9 @@
           ($res (add-mean-to-samples $rest $mean)))
      (cons-atom $new-row $res)))
 
-;; Main Function: Generates $lambda_ samples from a Multivariate Normal distribution
-;; Formula: Y = mean + L * Z, where L is the Cholesky factor of the Covariance matrix
-(= (random-multivariate $mean $cov-matrix $lambda_)
+;; Generates $lambda_ samples from a Multivariate Normal distribution
+;; Formula: Y = mean + L * Z, where L is the Cholesky factor of the Covariance matrice
+(= (random-multivariate $mean $cov-matrice $lambda_)
    (let* (
        ;; Decompose Covariance into Lower Triangular L
       ;  ($_ (println! (mean $mean)))
@@ -631,15 +637,120 @@
 ; (= (cleaner $lists $index)
 ;     (collapse (index-atom (superpose $lists) $index)))
 
-;; Custom Union: Merges lists or elements and ensures uniqueness
-(= (unionize () $acc) (unique-atom $acc))
+
+;; Merges two lists using the grounded union-atom function
+(= (custom-union-atom $list1 $list2)
+    (union-atom $list1 $list2))
+
+;; Ensures all elements in a list are unique
+(= (custom-unique-atom $list)
+    (unique-atom $list))
+
+;; Unionize: Recursively flattens and merges lists while ensuring uniqueness.
+;; If the head is a single element, it cons onto the accumulator; 
+;; if it's a list, it performs a set union.
+(= (unionize () $acc) (custom-unique-atom $acc))
 (= (unionize $list $acc)
    (let* (($ht (decons-atom $list))
           (($head $tail) $ht))
      (if (== (size-atom $head) 1)
          (unionize $tail (cons-atom (car-atom $head) $acc))
-         (unionize $tail (union-atom $head $acc)))))
+         (unionize $tail (custom-union-atom $head $acc)))))
+
+
+;; ============================================================================
+;;  Search & Extraction
+;; ============================================================================
+
+;; Checks if the second element (index 1) of a list matches $val.
+;; Returns the whole list if matched, otherwise an empty list.
+(= (match-val-best-nd $val $best-nd)
+   (let $obj (index-atom $best-nd 1)
+    (if (== $val $obj)
+        $best-nd
+        ())))
+
+;; Linear search through a list of entries. Returns the first entry that matches $val.
+(= (max-best-nd-helper $val $best-nds)
+   (if (== $best-nds ())
+      ()
+      (let* (($hd (car-atom $best-nds))
+             ($res (match-val-best-nd $val $hd)))
+       (if (== $res ())
+          (max-best-nd-helper $val (cdr-atom $best-nds))
+          $res))))
+
+;; Cleaner: Maps through a list of lists and extracts the element at $index from each.
+;; This version collects ALL results into a resulting list.
+(= (cleaner $lists $index)
+   (if (== $lists ())
+       ()  
+       (let* (($hd (car-atom $lists))
+              ($res (index-atom $hd $index))
+              ($remaining (cleaner (cdr-atom $lists) $index)))
+             (cons-atom $res $remaining))))
 
 
 
-         
+
+
+
+;; ============================================================================
+;;  Invert a Lower Triangular Matrice And Compute Its Inverse Square Root
+;; ============================================================================
+
+
+;; --- C-inv-sqrt ---
+;; High-level function to find the inverse square root of a matrix
+;; Step: Cholesky -> Invert Lower -> Transpose
+(= (C-inv-sqrt $matrice)
+    (transpose-matrice (inverse-lmatrice (cholesky-decomposition $matrice))))
+
+;; --- Append ---
+;; Standard tail-append to maintain row order during matrix construction
+(= (append () $item) ($item))
+(= (append $list $item)
+   (let* (($head (car-atom $list))
+          ($tail (cdr-atom $list))
+          ($updated-tail (append $tail $item)))
+         (cons-atom $head $updated-tail)))
+
+;; --- Summation (Forward Substitution) ---
+;; Calculates Σ (L[i][k] * Inv[k][j]) for k from j to i-1
+(= (sum-prev $row $inv-matrice $i $j $k)
+   (if (== $k $i)
+       0.0
+       (+ (* (nth $row $k) (nth (nth $inv-matrice $k) $j))
+          (sum-prev $row $inv-matrice $i $j (+ $k 1)))))
+
+;; --- build-row ---
+;; Constructs a single row of the inverse matrix.
+;; Uses 1/L[i][i] for diagonals and the Forward Substitution formula for others.
+(= (build-row $row $inv-matrice $i $j $n)
+   (if (== $j $n)
+       ()
+       (let* (($val (if (> $j $i)
+                        0.0
+                        (if (== $i $j)
+                            (/ 1.0 (nth $row $i))
+                            (/ (- 0.0 (sum-prev $row $inv-matrice $i $j $j)) (nth $row $i)))))
+                            ($rest (build-row $row $inv-matrice $i (+ $j 1) $n)))
+             (cons-atom $val $rest)
+             
+             )))
+
+;; --- invert-rec ---
+;; Iterates through the rows of the input matrix to build the inverse matrix
+(= (invert-rec $m $inv $i $n)
+   (if (== $i $n)
+       $inv
+       (let* (($new-row (build-row (nth $m $i) $inv $i 0 $n))
+              ($updated-inv (append $inv $new-row)))
+             (invert-rec $m $updated-inv (+ $i 1) $n))))
+
+
+;; Dynamically determines matrix size and starts inversion
+(= (inverse-lmatrice $matrice)
+   (let $n (size-atom $matrice) 
+        (invert-rec $matrice () 0 $n)))
+
