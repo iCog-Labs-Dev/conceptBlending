@@ -2,6 +2,10 @@
 ;; LIST MATH & COMPARISON
 ;; ==========================================
 
+;; Standard error reporting
+(= (Error $atom $message) $message)
+
+
 ;; Element-wise multiplication of two lists, tagged with properties
 (= (list-multiply $candidatedegreeval $propertiesvalues $properties)
    (if (or (== $properties ()) (or (== $propertiesvalues ()) (== $candidatedegreeval ()))) 
@@ -55,9 +59,9 @@
 
 (= (zip-list $l1 $l2)
    (if (and (== $l1 ()) (== $l2 ())) 
-       (Error (() ()) EmptyList) 
+       (Error (() ()) (EmptyList)) 
        (if (not (== (size-atom $l1) (size-atom $l2))) 
-           (Error ($l1 $l2) LengthMismatch)
+           (Error ($l1 $l2) (LengthMismatch))
            (zip-helper $l1 $l2)
        )
    )
@@ -78,7 +82,7 @@
 
 (= (unzip-list $list)
    (if (== $list ())
-       (Error () EmptyList)
+       (EmptyList)
        (unzip-helper $list)
    )
 )
@@ -122,14 +126,24 @@
 ;; ==========================================
 
 ;; Removes all instances of $val from $list
-(= (remove-list-element () $val) ())
+(= (remove-list-element-helper $list $val $chead)
+    (if (or (== $chead $val) (== (size-atom $list) 0))
+        $list
+        (let* 
+            (
+                ($head (car-atom $list))
+                ($fhead (if (== $head $val) () $head))
+                ($tail (cdr-atom $list))
+                ($res (remove-list-element-helper $tail $val $head))
+            )
+            (if (== $fhead ()) (union-atom () $res) (cons-atom $fhead $res))
+        )
+    )
+)
+
 (= (remove-list-element $list $val)
-    (let* (($head (car-atom $list))
-           ($tail (cdr-atom $list))
-           ($res (remove-list-element $tail $val))) 
-    (if (== $head $val)
-        $res 
-        (cons-atom $head $res))))
+    (remove-list-element-helper $list $val ())
+)
 
 
 ;; Returns a list excluding all occurrences of val
@@ -202,7 +216,6 @@
 
 ;; Generates list of N ones
 (= (generate-toy-list $n)
-
     (if (<= $n 0)
         ()  
         (let* 
@@ -230,3 +243,34 @@
 (= (first-n-elements $list $n)
    (let $nn (if (> $n (size-atom $list)) (size-atom $list) $n) (first-n-elements-helper $list $nn))
 )
+
+
+;;;; Random list generator ;;;;
+
+(= (random-row-list $width $lb $ub)
+    (if (<= $width 0)
+        ()
+        (let*
+            (
+                ($rfloat (random-float &rng $lb $ub))
+                ($rest (random-row-list (- $width 1) $lb $ub))
+            )
+            (cons-atom $rfloat $rest)
+        )
+    )
+)
+
+(= (random-list $length $width $lb $ub)
+    (if (<= $length 0)
+        ()
+        (let*
+            (
+                ($rrow (random-row-list $width $lb $ub))
+                ($rest (random-list (- $length 1) $width $lb $ub))
+            )
+            (cons-atom $rrow $rest)
+        )
+    )
+)
+
+; !(random-list 4 5 0.0 1.0 )

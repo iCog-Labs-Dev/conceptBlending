@@ -1,14 +1,3 @@
-!(import! &self "utils/semantic_coorelation.py")
-
-
-(=(semantic-correlation $properties $degrees)
-    (let* (
-    ($result (py-call (semantic_coorelation.semantic_similarity $properties $degrees)))
-)
-    $result
-))
-
-
 (= (concept-relations) (isA relatedTo hasProperty atLocation synonym capableOf antonym partOf hasA atLocation))
 
 ; Returns a list of relation expressions like (isa feline) (hasa whiskers) ...
@@ -37,4 +26,21 @@
 
 (= (prepare-network-call $str2)
     (py-call (operator.add gpt_agents. $str2))
+)
+
+(= (cons-blend-properties-helper $props $props-val)
+    (if (== (size-atom $props) 0)
+        ()
+        (let*
+            (
+                ($props-head (car-atom $props))
+                ($props-tail (cdr-atom $props))
+                ($props-val-head (car-atom $props-val))
+                ($props-val-tail (cdr-atom $props-val))
+                ($prop-with-val ((car-atom $props-head) $props-val-head))
+                ($rest (cons-blend-properties-helper $props-tail $props-val-tail))
+            )
+            (cons-atom $prop-with-val $rest)
+        )
+    )
 )

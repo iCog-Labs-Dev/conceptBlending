@@ -1,11 +1,8 @@
 !(import! &self utils/list-op-utils)
 !(import! &self utils/info-theoretic-utils)
 !(import! &self op-constraints/op-evaluation)
-; !(import! &self libs/agents/gpt_agents)
-!(import! &self "libs/agents/gpt_agents.py")
-; a temporary representation of the function Error
-(=(Error $atom $message) 
-    $message)
+!(import! &self "../utils/semantic_correlation.py")
+!(import! &self "../libs/agents/gpt_agents.py")
 
 (= (get-prop-value-pairs $concept)
     (let (Concept $x $y) $concept (cdr-atom $y))
@@ -76,7 +73,7 @@
     (let*
         (
             ($probability (property-probability $concept))
-            ($degree (* -1 (log 10 $probability)))
+            ($degree (* -1 (log-math 10 $probability)))
         )
         (py-round $degree 2)
     )
@@ -229,7 +226,7 @@
             ($tc (total-correlation-entropy $degrees min))
             ($tv (isnan-math $tc))
             ($ftc (if $tv 0 $tc))
-            ($sim (semantic-correlation $props $degrees))
+            ($sim (py-call (semantic_correlation.semantic_similarity $props $degrees)))
         )
         (+ (* (Alpha) $ftc) (* (- 1 (Alpha)) $sim))        
     )
@@ -345,23 +342,10 @@
 
 (= (cons-blend-properties $concept1 $blend-prop-values)
     (let (Concept $concpair $properties) $concept1
-        (let ($length $props) ((size-atom $blend-prop-values) (cdr-atom $properties))
-            (collapse(superpose
-                (
-                    (if (>= (- $length 1) 0) (let $prop0 (index-atom $props 0) (let ($prop0name $blendprop0val) ((car-atom $prop0) (index-atom $blend-prop-values 0)) ($prop0name $blendprop0val))) (empty))
-                    (if (>= (- $length 2) 0) (let $prop1 (index-atom $props 1) (let ($prop1name $blendprop1val) ((car-atom $prop1) (index-atom $blend-prop-values 1)) ($prop1name $blendprop1val))) (empty))
-                    (if (>= (- $length 3) 0) (let $prop2 (index-atom $props 2) (let ($prop2name $blendprop2val) ((car-atom $prop2) (index-atom $blend-prop-values 2)) ($prop2name $blendprop2val))) (empty))
-                    (if (>= (- $length 4) 0) (let $prop3 (index-atom $props 3) (let ($prop3name $blendprop3val) ((car-atom $prop3) (index-atom $blend-prop-values 3)) ($prop3name $blendprop3val))) (empty))
-                    (if (>= (- $length 5) 0) (let $prop4 (index-atom $props 4) (let ($prop4name $blendprop4val) ((car-atom $prop4) (index-atom $blend-prop-values 4)) ($prop4name $blendprop4val))) (empty))
-                    (if (>= (- $length 6) 0) (let $prop5 (index-atom $props 5) (let ($prop5name $blendprop5val) ((car-atom $prop5) (index-atom $blend-prop-values 5)) ($prop5name $blendprop5val))) (empty))
-                    (if (>= (- $length 7) 0) (let $prop6 (index-atom $props 6) (let ($prop6name $blendprop6val) ((car-atom $prop6) (index-atom $blend-prop-values 6)) ($prop6name $blendprop6val))) (empty))
-                    (if (>= (- $length 8) 0) (let $prop7 (index-atom $props 7) (let ($prop7name $blendprop7val) ((car-atom $prop7) (index-atom $blend-prop-values 7)) ($prop7name $blendprop7val))) (empty))
-                    (if (>= (- $length 9) 0) (let $prop8 (index-atom $props 8) (let ($prop8name $blendprop8val) ((car-atom $prop8) (index-atom $blend-prop-values 8)) ($prop8name $blendprop8val))) (empty))
-                    (if (>= (- $length 10) 0) (let $prop9 (index-atom $props 9) (let ($prop9name $blendprop9val) ((car-atom $prop9) (index-atom $blend-prop-values 9))($prop9name $blendprop9val))) (empty))
-                )
-            ))
+        (let $props (cdr-atom $properties)
+            (cons-blend-properties-helper $props $blend-prop-values)
         )
-    )    
+    )
 )
 
 (= (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend $blendproperties))
@@ -529,17 +513,3 @@
         )
     )
 )
-
-
-; (= (blend) (Blend spiderman (Property (web_creation 1) (intelligence 1) (physical_strength 0.5) (mobility 1) (predatory_behavior 0.4) (social_structure 1) (symbolism 0.2) (tool_use 1)) (Relations (formOf spiderman) (isA human) (isA superhero)))
-; )
-
-; (= (concept1) (Concept man@spider (Property (mobility 0.9) (intelligence 0.9) (web_creation 0.0) (social_structure 0.8) (predatory_behavior 0.2) (communication 0.9) (symbolism 0.7) (physical_strength 0.7)) (Relations (relatedTo person) (relatedTo man) (relatedTo boy)))
-; )
-
-; (= (concept2) (Concept spider@man (Property (web_creation 1.0) (intelligence 0.4) (physical_strength 0.6) (mobility 0.8) (predatory_behavior 1.0) (social_structure 0.2) (symbolism 0.7) (communication 0.1)) (Relations (capableOf spin_webs) (relatedTo spider) (isA arachnid)))
-; )
-
-; !(op-evaluater (blend) (concept1) (concept2))
-
-; ; !(get-concept-relations spider &space 5)

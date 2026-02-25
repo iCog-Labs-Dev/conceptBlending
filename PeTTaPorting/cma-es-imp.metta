@@ -2,7 +2,6 @@
 !(import! &self utils/random-list-utils)
 !(import! &self utils/cma-es-utils)
 !(import! &self info-theoretic)
-; !(import! &self libs/agents/gpt_agents)
 !(import! &self "utils/numpy_methods.py")
 
 (=(add-reduct $space $atom)
@@ -120,37 +119,30 @@
 )
 
 (= (new-p-sigma $c-sigma $p-sigma $mu-eff $c-inv-sqrt $y)
-       (let* (
-            (($m1-sigma $b2 $vec-mul) (collapse(superpose((- 1 $c-sigma) (sqrt-math (* (* $c-sigma (- 2 $c-sigma)) $mu-eff)) (mat-mat-mul $c-inv-sqrt ($y))))))
-            (($m1-sigma-p-sigma $vec-mul-b2) (collapse(superpose((map-atom $p-sigma $ps (* $ps $m1-sigma)) (map-atom $vec-mul $vm (* $vm $b2))))))
-            )
-            (vector-op $m1-sigma-p-sigma $vec-mul-b2 +)
+    (let* (
+        (($m1-sigma $b2 $vec-mul) (collapse(superpose((- 1 $c-sigma) (sqrt-math (* (* $c-sigma (- 2 $c-sigma)) $mu-eff)) (mat-mat-mul $c-inv-sqrt ($y))))))
+        (($m1-sigma-p-sigma $vec-mul-b2) (collapse(superpose((map-atom $p-sigma $ps (* $ps $m1-sigma)) (map-atom $vec-mul $vm (* $vm $b2))))))
         )
+        (vector-op $m1-sigma-p-sigma $vec-mul-b2 +)
+    )
 )
 
-; !(new-p-sigma 0.3196142529106335 (0 0) 3.1672992814107035 ((0 0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0) (0 0 0 0) (0 0 0) (0 0) (0)) (0.629276773868858 0.7029813694774427 0.17915574673512397 0.021359372554875078 0.5556770423164838 -1.1102230246251565e-16 -1.3877787807814457e-17 -5.551115123125783e-17))
-; !(mat-mat-mul (identity-matrix 3) ((0.5 0.4) (0.2 0.5) (0.4 0.5)))
-; !(identity-matrix 3)
-;  !(new-p-sigma 0.3 (0.1 0.2 0.3) 2 (identity-matrix 3) (0.5 0.4 0.6))
-
-; ; ;;;; STEP SIZE ADAPTATION ;;;;
+;;;; STEP SIZE ADAPTATION ;;;;
 
 
 (= (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma $mu-eff $c-inv-sqrt $y)
-        (let* 
-            (
-                ($new-p-sigma (new-p-sigma $c-sigma $p-sigma $mu-eff $c-inv-sqrt $y))
-                ($adaptingfactor (pow-math (e) (* (/ $c-sigma $d-sigma) (- (/ (l2-norm $new-p-sigma) (sqrt-math $dim)) 1))))
-                ($adaptXsize (* $step-size $adaptingfactor))
-            )
-            ($adaptXsize $new-p-sigma)
+    (let* 
+        (
+            ($new-p-sigma (new-p-sigma $c-sigma $p-sigma $mu-eff $c-inv-sqrt $y))
+            ($adaptingfactor (pow-math (e) (* (/ $c-sigma $d-sigma) (- (/ (l2-norm $new-p-sigma) (sqrt-math $dim)) 1))))
+            ($adaptXsize (* $step-size $adaptingfactor))
         )
-
+        ($adaptXsize $new-p-sigma)
+    )
 )
 
 
-; !(new-step-size 0.5 0.3 1.5 3 (0.2 0.4 0.6) 2 (identity-matrix 3) (0.5 0.4 0.6))
-; ; ;;;; COVARIANCE EVOLUTION PATH ADAPTATION ;;;;
+;;;; COVARIANCE EVOLUTION PATH ADAPTATION ;;;;
 
 (= (h-sigma $p-sigma $c-sigma $gen)
     (1or0 (< (/ (l2-norm $p-sigma) (sqrt-math (- 1 (pow-math (- 1 $c-sigma) (* 2 (+ $gen 1)))))) (+ 1.4 (/ 2 (+ (dim) 1)))))
@@ -202,7 +194,7 @@
             )
             (+ $d1 (* (Thetha) $d2))
         )
-        (Error ($obj $ref $weight) IncorrectLength)
+        (Error ($obj $ref $weight) (IncorrectLength))
     )
 )
 
@@ -360,9 +352,4 @@
 )
 
 ; !(moedd-cma-es-main-loop)
-!(blend moedd-cma-es-main-loop (Eval))
-
-(((Candidate property vector: (((0.4909481731261901 0 0.35875479160677815 1 0 0.7211592318989654 1 0) (0.011249999999999998 0.4629775345549171)) -0.060206813293582045) || fitness value: -0.060206813293582045 || NegativeMu-hqblendValue))
- ((Candidate property vector: (((0 1 0.012858202384673612 1 1 0 0 0.3481901167468058) (0.004999999999999999 0.47266102462065746)) -0.006198576273126588) || fitness value: -0.006198576273126588 || NegativeMu-hqblendValue))
- ((Formed Blend: (doubleScope (expand spider man) spiderman (extended arachnidHumanHybrid)) Evaluation-Metrics: Integration: 0.7139783948659897 Unpacking: 0.4166666666666667 Web: 0.6793103448275862 Topology: 0.3333333333333333 Metonymy: 0.3333333333333333 Good-reason: (Conceptnet-score 1 LLM-score 1))) 
- ((Formed Blend: (doubleScope (expand spider man) spiderman (extended arachnidHumanSynthesis)) Evaluation-Metrics: Integration: 0.625074028968811 Unpacking: 0.75 Web: 0.49181034482758623 Topology: 0.3333333333333333 Metonymy: 0.3333333333333333 Good-reason: (Conceptnet-score 0 LLM-score 0.7142857142857143))))
+; !(blend moedd-cma-es-main-loop (Eval))

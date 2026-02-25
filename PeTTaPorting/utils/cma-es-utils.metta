@@ -1,5 +1,5 @@
 ; ;Evaluate expression via py-call:
-!(import! &self "utils/numpy_methods.py")
+; !(import! &self "utils/numpy_methods.py")
 
 ;; ============================================================================
 ;; PYTHON INTEROPERABILITY & NUMPY BRIDGE
@@ -39,9 +39,6 @@
 ;; ============================================================================
 ;; MATHEMATICAL UTILITIES
 ;; ============================================================================
-
-;; Standard error reporting
-(= (Error $atom $message) $message)
 
 ;; Standard nth element accessor
 (= (nth $list $n)
@@ -126,21 +123,21 @@
 (= (vector-op $v1 $v2 $op)
     (if (== (get-metatype $v2) Grounded)
         $v1
-        (if (or (== $v1 ()) (== $v2 ()))
+        (if (not (== (size-atom $v1) (size-atom $v2)))
+            (Error ((size-atom $v1) (size-atom $v2)) (LengthMismatch))
             (if (and (== $v1 ()) (== $v2 ()))
                 ()
-                (Error (size-atom $v1) (size-atom $v2) LengthMismatch)
-            )
-            (let* 
-                (
-                    ($x1 (car-atom $v1))
-                    ($x2 (car-atom $v2))
-                    ($xs1 (cdr-atom $v1))
-                    ($xs2 (cdr-atom $v2))
-                    ($head-result ($op $x1 $x2))
-                    ($tail-results (vector-op $xs1 $xs2 $op))
+                (let* 
+                    (
+                        ($x1 (car-atom $v1))
+                        ($x2 (car-atom $v2))
+                        ($xs1 (cdr-atom $v1))
+                        ($xs2 (cdr-atom $v2))
+                        ($head-result ($op $x1 $x2))
+                        ($tail-results (vector-op $xs1 $xs2 $op))
+                    )
+                    (cons-atom $head-result $tail-results)
                 )
-                (cons-atom $head-result $tail-results)
             )
         )
    )
@@ -168,14 +165,23 @@
 ;; Applies an operation to each row of a matrix using elements of a vector
 (= (mat-vec-op $mat $vec $op)
    (if (or (== $mat ()) (== $vec ()))
-       ()
-       (let* (($row (car-atom $mat))
-              ($s (car-atom $vec))
-              ($m-tail (cdr-atom $mat))
-              ($v-tail (cdr-atom $vec))
-              ($new-row (scalar-op $row $s $op))
-              ($res (mat-vec-op $m-tail $v-tail $op)))
-         (cons-atom $new-row $res))))
+        ()
+        (if (not (== (size-atom $mat) (size-atom $vec)))
+            (Error ((size-atom $mat) (size-atom $vec)) (DimensionMismatch))
+            (let* 
+                (
+                    ($row (car-atom $mat))
+                    ($s (car-atom $vec))
+                    ($m-tail (cdr-atom $mat))
+                    ($v-tail (cdr-atom $vec))
+                    ($new-row (scalar-op $row $s $op))
+                    ($res (mat-vec-op $m-tail $v-tail $op))
+                )
+                (cons-atom $new-row $res)
+            )
+        )
+    )
+)
 
 ;; Performs element-wise operations between two matrixs of the same shape
 (= (mat-mat-eles-op $mat1 $mat2 $op)
@@ -326,41 +332,48 @@
 ;; NUMERICAL VALIDATION (Inf & NaN Checkers)
 ;; ============================================================================
 
-;; Checks if a vector contains an Infinity value
-(= (vec-inf-checker $vec)
-   (if (== $vec ()) 
-       False  ;; Base case: No infinity found
-       (let* (($head (car-atom $vec))
-              ($tail (cdr-atom $vec))
-              ($is-inf (isinf-math $head)))
-         (if $is-inf 
-             True 
-             (vec-inf-checker $tail)))))
+; ;; Checks if a vector contains an Infinity value
+; (= (vec-inf-checker $vec)
+;    (if (== $vec ()) 
+;        False  ;; Base case: No infinity found
+;        (let* (($head (car-atom $vec))
+;               ($tail (cdr-atom $vec))
+;               ($is-inf (isinf-math $head)))
+;          (if $is-inf 
+;              True 
+;              (vec-inf-checker $tail)))))
 
-;; Checks if a vector contains a NaN (Not-a-Number) value
-(= (vec-NaN-checker $vec)
-   (if (== $vec ()) 
-       False
-       (let* (($head (car-atom $vec))
-              ($tail (cdr-atom $vec))
-              ($is-nan (isnan-math $head)))
-         (if $is-nan 
-             True 
-             (vec-NaN-checker $tail)))))
+; ;; Checks if a vector contains a NaN (Not-a-Number) value
+; (= (vec-NaN-checker $vec)
+;    (if (== $vec ()) 
+;        False
+;        (let* (($head (car-atom $vec))
+;               ($tail (cdr-atom $vec))
+;               ($is-nan (isnan-math $head)))
+;          (if $is-nan 
+;              True 
+;              (vec-NaN-checker $tail)))))
 
-;; Checks the numerical integrity of a matrix.
-;; Returns False if any row contains NaN or Inf.
-(= (Pos-definitness-checker $mat)
-   (if (== $mat ())
-       True  ;; All rows are clean
-       (let* (($row (car-atom $mat))
-              ($rest (cdr-atom $mat))
-              ;; Identify if the current row has any numerical issues
-              ($row-errors (collapse (superpose ((vec-NaN-checker $row) 
-                                                 (vec-inf-checker $row))))))
-         (if (== $row-errors (False False)) ;; Adjusted for standard boolean check
-             (Pos-definitness-checker $rest) 
-             False))))
+; ;; Checks the numerical integrity of a matrix.
+; ;; Returns False if any row contains NaN or Inf.
+; (= (pos-definitness-checker $mat)
+;     (if (== $mat ())
+;         True  ;; All rows are clean
+;         (let* 
+;             (
+;                 ($_ (println! (matcs $mat)))
+;                 ($row (car-atom $mat))
+;                 ($rest (cdr-atom $mat))
+;                 ;; Identify if the current row has any numerical issues
+;                 ($row-errors (collapse (superpose ((vec-NaN-checker $row) (vec-inf-checker $row)))))
+;             )
+;             (if (== $row-errors (False False)) ;; Adjusted for standard boolean check
+;                 (pos-definitness-checker $rest) 
+;                 False
+;             )
+;         )
+;     )
+; )
 
 ;; ============================================================================
 ;; MATH UTILITIES
@@ -491,7 +504,7 @@
                 ($m2-rows (size-atom $m2))
             )
             (if (not (== $m1-cols $m2-rows))
-                (Error ($m1-cols $m2-rows) DimensionMismatch)
+                (Error ($m1-cols $m2-rows) (DimensionMismatch))
                 (let $m2-t (transpose-matrix $m2)
                     (matrix-mul-recursive $m1 $m2-t)
                 )
