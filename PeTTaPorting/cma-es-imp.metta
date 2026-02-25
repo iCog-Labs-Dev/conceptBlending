@@ -10,12 +10,12 @@
 )
 
 ;;;; INPUT CONCEPTS ;;;;
-; (= (testconcept1) 
-;     (Concept Man@Bat (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
-; )
-; (= (testconcept2) 
-;     (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
-; )
+(= (testconcept1) 
+    (Concept Man@Bat (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+)
+(= (testconcept2) 
+    (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+)
 
 (= (Input1) spider)
 (= (Input2) man)
@@ -220,6 +220,10 @@
     )
 )
 
+;;;; Single-Objective CMA-ES ;;;;
+
+!(add-concepts)
+
 !(bind! &single-cma-es-inputspace (new-space))
 (= (add-to-single-cma-es-inputspace)
     (add-reduct &single-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 0 0)))
@@ -238,7 +242,7 @@
 
 (= (cma-es-single-iteration $fitness-fn)
     (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen $stall) (match &single-cma-es-inputspace (Inputs $x) $x)
-        (if (and (>= $best-fitness 0.055) (>= $stall 5))                         ; patience = 5 gens
+        (if (>= $stall 10)                  ; patience = 10 gens
           ($best-pop $best-fitness)             
           (let*
             (
@@ -262,7 +266,6 @@
 (= (cma-es-main-loop)
     (let $iters (generate-toy-list (GENERATIONS))  
         (map-atom $iters $iter (cma-es-single-iteration population-fitness-score))
-        )
     )
 )
 
@@ -286,7 +289,7 @@
     (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-unscalarized-fitness $best-scalarized-fitness $gen $stall) (match &multi-single-iteration-cma-es-inputspace (Inputs $x) $x)
         (let*
         (
-            (($normalized-weights $c-sigma $d-sigma $mu $mu-eff $dim $rmspace $cispace1 $cispace2 $cispace3) (collapse(superpose((normalized_weights) (c_sigma) (d_sigma) (mu) (mu_eff) (dim) &rmspace &cispace1 &cispace2 &cispace3))))
+            (($normalized-weights $c-sigma $d-sigma $mu $mu-eff $dim) (collapse(superpose((normalized_weights) (c_sigma) (d_sigma) (mu) (mu_eff) (dim)))))
             ($samples (mat-clip (random-multivariate $mean (mat-scalar-op $cov (pow-math $step-size 2) *) (lambda_)) 0 1))
             (($selected $unscalarized-fit-score $scalarized-fitness-score) (moedd-update-mean $samples $mu $normalized-weights $fitness-fn $iter))
             (($new-best-pop $new-best-unscalarized-fitness $new-best-scalarized-fitness) ((cons-atom $selected $best-pop) (if (== (get-metatype $best-unscalarized-fitness) Grounded) (cons-atom $unscalarized-fit-score ()) (cons-atom $unscalarized-fit-score $best-unscalarized-fitness))(if (== (get-metatype $best-scalarized-fitness) Grounded) (cons-atom $scalarized-fitness-score ()) (cons-atom $scalarized-fitness-score $best-scalarized-fitness))))
@@ -358,3 +361,8 @@
 
 ; !(moedd-cma-es-main-loop)
 !(blend moedd-cma-es-main-loop (Eval))
+
+(((Candidate property vector: (((0.4909481731261901 0 0.35875479160677815 1 0 0.7211592318989654 1 0) (0.011249999999999998 0.4629775345549171)) -0.060206813293582045) || fitness value: -0.060206813293582045 || NegativeMu-hqblendValue))
+ ((Candidate property vector: (((0 1 0.012858202384673612 1 1 0 0 0.3481901167468058) (0.004999999999999999 0.47266102462065746)) -0.006198576273126588) || fitness value: -0.006198576273126588 || NegativeMu-hqblendValue))
+ ((Formed Blend: (doubleScope (expand spider man) spiderman (extended arachnidHumanHybrid)) Evaluation-Metrics: Integration: 0.7139783948659897 Unpacking: 0.4166666666666667 Web: 0.6793103448275862 Topology: 0.3333333333333333 Metonymy: 0.3333333333333333 Good-reason: (Conceptnet-score 1 LLM-score 1))) 
+ ((Formed Blend: (doubleScope (expand spider man) spiderman (extended arachnidHumanSynthesis)) Evaluation-Metrics: Integration: 0.625074028968811 Unpacking: 0.75 Web: 0.49181034482758623 Topology: 0.3333333333333333 Metonymy: 0.3333333333333333 Good-reason: (Conceptnet-score 0 LLM-score 0.7142857142857143))))

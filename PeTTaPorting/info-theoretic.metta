@@ -424,23 +424,21 @@
         (if (>= $best-fitness 0)
                 (let $best-candidate (let $best-sample (index-atom $best-sample-with-fitness 0) (index-atom $best-sample 0))
                     (let $_ (println! (Best-candidatee $best-candidate))
-                        (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (testconcept1) (testconcept2)))
-                            (let $blend ($network $concept-pair $best-cand-mu-emergence)
+                        (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (eval (concept1)) (eval (concept2))))
+                            (let $blend (sread (py-call ($network $concept-pair $best-cand-mu-emergence)))
                                 (if (== $eval True) 
-                                (let ($blend-name $blendpropwithoutprov) ((index-atom $blend 2) (cons-blend-properties (testconcept1) $best-candidate))
-                                    (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (testconcept1) (testconcept2))
-                                        (let $blenpropwithprov (provenance-helper ($input1 (get-prop-value-pairs $concept1)) ($input2 (get-prop-value-pairs $concept2)) ($blend-name $blendpropwithoutprov))
-                                            (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blenpropwithprov))
-                                                (let ($integration-res $good-reason-res $unpacking-res $web-res $topology-res $metonymy-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                    (Formed Blend: $blend-name
-                                                    Evaluation-Metrics:
-                                                    Integration: $integration-res
-                                                    Good-reason: $good-reason-res
-                                                    Unpacking: $unpacking-res
-                                                    Web: $web-res
-                                                    Topology: $topology-res
-                                                    Metonymy: $metonymy-res
-                                                    )
+                                (let ($blend-name $blendprops) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
+                                    (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
+                                        (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blendprops))
+                                            (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                                                (Formed Blend: $blend-name
+                                                Evaluation-Metrics:
+                                                Integration: $integration-res
+                                                Unpacking: $unpacking-res
+                                                Web: $web-res
+                                                Topology: $topology-res
+                                                Metonymy: $metonymy-res
+                                                Good-reason: $good-reason-res
                                                 )
                                             )
                                         )
@@ -460,46 +458,47 @@
 
 (= (multi-objective-blend-single $single-best-blend $concept-pair $network $eval)
     (let $scalarized-fitness (index-atom $single-best-blend 1)
-    ((if (> $scalarized-fitness 0)
-                        ;; -- PATH A: Fitness is positive, attempt blend --
-                        (let $best-candidate (let $unscalarized-zip (index-atom $single-best-blend 0) (let ($props $unscalarized-fitness-score) $unscalarized-zip $props))
-                            (let $_ (println! (best single-candidate: $best-candidate))
-                                (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (eval (concept1)) (eval (concept2))))
-                                    (let $_ (println! (best candidate mu emergence: $best-cand-mu-emergence))
-                                        (let $blend (sread (py-call ($network $concept-pair $best-cand-mu-emergence)))
-                                            (let $_ (println! (blend: $blend))
-                                                (if $eval
-                                                    ;; -- Sub-Path A1: Eval is True --
-                                                    (let ($blend-name $blendprops) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
-                                                        (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
-                                                            (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blendprops))
-                                                                (let $res-op (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                                    (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) $res-op
-                                                                        (Formed Blend: $blend
-                                                                        Evaluation-Metrics:
-                                                                        Integration: $integration-res
-                                                                        Good-reason: $good-reason-res
-                                                                        Unpacking: $unpacking-res
-                                                                        Web: $web-res
-                                                                        Topology: $topology-res
-                                                                        Metonymy: $metonymy-res)
-                                                                    )
-                                                                )
-                                                            )
+        (if (> $scalarized-fitness 0)
+            ;; -- PATH A: Fitness is positive, attempt blend --
+            (let $best-candidate (let $unscalarized-zip (index-atom $single-best-blend 0) (let ($props $unscalarized-fitness-score) $unscalarized-zip $props))
+                (let $_ (println! (best single-candidate: $best-candidate))
+                    (let $best-cand-mu-emergence (mu-emergence $best-candidate (property-max (eval (concept1)) (eval (concept2))))
+                        (let $_ (println! (best candidate mu emergence: $best-cand-mu-emergence))
+                            (let $blend (sread (py-call ($network $concept-pair $best-cand-mu-emergence)))
+                                (let $_ (println! (blend: $blend))
+                                    (if $eval
+                                        ;; -- Sub-Path A1: Eval is True --
+                                        (let ($blend-name $blendprops) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
+                                            (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
+                                                (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blendprops))
+                                                    (let $res-op (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                                                        (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) $res-op
+                                                            (Formed Blend: $blend
+                                                            Evaluation-Metrics:
+                                                            Integration: $integration-res
+                                                            Unpacking: $unpacking-res
+                                                            Web: $web-res
+                                                            Topology: $topology-res
+                                                            Metonymy: $metonymy-res
+                                                            Good-reason: $good-reason-res)
                                                         )
                                                     )
-                                                    ;; -- Sub-Path A2: Eval is False (Skip this item) --
-                                                    $blend
                                                 )
                                             )
                                         )
+                                        ;; -- Sub-Path A2: Eval is False (Skip this item) --
+                                        $blend
                                     )
                                 )
                             )
                         )
-                        ;; -- PATH B: Fitness is <= 0 (Skip this item) --
-                        (Candidate property vector: $single-best-blend || fitness value: $scalarized-fitness || NegativeMu-hqblendValue)
-                    )))
+                    )
+                )
+            )
+            ;; -- PATH B: Fitness is <= 0 (Skip this item) --
+            (Candidate property vector: $single-best-blend || fitness value: $scalarized-fitness || NegativeMu-hqblendValue)
+        )
+    )
 )
 
 

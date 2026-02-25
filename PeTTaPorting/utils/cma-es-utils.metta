@@ -298,7 +298,11 @@
 ;; ----------------------------------------------------------------------------
 ;; INITIALIZATION & ENTRY POINT
 ;; ----------------------------------------------------------------------------
+(= (zeros-vec $length)
+    (let $toy-list (eval (generate-toy-list $length)) (map-atom $toy-list $x 0))
+)
 
+; !(zeros-vec 8)
 
 
 ;; Creates an empty matrix of size $rows x $cols filled with 0s
@@ -514,20 +518,20 @@
 (= (random-multivariate $mean $cov-matrix $lambda_)
    (let* (
        ;; Decompose Covariance into Lower Triangular L
-      ;  ($_ (println! (mean $mean)))
+    ;    ($_ (println! (meannn $mean $cov-matrix)))
        ($L (cholesky-decomposition $cov-matrix))
-      ;  ($_ (println! (Lower $L)))
+    ;    ($_ (println! (Lowerrr $L)))
        ;; Generate Standard Normal samples Z (shape: lambda x dim)
        ($Z (standard-normal (size-atom $mean) $lambda_))
-      ;  ($_ (println! (Z $Z)))
+    ;    ($_ (println! (Z $Z)))
        ;; Transform: Y = Z * L^T (Matrix multiplication handles the L * Z part)
        ($LT (transpose-matrix $L))
-      ;  ($_ (println! (LT $LT)))
+    ;    ($_ (println! (LT $LT)))
        ($transformed (mat-mat-mul $Z $LT))
-      ;  ($_ (println! (tranformed $transformed)))
+    ;    ($_ (println! (tranformed $transformed)))
        ;; Shift: Add mean vector to every sample
        ($final-samples (add-mean-to-samples $transformed $mean))
-      ;  ($_ (println! (final $final-samples)))
+    ;    ($_ (println! (final $final-samples)))
    )
    $final-samples))
 
