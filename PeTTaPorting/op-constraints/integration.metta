@@ -36,15 +36,19 @@
 )
 
 (= (integration-op $blend)
-    (let $prop-list (properties-list $blend)
-        (let $prop-names (map-atom $prop-list $x (car-atom $x))
-            (let $conflicts (check-props-conflict $prop-names (predefined-conflicts))
-                (let $conflict-ratio (/ $conflicts (pow-math (size-atom $prop-names) 0.5)) (max-atom (0.0 (- 1.0 $conflict-ratio))))
-            )
+    (let*
+        (
+            ($prop-list (properties-list $blend))
+            ($filtered-props (greater-than-threshold-props $prop-list (int-prop-degree-threshold)))
+            ($prop-names (map-atom $filtered-props $prop (car-atom $prop)))
+            ($conflicts (check-props-conflict $prop-names (predefined-conflicts)))
+            ($conflict-ratio (/ $conflicts (pow-math (size-atom $prop-names) 0.5)))
+            ($conflict-res (max-atom (0.0 (- 1.0 $conflict-ratio))))
+            ($coherence (py-call (op-helper-codes.compute_average_pairwise_similarity $prop-names)))
+            ($final-res (/ (+ $conflict-res $coherence) 2.0))
         )
-        ; $prop-list
+        $final-res
     )
 )
 
-;!(integration-op (blend))
-; Expected output:- 1.0
+(= (int-prop-degree-threshold) 0.3)

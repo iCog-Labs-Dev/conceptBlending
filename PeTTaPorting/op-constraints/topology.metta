@@ -1,6 +1,6 @@
 !(bind! &concept-space (new-space))
 
-(= (similarity_threshold) 0.15)
+(= (similarity-threshold) 0.4)
 
 (= (find-similar-known-relation $rel $knowns)
    (if (== (size-atom $knowns) 0)
@@ -9,9 +9,11 @@
            ($head (car-atom $knowns))
            ($tail (cdr-atom $knowns))
            ($type-similarity (let ($rel-type $known-head-type) ((car-atom $rel) (car-atom $head)) (py-call (op-helper-codes.compute_average_pairwise_similarity ( $rel-type $known-head-type)))))
+        ;    ($_ (println! (relation type and head type ((car-atom $rel) (car-atom $head)) similarity $type-similarity)))
            ($target-similarity (let ($rel-target $known-head-target) ((index-atom $rel 1) (index-atom $head 1)) (py-call (op-helper-codes.compute_average_pairwise_similarity ( $rel-target $known-head-target)))))
+            ; ($_ (println! (relation target and head target ((index-atom $rel 1) (index-atom $head 1)) similarity $target-similarity)))
          )
-         (if (and (> $type-similarity (similarity_threshold)) (> $target-similarity (similarity_threshold)))
+         (if (and (> $type-similarity (similarity-threshold)) (> $target-similarity (similarity-threshold)))
             $head
              (find-similar-known-relation $rel $tail)
         )
@@ -70,11 +72,11 @@
         ($concept2-relations-list (relations-key-value-list $concept2))
         ($un-norm-source-relations (union-atom $concept1-relations-list $concept2-relations-list))
         (($source-relations $knowns) (let $result (source-relations-normalizer $un-norm-source-relations ()) (let ($source-relations-res $knowns-res) ((indexed-cdr-atom $result (- (size-atom $result) 1)) (index-atom $result (- (size-atom $result) 1))) ((unique-atom $source-relations-res) $knowns-res))))
-        ($source-relations-size (size-atom $source-relations))
         ($blend-relations-list (relations-key-value-list $blend))
+        ($blend-relations-size (size-atom $blend-relations-list))
         ($preserved-count (count-preserved-loop $blend-relations-list $source-relations $knowns))
-        ($source-relations-size-decimal (to-float-op $source-relations-size))
-        ($preservation-score (/ $preserved-count $source-relations-size-decimal))
+        ($blend-relations-size-decimal (to-float-op $blend-relations-size))
+        ($preservation-score (/ $preserved-count $blend-relations-size-decimal))
         )
         $preservation-score
     )

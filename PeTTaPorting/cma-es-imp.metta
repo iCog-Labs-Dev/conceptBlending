@@ -2,24 +2,23 @@
 !(import! &self utils/random-list-utils)
 !(import! &self utils/cma-es-utils)
 !(import! &self info-theoretic)
-!(import! &self libs/agents/gpt_agents)
+; !(import! &self libs/agents/gpt_agents)
 !(import! &self "utils/numpy_methods.py")
-
 
 (=(add-reduct $space $atom)
     (let $result $atom (add-atom $space $atom))
 )
 
 ;;;; INPUT CONCEPTS ;;;;
-(= (testconcept1) 
-    (Concept Man@Bat (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
-)
-(= (testconcept2) 
-    (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
-)
+; (= (testconcept1) 
+;     (Concept Man@Bat (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+; )
+; (= (testconcept2) 
+;     (Concept Bat@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+; )
 
-(= (Input1) Bat)
-(= (Input2) Man)
+(= (Input1) spider)
+(= (Input2) man)
 
 ;;;; PARAMETERS ;;;;
 ;;;; DIMENSION, INITIAL MEAN, COVARIANCE, AND STEP SIZE
@@ -52,7 +51,7 @@
 
 ;;;; POPULATION FITNESS SCORE CALCULATION ;;;;
 (= (population-fitness-score $population)
-    (map-atom $population $x (mu-hqblend $x (concept1) (concept2)))
+    (map-atom $population $x (mu-hqblend $x (eval (concept1)) (eval (concept2))))
 )
 
 ;;;; POPULATION FITNESS SCORE CALCULATION FOR TESTING ;;;;
@@ -67,8 +66,6 @@
     $result
     )
 )
-
-; !(population-fitness-score-test ((1 0 1 0 1 0 1 0) (0 1 0 1 0 1 0 1) (1 1 0 1 1 0 1 0) (0 0 1 1 0 0 1 0) (1 0 1 1 1 1 0 1) (1 1 1 1 1 0 0 1) (0 0 0 1 1 0 1 1) (1 1 0 0 0 0 1 1)))
 
 (= (update-mean $samples $mu $weights $fitness-fn)
     (let $fitness-score ($fitness-fn $samples)
@@ -99,6 +96,7 @@
     )
   )
 )
+    
 
 (= (update-mean-test $samples $mu $weights)
   (let $fitness-score (population-fitness-score-test $samples)
@@ -116,15 +114,10 @@
   )
 )
 
-; !(update-mean-test ((2 0) (4 4) (8 2)) 3 (0.5 0.3 0.2))  
-
 
 (= (y $new-mean $old-mean $step-size)
   (let $mean-diff (vector-op $new-mean $old-mean -) (scalar-op $mean-diff $step-size /))
 )
-
-; !(y (0.3 0.4 0.6 0.2 0.8 0.1 0.5 0.8) (0.2 0.7 0.3 0.6 0.8 0.3 0.9 0.4) 0.34)
-
 
 (= (new-p-sigma $c-sigma $p-sigma $mu-eff $c-inv-sqrt $y)
        (let* (
@@ -154,7 +147,6 @@
         )
 
 )
-; !(new-step-size 1 0.3196142529106335 1.3196142529106334 8 (0 0) 3.1672992814107035 ((0 0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0) (0 0 0 0) (0 0 0) (0 0) (0)) (0.629276773868858 0.7029813694774427 0.17915574673512397 0.021359372554875078 0.5556770423164838 -1.110223024625156516 -1.387778780781445717 -5.55111512312578317))
 
 
 ; !(new-step-size 0.5 0.3 1.5 3 (0.2 0.4 0.6) 2 (identity-matrix 3) (0.5 0.4 0.6))
@@ -164,21 +156,15 @@
     (1or0 (< (/ (l2-norm $p-sigma) (sqrt-math (- 1 (pow-math (- 1 $c-sigma) (* 2 (+ $gen 1)))))) (+ 1.4 (/ 2 (+ (dim) 1)))))
 )
 
-; !(h-sigma (0.2 0.3 0.4) 0.3 5)
-
 (= (p-c $prev-p-c $new-p-sigma $c-sigma $gen $y)
     (let $h-sigma (h-sigma $new-p-sigma $c-sigma $gen)
         (let $c-c (c_c) (vector-op (rev-scalar-op (- 1 $c-c) $prev-p-c *) (rev-scalar-op (* $h-sigma (sqrt-math (* $c-c (* (- 2 $c-c) (mu_eff))))) $y *) +))
     )
 )
 
-; !(p-c (0.2 0.3 0.4) (0.5 0.6 0.7) 0.4 5 (0.1 0.2 0.3))
-
 (= (delta $selected $old-mean)
  (mat-mat-eles-op $selected ($old-mean) -)
 )
-
-; !(delta ((0.5 0.6 0.7) (0.2 0.3 0.4) (0.1 0.2 0.3)) (0.2 0.3 0.4))
 
 (= (rank-mu $weights $selected $old-mean)
     (let $delta (delta $selected $old-mean)
@@ -190,8 +176,6 @@
     )
 )
 
-;  !(rank-mu (0.4 0.3 0.3) ((0.5 0.6 0.7) (0.2 0.3 0.4) (0.1 0.2 0.3)) (0.2 0.3 0.4))
-
 (= (new-cov $prev-cov $prev-p-c $new-p-sigma $c-sigma $gen $y $weights $selected $old-mean)
     (let ($new-p-c $rank-mu) ((p-c $prev-p-c $new-p-sigma $c-sigma $gen $y) (rank-mu $weights $selected $old-mean))
         (let ($c1 $c-mu) ((c1) (c_mu))
@@ -201,8 +185,6 @@
         )
     )
 )
-
-; !(new-cov (identity-matrix 3) (0.2 0.3 0.4) (0.5 0.6 0.7) 0.4 5 (0.1 0.2 0.3) (0.4 0.3 0.3) ((0.5 0.6 0.7) (0.2 0.3 0.4) (0.1 0.2 0.3)) (0.2 0.3 0.4))
 
 (= (Thetha) 5.0)
 
@@ -251,14 +233,6 @@
     (collapse (match $space $X (remove-atom $space $X)))
 )
 
-(= (add-concepts)
-    (let $concept1 (testconcept1)
-        (let $concept2 (testconcept2)
-            (collapse(superpose((add-atom &concept-space (= (concept1) $concept1)) (add-atom &concept-space (= (concept2) $concept2)))))
-        )
-    )
-)
-
 
 !(add-to-single-cma-es-inputspace)
 
@@ -286,14 +260,13 @@
 )
 
 (= (cma-es-main-loop)
-    (let $iters (generate-toy-list (GENERATIONS))
-        (let $_ (println! (Iterss $iters))
-            (map-atom $iters $iter (cma-es-single-iteration population-fitness-score-test))
+    (let $iters (generate-toy-list (GENERATIONS))  
+        (map-atom $iters $iter (cma-es-single-iteration population-fitness-score))
         )
     )
 )
 
-(= (Eval) False)
+(= (Eval) True)
 
 ; !(cma-es-main-loop)
 ; !(blend cma-es-main-loop (Eval))
@@ -342,7 +315,7 @@
             ($_ (println! (ref-point $ref-point | Generation $gen | Population Size (size-atom $pop))))
             ($add (add-atom &self (= (scalarized-fitness $samples $iter)
                                         (let* (
-                                            ($objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample)))
+                                            ($objs (map-atom $samples $sample (objectives (concept1) (concept2) $sample)))
                                             ($weight (index-atom $weights $iter))
                                             ($result ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
                                         )
@@ -360,13 +333,13 @@
             ($_ (println! (Generation $gen | Population $filtered-pop)))
             ($clean (collapse(match &self (= (scalarized-fitness $samples $iter)
                                         (let* (
-                                            ($objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample)))
+                                            ($objs (map-atom $samples $sample (objectives (concept1) (concept2) $sample)))
                                             ($weight (index-atom $weights $iter))
                                             ($result ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
                                         )
                                         $result )) (remove-atom &self (= (scalarized-fitness $samples $iter)
                                         (let* (
-                                            ($objs (map-atom $samples $sample (objectives (testconcept1) (testconcept2) $sample)))
+                                            ($objs (map-atom $samples $sample (objectives (concept1) (concept2) $sample)))
                                             ($weight (index-atom $weights $iter))
                                             ($result ($objs (map-atom $objs $obj (pbi-scalarization $obj $ref-point $weight))))
                                         )

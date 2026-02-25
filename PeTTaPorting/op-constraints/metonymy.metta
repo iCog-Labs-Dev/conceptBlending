@@ -1,30 +1,36 @@
-(= (is-semantically-compressed $relation $blend-properties $blend-name $detect-abbreviations $detect-characteristic-parts) 
+; !(import! op-constraints/common-utils)
 
-    (let* (
-        ($is-abbrev (is-abbreviation (car-atom $relation)))
-        )
-        (if (and $detect-abbreviations $is-abbrev)
+(= (rel-score $target $blend-name)
+    (let $res (py-call (op-helper-codes.compute_average_pairwise_similarity ( $target $blend-name)))
+        (if (> $res (met-sim-threshold)) True False)
+    )
+)
+
+(= (is-characteristic-part $target $blend-properties)
+    (let $blend-prop-names (map-atom $blend-properties $prop (car-atom $prop)) (is-list-member $target $blend-prop-names))
+)
+
+(= (is-semantically-compressed $target $blend-properties $blend-name $detect-characteristic-parts) 
+    (if (rel-score $target $blend-name)
+        True
+        (if (and $detect-characteristic-parts (is-characteristic-part $target $blend-properties))
             True
-            (if (is-relation-metonymy (car-atom $relation) (index-atom $relation 1))
-                True
-                (if (and $detect-characteristic-parts (is-characteristic-part $relation $blend-properties $blend-name))
-                    True
-                    False
-                )
-            )
+            False
         )
     )
 )
-(= (compression-indicators) (Syn Metonym Short_HasPart Abbr Contraction))
+
+(= (metonymy-indicators) (relatedTo synonym formOf hasA partOf atLocation))
 
 (= (count-compressed-relations $relations $blend-properties $blend-name $acc)
     (if (< (size-atom $relations) 1)
         $acc
         (let* (($current-rel (car-atom $relations))
                ($remaining-rels (cdr-atom $relations))
-               ($is-compressed (is-list-member (car-atom $current-rel) (compression-indicators)))
-               ($is-semantically-compressed (is-semantically-compressed $current-rel $blend-properties $blend-name (detect-abbreviations) (detect-characteristic-parts)))
-               ($new-acc (if (or $is-compressed $is-semantically-compressed)
+               ($target (index-atom $current-rel 1))
+               ($is-met-indicator (is-list-member (car-atom $current-rel) (metonymy-indicators)))
+               ($is-semantically-compressed (if $is-met-indicator (is-semantically-compressed $target $blend-properties $blend-name (detect-characteristic-parts)) False))
+               ($new-acc (if $is-semantically-compressed
                            (+ $acc 1)
                              $acc))
                 )
@@ -49,3 +55,5 @@
     )
   )
 )
+
+(= (met-sim-threshold) 0.2)

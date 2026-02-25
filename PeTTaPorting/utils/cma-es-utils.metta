@@ -96,13 +96,6 @@
 (= (identity-matrix $dim)
    (gen-matrix-rows 0 $dim))
 
-;; Generates a zero-initialized vector of a specific length
-(= (zeros-vec $length)
-    (let $toy-list (eval (generate-toy-list $length))
-         (map-atom $toy-list $x 0)
-         ))
-
-;; Generates a list of integers from $lb up to (but not including) $ub
 (= (range $lb $ub)
    (if (>= $lb $ub)
        ()

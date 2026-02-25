@@ -138,48 +138,6 @@
    (collapse (check-equality $val (superpose $list))))
 (= (check-equality $val $target) (if (== $val $target) (empty) $target))
 
-
-
-
-
-;; ==========================================
-;;  Property Comparison Helper
-;; ==========================================
-;; Extracts property at index from both inputs and returns the winner.
-;; Format returned: (WinnerName PropName WinnerValue)
-(= (compare-concepts-prop-val ($input1 $props1) ($input2 $props2) $index)
-   (let* (($p1 (index-atom $props1 $index))
-          ($p2 (index-atom $props2 $index))
-          ($prop-name (car-atom $p1))
-          ($v1 (index-atom $p1 1))
-          ($v2 (index-atom $p2 1)))
-     (if (>= $v1 $v2) 
-         ($input1 $prop-name $v1) 
-         ($input2 $prop-name $v2))))
-
-;; ==========================================
-;; Provenance Implementation
-;; ==========================================
-
-(= (provenance-helper ($input1 $concept1props) ($input2  $concept2props) ($blend $blendprops))   
-   (provenance-recursive ($input1 $concept1props) ($input2  $concept2props) $blendprops 0))
-
-(= (provenance-recursive ($input1 $concept1props) ($input2  $concept2props) $blendprops $idx)
-   (if (>= $idx (size-atom $blendprops))
-       () 
-       (let* (
-           (($gcn $gcp $gcpv) (compare-concepts-prop-val ($input1 $concept1props) ($input2  $concept2props) $idx))
-           ($blend-prop (index-atom $blendprops $idx))
-           ($blend-prop-name (car-atom $blend-prop))
-           ($blend-prop-val  (index-atom $blend-prop 1))
-           ($current-entry (if (>= $blend-prop-val $gcpv) 
-                               ($blend-prop-name) 
-                               ($blend-prop-name ($gcn))))
-           ($rest (provenance-recursive ($input1 $concept1props) ($input2  $concept2props) $blendprops (+ $idx 1)))
-       )
-       (cons-atom $current-entry $rest))))
-
-
 ;; Logic checks
 (= (all-true ()) True)
 (= (all-true $list)
@@ -254,3 +212,27 @@
     )
 )
 
+(= (zeros-vec $length)
+    (let $toy-list (generate-toy-list $length) (map-atom $toy-list $x 0))
+)
+
+; !(zeros-vec 8)
+
+(= (first-n-elements-helper $list $n)
+   (if (<= $n 0)
+      ()
+      (let*
+         (
+            ($head (car-atom $list))
+            ($tail (cdr-atom $list))
+            ($new-n (- $n 1))
+            ($res (first-n-elements-helper $tail $new-n))
+         )
+         (cons-atom $head $res)
+      )
+   )
+)
+
+(= (first-n-elements $list $n)
+   (let $nn (if (> $n (size-atom $list)) (size-atom $list) $n) (first-n-elements-helper $list $nn))
+)

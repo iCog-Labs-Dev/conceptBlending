@@ -10,9 +10,9 @@ _sentence_model = None
 def get_sentence_model():
     global _sentence_model
     if _sentence_model is None:
-        print("Loading sentence transformer model...")
+        # print("Loading sentence transformer model...")
         _sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
-        print("Model loaded.")
+        # print("Model loaded.")
     return _sentence_model
 
 def parse_to_list(s: str):
@@ -47,7 +47,7 @@ def semantic_similarity(properties, degrees):
     degrees = [float(d) for d in degrees]
 
     # clean properties by replacing '-' with ' '
-    properties_clean = [prop.replace('-', ' ') for prop in properties]
+    properties_clean = [prop.replace('-', ' ').replace('_', ' ') for prop in properties]
 
     # filter properties and degrees by threshold
     filtered = [(p, d) for p, d in zip(properties_clean, degrees) if d >= threshold]
