@@ -55,9 +55,9 @@
 
 (= (zip-list $l1 $l2)
    (if (and (== $l1 ()) (== $l2 ())) 
-       (Error (zip-list () ()) EmptyList) 
+       (Error (() ()) EmptyList) 
        (if (not (== (size-atom $l1) (size-atom $l2))) 
-           (Error (zip-list $l1 $l2) LengthMismatch)
+           (Error ($l1 $l2) LengthMismatch)
            (zip-helper $l1 $l2)
        )
    )

@@ -25,7 +25,7 @@
 (= (dim) 8)
 (= (mean)(let $x (random-list 1 (dim) 0 1) (car-atom $x)))
 ; !(mean)
-(= (cov) (identity-matrice (dim)))
+(= (cov) (identity-matrix (dim)))
 (= (step_size) 1)
 (= (e) 2.71828)
 
@@ -68,19 +68,21 @@
 )
 
 (= (update-mean $samples $mu $weights $fitness-fn)
-  (let $fitness-score ($fitness-fn $samples)
-    (let $fit-ind-pairs (pair-index-fitness (make-indices $fitness-score) $fitness-score)
-        (let $desc-sorted-pairs (sort-pairs-desc $fit-ind-pairs)
-            (let $extracted-indices (extract-indices $desc-sorted-pairs $mu)
-                (let $selected (select-by-indices $samples $extracted-indices)
-                    (let $weighted-indiv (mat-vec-op $selected $weights *)
-                        ((foldl-atom $weighted-indiv 0 $acc $x (vector-op $x $acc +)) $selected $fitness-score)
-                    )
+    (let $fitness-score ($fitness-fn $samples)
+        (let $fit-ind-pairs (pair-index-fitness (make-indices $fitness-score) $fitness-score)
+            (let $desc-sorted-pairs (sort-pairs-desc $fit-ind-pairs)
+                (let $extracted-indices (extract-indices $desc-sorted-pairs $mu)
+                        (let $selected (select-by-indices $samples $extracted-indices)
+                            (let $weighted-indiv (mat-vec-op $selected $weights *)
+                                (let $weighted-mean (foldl-atom $weighted-indiv 0 $acc $x (vector-op $x $acc +))
+                                    ($weighted-mean $selected $fitness-score)
+                                )                                        
+                            )
+                        )
                 )
             )
         )
     )
-  )
 )
 
 (= (moedd-update-mean $samples $mu $weights $fitness-fn $iter)
@@ -126,22 +128,28 @@
         )
 )
 
+; !(new-p-sigma 0.3196142529106335 (0 0) 3.1672992814107035 ((0 0 0 0 0 0 0) (0 0 0 0 0 0) (0 0 0 0 0) (0 0 0 0) (0 0 0) (0 0) (0)) (0.629276773868858 0.7029813694774427 0.17915574673512397 0.021359372554875078 0.5556770423164838 -1.1102230246251565e-16 -1.3877787807814457e-17 -5.551115123125783e-17))
+; !(mat-mat-mul (identity-matrix 3) ((0.5 0.4) (0.2 0.5) (0.4 0.5)))
+; !(identity-matrix 3)
+;  !(new-p-sigma 0.3 (0.1 0.2 0.3) 2 (identity-matrix 3) (0.5 0.4 0.6))
+
 ; ; ;;;; STEP SIZE ADAPTATION ;;;;
 
 
 (= (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma $mu-eff $c-inv-sqrt $y)
-        (let* (
-            ($new-p-sigma (new-p-sigma $c-sigma $p-sigma $mu-eff $c-inv-sqrt $y))
-            ($adaptingfactor (pow-math (e) (* (/ $c-sigma $d-sigma) (- (/ (l2-norm $new-p-sigma) (sqrt-math $dim)) 1))))
-            ($adaptXsize (* $step-size $adaptingfactor))
-
-        )
-        ($adaptXsize $new-p-sigma)
-        
+        (let* 
+            (
+                ($new-p-sigma (new-p-sigma $c-sigma $p-sigma $mu-eff $c-inv-sqrt $y))
+                ($adaptingfactor (pow-math (e) (* (/ $c-sigma $d-sigma) (- (/ (l2-norm $new-p-sigma) (sqrt-math $dim)) 1))))
+                ($adaptXsize (* $step-size $adaptingfactor))
+            )
+            ($adaptXsize $new-p-sigma)
         )
 
 )
 
+
+; !(new-step-size 0.5 0.3 1.5 3 (0.2 0.4 0.6) 2 (identity-matrix 3) (0.5 0.4 0.6))
 ; ; ;;;; COVARIANCE EVOLUTION PATH ADAPTATION ;;;;
 
 (= (h-sigma $p-sigma $c-sigma $gen)
@@ -227,30 +235,23 @@
 
 
 !(add-to-single-cma-es-inputspace)
-!(add-concepts)
-
-!(bind! &rmspace (new-space))
-!(bind! &cispace1 (new-space))
-!(bind! &cispace2 (new-space))
-!(bind! &cispace3 (new-space))
 
 (= (cma-es-single-iteration $fitness-fn)
     (let ($mean $cov $step-size $p-sigma $p-c $best-pop $best-fitness $gen $stall) (match &single-cma-es-inputspace (Inputs $x) $x)
-        (if (and (>= $stall 5) (>= $best-fitness 0.05))
+        (if (and (>= $best-fitness 0.055) (>= $stall 5))                         ; patience = 5 gens
           ($best-pop $best-fitness)             
           (let*
             (
-                (($normalized-weights $c-sigma $d-sigma $mu $mu-eff $dim $rmspace $cispace1 $cispace2 $cispace3) (collapse(superpose((normalized_weights) (c_sigma) (d_sigma) (mu) (mu_eff) (dim) &rmspace &cispace1 &cispace2 &cispace3))))
-                ($samples (mat-clip (random-multivariate $mean (mat-scalar-op $cov (pow-math $step-size 2) *) (lambda_) $rmspace) 0 1))
+                (($normalized-weights $c-sigma $d-sigma $mu $mu-eff $dim) (collapse(superpose((normalized_weights) (c_sigma) (d_sigma) (mu) (mu_eff) (dim)))))
+                ($samples (mat-clip (random-multivariate $mean (mat-scalar-op $cov (pow-math $step-size 2) *) (lambda_)) 0 1))
                 (($new-mean $selected $fitness-score) (update-mean $samples $mu $normalized-weights $fitness-fn))
                 (($new-best-fitness $new-best-pop) (let $gen-best-fitness (max-atom $fitness-score) (if (>= $gen-best-fitness $best-fitness) ($gen-best-fitness $selected) ($best-fitness $best-pop))))
                 ($improved?  (> $new-best-fitness $best-fitness))
                 ($new-stall  (if $improved? 0 (+ 1 $stall)))
-                (($y $C-inv-sqrt) ((y $new-mean $mean $step-size) (C-inv-sqrt $cov $cispace1 $cispace2 $cispace3)))
+                (($y $C-inv-sqrt) ((y $new-mean $mean $step-size) (C-inv-sqrt $cov)))
                 (($new-step-size $new-p-sigma) (new-step-size $step-size $c-sigma $d-sigma $dim $p-sigma $mu-eff $C-inv-sqrt $y))
                 (($new-cov $new-p-c) (new-cov $cov $p-c $new-p-sigma $c-sigma $gen $y $normalized-weights $selected $mean))
                 ($clean (collapse (match &single-cma-es-inputspace (Inputs $params) (remove-atom &single-cma-es-inputspace (Inputs $params)))))
-                ($cleanspace (collapse(superpose((clean-from-space &rmspace) (clean-from-space &cispace1) (clean-from-space &cispace2) (clean-from-space &cispace3)))))
                 ($_ (println!(GENERATION $gen |  Max Fitness $new-best-fitness  |  Stall $new-stall)))
             )
             (let $added (add-reduct &single-cma-es-inputspace (Inputs ($new-mean $new-cov $new-step-size $new-p-sigma $new-p-c $new-best-pop $new-best-fitness (+ 1 $gen) $new-stall))) ($new-best-pop $new-best-fitness)))
@@ -262,6 +263,7 @@
     (let $iters (generate-toy-list (GENERATIONS))  
         (map-atom $iters $iter (cma-es-single-iteration population-fitness-score))
         )
+    )
 )
 
 (= (Eval) True)
@@ -269,7 +271,7 @@
 ; !(cma-es-main-loop)
 ; !(blend cma-es-main-loop (Eval))
 
-!(bind! &multi-single-iteration-cma-es-inputspace (get-space))
+!(bind! &multi-single-iteration-cma-es-inputspace (new-space))
 (= (add-to-multi-single-iteration-cma-es-inputspace)
     (add-reduct &multi-single-iteration-cma-es-inputspace (Inputs ((mean) (cov) (step_size) (p_sigma) (p_c) () -10000 -10000 0 0)))
 )
@@ -285,7 +287,7 @@
         (let*
         (
             (($normalized-weights $c-sigma $d-sigma $mu $mu-eff $dim $rmspace $cispace1 $cispace2 $cispace3) (collapse(superpose((normalized_weights) (c_sigma) (d_sigma) (mu) (mu_eff) (dim) &rmspace &cispace1 &cispace2 &cispace3))))
-            ($samples (mat-clip (random-multivariate $mean (mat-scalar-op $cov (pow-math $step-size 2) *) (lambda_) $rmspace) 0 1))
+            ($samples (mat-clip (random-multivariate $mean (mat-scalar-op $cov (pow-math $step-size 2) *) (lambda_)) 0 1))
             (($selected $unscalarized-fit-score $scalarized-fitness-score) (moedd-update-mean $samples $mu $normalized-weights $fitness-fn $iter))
             (($new-best-pop $new-best-unscalarized-fitness $new-best-scalarized-fitness) ((cons-atom $selected $best-pop) (if (== (get-metatype $best-unscalarized-fitness) Grounded) (cons-atom $unscalarized-fit-score ()) (cons-atom $unscalarized-fit-score $best-unscalarized-fitness))(if (== (get-metatype $best-scalarized-fitness) Grounded) (cons-atom $scalarized-fitness-score ()) (cons-atom $scalarized-fitness-score $best-scalarized-fitness))))
             ($clean (collapse (match &multi-single-iteration-cma-es-inputspace (Inputs $params) (remove-atom &multi-single-iteration-cma-es-inputspace (Inputs $params)))))
@@ -348,7 +350,6 @@
         (let $added (add-reduct &multi-cma-es-inputspace (Inputs ($new-ref-point $filtered-pop (+ $gen 1)))) $filtered-pop)
     )
 )
-
 
 
 (= (moedd-cma-es-main-loop)
