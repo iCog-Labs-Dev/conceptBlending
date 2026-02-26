@@ -1,8 +1,8 @@
 !(import! &self utils/list-op-utils)
 !(import! &self utils/info-theoretic-utils)
 !(import! &self op-constraints/op-evaluation)
-!(import! &self "utils/semantic_correlation.py")
-!(import! &self "libs/agents/gpt_agents.py")
+!(import! &self "../utils/semantic_correlation.py")
+!(import! &self "../libs/agents/gpt_agents.py")
 
 (= (get-prop-value-pairs $concept)
     (let (Concept $x $y) $concept (cdr-atom $y))

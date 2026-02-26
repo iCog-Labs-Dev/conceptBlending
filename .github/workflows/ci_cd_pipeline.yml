@@ -15,11 +15,15 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
-
-    - name: Setup Python Environment
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11.6'
+    
+    - name: Install system Python
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+        python3 \
+        python3-pip \
+        python3-dev \
+        build-essential
 
     # -----------------------------
     # Install System Dependencies
@@ -35,9 +39,6 @@ jobs:
         VERSION=$(swipl --version | awk '{print $3}')
         echo "Installed SWI-Prolog version: $VERSION"
 
-    - name: Upgrade pip
-      run: python -m pip install --upgrade pip==23.1.2
-
     # -----------------------------
     # Clone and Install PeTTa
     # -----------------------------
@@ -48,7 +49,7 @@ jobs:
     - name: Install PeTTa in Editable Mode
       run: |
         cd PeTTa
-        pip install -e .
+        python3 -m pip install --break-system-packages -e .
 
     # -----------------------------
     # Install ConceptBlending Dependencies
@@ -56,7 +57,7 @@ jobs:
     - name: Install Python Dependencies
       run: |
         cd PeTTaPorting
-        pip install -r requirements.txt
+        python3 -m pip install --break-system-packages -r requirements.txt
 
     # -----------------------------
     # Create .env File
@@ -68,19 +69,17 @@ jobs:
 
     - name: Debug Python Paths
       run: |
-        which python
-        python -c "import sys; print(sys.executable)"
-        python -c "import numpy; print(numpy.__file__)"
+        which python3
+        python3 -c "import sys; print(sys.executable)"
+        python3 -c "import numpy; print(numpy.__file__)"
 
     # -----------------------------
     # Run Tests
     # -----------------------------
     - name: Run Tests
       env:
-        env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: |
-       
         cd PeTTaPorting
-        python scripts/run-tests.py
+        python3 scripts/run-tests.py
