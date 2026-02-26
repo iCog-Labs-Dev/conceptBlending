@@ -33,7 +33,7 @@ def validate_gpt_output(output: str, method: str) -> bool:
         "gpt_mirror": r"^\([^\s()]+\s+\([^\s()]+\s+[^\s()]+\s+[^\s()]+\)\s+[^\s()]+\s+\([^\s()]+\s+[^\s()]+\)\)$",
         "gpt_simplex": r"^\([^\s()]+\s+\([^\s()]+\s+[^\s()]+\s+[^\s()]+\)\s+[^\s()]+\s+\([^\s()]+\s+[^\s()]+\)\)$",
         "gpt_double_scope": r"^\([^\s()]+\s+\([^\s()]+\s+[^\s()]+\s+[^\s()]+\)\s+[^\s()]+\s+\([^\s()]+\s+[^\s()]+\)\)$",
-        "gpt_single_scope": r"^\([^\s()]+\s+\([^\s()]+\s+[^\s()]+\)\s+[^\s()]+\s+\([^\s()]+\s+[^\s()]+\)\)$",
+        "gpt_single_scope": r"^\([^\s()]+\s+\([^\s()]+\s+[^\s()]+\s+[^\s()]+\)\s+[^\s()]+\s+\([^\s()]+\s+[^\s()]+\)\)$",
 
         # Network selector
         "gpt_network_selector": r"^(gpt_simplex|gpt_single_scope|gpt_double_scope|gpt_mirror)$",

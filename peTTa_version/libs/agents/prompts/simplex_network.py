@@ -29,7 +29,7 @@ Return only:
 (Simplex (expand painting music) visualsymphony (extended rhythmicColorTheory))
 
 ### Output Rules:
-- DO NOT include quotes, backticks, or brackets around the output.
+- DO NOT include quotes, backticks around the output.
 - For the BlendedConcept, consider just combining the two concepts (choose the best order so that the formed combination gives correct meaning) if it gives a clearer insight, instead of trying to find a complex synthesis.
 - DO NOT write explanations or return extra text.
 - Return only one valid MeTTa expression on a single line.

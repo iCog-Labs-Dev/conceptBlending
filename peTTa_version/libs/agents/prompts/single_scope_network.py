@@ -24,8 +24,8 @@ Return only:
 (SingleScope (expand concept1 concept2) blendedconcept (extended Elaboration1))
 
 ### Examples:
-(SingleScope (expand warStrategy) tacticaloperations (extended strategicWarfare))
-(SingleScope (expand videoGames) tacticalsimulation (extended interactiveWargaming))
+(SingleScope (expand war Strategy) tacticaloperations (extended strategicWarfare))
+(SingleScope (expand video Games) tacticalsimulation (extended interactiveWargaming))
 
 ### Output Rules:
 - DO NOT use quotes, backticks, or additional text.
