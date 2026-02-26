@@ -1,6 +1,7 @@
 !(import! &self utils/list-op-utils)
 !(import! &self utils/info-theoretic-utils)
 !(import! &self op-constraints/op-evaluation)
+!(import! &self ../op-constraints/op-evaluation)
 !(import! &self "../utils/semantic_correlation.py")
 !(import! &self "../libs/agents/gpt_agents.py")
 

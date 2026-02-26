@@ -1,5 +1,4 @@
 ;;;; PARAMETERS ;;;;
-!(import! &self utils/random-list-utils)
 !(import! &self utils/cma-es-utils)
 !(import! &self info-theoretic)
 !(import! &self "utils/numpy_methods.py")
@@ -214,7 +213,7 @@
 
 ;;;; Single-Objective CMA-ES ;;;;
 
-!(add-concepts)
+; !(add-concepts)
 
 !(bind! &single-cma-es-inputspace (new-space))
 (= (add-to-single-cma-es-inputspace)

@@ -162,6 +162,3 @@
     (let $x (random-list 4 3 0 1) (collapse(superpose((size-atom $x)(let $y (car-atom $x) (size-atom $y))))))
     (4 3)
 )
-
-
-
