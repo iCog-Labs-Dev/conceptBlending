@@ -213,7 +213,7 @@
 
 ;;;; Single-Objective CMA-ES ;;;;
 
-; !(add-concepts)
+!(add-concepts)
 
 !(bind! &single-cma-es-inputspace (new-space))
 (= (add-to-single-cma-es-inputspace)
@@ -351,4 +351,4 @@
 )
 
 ; !(moedd-cma-es-main-loop)
-; !(blend moedd-cma-es-main-loop (Eval))
+!(blend moedd-cma-es-main-loop (Eval))
