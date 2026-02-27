@@ -69,6 +69,9 @@
    (if (== (get-metatype $lst) Expression) (foldl-atom $lst 0 $acc $x (+ $acc $x)) $lst)
 )
 
+; !(foldl-atom () 0 $acc $x (+ $acc $x))
+; !(/ 0 0)
+
 (= (concept-relations-op) (isA relatedTo hasProperty atLocation synonym capableOf antonym partOf hasA atLocation))
 
 ; Returns a list of relation expressions like (isa feline) (hasa whiskers) ...
@@ -179,7 +182,7 @@
                 ; ($_ (println! (blend-rels-head $blend-rels-head)))
                 ($blend-rels-tail (cdr-atom $blend-relations))
                 ($blend-rels-head-score (map-atom $c1-c2-relations $relation (rel-sim-score $blend-rels-head $relation)))
-                ($res (let $max-sim-score (max-atom $blend-rels-head-score) (if (>= $max-sim-score $threshold) 1 0)))
+                ($res (let $max-sim-score (if (== (size-atom $blend-rels-head-score) 0) () (max-atom $blend-rels-head-score)) (if (>= $max-sim-score $threshold) 1 0)))
                 ($tail (relations-traceability-helper $blend-rels-tail $c1-c2-relations $threshold))
             )
             (cons-atom $res $tail)

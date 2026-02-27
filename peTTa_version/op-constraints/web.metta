@@ -31,22 +31,26 @@
 )
 
 (= (score-cross-mapping $relation $blend-relations)
-   (let* (
-        ($rel-exists (relation-exists-in-blend $relation $blend-relations))
-        ($rel-type (car-atom $relation))
-        ($rel-target (index-atom $relation 1))
-        ($threshold (semantic-threshold))
-   )
-     (
-        if $rel-exists
-         1.0
-         (
-            if (check-relations-loop $blend-relations $rel-type $rel-target $threshold)
-                0.8
-                0.0
+    (if (== (size-atom $blend-relations) 0)
+        0
+        (let* 
+            (
+                ($rel-exists (relation-exists-in-blend $relation $blend-relations))
+                ($rel-type (car-atom $relation))
+                ($rel-target (index-atom $relation 1))
+                ($threshold (semantic-threshold))
+            )
+            (
+                if $rel-exists
+                1.0
+                (
+                    if (check-relations-loop $blend-relations $rel-type $rel-target $threshold)
+                        0.8
+                        0.0
+                )
+            )
         )
-     )
-   )
+    )
 )
 
 (= (crucial-link-integrity-check $blend-props $c1-props $c2-props)
@@ -68,12 +72,11 @@
         ($c1-c2-rels (let $c1-c2-union (union-atom $c1-rels $c2-rels) (unique-atom $c1-c2-union)))
         ($rels-mapping-scores (map-atom $c1-c2-rels $relation (score-cross-mapping $relation $blend-relations)))
         ($cli-res (crucial-link-integrity-check $blend-props-degrees $c1-props-degrees $c2-props-degrees))
-        ($cross-space-mapping-res (let ($sum $score-size) ((sum-op $rels-mapping-scores) (size-atom $rels-mapping-scores)) (/ $sum $score-size)))
+        ($cross-space-mapping-res (let ($sum $score-size) ((sum-op $rels-mapping-scores) (size-atom $rels-mapping-scores)) (if (or (== $sum 0) (== $score-size 0)) 0 (/ $sum $score-size))))
         ($result (/ (+ $cli-res $cross-space-mapping-res) 2.0))
     )    
     $result
   )
 )
 
-; !(web-op (cross_mappings) (blend))
-; Expected output 0.0
+

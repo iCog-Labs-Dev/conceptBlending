@@ -36,7 +36,7 @@ def validate_gpt_output(output: str, method: str) -> bool:
         "gpt_single_scope": r"^\([^\s()]+\s+\([^\s()]+\s+[^\s()]+\s+[^\s()]+\)\s+[^\s()]+\s+\([^\s()]+\s+[^\s()]+\)\)$",
 
         # Network selector
-        "gpt_network_selector": r"^(gpt_simplex|gpt_single_scope|gpt_double_scope|gpt_mirror)$",
+        "gpt_network_selector": r"^(gpt_simplex|gpt_single_scope|gpt_double_scope|gpt_mirror|none)$",
 
         # Vector extraction: two Concept blocks each with exactly 8 properties
         "gpt_vector_extraction": r"^\(\(Concept\s+[^\s@]+@[^\s@]+\s+\(Property\s+(\([^\s]+ [0-9.]+\)\s*){8}\)\)\s+\(Concept\s+[^\s@]+@[^\s@]+\s+\(Property\s+(\([^\s]+ [0-9.]+\)\s*){8}\)\)\)$",

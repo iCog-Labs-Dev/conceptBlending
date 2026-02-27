@@ -19,6 +19,20 @@ You are an expert in conceptual blending. Your task is to:
 - Completion: Fill in missing or implicit structural roles.
 - Elaboration: Extend the mirrored mapping into a more abstract or insightful idea.
 
+### **blendedConcept** Formation Rule (Mirror Network)
+
+When generating the `blendedConcept`, first consider a **mirror-style combination** where both concepts contribute symmetrically, highlighting **shared structure or reversed roles**. This works best when it produces a **balanced, interpretable hybrid**, for example:  
+- **houseboat ↔ boathouse** — both elements are reflected; the focus can shift naturally between house-on-boat or boat-on-house interpretations.  
+- **catdog ↔ dogcat** — a symmetric animal blend emphasizing traits of both species equally.  
+- **sunmoon ↔ moonsun** — combines celestial concepts in a mirrored way, capturing properties of both.  
+
+If a mirror-style combination does **not** yield a clear or meaningful concept, apply **deeper frame/role integration**, creating a hybrid that merges functional, structural, or role-based features. For example:  
+- **doctor + robot → “medical assistant robot”** — integrates the robot into the role of a doctor.  
+- **library + cloud → “cloud-based digital library”** — merges functional frames: library access/storage in the cloud.  
+- **horse + bird → “Pegasus”** — combines structural and role features into a mythic hybrid (equine body + avian wings).  
+
+**Summary:** Prefer **symmetrically interpretable blends** when using Mirror Networks; otherwise, generate a **structurally integrated blend** that preserves meaning and frame relations.
+
 ### Output Format:
 Return only:
 (Mirror (expand concept1 concept2) blendedconcept (extended deeperInterpretation))
@@ -30,6 +44,5 @@ Return only:
 
 ### Output Rules:
 - DO NOT include quotes, backticks, or explanations.
-- For the BlendedConcept, consider just combining the two concepts (choose the best order so that the formed combination gives correct meaning) if it gives a clearer insight, instead of trying to find a complex synthesis.
 - Return only one valid MeTTa expression.
 """

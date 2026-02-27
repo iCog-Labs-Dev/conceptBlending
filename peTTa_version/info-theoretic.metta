@@ -414,8 +414,10 @@
                                 (let ($blend-name $blendprops) ((index-atom $blend 2) (cons-blend-properties (eval (concept1)) $best-candidate))
                                     (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
                                         (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blendprops))
-                                            (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                (Formed Blend: $blend-name
+                                            (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res $average-eval-result) (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
+                                                (
+                                                Formed Blend: $blend-name
+                                                Blend-properties: $blendprops
                                                 Evaluation-Metrics:
                                                 Integration: $integration-res
                                                 Unpacking: $unpacking-res
@@ -423,6 +425,7 @@
                                                 Topology: $topology-res
                                                 Metonymy: $metonymy-res
                                                 Good-reason: $good-reason-res
+                                                Average-Evaluation-Result: $average-eval-result
                                                 )
                                             )
                                         )
@@ -456,15 +459,18 @@
                                             (let ($input1 $input2 $concept1 $concept2) ((Input1) (Input2) (eval (concept1)) (eval (concept2)))
                                                 (let ($formattedcon1 $formattedcon2 $formattedblend) (format-concepts ($input1 $concept1) ($input2 $concept2) ($blend-name $blendprops))
                                                     (let $res-op (op-evaluater $formattedblend $formattedcon1 $formattedcon2)
-                                                        (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res) $res-op
-                                                            (Formed Blend: $blend
+                                                        (let ($integration-res $metonymy-res $unpacking-res $web-res $topology-res $good-reason-res $average-eval-result) $res-op
+                                                            (
+                                                            Formed Blend: $blend
+                                                            Blend-properties: $blendprops
                                                             Evaluation-Metrics:
                                                             Integration: $integration-res
                                                             Unpacking: $unpacking-res
                                                             Web: $web-res
                                                             Topology: $topology-res
                                                             Metonymy: $metonymy-res
-                                                            Good-reason: $good-reason-res)
+                                                            Good-reason: $good-reason-res
+                                                            Average-Evaluation-Result: $average-eval-result)
                                                         )
                                                     )
                                                 )
@@ -491,24 +497,24 @@
 
 
 (= (blend $SCMAorMCMA $eval)
-    (let $generations (if (== $SCMAorMCMA moedd-cma-es-main-loop) Moedd-cma-gen GENERATIONS)
-        (let $final-pop ($SCMAorMCMA)
-            (let $best-sample-with-fitness (index-atom $final-pop (- ($generations) 1))
-                (let $_ (println! (Best-sample $best-sample-with-fitness))
-                    (let $concept-pair (let (Concept $x $y) (concept1) $x)
-                        (let $network (sread (py-call (gpt_agents.gpt_network_selector $concept-pair)))
-                            (if (not (== $network None))
+    (let $concept-pair (let (Concept $x $y) (concept1) $x)
+        (let $network (sread (py-call (gpt_agents.gpt_network_selector $concept-pair)))
+            (if (not (== $network none))
+                (let $generations (if (== $SCMAorMCMA moedd-cma-es-main-loop) Moedd-cma-gen GENERATIONS)
+                    (let $final-pop ($SCMAorMCMA)
+                        (let $best-sample-with-fitness (index-atom $final-pop (- ($generations) 1))
+                            (let $_ (println! (Best-sample $best-sample-with-fitness))
                                 (let $prepared-network (prepare-network-call $network)
                                     (if (== $SCMAorMCMA moedd-cma-es-main-loop)
-                                        (let $_ (println! (Type of CMA-ES: Multi-Objective CMA-ES | Selected Network: $prepared-network | Concept-pair: $concept-pair)) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $prepared-network $eval))
-                                        (let $_ (println! (Type of CMA-ES: Single-Objective CMA-ES | Selected Network: $prepared-network | Concept-pair: $concept-pair)) (single-objective-blend $best-sample-with-fitness $concept-pair $prepared-network $eval))
+                                        (let $_ (println! (Type of CMA-ES: Multi-Objective CMA-ES | Selected Network: $prepared-network | Concept-pair: $concept-pair)) ((concept1) (concept2) (multi-objective-blend-loop $best-sample-with-fitness $concept-pair $prepared-network $eval)))
+                                        (let $_ (println! (Type of CMA-ES: Single-Objective CMA-ES | Selected Network: $prepared-network | Concept-pair: $concept-pair)) ((concept1) (concept2) (single-objective-blend $best-sample-with-fitness $concept-pair $prepared-network $eval)))
                                     )
                                 )
-                                (Error $network NoNetworkSelected)
                             )
                         )
                     )
                 )
+                (Error $network (The concept pair $concept-pair couldn't produce a blend))
             )
         )
     )

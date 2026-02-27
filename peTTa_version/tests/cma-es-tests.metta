@@ -600,8 +600,8 @@
 (= (testEval) False)
 
 !(test 
-   (let ($net-type $exp-ver $blend $ext-ver) (blend cma-es-main-loop (testEval)) ($net-type $blend))
-   (doubleScope spiderman)
+   (let ($con1 $con2 ($net-type $exp-ver $blend $ext-ver)) (blend cma-es-main-loop (testEval)) ($net-type $blend))
+   (doubleScope houseboat)
 )
 
 ;;; cma-es-blend with evaluation ;;;;
