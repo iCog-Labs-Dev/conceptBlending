@@ -4,7 +4,7 @@ import re
 import time
 
 # Configuration
-ROUNDS = 5  # How many times to run the experiment
+ROUNDS = 1  # How many times to run the experiment
 SCRIPT = "master_pipeline.metta"
 
 print(f"Starting Benchmark: {ROUNDS} Rounds...")
