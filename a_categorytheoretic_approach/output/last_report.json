@@ -1,0 +1,26 @@
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 4.468775033950806,
+    "2_Generalization": 5.327690362930298,
+    "3_Morphism_Search": 1.1574950218200684,
+    "3_Colimit_Computation": 0.0003921985626220703,
+    "Total": 12.866868019104004
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.6917",
+  "Raw_Stats": {
+    "start_time": 1772186583.089072,
+    "end_time": 1772186595.95594,
+    "phases": {
+      "1_Spec_Generation": 4.468775033950806,
+      "2_Generalization": 5.327690362930298,
+      "3_Morphism_Search": 1.1574950218200684,
+      "3_Colimit_Computation": 0.0003921985626220703,
+      "Total": 12.866868019104004
+    },
+    "llm_attempts": 4,
+    "llm_failures": 0,
+    "synergy_score": 8.9,
+    "fidelity_score": 1.0
+  }
+}

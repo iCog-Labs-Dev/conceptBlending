@@ -10,11 +10,17 @@ load_dotenv()
 
 class ChatGPTAgent():
 
+    # def __init__(self, model="gpt-4o"):
+    #     self._model = model
+    #     self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
     def __init__(self, model="gpt-4o"):
         self._model = model
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-    def __call__(self, messages, functions=[]):
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment variables.")
+        self.client = OpenAI(api_key=api_key)
+    def __call__(self, messages, functions=[], **kwargs):
         if functions == []:
             response = self.client.chat.completions.create(model=self._model,
                 messages=messages,
@@ -27,7 +33,8 @@ class ChatGPTAgent():
                 function_call="auto",
                 temperature=0.1,
                 timeout = 15)
-        return response.choices[0].message
+        # return response.choices[0].message
+        return response.choices[0].message.content
 
 class GeminiAgent():
     def __init__(self, model="gemini-2.5-flash"):
