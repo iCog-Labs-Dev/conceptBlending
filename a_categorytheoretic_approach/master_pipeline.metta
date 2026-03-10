@@ -9,10 +9,14 @@
 ; [INIT] Start Timer
 !(util:start-monitor)
 
-; 2. DEFINE WRAPPERS (Using the extensions.py names)
+; 2. DEFINE WRAPPERS (Using the extensions.py)
 (= (generate_specs $c1 $c2)
-   ; extensions.py handles both preprocessing and building inside llm:generate-spec
-   (collapse (llm:generate-spec $c1 $c2))
+   (let $context1 (let $fetchedcont1 (main-fetch $c1) (cons-atom Context $fetchedcont1))
+      (let $context2 (let $fetchedcont2 (main-fetch $c2) (cons-atom Context $fetchedcont2))
+         ; Passing the concept AND its fetched context to the Python LLM wrapper
+         (collapse (llm:generate-spec ($c1 $context1) ($c2 $context2)))
+      )
+   )
 )
 
 (= (find_generalization $A $B) (llm:generate-gen $A $B))
