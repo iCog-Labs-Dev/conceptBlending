@@ -148,9 +148,13 @@ def prompt_agent(metta: MeTTa, agent_type: str, *args):
     concept1_name, concept2_name, context_str = "", "", ""
     
     if agent_type == "algspec_builder":
-        # Extract concept names from Concept atoms
-        concept1_name, context_str = _extract_concept_name(str(args[0]))
-        concept2_name, _ = _extract_concept_name(str(args[1]))
+        
+        # Extract concept names AND contexts from both atoms
+        concept1_name, context_str1 = _extract_concept_name(str(args[0]))
+        concept2_name, context_str2 = _extract_concept_name(str(args[1]))
+        
+        # Combine both contexts so the LLM and the Validator
+        context_str = f"Context for {concept1_name}: {context_str1}\nContext for {concept2_name}: {context_str2}"
         
         formatted_prompt = prompt_template.format(
             concept1=concept1_name,
