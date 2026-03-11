@@ -1,0 +1,80 @@
+=== CONCEPT BLENDING RUN ===
+Concepts: House + Boat
+Run ID:   27f9f02e
+Date:     Wed Feb 18 17:59:17 2026
+============================
+
+>>> [PHASE 1] Generating Specifications...
+
+; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Structure 0.9) ((< House Structure) 1.0) (UserType 0.8) (Family ((< Family UserType)) 0.9) (EnvironmentType 0.8) (Land ((< Land EnvironmentType)) 0.9))) (ops (((: house House) 1.0) ((: a_family Family) 0.9) ((: the_land Land) 0.9))) (preds (((is_a_building House) 1.0) ((is_for House UserType) 0.9) ((is_located_on House EnvironmentType) 0.9) ((is_expensive House) 0.8) ((is_stationary House) 0.8))) (axioms (((is_a_building (house)) 1.0) ((is_for (house a_family)) 0.9) ((is_located_on (house the_land)) 0.9) ((is_expensive (house)) 0.8) ((is_stationary (house)) 0.8)))))
+
+; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Vehicle 0.9) ((< Boat Vehicle) 1.0) (UserType 0.8) (Sailor ((< Sailor UserType)) 0.9) (EnvironmentType 0.8) (Water ((< Water EnvironmentType)) 0.9))) (ops (((: boat Boat) 1.0) ((: a_sailor Sailor) 0.9) ((: the_water Water) 0.9))) (preds (((is_a_vehicle Boat) 1.0) ((is_for Boat UserType) 0.9) ((is_located_on Boat EnvironmentType) 0.9) ((is_expensive Boat) 0.8) ((is_buoyant Boat) 0.8))) (axioms (((is_a_vehicle (boat)) 1.0) ((is_for (boat a_sailor)) 0.9) ((is_located_on (boat the_water)) 0.9) ((is_expensive (boat)) 0.8) ((is_buoyant (boat)) 0.8)))))
+; ---> Specs Generated.
+
+>>> [PHASE 2] Finding Shared Generalization (G)...
+; ---> Generalization Found.
+
+>>> [PHASE 3] Finding Morphisms (Mapping)...
+; ---> Maps Acquired (JSON).
+
+>>> [PHASE 4] Computing Final Blend...
+
+; ===========================================
+;         FINAL BLEND              
+; ===========================================
+(Concept BlendedConcept 
+            (specs
+             (sorts ((< House_Boat Structure_Vehicle 1.0) (EnvironmentType 0.8) (Family_Sailor ((< Family_Sailor UserType 0.9) (Land_Water ((< Land_Water EnvironmentType 0.9) (Object 1.0) (Structure_Vehicle 0.9) (UserType 0.8)))
+             (ops ((: a_family_a_sailor Family_Sailor 0.9) (: house_boat House_Boat 1.0) (: the_land_the_water Land_Water 0.9)))
+             (preds ((is_a_building_is_a_vehicle House_Boat 1.0) (is_buoyant House_Boat 0.8) (is_expensive House_Boat 0.8) (is_for House_Boat UserType 0.9) (is_located_on House_Boat EnvironmentType 0.9) (is_stationary House_Boat 0.8)))
+             (axioms ((is_a_building_is_a_vehicle (house_boat 1.0) (is_buoyant (house_boat 0.8) (is_expensive (house_boat 0.8) (is_for (house_boat a_family_a_sailor 0.9) (is_located_on (house_boat the_land_the_water 0.9) (is_stationary (house_boat 0.8)))
+            )
+        ))
+            
+        ---------------------------------------
+               Output Quality Metrics
+        ---------------------------------------
+        (metrics
+             (InfoValue(Richness): 19.50)
+             (Compression(Synergy): 17.90)
+             (SFS(Fidelity): 1.000)
+             (CCR(Efficiency): 0.455)
+             (Imbalance(Balance): 0.00)
+            )
+        
+
+>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+==================================================
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 41.80189538002014,
+    "2_Generalization": 28.318753719329834,
+    "3_Morphism_Search": 5.279515504837036,
+    "3_Colimit_Computation": 0.0016717910766601562,
+    "Total": 82.62962341308594
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.2166",
+  "Raw_Stats": {
+    "start_time": 1771426757.2968616,
+    "end_time": 1771426839.926485,
+    "phases": {
+      "1_Spec_Generation": 41.80189538002014,
+      "2_Generalization": 28.318753719329834,
+      "3_Morphism_Search": 5.279515504837036,
+      "3_Colimit_Computation": 0.0016717910766601562,
+      "Total": 82.62962341308594
+    },
+    "llm_attempts": 4,
+    "llm_failures": 0,
+    "synergy_score": 17.900000000000002,
+    "fidelity_score": 1.0
+  }
+}
+==================================================
+

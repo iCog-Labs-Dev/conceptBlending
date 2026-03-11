@@ -1,0 +1,80 @@
+=== CONCEPT BLENDING RUN ===
+Concepts: House + Boat
+Run ID:   1cf6ac01
+Date:     Fri Feb 20 12:56:37 2026
+============================
+
+>>> [PHASE 1] Generating Specifications...
+
+; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Entity 0.9) (Location 0.8) (Occupant 0.8) (Characteristic 0.7) (House 1.0) ((< House Entity) 1.0) (Building 1.0) ((< Building Entity) 1.0) (Family 0.9) ((< Family Occupant) 0.9) (Land 0.9) ((< Land Location) 0.9) (Cost 0.8) ((< Cost Characteristic) 0.8) (MovementState 0.9) ((< MovementState Characteristic) 0.9) (Stationary 0.9) ((< Stationary MovementState) 0.9))) (ops (((: house House) 1.0) ((: family Family) 0.9) ((: land Land) 0.9) ((: expensive Cost) 0.8) ((: stationary Stationary) 0.9))) (preds (((isA Type1 Type2) 1.0) ((isFor Type1 Type2) 0.9) ((isLocatedOn Type1 Type2) 0.9) ((hasCost Type1 Type2) 0.8) ((hasState Type1 Type2) 0.9))) (axioms (((isA (house Building)) 1.0) ((isFor (house family)) 0.9) ((isLocatedOn (house land)) 0.9) ((hasCost (house expensive)) 0.8) ((hasState (house stationary)) 0.9)))))
+
+; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Entity 0.9) (Location 0.8) (Occupant 0.8) (Characteristic 0.7) (Boat 1.0) ((< Boat Entity) 1.0) (Vehicle 1.0) ((< Vehicle Entity) 1.0) (Sailor 0.9) ((< Sailor Occupant) 0.9) (Water 0.9) ((< Water Location) 0.9) (Cost 0.8) ((< Cost Characteristic) 0.8) (BuoyancyState 0.9) ((< BuoyancyState Characteristic) 0.9) (Buoyant 0.9) ((< Buoyant BuoyancyState) 0.9))) (ops (((: boat Boat) 1.0) ((: sailors Sailor) 0.9) ((: water Water) 0.9) ((: expensive Cost) 0.8) ((: buoyant Buoyant) 0.9))) (preds (((isA Type1 Type2) 1.0) ((isFor Type1 Type2) 0.9) ((isLocatedOn Type1 Type2) 0.9) ((hasCost Type1 Type2) 0.8) ((hasState Type1 Type2) 0.9))) (axioms (((isA (boat Vehicle)) 1.0) ((isFor (boat sailors)) 0.9) ((isLocatedOn (boat water)) 0.9) ((hasCost (boat expensive)) 0.8) ((hasState (boat buoyant)) 0.9)))))
+; ---> Specs Generated.
+
+>>> [PHASE 2] Finding Shared Generalization (G)...
+; ---> Generalization Found.
+
+>>> [PHASE 3] Finding Morphisms (Mapping)...
+; ---> Maps Acquired (JSON).
+
+>>> [PHASE 4] Computing Final Blend...
+
+; ===========================================
+;         FINAL BLEND              
+; ===========================================
+(Concept BlendedConcept 
+            (specs
+             (sorts ((< Building_Vehicle Entity 1.0) (< Cost Characteristic 0.8) (< Family_Sailor Occupant 0.9) (< House_Boat Entity 1.0) (< Land_Water Location 0.9) (< MovementState_BuoyancyState Characteristic 0.9) (< Stationary_Buoyant MovementState_BuoyancyState 0.9) (Building_Vehicle 1.0) (Characteristic 0.7) (Cost 0.8) (Entity 0.9) (Family_Sailor 0.9) (House_Boat 1.0) (Land_Water 0.9) (Location 0.8) (MovementState_BuoyancyState 0.9) (Object 1.0) (Occupant 0.8) (Stationary_Buoyant 0.9)))
+             (ops ((: expensive Cost 0.8) (: family_sailors Family_Sailor 0.9) (: house_boat House_Boat 1.0) (: land_water Land_Water 0.9) (: stationary_buoyant Stationary_Buoyant 0.9)))
+             (preds ((hasCost Type1 Type2 0.8) (hasState Type1 Type2 0.9) (isA Type1 Type2 1.0) (isFor Type1 Type2 0.9) (isLocatedOn Type1 Type2 0.9)))
+             (axioms ((hasCost (house_boat expensive 0.8) (hasState (house_boat stationary_buoyant 0.9) (isA (house_boat Building_Vehicle 1.0) (isFor (house_boat family_sailors 0.9) (isLocatedOn (house_boat land_water 0.9)))
+            )
+        ))
+            
+        ---------------------------------------
+               Output Quality Metrics
+        ---------------------------------------
+        (metrics
+             (InfoValue(Richness): 30.50)
+             (Compression(Synergy): 30.50)
+             (SFS(Fidelity): 1.000)
+             (CCR(Efficiency): 0.500)
+             (Imbalance(Balance): 0.00)
+            )
+        
+
+>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+==================================================
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 44.503761529922485,
+    "2_Generalization": 25.14721417427063,
+    "3_Morphism_Search": 8.63266134262085,
+    "3_Colimit_Computation": 0.0018057823181152344,
+    "Total": 86.72104859352112
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.3517",
+  "Raw_Stats": {
+    "start_time": 1771581397.1402302,
+    "end_time": 1771581483.8612788,
+    "phases": {
+      "1_Spec_Generation": 44.503761529922485,
+      "2_Generalization": 25.14721417427063,
+      "3_Morphism_Search": 8.63266134262085,
+      "3_Colimit_Computation": 0.0018057823181152344,
+      "Total": 86.72104859352112
+    },
+    "llm_attempts": 4,
+    "llm_failures": 0,
+    "synergy_score": 30.49999999999999,
+    "fidelity_score": 1.0000000000000002
+  }
+}
+==================================================
+

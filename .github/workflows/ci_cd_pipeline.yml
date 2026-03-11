@@ -3,10 +3,10 @@ name: CI/CD Workflow
 on:
   push:
     branches:
-      - PeTTaPorting
+      - main
   pull_request:
     branches:
-      - PeTTaPorting
+      - main
 
 jobs:
   build:
