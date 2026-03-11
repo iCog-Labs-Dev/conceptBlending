@@ -1,0 +1,80 @@
+=== CONCEPT BLENDING RUN ===
+Concepts: House + Boat
+Run ID:   73954cc5
+Date:     Sun Feb 22 06:44:34 2026
+============================
+
+>>> [PHASE 1] Generating Specifications...
+
+; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Building 0.9) ((< House Building) 1.0))) (ops (((: house House) 1.0) ((: family Group) 0.8) ((: land Land) 0.9))) (preds (((isStationary House) 1.0) ((isExpensive House) 0.7) ((providesShelter House Group) 0.95))) (axioms (((isStationary (house)) 1.0) ((isExpensive (house)) 0.7) ((providesShelter (house family)) 0.95)))))
+
+; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Vehicle 0.9) ((< Boat Vehicle) 1.0))) (ops (((: boat Boat) 1.0) ((: sailors Group) 0.8) ((: water Water) 0.9))) (preds (((isBuoyant Boat) 1.0) ((isExpensive Boat) 0.7) ((providesTransport Boat Group) 0.95))) (axioms (((isBuoyant (boat)) 1.0) ((isExpensive (boat)) 0.7) ((providesTransport (boat sailors)) 0.95)))))
+; ---> Specs Generated.
+
+>>> [PHASE 2] Finding Shared Generalization (G)...
+; ---> Generalization Found.
+
+>>> [PHASE 3] Finding Morphisms (Mapping)...
+; ---> Maps Acquired (JSON).
+
+>>> [PHASE 4] Computing Final Blend...
+
+; ===========================================
+;         FINAL BLEND              
+; ===========================================
+(Concept BlendedConcept 
+            (specs
+             (sorts ((< House_Boat Building_Vehicle 1.0) (Building_Vehicle 0.9) (Object 1.0)))
+             (ops ((: family_sailors Group 0.8) (: house_boat House_Boat 1.0) (: land_water Land 0.9) (: land_water Water 0.9)))
+             (preds ((isExpensive House_Boat 0.7) (isStationary_isBuoyant House_Boat 1.0) (providesShelter_providesTransport House_Boat Group 0.95)))
+             (axioms ((isExpensive (house_boat 0.7) (isStationary_isBuoyant (house_boat 1.0) (providesShelter_providesTransport (house_boat family_sailors 0.95)))
+            )
+        ))
+            
+        ---------------------------------------
+               Output Quality Metrics
+        ---------------------------------------
+        (metrics
+             (InfoValue(Richness): 11.80)
+             (Compression(Synergy): 10.90)
+             (SFS(Fidelity): 1.000)
+             (CCR(Efficiency): 0.459)
+             (Imbalance(Balance): 0.00)
+            )
+        
+
+>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+==================================================
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 10.287660598754883,
+    "2_Generalization": 4.622184991836548,
+    "3_Morphism_Search": 1.925018310546875,
+    "3_Colimit_Computation": 0.0011048316955566406,
+    "Total": 20.805383920669556
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.5239",
+  "Raw_Stats": {
+    "start_time": 1771731874.1536303,
+    "end_time": 1771731894.9590142,
+    "phases": {
+      "1_Spec_Generation": 10.287660598754883,
+      "2_Generalization": 4.622184991836548,
+      "3_Morphism_Search": 1.925018310546875,
+      "3_Colimit_Computation": 0.0011048316955566406,
+      "Total": 20.805383920669556
+    },
+    "llm_attempts": 4,
+    "llm_failures": 0,
+    "synergy_score": 10.899999999999999,
+    "fidelity_score": 1.0
+  }
+}
+==================================================
+

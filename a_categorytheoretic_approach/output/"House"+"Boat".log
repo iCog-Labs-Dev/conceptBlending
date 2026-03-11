@@ -1,0 +1,654 @@
+
+--- New Run: "House" + "Boat" at Fri Feb 27 12:45:51 2026 ---
+
+[Performance Monitor] Started.
+>>> [PHASE 1] Generating Specifications...
+   -> [Agent] Calling LLM for 'context_preprocessing'...
+   -> LLM Response Received.
+   -> [Agent] Preparing prompt for 'algspec_builder'...
+   -> [Agent] Calling LLM for 'algspec_builder'...
+   -> LLM Response Received.
+\n; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Structure 0.9) ((< House Structure) 1.0))) (ops (((: house House) 1.0) ((: resident Person) 0.8) ((: room InternalSpace) 0.7))) (preds (((providesShelter House) 0.95) ((hasRoom House InternalSpace) 0.7))) (axioms (((providesShelter (house)) 0.95) ((hasRoom (house room)) 0.7)))))
+\n; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Structure 0.9) ((< Boat Structure) 1.0))) (ops (((: boat Boat) 1.0) ((: passenger Person) 0.8) ((: cabin InternalSpace) 0.7))) (preds (((providesTransport Boat) 0.95) ((hasCabin Boat InternalSpace) 0.7))) (axioms (((providesTransport (boat)) 0.95) ((hasCabin (boat cabin)) 0.7)))))
+; ---> Specs Generated.
+\n>>> [PHASE 2] Finding Shared Generalization (G)...
+   -> [Agent] Preparing prompt for 'generalization_helper'...
+   -> [Agent] Calling LLM for 'generalization_helper'...
+   -> LLM Response Received.
+; ---> Generalization Found.
+\n>>> [PHASE 3] Finding Morphisms (Mapping)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+; ---> Maps Acquired (JSON).
+\n>>> [PHASE 4] Computing Final Blend...
+   -> [Math] Parsing Morphisms & Computing Colimit...
+\n; ===========================================
+;         FINAL BLEND              
+; ===========================================
+(Concept BlendedConcept \n            (specs\n             (sorts ((< House_Boat Structure 1.0) (Object 1.0) (Structure 0.9)))\n             (ops ((: house_boat House_Boat 1.0) (: resident_passenger Person 0.8) (: room_cabin InternalSpace 0.7)))\n             (preds ((hasRoom_hasCabin House_Boat InternalSpace 0.7) (providesShelter_providesTransport House_Boat 0.95)))\n             (axioms ((hasRoom_hasCabin (house_boat room_cabin 0.7) (providesShelter_providesTransport (house_boat 0.95)))\n            )\n        ))\n            \n        ---------------------------------------\n               Output Quality Metrics\n        ---------------------------------------\n        (metrics\n             (InfoValue(Richness): 8.70)\n             (Compression(Synergy): 8.70)\n             (SFS(Fidelity): 1.000)\n             (CCR(Efficiency): 0.500)\n             (Imbalance(Balance): 0.00)\n            )\n        
+\n>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 4.882189750671387,
+    "2_Generalization": 4.9489405155181885,
+    "3_Morphism_Search": 1.4234654903411865,
+    "3_Colimit_Computation": 0.00069427490234375,
+    "Total": 13.38270378112793
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.6501",
+  "Raw_Stats": {
+    "start_time": 1772185551.0544887,
+    "end_time": 1772185564.4371924,
+    "phases": {
+      "1_Spec_Generation": 4.882189750671387,
+      "2_Generalization": 4.9489405155181885,
+      "3_Morphism_Search": 1.4234654903411865,
+      "3_Colimit_Computation": 0.00069427490234375,
+      "Total": 13.38270378112793
+    },
+    "llm_attempts": 4,
+    "llm_failures": 0,
+    "synergy_score": 8.7,
+    "fidelity_score": 1.0
+  }
+}
+[()]
+[()]
+[True]
+[True]
+[True]
+[(block True)]
+[True]
+[True]
+
+--- New Run: "House" + "Boat" at Fri Feb 27 12:46:15 2026 ---
+
+[Performance Monitor] Started.
+>>> [PHASE 1] Generating Specifications...
+   -> [Agent] Calling LLM for 'context_preprocessing'...
+   -> LLM Response Received.
+   -> [Agent] Preparing prompt for 'algspec_builder'...
+   -> [Agent] Calling LLM for 'algspec_builder'...
+   -> LLM Response Received.
+\n; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Structure 0.9) ((< House Structure) 1.0))) (ops (((: house House) 1.0) ((: resident Person) 0.8) ((: room InternalSpace) 0.7))) (preds (((providesShelter House) 0.95) ((hasColor House Color) 0.2))) (axioms (((providesShelter (house)) 0.95)))))
+\n; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Structure 0.9) ((< Boat Structure) 1.0))) (ops (((: boat Boat) 1.0) ((: passenger Person) 0.8) ((: cabin InternalSpace) 0.7))) (preds (((providesTransport Boat) 0.95) ((hasColor Boat Color) 0.2))) (axioms (((providesTransport (boat)) 0.95)))))
+; ---> Specs Generated.
+\n>>> [PHASE 2] Finding Shared Generalization (G)...
+   -> [Agent] Preparing prompt for 'generalization_helper'...
+   -> [Agent] Calling LLM for 'generalization_helper'...
+   -> LLM Response Received.
+; ---> Generalization Found.
+\n>>> [PHASE 3] Finding Morphisms (Mapping)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+; ---> Maps Acquired (JSON).
+\n>>> [PHASE 4] Computing Final Blend...
+   -> [Math] Parsing Morphisms & Computing Colimit...
+\n; ===========================================
+;         FINAL BLEND              
+; ===========================================
+(Concept BlendedConcept \n            (specs\n             (sorts ((< House_Boat Structure 1.0) (Object 1.0) (Structure 0.9)))\n             (ops ((: house_boat House_Boat 1.0) (: resident_passenger Person 0.8) (: room_cabin InternalSpace 0.7)))\n             (preds ((hasColor House_Boat Color 0.2) (providesShelter_providesTransport House_Boat 0.95)))\n             (axioms ((providesShelter_providesTransport (house_boat 0.95)))\n            )\n        ))\n            \n        ---------------------------------------\n               Output Quality Metrics\n        ---------------------------------------\n        (metrics\n             (InfoValue(Richness): 7.50)\n             (Compression(Synergy): 7.50)\n             (SFS(Fidelity): 1.000)\n             (CCR(Efficiency): 0.500)\n             (Imbalance(Balance): 0.00)\n            )\n        
+\n>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 4.79084038734436,
+    "2_Generalization": 4.7745912075042725,
+    "3_Morphism_Search": 1.1183574199676514,
+    "3_Colimit_Computation": 0.0009634494781494141,
+    "Total": 12.450444221496582
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.6024",
+  "Raw_Stats": {
+    "start_time": 1772185575.503961,
+    "end_time": 1772185587.9544053,
+    "phases": {
+      "1_Spec_Generation": 4.79084038734436,
+      "2_Generalization": 4.7745912075042725,
+      "3_Morphism_Search": 1.1183574199676514,
+      "3_Colimit_Computation": 0.0009634494781494141,
+      "Total": 12.450444221496582
+    },
+    "llm_attempts": 4,
+    "llm_failures": 0,
+    "synergy_score": 7.500000000000001,
+    "fidelity_score": 1.0
+  }
+}
+[()]
+[()]
+[True]
+[True]
+[True]
+[(block True)]
+[True]
+[True]
+
+--- New Run: "House" + "Boat" at Fri Feb 27 12:50:19 2026 ---
+
+[Performance Monitor] Started.
+>>> [PHASE 1] Generating Specifications...
+   -> [Agent] Calling LLM for 'context_preprocessing'...
+   -> LLM Response Received.
+   -> [Agent] Preparing prompt for 'algspec_builder'...
+   -> [Agent] Calling LLM for 'algspec_builder'...
+   -> LLM Response Received.
+\n; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Structure 0.9) ((< House Structure) 1.0))) (ops (((: house House) 1.0) ((: room Space) 0.8) ((: roof Covering) 0.7))) (preds (((providesShelter House) 0.95) ((hasRoom House Space) 0.8) ((hasRoof House Covering) 0.7))) (axioms (((providesShelter (house)) 0.95) ((hasRoom (house room)) 0.8) ((hasRoof (house roof)) 0.7)))))
+\n; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Structure 0.9) ((< Boat Structure) 1.0))) (ops (((: boat Boat) 1.0) ((: cabin Space) 0.8) ((: deck Covering) 0.7))) (preds (((providesTransport Boat) 0.95) ((hasCabin Boat Space) 0.8) ((hasDeck Boat Covering) 0.7))) (axioms (((providesTransport (boat)) 0.95) ((hasCabin (boat cabin)) 0.8) ((hasDeck (boat deck)) 0.7)))))
+; ---> Specs Generated.
+\n>>> [PHASE 2] Finding Shared Generalization (G)...
+   -> [Agent] Preparing prompt for 'generalization_helper'...
+   -> [Agent] Calling LLM for 'generalization_helper'...
+   -> LLM Response Received.
+; ---> Generalization Found.
+\n>>> [PHASE 3] Finding Morphisms (Mapping)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+; ---> Maps Acquired (JSON).
+\n>>> [PHASE 4] Computing Final Blend...
+   -> [Math] Parsing Morphisms & Computing Colimit...
+\n; ===========================================
+;         FINAL BLEND              
+; ===========================================
+(Concept BlendedConcept \n            (specs\n             (sorts ((< House_Boat Structure 1.0) (Object 1.0) (Structure 0.9)))\n             (ops ((: house_boat House_Boat 1.0) (: roof_deck Covering 0.7) (: room_cabin Space 0.8)))\n             (preds ((hasRoof_hasDeck House_Boat Covering 0.7) (hasRoom_hasCabin House_Boat Space 0.8) (providesShelter_providesTransport House_Boat 0.95)))\n             (axioms ((hasRoof_hasDeck (house_boat roof_deck 0.7) (hasRoom_hasCabin (house_boat room_cabin 0.8) (providesShelter_providesTransport (house_boat 0.95)))\n            )\n        ))\n            \n        ---------------------------------------\n               Output Quality Metrics\n        ---------------------------------------\n        (metrics\n             (InfoValue(Richness): 10.30)\n             (Compression(Synergy): 10.30)\n             (SFS(Fidelity): 1.000)\n             (CCR(Efficiency): 0.500)\n             (Imbalance(Balance): 0.00)\n            )\n        
+\n>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 5.700879335403442,
+    "2_Generalization": 5.623377323150635,
+    "3_Morphism_Search": 1.504594326019287,
+    "3_Colimit_Computation": 0.0004277229309082031,
+    "Total": 15.83141803741455
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.6506",
+  "Raw_Stats": {
+    "start_time": 1772185819.8512585,
+    "end_time": 1772185835.6826766,
+    "phases": {
+      "1_Spec_Generation": 5.700879335403442,
+      "2_Generalization": 5.623377323150635,
+      "3_Morphism_Search": 1.504594326019287,
+      "3_Colimit_Computation": 0.0004277229309082031,
+      "Total": 15.83141803741455
+    },
+    "llm_attempts": 4,
+    "llm_failures": 0,
+    "synergy_score": 10.3,
+    "fidelity_score": 1.0
+  }
+}
+[()]
+[()]
+[True]
+[True]
+[True]
+[(block True)]
+[True]
+[True]
+
+--- New Run: "House" + "Boat" at Fri Feb 27 12:53:23 2026 ---
+
+[Performance Monitor] Started.
+>>> [PHASE 1] Generating Specifications...
+   -> [Agent] Calling LLM for 'context_preprocessing'...
+   -> LLM Response Received.
+   -> [Agent] Preparing prompt for 'algspec_builder'...
+   -> [Agent] Calling LLM for 'algspec_builder'...
+   -> LLM Response Received.
+\n; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Structure 0.9) ((< House Structure) 1.0))) (ops (((: house House) 1.0) ((: resident Person) 0.8) ((: room InternalSpace) 0.7))) (preds (((providesShelter House) 0.95) ((hasRoom House InternalSpace) 0.7))) (axioms (((providesShelter (house)) 0.95) ((hasRoom (house room)) 0.7)))))
+\n; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Structure 0.9) ((< Boat Structure) 1.0))) (ops (((: boat Boat) 1.0) ((: passenger Person) 0.8) ((: cabin InternalSpace) 0.7))) (preds (((providesTransport Boat) 0.95) ((hasCabin Boat InternalSpace) 0.7))) (axioms (((providesTransport (boat)) 0.95) ((hasCabin (boat cabin)) 0.7)))))
+; ---> Specs Generated.
+\n>>> [PHASE 2] Finding Shared Generalization (G)...
+   -> [Agent] Preparing prompt for 'generalization_helper'...
+   -> [Agent] Calling LLM for 'generalization_helper'...
+   -> LLM Response Received.
+; ---> Generalization Found.
+\n>>> [PHASE 3] Finding Morphisms (Mapping)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+; ---> Maps Acquired (JSON).
+\n>>> [PHASE 4] Computing Final Blend...
+   -> [Math] Parsing Morphisms & Computing Colimit...
+\n; ===========================================
+;         FINAL BLEND              
+; ===========================================
+(Concept BlendedConcept \n            (specs\n             (sorts ((< House_Boat Structure 1.0) (Object 1.0) (Structure 0.9)))\n             (ops ((: house_boat House_Boat 1.0) (: resident_passenger Person 0.8) (: room_cabin InternalSpace 0.7)))\n             (preds ((hasRoom_hasCabin House_Boat InternalSpace 0.7) (providesShelter_providesTransport House_Boat 0.95)))\n             (axioms ((hasRoom_hasCabin (house_boat room_cabin 0.7) (providesShelter_providesTransport (house_boat 0.95)))\n            )\n        ))\n            \n        ---------------------------------------\n               Output Quality Metrics\n        ---------------------------------------\n        (metrics\n             (InfoValue(Richness): 8.70)\n             (Compression(Synergy): 8.70)\n             (SFS(Fidelity): 1.000)\n             (CCR(Efficiency): 0.500)\n             (Imbalance(Balance): 0.00)\n            )\n        
+\n>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 6.297134876251221,
+    "2_Generalization": 5.2517924308776855,
+    "3_Morphism_Search": 1.2902283668518066,
+    "3_Colimit_Computation": 0.00036644935607910156,
+    "Total": 14.950181722640991
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.5819",
+  "Raw_Stats": {
+    "start_time": 1772186003.8668342,
+    "end_time": 1772186018.817016,
+    "phases": {
+      "1_Spec_Generation": 6.297134876251221,
+      "2_Generalization": 5.2517924308776855,
+      "3_Morphism_Search": 1.2902283668518066,
+      "3_Colimit_Computation": 0.00036644935607910156,
+      "Total": 14.950181722640991
+    },
+    "llm_attempts": 4,
+    "llm_failures": 0,
+    "synergy_score": 8.7,
+    "fidelity_score": 1.0
+  }
+}
+[()]
+[()]
+[True]
+[True]
+[True]
+[(block True)]
+[True]
+[True]
+
+--- New Run: "House" + "Boat" at Fri Feb 27 13:01:45 2026 ---
+
+[Performance Monitor] Started.
+>>> [PHASE 1] Generating Specifications...
+   -> [Agent] Calling LLM for 'context_preprocessing'...
+   -> LLM Response Received.
+   -> [Agent] Preparing prompt for 'algspec_builder'...
+   -> [Agent] Calling LLM for 'algspec_builder'...
+   -> LLM Response Received.
+\n; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Structure 0.9) ((< House Structure) 1.0))) (ops (((: house House) 1.0) ((: resident Person) 0.8) ((: garden ExternalSpace) 0.4))) (preds (((providesShelter House) 0.95) ((hasColor House Color) 0.2))) (axioms (((providesShelter (house)) 0.95)))))
+\n; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Structure 0.9) ((< Boat Structure) 1.0))) (ops (((: boat Boat) 1.0) ((: captain Person) 0.8) ((: sail Equipment) 0.4))) (preds (((providesTransport Boat) 0.95) ((hasColor Boat Color) 0.2))) (axioms (((providesTransport (boat)) 0.95)))))
+; ---> Specs Generated.
+\n>>> [PHASE 2] Finding Shared Generalization (G)...
+   -> [Agent] Preparing prompt for 'generalization_helper'...
+   -> [Agent] Calling LLM for 'generalization_helper'...
+   -> LLM Response Received.
+Grounding Error: Grounding Error: Unsupported terms found (house@boat, resident@captain, garden@sail... Reason: The terms 'house@boat', 'resident@captain', 'garden@sail', and 'providesShelter@Transport' are not directly supported by the context. The context provides separate specifications for 'House' and 'Boat', but does not support a combined concept of 'House@Boat'. Similarly, 'resident@captain' and 'garden@sail' are combinations of terms from different contexts without a basis for such combinations. 'providesShelter@Transport' is a combination of predicates from different contexts, which is not supported by the provided context.)
+   > [Self-Correction] Attempt 2/3...
+   -> LLM Response Received.
+Grounding Error: Grounding Error: Unsupported terms found (House@Boat, house@boat, crew... Reason: The generated specification introduces the concept 'House@Boat', which is not present in the source context. The term 'house@boat' is a new object not supported by the context. 'crew' is not a synonym or abstraction of any term in the context, as the context uses 'resident' and 'captain' for people associated with houses and boats, respectively. 'externalFeature' is not grounded in the context, which uses 'garden' and 'sail' as specific features. 'providesFunctionality' is a new predicate not directly supported by the context, which uses 'providesShelter' and 'providesTransport'.)
+   > [Self-Correction] Attempt 3/3...
+   -> LLM Response Received.
+Grounding Error: Grounding Error: Unsupported terms found (HouseBoat, houseBoat, ExternalFeature... Reason: The term 'HouseBoat' and its related operations and predicates such as 'houseBoat', 'ExternalFeature', and 'providesFunctionality' are not present in the source context. The context only includes specifications for 'House' and 'Boat' separately, without any mention of a combined 'HouseBoat' concept or the functionality it provides.)
+Error: Max retries exceeded.
+\n>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 7.1855549812316895,
+    "2_Generalization": 136.06003546714783,
+    "Total": -1772186505.2586038
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.0000",
+  "Raw_Stats": {
+    "start_time": 1772186505.2586038,
+    "end_time": 0,
+    "phases": {
+      "1_Spec_Generation": 7.1855549812316895,
+      "2_Generalization": 136.06003546714783,
+      "Total": -1772186505.2586038
+    },
+    "llm_attempts": 2,
+    "llm_failures": 0,
+    "synergy_score": 0,
+    "fidelity_score": 0
+  }
+}
+[()]
+[()]
+[True]
+[True]
+[True]
+[]
+[True]
+[True]
+
+--- New Run: "House" + "Boat" at Fri Feb 27 13:04:10 2026 ---
+
+[Performance Monitor] Started.
+>>> [PHASE 1] Generating Specifications...
+   -> [Agent] Calling LLM for 'context_preprocessing'...
+   -> LLM Response Received.
+   -> [Agent] Preparing prompt for 'algspec_builder'...
+   -> [Agent] Calling LLM for 'algspec_builder'...
+   -> LLM Response Received.
+\n; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Structure 0.9) ((< House Structure) 1.0))) (ops (((: house House) 1.0) ((: resident Person) 0.8) ((: room InternalSpace) 0.7))) (preds (((providesShelter House) 0.95) ((hasRoom House InternalSpace) 0.7))) (axioms (((providesShelter (house)) 0.95) ((hasRoom (house room)) 0.7)))))
+\n; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Structure 0.9) ((< Boat Structure) 1.0))) (ops (((: boat Boat) 1.0) ((: passenger Person) 0.8) ((: cabin InternalSpace) 0.7))) (preds (((providesTransport Boat) 0.95) ((hasCabin Boat InternalSpace) 0.7))) (axioms (((providesTransport (boat)) 0.95) ((hasCabin (boat cabin)) 0.7)))))
+; ---> Specs Generated.
+\n>>> [PHASE 2] Finding Shared Generalization (G)...
+   -> [Agent] Preparing prompt for 'generalization_helper'...
+   -> [Agent] Calling LLM for 'generalization_helper'...
+   -> LLM Response Received.
+; ---> Generalization Found.
+\n>>> [PHASE 3] Finding Morphisms (Mapping)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+; ---> Maps Acquired (JSON).
+\n>>> [PHASE 4] Computing Final Blend...
+   -> [Math] Parsing Morphisms & Computing Colimit...
+\n; ===========================================
+;         FINAL BLEND              
+; ===========================================
+(Concept BlendedConcept \n            (specs\n             (sorts ((< House_Boat Structure 1.0) (Object 1.0) (Structure 0.9)))\n             (ops ((: house_boat House_Boat 1.0) (: resident_passenger Person 0.8) (: room_cabin InternalSpace 0.7)))\n             (preds ((hasRoom_hasCabin House_Boat InternalSpace 0.7) (providesShelter_providesTransport House_Boat 0.95)))\n             (axioms ((hasRoom_hasCabin (house_boat room_cabin 0.7) (providesShelter_providesTransport (house_boat 0.95)))\n            )\n        ))\n            \n        ---------------------------------------\n               Output Quality Metrics\n        ---------------------------------------\n        (metrics\n             (InfoValue(Richness): 8.70)\n             (Compression(Synergy): 8.70)\n             (SFS(Fidelity): 1.000)\n             (CCR(Efficiency): 0.500)\n             (Imbalance(Balance): 0.00)\n            )\n        
+\n>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": -117.51774883270264,
+    "2_Generalization": 4.448093414306641,
+    "3_Morphism_Search": 2.3471879959106445,
+    "3_Colimit_Computation": 0.0003936290740966797,
+    "Total": -108.97212553024292
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "87000.0000",
+  "Raw_Stats": {
+    "start_time": 1772186650.8968816,
+    "end_time": 1772186541.924756,
+    "phases": {
+      "1_Spec_Generation": -117.51774883270264,
+      "2_Generalization": 4.448093414306641,
+      "3_Morphism_Search": 2.3471879959106445,
+      "3_Colimit_Computation": 0.0003936290740966797,
+      "Total": -108.97212553024292
+    },
+    "llm_attempts": 4,
+    "llm_failures": 0,
+    "synergy_score": 8.7,
+    "fidelity_score": 1.0
+  }
+}
+[()]
+[()]
+[True]
+[True]
+[True]
+[(block True)]
+[True]
+[True]
+
+--- New Run: "House" + "Boat" at Fri Feb 27 13:02:24 2026 ---
+
+[Performance Monitor] Started.
+>>> [PHASE 1] Generating Specifications...
+   -> [Agent] Calling LLM for 'context_preprocessing'...
+   -> LLM Response Received.
+   -> [Agent] Preparing prompt for 'algspec_builder'...
+   -> [Agent] Calling LLM for 'algspec_builder'...
+   -> LLM Response Received.
+\n; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Structure 0.9) ((< House Structure) 1.0))) (ops (((: house House) 1.0) ((: room Room) 0.8) ((: door Door) 0.7) ((: window Window) 0.6))) (preds (((providesShelter House) 0.95) ((hasRoom House Room) 0.8) ((hasDoor House Door) 0.7) ((hasWindow House Window) 0.6))) (axioms (((providesShelter (house)) 0.95) ((hasRoom (house room)) 0.8) ((hasDoor (house door)) 0.7) ((hasWindow (house window)) 0.6)))))
+\n; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Structure 0.9) ((< Boat Structure) 1.0))) (ops (((: boat Boat) 1.0) ((: cabin Cabin) 0.8) ((: hatch Hatch) 0.7) ((: porthole Porthole) 0.6))) (preds (((providesTransport Boat) 0.95) ((hasCabin Boat Cabin) 0.8) ((hasHatch Boat Hatch) 0.7) ((hasPorthole Boat Porthole) 0.6))) (axioms (((providesTransport (boat)) 0.95) ((hasCabin (boat cabin)) 0.8) ((hasHatch (boat hatch)) 0.7) ((hasPorthole (boat porthole)) 0.6)))))
+; ---> Specs Generated.
+\n>>> [PHASE 2] Finding Shared Generalization (G)...
+   -> [Agent] Preparing prompt for 'generalization_helper'...
+   -> [Agent] Calling LLM for 'generalization_helper'...
+   -> LLM Response Received.
+; ---> Generalization Found.
+\n>>> [PHASE 3] Finding Morphisms (Mapping)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+; ---> Maps Acquired (JSON).
+\n>>> [PHASE 4] Computing Final Blend...
+   -> [Math] Parsing Morphisms & Computing Colimit...
+\n; ===========================================
+;         FINAL BLEND              
+; ===========================================
+(Concept BlendedConcept \n            (specs\n             (sorts ((< House_Boat Structure 1.0) (Object 1.0) (Structure 0.9)))\n             (ops ((: door_hatch Door 0.7) (: door_hatch Hatch 0.7) (: house_boat House_Boat 1.0) (: room_cabin Cabin 0.8) (: room_cabin Room 0.8) (: window_porthole Porthole 0.6) (: window_porthole Window 0.6)))\n             (preds ((hasDoor_hasHatch House_Boat Door 0.7) (hasDoor_hasHatch House_Boat Hatch 0.7) (hasRoom_hasCabin House_Boat Cabin 0.8) (hasRoom_hasCabin House_Boat Room 0.8) (hasWindow_hasPorthole House_Boat Porthole 0.6) (hasWindow_hasPorthole House_Boat Window 0.6) (providesShelter_providesTransport House_Boat 0.95)))\n             (axioms ((hasDoor_hasHatch (house_boat door_hatch 0.7) (hasRoom_hasCabin (house_boat room_cabin 0.8) (hasWindow_hasPorthole (house_boat window_porthole 0.6) (providesShelter_providesTransport (house_boat 0.95)))\n            )\n        ))\n            \n        ---------------------------------------\n               Output Quality Metrics\n        ---------------------------------------\n        (metrics\n             (InfoValue(Richness): 16.30)\n             (Compression(Synergy): 12.10)\n             (SFS(Fidelity): 1.000)\n             (CCR(Efficiency): 0.326)\n             (Imbalance(Balance): 0.00)\n            )\n        
+\n>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 6.399029493331909,
+    "2_Generalization": 7.256476640701294,
+    "3_Morphism_Search": 1.645641803741455,
+    "3_Colimit_Computation": 0.000514984130859375,
+    "Total": 17.519041061401367
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.6907",
+  "Raw_Stats": {
+    "start_time": 1772186544.1625185,
+    "end_time": 1772186561.6815596,
+    "phases": {
+      "1_Spec_Generation": 6.399029493331909,
+      "2_Generalization": 7.256476640701294,
+      "3_Morphism_Search": 1.645641803741455,
+      "3_Colimit_Computation": 0.000514984130859375,
+      "Total": 17.519041061401367
+    },
+    "llm_attempts": 4,
+    "llm_failures": 0,
+    "synergy_score": 12.099999999999998,
+    "fidelity_score": 1.0
+  }
+}
+[()]
+[()]
+[True]
+[True]
+[True]
+[(block True)]
+[True]
+[True]
+
+--- New Run: "House" + "Boat" at Fri Feb 27 13:02:43 2026 ---
+
+[Performance Monitor] Started.
+>>> [PHASE 1] Generating Specifications...
+   -> [Agent] Calling LLM for 'context_preprocessing'...
+   -> LLM Response Received.
+   -> [Agent] Preparing prompt for 'algspec_builder'...
+   -> [Agent] Calling LLM for 'algspec_builder'...
+   -> LLM Response Received.
+\n; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Structure 0.9) ((< House Structure) 1.0))) (ops (((: house House) 1.0) ((: resident Person) 0.8) ((: garden ExternalSpace) 0.4))) (preds (((providesShelter House) 0.95) ((hasColor House Color) 0.2))) (axioms (((providesShelter (house)) 0.95)))))
+\n; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Structure 0.9) ((< Boat Structure) 1.0))) (ops (((: boat Boat) 1.0) ((: passenger Person) 0.8) ((: sail Equipment) 0.4))) (preds (((providesTransport Boat) 0.95) ((hasColor Boat Color) 0.2))) (axioms (((providesTransport (boat)) 0.95)))))
+; ---> Specs Generated.
+\n>>> [PHASE 2] Finding Shared Generalization (G)...
+   -> [Agent] Preparing prompt for 'generalization_helper'...
+   -> [Agent] Calling LLM for 'generalization_helper'...
+   -> LLM Response Received.
+Grounding Error: Grounding Error: Unsupported terms found (House@Boat, house@boat, externalFeature Equipment@ExternalSpace... Reason: The generated specification introduces the concept of 'House@Boat', which is not present in the source context. The term 'house@boat' and the predicate 'providesFunction' are also not grounded in the context. Additionally, 'externalFeature Equipment@ExternalSpace' combines elements from different contexts ('Equipment' from Boat and 'ExternalSpace' from House) in a way not supported by the source context.)
+   > [Self-Correction] Attempt 2/3...
+   -> LLM Response Received.
+Grounding Error: Grounding Error: Unsupported terms found (HouseBoat, houseBoat, providesFunction... Reason: The term 'HouseBoat' and its related operations and predicates are not directly supported by the context. The context provides specifications for 'House' and 'Boat' separately, but does not mention or imply a combined 'HouseBoat' concept. The operation 'houseBoat' and the predicate 'providesFunction' are also not grounded in the context. Additionally, 'feature Equipment@ExternalSpace' introduces a new concept that is not present in the context.)
+   > [Self-Correction] Attempt 3/3...
+   -> LLM Response Received.
+Grounding Error: Grounding Error: Unsupported terms found (HouseBoat, houseBoat, providesFunction... Reason: The term 'HouseBoat' and its related operations and predicates such as 'houseBoat' and 'providesFunction' are not directly supported by the context. The context provides specifications for 'House' and 'Boat' separately, but does not mention or imply a combined concept like 'HouseBoat'. Additionally, 'providesFunction' is a new predicate not grounded in the context, which specifies 'providesShelter' for House and 'providesTransport' for Boat.)
+Error: Max retries exceeded.
+\n>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 4.665340423583984,
+    "2_Generalization": 11.535332679748535,
+    "Total": -1772186563.9663289
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.0000",
+  "Raw_Stats": {
+    "start_time": 1772186563.9663289,
+    "end_time": 0,
+    "phases": {
+      "1_Spec_Generation": 4.665340423583984,
+      "2_Generalization": 11.535332679748535,
+      "Total": -1772186563.9663289
+    },
+    "llm_attempts": 2,
+    "llm_failures": 0,
+    "synergy_score": 0,
+    "fidelity_score": 0
+  }
+}
+[()]
+[()]
+[True]
+[True]
+[True]
+[]
+[True]
+[True]
+
+--- New Run: "House" + "Boat" at Fri Feb 27 13:03:03 2026 ---
+
+[Performance Monitor] Started.
+>>> [PHASE 1] Generating Specifications...
+   -> [Agent] Calling LLM for 'context_preprocessing'...
+   -> LLM Response Received.
+   -> [Agent] Preparing prompt for 'algspec_builder'...
+   -> [Agent] Calling LLM for 'algspec_builder'...
+   -> LLM Response Received.
+\n; ================= SPEC A ===================
+(Concept House (spec (sorts ((Object 1.0) (Structure 0.9) ((< House Structure) 1.0))) (ops (((: house House) 1.0) ((: room InternalSpace) 0.8) ((: roof Covering) 0.7))) (preds (((providesShelter House) 0.95) ((hasRoom House InternalSpace) 0.8))) (axioms (((providesShelter (house)) 0.95) ((hasRoom (house room)) 0.8)))))
+\n; ================= SPEC B ===================
+(Concept Boat (spec (sorts ((Object 1.0) (Structure 0.9) ((< Boat Structure) 1.0))) (ops (((: boat Boat) 1.0) ((: cabin InternalSpace) 0.8) ((: deck Covering) 0.7))) (preds (((providesTransport Boat) 0.95) ((hasCabin Boat InternalSpace) 0.8))) (axioms (((providesTransport (boat)) 0.95) ((hasCabin (boat cabin)) 0.8)))))
+; ---> Specs Generated.
+\n>>> [PHASE 2] Finding Shared Generalization (G)...
+   -> [Agent] Preparing prompt for 'generalization_helper'...
+   -> [Agent] Calling LLM for 'generalization_helper'...
+   -> LLM Response Received.
+; ---> Generalization Found.
+\n>>> [PHASE 3] Finding Morphisms (Mapping)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Finding Morphisms (Mapping G -> Target)...
+   -> [Agent] Preparing prompt for 'morphism_finder'...
+   -> [Agent] Calling LLM for 'morphism_finder'...
+   -> LLM Response Received.
+; ---> Maps Acquired (JSON).
+\n>>> [PHASE 4] Computing Final Blend...
+   -> [Math] Parsing Morphisms & Computing Colimit...
+\n; ===========================================
+;         FINAL BLEND              
+; ===========================================
+(Concept BlendedConcept \n            (specs\n             (sorts ((< House_Boat Structure 1.0) (Object 1.0) (Structure 0.9)))\n             (ops ((: house_boat House_Boat 1.0) (: roof_deck Covering 0.7) (: room_cabin InternalSpace 0.8)))\n             (preds ((hasRoom_hasCabin House_Boat InternalSpace 0.8) (providesShelter_providesTransport House_Boat 0.95)))\n             (axioms ((hasRoom_hasCabin (house_boat room_cabin 0.8) (providesShelter_providesTransport (house_boat 0.95)))\n            )\n        ))\n            \n        ---------------------------------------\n               Output Quality Metrics\n        ---------------------------------------\n        (metrics\n             (InfoValue(Richness): 8.90)\n             (Compression(Synergy): 8.90)\n             (SFS(Fidelity): 1.000)\n             (CCR(Efficiency): 0.500)\n             (Imbalance(Balance): 0.00)\n            )\n        
+\n>>> PIPELINE FINISHED.
+
+==================================================
+ PIPELINE PERFORMANCE REPORT 
+{
+  "Latency_Breakdown": {
+    "1_Spec_Generation": 4.468775033950806,
+    "2_Generalization": 5.327690362930298,
+    "3_Morphism_Search": 1.1574950218200684,
+    "3_Colimit_Computation": 0.0003921985626220703,
+    "Total": 12.866868019104004
+  },
+  "Robustness_SVR": "100.00%",
+  "Cognitive_ROI": "0.6917",
+  "Raw_Stats": {
+    "start_time": 1772186583.089072,
+    "end_time": 1772186595.95594,
+    "phases": {
+      "1_Spec_Generation": 4.468775033950806,
+      "2_Generalization": 5.327690362930298,
+      "3_Morphism_Search": 1.1574950218200684,
+      "3_Colimit_Computation": 0.0003921985626220703,
+      "Total": 12.866868019104004
+    },
+    "llm_attempts": 4,
+    "llm_failures": 0,
+    "synergy_score": 8.9,
+    "fidelity_score": 1.0
+  }
+}
+[()]
+[()]
+[True]
+[True]
+[True]
+[(block True)]
+[True]
+[True]
