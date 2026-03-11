@@ -1,0 +1,53 @@
+constraint_weights:
+  integration: 0.25
+  topology: 0.20
+  web: 0.15
+  unpacking: 0.15
+  metonymy: 0.15
+  good_reason: 0.10
+
+rejection_thresholds:
+  min_weighted_score: 0.65
+  min_individual:
+    integration: 0.4
+    good_reason: 0.7
+
+conceptnet:
+  cache_enabled: true
+  similarity_threshold: 0.65
+
+constraints:
+  web:
+    semantic_match_threshold: 0.75
+    semantic_match_credit: 0.8
+
+  unpacking:
+    provenance_expansion: true
+    min_semantic_similarity: 0.65
+
+  metonymy:
+    detect_abbreviations: true
+    detect_characteristic_parts: true
+
+  good_reason:
+  prompt: >
+    Analyze the property '{property}' in blend '{blend}':
+    {context}
+    
+    Dimensions:
+    - Scientific plausibility (1-5)
+    - Functional coherence (1-5)
+    - Innovation value (1-5)
+    - Commonsense alignment (1-5)
+    
+    Respond with JSON: {{scores: {{dimension: int}}, justified: bool, reason: str}}
+
+    
+    llm:
+      model: gpt-4-turbo
+      temperature: 0.2
+      fallback_strategy: mock
+
+llm:
+  api_key: ${OPENAI_API_KEY}  # Set in environment
+  max_retries: 3

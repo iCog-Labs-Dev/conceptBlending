@@ -1,7 +1,0 @@
-(Concept Bat)
-(Concept Man)
-(Concept Man)
-(Concept Spider)
-(Concept Bat)
-(Concept Man)
-(Concept Spider)
