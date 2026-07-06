@@ -1,0 +1,2 @@
+google-genai>=2.0.0
+# hyperon>=0.1.0  # Uncomment for MeTTa runtime integration
