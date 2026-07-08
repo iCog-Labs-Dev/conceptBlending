@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-import os
+import os, glob
 import re
 import random
 import argparse
@@ -12,7 +12,8 @@ from .gnn_truth_value import QuantaleTruthValueGNN
 from .concept_extractor import ConceptEmbedder, build_concept_graph
 
 
-def parse_metta_triples(file_path: str) -> List[Tuple[str, str, float]]:
+
+def parse_all_metta_triples(file_path: str) -> List[Tuple[str, str, float]]:
     """
     Parses hasProperty triples from AtomSpace .metta files.
 
@@ -20,36 +21,53 @@ def parse_metta_triples(file_path: str) -> List[Tuple[str, str, float]]:
     property retains a non-trivial truth value. Mapping to 0.0 causes the
     model to collapse to the global mean (flat-predictor problem).
     """
-    if not os.path.exists(file_path):
+    if not os.path.exists(data_dir):
+        print(f"Directory not found: {data_dir}")
+        return []
+    
+    metta_files = glob.glob(os.path.join(data_dir, "*.metta"))
+    if not metta_files:
+        print(f"No .metta files found in {data_dir}")
         return []
 
-    with open(file_path, 'r') as f:
-        content = f.read()
+    weight_pattern = re.compile(r'\(weight \(([^ ]+) (\S+) (\S+)\) ([\d.]+)\)')
+    triple_pattern = re.compile(r'^\(([^ ]+) (\S+) (\S+)\)')
 
-    weight_pattern = r'\(weight \(hasProperty (\S+) (\S+)\) ([\d.]+)\)'
-    weight_lookup = {(c, p): float(w) for c, p, w in re.findall(weight_pattern, content)}
+    for file_path in metta_files:
+        with open(file_path, 'r') as f:
+            content = f.read()
 
-    raw_triples = []
-    for line in content.splitlines():
-        m = re.match(r'^\(hasProperty (\S+) (\S+)\)', line)
-        if m:
-            concept, prop = m.group(1), m.group(2)
-            weight = weight_lookup.get((concept, prop), 1.0)
-            raw_triples.append((concept, prop.replace('_', ' '), weight))
+        # Extracting Weights first
+        weight_lookup = {}
+        for match in weight_pattern.finditer(content):
+            rel, concept, target, w = match.groups()
+            weight_lookup[(rel, concept, target)] = float(w)
 
+        # Extract the relation triples
+        for line in content.splitlines():
+            m = triple_pattern.match(line)
+            if m:
+                rel, concept, target = m.groups()
+                
+                # Combine relation and target (e.g., "IsA animal" or "UsedFor cutting")
+                # This ensures the language model embeds the contextual meaning properly
+                property_string = f"{rel} {target}".replace('_', ' ')
+                
+                weight = weight_lookup.get((rel, concept, target), 1.0)
+                raw_triples.append((concept, property_string, weight))
+    
     if not raw_triples:
         return []
 
     all_weights = [w for _, _, w in raw_triples]
     w_min, w_max = min(all_weights), max(all_weights)
 
-    # Map to [0.1, 1.0]: keeps a semantic floor so 0.0 is never a target
+    # Min-max normalization to [0.1, 1.0]
     triples = [
         (c, p, 0.1 + 0.9 * (w - w_min) / (w_max - w_min) if w_max > w_min else 0.5)
         for c, p, w in raw_triples
     ]
     return triples
-
 
 def ranking_loss(pred: torch.Tensor, target: torch.Tensor, margin: float = 0.05) -> torch.Tensor:
     """
