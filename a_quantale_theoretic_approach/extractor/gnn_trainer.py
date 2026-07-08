@@ -11,9 +11,7 @@ from scipy.stats import spearmanr
 from .gnn_truth_value import QuantaleTruthValueGNN
 from .concept_extractor import ConceptEmbedder, build_concept_graph
 
-
-
-def parse_all_metta_triples(file_path: str) -> List[Tuple[str, str, float]]:
+def parse_all_metta_triples(data_dir: str) -> List[Tuple[str, str, float]]:
     """
     Parses hasProperty triples from AtomSpace .metta files.
 
@@ -243,8 +241,8 @@ def main():
         args.data_dir,
         "hasprerequisite-sw-hasproperty-as-hassubevent-bw-isa-ad.metta"
     )
-    triples = parse_metta_triples(prop_file)
-    print(f"Loaded {len(triples)} triples.")
+    triples = parse_all_metta_triples(args.data_dir)
+    print(f"Loaded {len(triples)} triples from all .metta files.")
 
     concept_props = defaultdict(dict)
     for c, p, tv in triples:
