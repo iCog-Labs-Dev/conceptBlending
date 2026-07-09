@@ -31,6 +31,11 @@ def parse_all_metta_triples(data_dir: str) -> List[Tuple[str, str, float]]:
     weight_pattern = re.compile(r'\(weight \(([^ ]+) (\S+) (\S+)\) ([\d.]+)\)')
     triple_pattern = re.compile(r'^\(([^ ]+) (\S+) (\S+)\)')
 
+    weight_pattern = re.compile(r'\(weight \(([^ ]+) (\S+) (\S+)\) ([\d.]+)\)')
+    triple_pattern = re.compile(r'^\(([^ ]+) (\S+) (\S+)\)')
+
+    raw_triples = []  
+
     for file_path in metta_files:
         with open(file_path, 'r') as f:
             content = f.read()
