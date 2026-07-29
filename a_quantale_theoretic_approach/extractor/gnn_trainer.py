@@ -7,7 +7,7 @@ import argparse
 import numpy as np
 from collections import defaultdict
 from typing import Dict, List, Tuple
-from scipy.stats import spearmanr
+from scipy.stats import spearmanr, rankdata
 from .gnn_truth_value import QuantaleTruthValueGNN
 from .concept_extractor import ConceptEmbedder, build_concept_graph
 
@@ -63,13 +63,21 @@ def parse_all_metta_triples(data_dir: str) -> List[Tuple[str, str, float]]:
         return []
 
     all_weights = [w for _, _, w in raw_triples]
-    w_min, w_max = min(all_weights), max(all_weights)
+    
+    # Rank data from 1 to N (handles ties gracefully)
+    ranks = rankdata(all_weights)
+    max_rank = len(all_weights)
 
-    # Min-max normalization to [0.1, 1.0]
-    triples = [
-        (c, p, 0.1 + 0.9 * (w - w_min) / (w_max - w_min) if w_max > w_min else 0.5)
-        for c, p, w in raw_triples
-    ]
+    # Rank normalization to guarantee the result even spread from 0.1 to 1.0
+    triples = []
+    for (c, p, _), r in zip(raw_triples, ranks):
+        if max_rank > 1:
+            # Scale the rank proportionally across [0.1, 1.0]
+            normalized_w = 0.1 + 0.9 * ((r - 1) / (max_rank - 1))
+        else:
+            normalized_w = 0.5
+        triples.append((c, p, normalized_w))
+        
     return triples
 
 def ranking_loss(pred: torch.Tensor, target: torch.Tensor, margin: float = 0.05) -> torch.Tensor:
@@ -91,7 +99,6 @@ def ranking_loss(pred: torch.Tensor, target: torch.Tensor, margin: float = 0.05)
                 count += 1
     return loss / max(count, 1)
 
-
 def evaluate_mse(model: QuantaleTruthValueGNN, graphs: list, device: str) -> float:
     """Returns mean MSE loss on a set of graphs."""
     model.eval()
@@ -105,7 +112,6 @@ def evaluate_mse(model: QuantaleTruthValueGNN, graphs: list, device: str) -> flo
                 losses.append(loss.item())
     model.train()
     return sum(losses) / max(len(losses), 1)
-
 
 def evaluate_spearman(model: QuantaleTruthValueGNN, graphs: list, device: str) -> float:
     """Returns mean Spearman rank correlation on a set of graphs."""
@@ -122,7 +128,6 @@ def evaluate_spearman(model: QuantaleTruthValueGNN, graphs: list, device: str) -
                     correlations.append(corr)
     model.train()
     return sum(correlations) / max(len(correlations), 1)
-
 
 def train_quantale_gnn(
     model: QuantaleTruthValueGNN,
@@ -208,7 +213,6 @@ def train_quantale_gnn(
     if best_state is not None:
         model.load_state_dict(best_state)
     return model, loss_history, test_loss_history, rank_history, best_epoch
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -302,7 +306,6 @@ def main():
     torch.save(trained_model.state_dict(), args.output)
     print(f"✓ Weights saved to {args.output}")
 
-
 def bootstrap_training_data(embedder: ConceptEmbedder):
     """Minimal fallback data for smoke-testing without the full AtomSpace dataset."""
     raw_data = [
@@ -311,7 +314,6 @@ def bootstrap_training_data(embedder: ConceptEmbedder):
         ("Fire", {"hot": 0.25, "dangerous": 0.30, "red": 0.28})
     ]
     return [build_concept_graph(c, p, embedder) for c, p in raw_data]
-
 
 if __name__ == "__main__":
     main()
