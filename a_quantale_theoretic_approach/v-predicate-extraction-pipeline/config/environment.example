@@ -1,0 +1,28 @@
+# Resolve Python helpers when Pipeline.metta is imported outside this folder.
+export V_PREDICATE_PIPELINE_ROOT=/absolute/path/to/v-predicate-extraction-pipeline
+
+# Official OpenAI SDK configuration.
+export OPENAI_API_KEY=
+export OPENAI_MODEL=gpt-5.4
+
+# Property and possible-world repair/verification.
+export PROPERTY_WORLD_VERIFIER_MODE=auto
+export PROPERTY_WORLD_VERIFIER_FAILURE_POLICY=fallback
+export PROPERTY_WORLD_VERIFIER_MODEL=gpt-5.4
+export PROPERTY_WORLD_VERIFIER_TRACE=0
+
+# Algebraic-specification repair/verification.
+export ALGEBRAIC_SPEC_VERIFIER_MODE=auto
+export ALGEBRAIC_SPEC_VERIFIER_FAILURE_POLICY=fallback
+export ALGEBRAIC_SPEC_VERIFIER_MODEL=gpt-5.4
+export ALGEBRAIC_SPEC_VERIFIER_TRACE=0
+
+# Cross-run algebraic-specification cache.
+export ALGEBRAIC_SPEC_SPACE_CACHE_MODE=on
+export ALGEBRAIC_SPEC_SPACE_IMPORT_VERIFIED=1
+
+# Complete-pipeline event logger.
+export PIPELINE_LOG_MODE=on
+export PIPELINE_LOG_VERBOSITY=default
+export PIPELINE_LOG_STDERR=1
+export PIPELINE_LOG_MAX_DETAIL_CHARS=2000
