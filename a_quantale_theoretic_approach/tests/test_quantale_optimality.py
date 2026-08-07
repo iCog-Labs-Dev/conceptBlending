@@ -72,7 +72,7 @@ class QuantaleOptimalityTests(unittest.TestCase):
 
         blend = colimit.blend
         self.assertEqual(set(blend.entries), {"floatsOnWater", "providesTransport", "travelsOnRoad"})
-        self.assertTrue(math.isclose(blend.get_property("providesTransport").tv.value, 1.0))
+        self.assertTrue(math.isclose(blend.get_property("providesTransport").tv.value, 0.85))
         self.assertEqual(_world_labels(blend.get_property("providesTransport")), {"W_FERRY", "W_COMMUTE"})
         self.assertEqual(colimit.metrics["SharedPropertyCount"], 1)
 
@@ -87,7 +87,7 @@ class QuantaleOptimalityTests(unittest.TestCase):
             relevance={"providesTransport": 1.0, "floatsOnWater": 0.8},
         )
 
-        self.assertTrue(math.isclose(report.scalar_score, 1.0))
+        self.assertTrue(math.isclose(report.scalar_score, 0.85))
         self.assertEqual(
             set(report.conditions),
             {
@@ -100,10 +100,11 @@ class QuantaleOptimalityTests(unittest.TestCase):
                 "relevance",
             },
         )
-        for result in report.conditions.values():
+        for name, result in report.conditions.items():
             self.assertTrue(result.passed)
             self.assertFalse(result.skipped)
-            self.assertTrue(math.isclose(result.tv_score, 1.0))
+            expected = 0.85 if name == "relevance" else 1.0
+            self.assertTrue(math.isclose(result.tv_score, expected))
 
     def test_relationless_property_only_evaluation_marks_relation_ops_skipped(self):
         boat, car, colimit, _relations = _boat_car_fixture()

@@ -47,9 +47,9 @@ class TruthValueQuantale(QuantaleValue[float]):
         return TruthValueQuantale(self.value * other.value)
 
     def join(self, other: 'TruthValueQuantale') -> 'TruthValueQuantale':
-        # ⊕ is bounded addition (supremum in this context)
+        # Under the standard order on [0, 1], the lattice join is maximum.
         self._require_compatible(other)
-        return TruthValueQuantale(min(self.value + other.value, 1.0))
+        return TruthValueQuantale(max(self.value, other.value))
 
     def residuation(self, other: 'TruthValueQuantale') -> 'TruthValueQuantale':
         self._require_compatible(other)

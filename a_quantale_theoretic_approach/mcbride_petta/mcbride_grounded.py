@@ -1,0 +1,71 @@
+"""
+Grounded Python atoms that expose McBrideOptimizer to MeTTa.
+Follows the pattern used in op-constraints/op-helper-codes.py.
+"""
+from typing import Any
+from hyperon import OperationAtom, ValueAtom
+from a_quantale_theoretic_approach.optimization.macbride_derivative import (
+    McBrideOptimizer, emergence_tv, uniform_valuation
+)
+from a_quantale_theoretic_approach.core_representation.v_predicate_parser import (
+    parse_v_predicate_concept
+)
+from a_quantale_theoretic_approach.core_representation.v_predicate import (
+    VPredicateConcept
+)
+
+
+def _concept_from_metta_atom(atom: Any) -> VPredicateConcept:
+    """Parse a MeTTa atom's string representation into a VPredicateConcept.
+
+    The atom must serialise as a (Concept ...) S-expression.
+    This function calls str(atom) first, so it works with any MeTTa
+    atom type that has a valid string form.
+    """
+    return parse_v_predicate_concept(str(atom))
+
+
+def mcbride_py_refine(blend_atom, source_a_atom, source_b_atom, eta_atom, steps_atom):
+    try:
+        blend    = _concept_from_metta_atom(blend_atom)
+        source_a = _concept_from_metta_atom(source_a_atom)
+        source_b = _concept_from_metta_atom(source_b_atom)
+        eta      = float(str(eta_atom))
+        steps    = int(str(steps_atom))
+    except Exception as exc:
+        raise RuntimeError(
+            f"mcbride-py-refine: failed to parse arguments — {exc}"
+        ) from exc
+
+    optimizer = McBrideOptimizer(
+        source_a=source_a, source_b=source_b,
+        eta=eta, max_steps=steps,
+    )
+    result = optimizer.refine(blend)
+    return ValueAtom(result.refined_blend.to_metta())
+
+
+def mcbride_py_emergence(blend_atom, source_a_atom, source_b_atom):
+    try:
+        blend    = _concept_from_metta_atom(blend_atom)
+        source_a = _concept_from_metta_atom(source_a_atom)
+        source_b = _concept_from_metta_atom(source_b_atom)
+    except Exception as exc:
+        raise RuntimeError(
+            f"mcbride-py-emergence: failed to parse arguments — {exc}"
+        ) from exc
+
+    score = emergence_tv(source_a, source_b, blend, uniform_valuation)
+    return ValueAtom(score)
+
+
+def register_mcbride_atoms(metta_instance):
+    """Call this once when setting up your MeTTa runtime."""
+    metta_instance.register_atom(
+        "mcbride-py-refine",
+        OperationAtom("mcbride-py-refine", mcbride_py_refine, unwrap=False)
+    )
+    metta_instance.register_atom(
+        "mcbride-py-emergence",
+        OperationAtom("mcbride-py-emergence", mcbride_py_emergence, unwrap=False)
+    )

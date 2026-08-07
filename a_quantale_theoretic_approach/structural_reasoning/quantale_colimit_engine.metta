@@ -80,13 +80,34 @@
               ($next-merged (q-upsert-property $head $merged)))
           (q-merge-property-lists $next-merged $tail))))
 
+; Derive the blend perspective when both inputs have the same scope. Legacy
+; concepts have perspective (), and continue to produce the legacy shape.
+; Different input perspectives require the explicit five-argument operation.
 (= (q-vpredicate-colimit $blend-name $concept-a $concept-b $mappings)
+   (let* (($perspective-a (v-concept-perspective $concept-a))
+          ($perspective-b (v-concept-perspective $concept-b)))
+      (if (== $perspective-a $perspective-b)
+          (let* (($props-a (v-property-list $concept-a))
+                 ($props-b (v-property-list $concept-b))
+                 ($renamed-a (q-rename-a-properties $props-a $mappings))
+                 ($renamed-b (q-rename-b-properties $props-b $mappings))
+                 ($merged (q-merge-property-lists $renamed-a $renamed-b)))
+             (if (== $perspective-a ())
+                 (v-make-concept $blend-name $merged)
+                 (v-make-concept $blend-name $perspective-a $merged)))
+          (VError IncompatibleConceptPerspectives
+                  $perspective-a $perspective-b))))
+
+; Explicit output perspective for cross-perspective blends or callers that
+; choose a new perspective for the blend.
+(= (q-vpredicate-colimit
+      $blend-name $blend-perspective $concept-a $concept-b $mappings)
    (let* (($props-a (v-property-list $concept-a))
           ($props-b (v-property-list $concept-b))
           ($renamed-a (q-rename-a-properties $props-a $mappings))
           ($renamed-b (q-rename-b-properties $props-b $mappings))
           ($merged (q-merge-property-lists $renamed-a $renamed-b)))
-      (v-make-concept $blend-name $merged)))
+      (v-make-concept $blend-name $blend-perspective $merged)))
 
 (= (q-colimit-contribution-map $concept-a $concept-b $mappings)
    ((A (q-rename-a-properties (v-property-list $concept-a) $mappings))
@@ -109,9 +130,11 @@
           (cons-atom $rewritten-head $rewritten-tail))))
 
 (= (q-rewrite-concept-worlds $concept $world-clusters)
-   (v-make-concept (v-concept-name $concept)
-                   (q-rewrite-properties-worlds (v-property-list $concept)
-                                               $world-clusters)))
+   (v-remake-concept
+      $concept
+      (v-concept-name $concept)
+      (q-rewrite-properties-worlds
+         (v-property-list $concept) $world-clusters)))
 
 (= (q-integrated-colimit-blend
       (QuantaleVPredicateColimitResult

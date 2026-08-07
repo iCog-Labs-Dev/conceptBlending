@@ -5,7 +5,7 @@
 ;
 ; Product quantale:
 ;   Q_logic = (P(W), intersection, union, W, subset)
-;   Q_tv    = ([0,1], multiplication, bounded-sum, 1, <=)
+;   Q_tv    = ([0,1], multiplication, max, 1, <=)
 
 (= (q-worlds (Q $worlds $degree)) $worlds)
 (= (q-degree (Q $worlds $degree)) $degree)
@@ -32,8 +32,17 @@
               $rest
               (cons-atom $head $rest)))))
 
-(= (q-bounded-sum $x $y)
-   (min-atom ((+ $x $y) 1.0)))
+(= (q-subset $items $container)
+   (if (== $items ())
+       True
+       (let* (($head (car-atom $items))
+              ($tail (cdr-atom $items)))
+          (if (q-list-member $head $container)
+              (q-subset $tail $container)
+              False))))
+
+(= (q-tv-join $x $y)
+   (max-atom ($x $y)))
 
 (= (q-tv-residuation $a $b)
    (if (== $a 0.0)
@@ -46,11 +55,26 @@
 
 (= (q-join (Q $worlds-a $degree-a) (Q $worlds-b $degree-b))
    (Q (unique-atom (union-atom $worlds-a $worlds-b))
-      (q-bounded-sum $degree-a $degree-b)))
+      (q-tv-join $degree-a $degree-b)))
 
 (= (q-residuation (Q $worlds-a $degree-a) (Q $worlds-b $degree-b) $universe)
    (Q (unique-atom (union-atom $worlds-b (q-difference $universe $worlds-a)))
       (q-tv-residuation $degree-a $degree-b)))
+
+(= (q-less-eq (Q $worlds-a $degree-a) (Q $worlds-b $degree-b))
+   (if (q-subset $worlds-a $worlds-b)
+       (<= $degree-a $degree-b)
+       False))
+
+(= (q-equal $value-a $value-b)
+   (if (q-less-eq $value-a $value-b)
+       (q-less-eq $value-b $value-a)
+       False))
+
+(= (q-value-in-universe (Q $worlds $degree) $universe)
+   (if (q-subset $worlds $universe)
+       (if (>= $degree 0.0) (<= $degree 1.0) False)
+       False))
 
 (= (q-score $score $universe)
    (Q $universe
