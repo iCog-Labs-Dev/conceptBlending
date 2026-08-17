@@ -1,6 +1,7 @@
 # Python virtual environment
 .venv/
 habit_memory/.python_deps/
+habit_memory/.cache/
 /venv/
 
 # Coverage data
