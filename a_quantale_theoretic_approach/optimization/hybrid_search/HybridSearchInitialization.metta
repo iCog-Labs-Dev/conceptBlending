@@ -45,6 +45,7 @@
 
 ;; Candidate records and the four-objective population-evaluation stage.
 !(import! &self CandidateEvaluation)
+!(import! &self HybridSearchMcBrideRefinement)
 
 (= (hs-enrich-compact $compact $seed)
    (let $_bridge (hs-register-python-bridge)
