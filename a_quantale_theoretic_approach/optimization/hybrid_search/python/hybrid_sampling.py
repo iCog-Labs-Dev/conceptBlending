@@ -302,9 +302,9 @@ def _covariance(size):
     return f"({' '.join(rows)})"
 
 
-def sample_populations(generic_result, target, seed=0, population_size=10,
-                       sigma=0.15, betas="(0 0.25 0.5 0.75 1)"):
-    """Sample five populations once; this function mutates no CMA state."""
+def sampling_plan(generic_result, target, population_size=10,
+                  sigma=0.15, betas="(0 0.25 0.5 0.75 1)"):
+    """Describe five fixed CMA distributions without drawing any samples."""
     concept, _ = _generic_result(generic_result)
     target_map = {name: (base, habit) for name, base, habit in _target_entries(target)}
     schema = [p.name for p in concept.properties if p.name in target_map]
@@ -317,33 +317,86 @@ def sample_populations(generic_result, target, seed=0, population_size=10,
         raise HybridInitializationError("exactly five beta values are required")
     if _int(population_size, "population_size") != 10:
         raise HybridInitializationError("exactly ten individuals are required")
-    sigma, seed = _float(sigma, "sigma"), _int(seed, "seed")
+    sigma = _float(sigma, "sigma")
     if sigma < 0:
         raise HybridInitializationError("sigma cannot be negative")
-    worlds = {p.name: p.worlds for p in concept.properties}
     covariance, subproblems = _covariance(len(schema)), []
     for subproblem, beta in enumerate(beta_values):
         mean = [(1-beta)*a + beta*h for a, h in zip(base, habit)]
-        stream_seed = int.from_bytes(hashlib.sha256(
-            f"{seed}:subproblem:{subproblem}".encode()).digest()[:8], "big")
-        rng, candidates = random.Random(stream_seed), []
-        for individual in range(10):
-            vector = [max(0.01, min(0.99, rng.gauss(x, sigma))) for x in mean]
-            predicate = _concept_text(Concept(
-                f"{concept.name}_s{subproblem}_i{individual}", concept.perspective,
-                tuple(Property(name, worlds[name], value)
-                      for name, value in zip(schema, vector))))
-            candidates.append(f"(SampledCandidate {subproblem} {individual} "
-                              f"(Vector ({' '.join(f'{x:.12g}' for x in vector)})) {predicate})")
-        subproblems.append(f"(SubproblemPopulation {subproblem} (HabitBias {beta:.12g}) "
+        subproblems.append(f"(SamplingSubproblem {subproblem} (HabitBias {beta:.12g}) "
                            f"(Mean ({' '.join(f'{x:.12g}' for x in mean)})) "
-                           f"(Covariance {covariance}) (StepSize {sigma:.12g}) "
-                           f"(Population {' '.join(candidates)}))")
-    return (f"(HabitBiasedPopulationInitialization Ready "
+                           f"(Covariance {covariance}) (StepSize {sigma:.12g}))")
+    return (f"(HabitBiasedSamplingPlan Ready "
             f"(CandidateSchema {' '.join(map(_ma, schema))}) "
             f"(InitialMean ({' '.join(f'{x:.12g}' for x in base)})) "
             f"(HabitVector ({' '.join(f'{x:.12g}' for x in habit)})) "
             f"(Subproblems {' '.join(subproblems)}))")
+
+
+def _sampling_plan(value):
+    node = _one(value, "HabitBiasedSamplingPlan")
+    schema = tuple(map(_atom, node[2][1:]))
+    subproblems = node[5]
+    if not schema or subproblems[0] != "Subproblems" or len(subproblems) != 6:
+        raise HybridInitializationError("invalid five-subproblem sampling plan")
+    return node, schema
+
+
+def materialize_populations(generic_result, plan, sampled_subproblems):
+    """Wrap vectors already drawn by PeTTa random-multivariate."""
+    concept, _ = _generic_result(generic_result)
+    plan_node, schema = _sampling_plan(plan)
+    root = _one(sampled_subproblems, "SampledSubproblems")
+    blocks = root[1:]
+    if (len(blocks) == 1 and isinstance(blocks[0], list)
+            and blocks[0] and isinstance(blocks[0][0], list)):
+        blocks = blocks[0]
+    samples_by_index = {}
+    for block in blocks:
+        if not isinstance(block, list) or len(block) != 3 or block[0] != "SampledSubproblem":
+            raise HybridInitializationError("invalid sampled subproblem")
+        index = _int(block[1], "subproblem index")
+        rows = block[2]
+        if not isinstance(rows, list) or len(rows) != 10:
+            raise HybridInitializationError("each subproblem must contain ten samples")
+        vectors = []
+        for row in rows:
+            if not isinstance(row, list) or len(row) != len(schema):
+                raise HybridInitializationError("sample dimension differs from candidate schema")
+            vector = tuple(_float(value, "sample coordinate") for value in row)
+            if any(not 0 <= value <= 1 for value in vector):
+                raise HybridInitializationError("PeTTa sample coordinate outside [0,1]")
+            vectors.append(vector)
+        samples_by_index[index] = vectors
+    if set(samples_by_index) != set(range(5)):
+        raise HybridInitializationError("expected samples for subproblems 0 through 4")
+    worlds = {p.name: p.worlds for p in concept.properties}
+    populations = []
+    for subproblem in plan_node[5][1:]:
+        index = _int(subproblem[1], "subproblem index")
+        candidates = []
+        for individual, vector in enumerate(samples_by_index[index]):
+            predicate = _concept_text(Concept(
+                f"{concept.name}_s{index}_i{individual}", concept.perspective,
+                tuple(Property(name, worlds[name], value)
+                      for name, value in zip(schema, vector))))
+            candidates.append(f"(SampledCandidate {index} {individual} "
+                              f"(Vector ({' '.join(f'{x:.12g}' for x in vector)})) {predicate})")
+        populations.append(
+            f"(SubproblemPopulation {index} {flatten_sexpr(subproblem[2])} "
+            f"{flatten_sexpr(subproblem[3])} {flatten_sexpr(subproblem[4])} "
+            f"{flatten_sexpr(subproblem[5])} (Population {' '.join(candidates)}))"
+        )
+    return (f"(HabitBiasedPopulationInitialization Ready "
+            f"{flatten_sexpr(plan_node[2])} {flatten_sexpr(plan_node[3])} "
+            f"{flatten_sexpr(plan_node[4])} (Sampler random-multivariate) "
+            f"(Subproblems {' '.join(populations)}))")
+
+
+def seed_multivariate_stream(seed):
+    """Seed the scalar-normal stream consumed by PeTTa standard-normal."""
+    random.seed(_int(seed, "seed"))
+    return True
 
 
 def population_count(value):
@@ -381,11 +434,15 @@ def register_petta_builtins():
         "hs_generic_vpredicate_result": generic_vpredicate_result,
         "hs_habit_target": habit_target,
         "hs_source_property_names": source_property_names,
-        "hs_sample_populations": sample_populations,
+        "hs_sampling_plan": sampling_plan,
+        "hs_materialize_populations": materialize_populations,
+        "hs_seed_multivariate_stream": seed_multivariate_stream,
         "hs_population_count": population_count,
         "hs_individual_counts": individual_counts,
         "habit_load_evidence": importlib.import_module("atomspace_evidence").load_evidence,
     }
+    exports["apply_args"] = lambda function, args: function(*args)
+    exports["cma_random_normal"] = lambda args: random.gauss(*args)
     for name, function in exports.items():
         setattr(builtins, name, function)
     return True

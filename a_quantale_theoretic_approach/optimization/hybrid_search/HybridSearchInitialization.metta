@@ -40,6 +40,9 @@
 !(import! &self ../../../habit_memory/habit_memory)
 !(import! &self ../../../habit_memory/atomspace_memory)
 
+;; Reuse the CMA-ES Cholesky-based multivariate-normal implementation.
+!(import! &self ../../../peTTa_version/utils/cma-es-utils)
+
 (= (hs-enrich-compact $compact $seed)
    (let $_bridge (hs-register-python-bridge)
       (sread (py-call
@@ -196,11 +199,38 @@
             (memory-from-imported-history) $properties))))
 
 (= (hs-sample-five-populations $generic-result $target $seed)
-   (let $_bridge (hs-register-python-bridge)
+   (let* (
+      ($_bridge (hs-register-python-bridge))
+      ($plan
+         (sread (py-call
+            (builtins.hs_sampling_plan
+               (repr (reduce $generic-result)) (repr (reduce $target))
+               10 0.15 "(0 0.25 0.5 0.75 1)"))))
+      ($_seeded (py-call (builtins.hs_seed_multivariate_stream $seed)))
+      ($subproblem-plans (cdr-atom (index-atom $plan 5)))
+      ($sampled
+         (SampledSubproblems
+            (hs-random-multivariate-subproblems $subproblem-plans))))
       (sread (py-call
-         (builtins.hs_sample_populations
-            (repr (reduce $generic-result)) (repr (reduce $target))
-            $seed 10 0.15 "(0 0.25 0.5 0.75 1)")))))
+         (builtins.hs_materialize_populations
+            (repr (reduce $generic-result)) (repr (reduce $plan))
+            (repr (reduce $sampled)))))))
+
+(= (hs-random-multivariate-subproblems ()) ())
+(= (hs-random-multivariate-subproblems
+      (cons
+         (SamplingSubproblem $index $bias
+            (Mean $mean) (Covariance $covariance) (StepSize $step-size))
+         $remaining))
+   (let* (
+      ($scaled-covariance
+         (mat-scalar-op $covariance (pow-math $step-size 2) *))
+      ($samples
+         (mat-clip
+            (random-multivariate $mean $scaled-covariance 10)
+            0.01 0.99))
+      ($rest (hs-random-multivariate-subproblems $remaining)))
+      (cons-atom (SampledSubproblem $index $samples) $rest)))
 
 (= (hs-population-count $populations)
    (let $_bridge (hs-register-python-bridge)
