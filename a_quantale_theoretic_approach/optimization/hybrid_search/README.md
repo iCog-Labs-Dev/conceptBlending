@@ -65,6 +65,43 @@ context. Keeping this materialization boundary separate prevents PeTTa's
 transitive imports from duplicating V-predicate rewrite rules during the 50-way
 population traversal.
 
+## McBride local refinement
+
+McBride refinement runs after current-generation evaluation and before Pareto
+selection:
+
+```metta
+(hs-refine-evaluation-result
+  evaluated-result
+  (McBrideRefinementConfiguration
+    eta max-steps threshold patience probability seed))
+```
+
+The operation is PeTTa-native and uses a deterministic Park–Miller decision
+stream. A convenience constructor supplies the standard McBride parameters:
+
+```metta
+(hs-default-mcbride-refinement-configuration probability seed)
+```
+
+Refinement updates only the blend's property degrees and its corresponding
+candidate vector. Candidate identity, `CandidateFitness`, and `FitnessVector`
+are copied verbatim, so Pareto selection sees exactly the fitness values that
+were computed before local refinement. The refinement state records the
+decision draw, convergence status, step count, and initial/final emergence
+signal.
+
+After Pareto selection, promote only the surviving candidates:
+
+```metta
+(hs-promote-survivors survivors)
+(hs-evaluate-promoted-survivors promoted-candidates next-generation-context)
+```
+
+Promotion increments the generation and is the explicit reevaluation boundary.
+Consequently, refined degrees affect emergence and coherence only in the next
+generation, if the candidate survives selection.
+
 Sampling is deliberately one-shot.  For bias values
 `(0 0.25 0.5 0.75 1)`, subproblem `j` uses
 
@@ -97,4 +134,7 @@ petta \
 
 petta \
   a_quantale_theoretic_approach/optimization/hybrid_search/tests/CandidateEvaluationValidation.metta
+
+petta \
+  a_quantale_theoretic_approach/optimization/hybrid_search/tests/HybridSearchMcBrideRefinementValidation.metta
 ```
