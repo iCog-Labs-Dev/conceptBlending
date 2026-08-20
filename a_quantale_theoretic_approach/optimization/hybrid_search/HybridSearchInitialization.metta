@@ -43,6 +43,9 @@
 ;; Reuse the CMA-ES Cholesky-based multivariate-normal implementation.
 !(import! &self ../../../peTTa_version/utils/cma-es-utils)
 
+;; Candidate records and the four-objective population-evaluation stage.
+!(import! &self CandidateEvaluation)
+
 (= (hs-enrich-compact $compact $seed)
    (let $_bridge (hs-register-python-bridge)
       (sread (py-call
