@@ -36,18 +36,39 @@
 
 (= (hs-candidate-status
       (HybridCandidate $identity $vector $blend
+         $refinement-state
          (CandidateFitness $objectives) $fitness-vector))
    (if (hs-objectives-ready $objectives) Evaluated Blocked))
 
 (= (hs-candidate-fitness
       (HybridCandidate $identity $vector $blend
-         $fitness $fitness-vector))
+         $refinement-state $fitness $fitness-vector))
    $fitness)
 
 (= (hs-candidate-fitness-vector
       (HybridCandidate $identity $vector $blend
-         $fitness $fitness-vector))
+         $refinement-state $fitness $fitness-vector))
    $fitness-vector)
+
+(= (hs-candidate-identity
+      (HybridCandidate $identity $vector $blend
+         $refinement-state $fitness $fitness-vector))
+   $identity)
+
+(= (hs-candidate-vector
+      (HybridCandidate $identity $vector $blend
+         $refinement-state $fitness $fitness-vector))
+   $vector)
+
+(= (hs-candidate-blend
+      (HybridCandidate $identity $vector (Blend $blend)
+         $refinement-state $fitness $fitness-vector))
+   $blend)
+
+(= (hs-candidate-refinement-state
+      (HybridCandidate $identity $vector $blend
+         $refinement-state $fitness $fitness-vector))
+   $refinement-state)
 
 ;; --------------------------------------------------------------------------
 ;; Shared context accessors
@@ -530,10 +551,8 @@
 ;; Candidate and population traversal
 ;; --------------------------------------------------------------------------
 
-(= (hs-evaluate-candidate
-      (SampledCandidate
-         $subproblem $individual (Vector $vector) $candidate)
-      $context)
+(= (hs-evaluate-candidate-components
+      $subproblem $individual $generation $vector $candidate $context)
    (let* (
       ($emergence
          (hs-evaluate-emergence
@@ -554,11 +573,27 @@
             (hs-context-peircean $context)))
       ($objectives ($emergence $coherence $optimality $peircean)))
       (HybridCandidate
-         (CandidateId $subproblem $individual 0)
+         (CandidateId $subproblem $individual $generation)
          (Vector $vector)
          (Blend $candidate)
+         (RefinementState Unrefined)
          (CandidateFitness $objectives)
          (hs-make-fitness-vector $objectives))))
+
+(= (hs-evaluate-candidate
+      (SampledCandidate
+         $subproblem $individual (Vector $vector) $candidate)
+      $context)
+   (hs-evaluate-candidate-components
+      $subproblem $individual 0 $vector $candidate $context))
+
+(= (hs-evaluate-promoted-candidate
+      (PromotedCandidate
+         $subproblem $individual $generation
+         (Vector $vector) (Blend $candidate))
+      $context)
+   (hs-evaluate-candidate-components
+      $subproblem $individual $generation $vector $candidate $context))
 
 (= (hs-evaluate-candidates () $context) ())
 (= (hs-evaluate-candidates (cons $candidate $remaining) $context)
