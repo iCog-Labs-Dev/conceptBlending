@@ -3,6 +3,9 @@
 !(import! &self ../../../../PeTTa/lib/lib_import)
 !(import! &self ../../../integration/python/integration_support.py)
 !(integration_support.configure_component_roots)
+;; PeTTa imports rewrite rules but does not transitively re-export a module's
+;; nested imports. Load the shared CMA utility explicitly for this test caller.
+!(import! &self ../../../../peTTa_version/utils/cma-es-utils)
 !(import! &self ../HybridSearchInitialization)
 
 (= (fixture-compact-a)
@@ -52,3 +55,13 @@
       (hs-world-pair-requests
          $source-a $source-b (fixture-property-resolutions))))
    (test (size-atom (hs-request-list $requests)) 4))
+
+;; Exercise the actual Cholesky path with a non-diagonal covariance, rather
+;; than relying only on the one-property population fixture above.
+!(let $samples
+   (random-multivariate
+      (0.5 0.5)
+      ((0.04 0.018) (0.018 0.09))
+      3)
+   (let $_sample-count (test (size-atom $samples) 3)
+      (test (size-atom (index-atom $samples 0)) 2)))

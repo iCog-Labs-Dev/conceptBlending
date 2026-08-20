@@ -25,10 +25,14 @@ Sampling is deliberately one-shot.  For bias values
 
 ```text
 m_j = (1 - beta_j) m_0 + beta_j h
-x_jk ~ N(m_j, sigma_0^2 I),  k = 1..10
+x_jk = random-multivariate(m_j, sigma_0^2 C_0, 10)
 ```
 
-No mean, covariance, step-size, or evolution-path update is performed here.
+The draw is performed by `peTTa_version/utils/cma-es-utils.metta`, using its
+Cholesky-based `random-multivariate` implementation. Its scalar standard-normal
+draw uses Python's standard-library Gaussian generator, so this path does not
+require NumPy. No mean, covariance, step-size, or evolution-path update is
+performed here.
 
 The first evidence-backed run builds
 `habit_memory/.cache/atomspace_habits.sqlite3` from all simple binary edges in

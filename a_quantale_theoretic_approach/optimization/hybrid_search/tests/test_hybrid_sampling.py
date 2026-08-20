@@ -49,7 +49,7 @@ class ScalarAndGenericTests(unittest.TestCase):
         self.assertEqual(concept.properties[0].worlds, ("vehicle", "transport"))
         self.assertEqual(mappings, [("locomotion", "move_on_water", "move_on_land")])
 
-    def test_target_and_five_by_ten_sampling(self):
+    def test_target_plan_and_petta_sample_materialization(self):
         generic = hybrid_sampling.generic_vpredicate_result(
             "vehicle", "functional_use", PROPERTY_RESOLUTIONS, WORLD_MAPPINGS, 13
         )
@@ -59,10 +59,18 @@ class ScalarAndGenericTests(unittest.TestCase):
         entries = hybrid_sampling._target_entries(target)
         base, habit = entries[0][1], entries[0][2]
         self.assertTrue(math.isclose(habit, base + 0.5 * 0.8 * (1-base)))
-        sampled = hybrid_sampling.sample_populations(generic, target, 19)
+        plan = hybrid_sampling.sampling_plan(generic, target)
+        self.assertEqual(plan.count("(SamplingSubproblem "), 5)
+        rows = " ".join("(0.5)" for _ in range(10))
+        petta_samples = "(SampledSubproblems (" + " ".join(
+            f"(SampledSubproblem {index} ({rows}))" for index in range(5)
+        ) + "))"
+        sampled = hybrid_sampling.materialize_populations(
+            generic, plan, petta_samples
+        )
+        self.assertIn("(Sampler random-multivariate)", sampled)
         self.assertEqual(hybrid_sampling.population_count(sampled), 5)
         self.assertEqual(hybrid_sampling.individual_counts(sampled), "(10 10 10 10 10)")
-        self.assertEqual(sampled, hybrid_sampling.sample_populations(generic, target, 19))
 
 
 class AtomspaceEvidenceTests(unittest.TestCase):
