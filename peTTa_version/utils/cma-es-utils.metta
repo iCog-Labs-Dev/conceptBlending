@@ -6,24 +6,22 @@
 ;; ============================================================================
 
 ;; Evaluates a Python string in a clean dictionary context
-(= (py-eval $str)
+(= (cma-py-eval $str)
    (let $dict (py-call (dict))
         (py-call (quote (eval $str $dict $dict)))))
 
 ;; Inject helper function into Python's builtins to handle *args
-!(py-eval "setattr(__import__('builtins'),'apply_args',(lambda f,args: f(*args))) or 0")
+!(cma-py-eval "setattr(__import__('builtins'),'apply_args',(lambda f,args: f(*args))) or 0")
+!(cma-py-eval "setattr(__import__('builtins'),'cma_random_normal',(lambda args: __import__('random').gauss(*args))) or 0")
 
 ;; Wrapper for Numpy's max function
 (= (np-max $ref-point $objs-val $axis)
    (py-call (numpy_methods.np_max $ref-point $objs-val $axis)))
 
-;; Generates samples from a Normal distribution using Numpy
-(= (numpy-random-normal $rng) 
-   (let* (($numpy (py-call (importlib.import_module "numpy")))
-          ($np-random (py-call (getattr $numpy "random")))
-          ($rand (py-call (getattr $np-random "normal")))
-          ($result (py-call (builtins.apply_args $rand $rng))))
-     $result))
+;; Generates a scalar normal draw. The legacy name is retained for callers,
+;; while the standard-library backend keeps CMA sampling usable without NumPy.
+(= (numpy-random-normal $rng)
+   (py-call (builtins.cma_random_normal $rng)))
 
 ;; Generates samples from a Dirichlet distribution
 (= (np-dirichlet $alpha $size)
@@ -305,8 +303,9 @@
 ;; INITIALIZATION & ENTRY POINT
 ;; ----------------------------------------------------------------------------
 (= (zeros-vec $length)
-    (let $toy-list (eval (generate-toy-list $length)) (map-atom $toy-list $x 0))
-)
+   (if (<= $length 0)
+       ()
+       (cons-atom 0 (zeros-vec (- $length 1)))))
 
 ; !(zeros-vec 8)
 
@@ -476,22 +475,24 @@
    (sum (vector-op $v1 $v2 *)))
 
 ;; Multiplies a single row by all columns of the second matrix (M2-Transposed)
-(= (row-times-matrix $row ()) ())
 (= (row-times-matrix $row $m2-t)
-   (let* (($col (car-atom $m2-t))
-          ($rest-cols (cdr-atom $m2-t))
-          ($dot (dot-product $row $col))
-          ($res (row-times-matrix $row $rest-cols)))
-     (cons-atom $dot $res)))
+   (if (== $m2-t ())
+       ()
+       (let* (($col (car-atom $m2-t))
+              ($rest-cols (cdr-atom $m2-t))
+              ($dot (dot-product $row $col))
+              ($res (row-times-matrix $row $rest-cols)))
+         (cons-atom $dot $res))))
 
 ;; Recursively processes each row of M1 to perform matrix-matrix Multiplication
-(= (matrix-mul-recursive () $m2-t) ())
 (= (matrix-mul-recursive $m1 $m2-t)
-   (let* (($row (car-atom $m1))
-          ($rest-m1 (cdr-atom $m1))
-          ($new-row (row-times-matrix $row $m2-t))
-          ($res (matrix-mul-recursive $rest-m1 $m2-t)))
-     (cons-atom $new-row $res)))
+   (if (== $m1 ())
+       ()
+       (let* (($row (car-atom $m1))
+              ($rest-m1 (cdr-atom $m1))
+              ($new-row (row-times-matrix $row $m2-t))
+              ($res (matrix-mul-recursive $rest-m1 $m2-t)))
+         (cons-atom $new-row $res))))
 
 ;; Main Multiplication Entry Point: Includes dimension validation
 (= (mat-mat-mul $m1 $m2)
@@ -518,13 +519,14 @@
 ;; ============================================================================
 
 ;; Internal helper: Recursively adds the mean vector to each row of the transformed samples
-(= (add-mean-to-samples () $mean) ())
 (= (add-mean-to-samples $samples $mean)
-   (let* (($row (car-atom $samples))
-          ($rest (cdr-atom $samples))
-          ($new-row (vec-add $row $mean)) 
-          ($res (add-mean-to-samples $rest $mean)))
-     (cons-atom $new-row $res)))
+   (if (== $samples ())
+       ()
+       (let* (($row (car-atom $samples))
+              ($rest (cdr-atom $samples))
+              ($new-row (vec-add $row $mean))
+              ($res (add-mean-to-samples $rest $mean)))
+         (cons-atom $new-row $res))))
 
 ;; Generates $lambda_ samples from a Multivariate Normal distribution
 ;; Formula: Y = mean + L * Z, where L is the Cholesky factor of the Covariance matrix
@@ -540,7 +542,13 @@
        ;; Transform: Y = Z * L^T (Matrix multiplication handles the L * Z part)
        ($LT (transpose-matrix $L))
     ;    ($_ (println! (LT $LT)))
-       ($transformed (mat-mat-mul $Z $LT))
+       ($transformed-raw (mat-mat-mul $Z $LT))
+       ;; mat-mat-mul deliberately returns a vector for a single-column
+       ;; product. Sampling still requires one row per individual.
+       ($transformed
+          (if (== (size-atom $mean) 1)
+              (map-atom $transformed-raw $sample (cons-atom $sample ()))
+              $transformed-raw))
     ;    ($_ (println! (tranformed $transformed)))
        ;; Shift: Add mean vector to every sample
        ($final-samples (add-mean-to-samples $transformed $mean))
@@ -741,4 +749,3 @@
 (= (inverse-lmatrix $matrix)
    (let $n (size-atom $matrix) 
         (invert-rec $matrix () 0 $n)))
-
