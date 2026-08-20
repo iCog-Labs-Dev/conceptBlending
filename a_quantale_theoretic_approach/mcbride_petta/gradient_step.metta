@@ -43,4 +43,4 @@
    (let* (($blend-name (v-concept-name $blend))
           ($props      (v-property-list $blend))
           ($updated-props (q-update-props $props $source-a $source-b $blend $eta)))
-      (v-make-concept $blend-name $updated-props)))
+      (v-remake-concept $blend $blend-name $updated-props)))
