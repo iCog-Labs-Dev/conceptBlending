@@ -1,4 +1,4 @@
-# Hybrid-search initialization and candidate evaluation
+# PeTTa hybrid search
 
 This component implements steps 1–4 of the memetic quantale-blending search:
 
@@ -8,7 +8,10 @@ This component implements steps 1–4 of the memetic quantale-blending search:
    possible worlds, storing a genuine algebraic specification for each generic
    world;
 4. augment the sibling `habit_memory` component with indexed atomspace counts,
-   construct the habit target, and sample five fixed populations of ten.
+   construct the habit target, and sample five batches of ten;
+5. immediately aggregate those batches into one shared population of 50;
+6. evaluate, refine, and evolve the shared population, then return one global
+   Pareto front.
 
 The public PeTTa operation is:
 
@@ -18,7 +21,10 @@ The public PeTTa operation is:
 ```
 
 The result contains the two scalar source predicates, the generic V-predicate
-with property/world provenance, the habit target, and all 50 candidates.
+with property/world provenance, the habit target, the five sampling batches,
+and an `AggregatedPopulation` holding all 50 candidates. The original batch
+index and habit bias remain in `CandidateId`/`SamplingProvenance`, but are never
+used to partition mating or environmental selection.
 
 Candidate evaluation is a second, PeTTa-native stage because its semantic,
 optimality, and habit-break evidence is candidate-specific and may be produced
@@ -102,6 +108,39 @@ Promotion increments the generation and is the explicit reevaluation boundary.
 Consequently, refined degrees affect emergence and coherence only in the next
 generation, if the candidate survives selection.
 
+## Global evolution
+
+`HybridSearchEvolution.metta` implements four-objective nondominated sorting,
+crowding distance, seeded binary tournament selection, uniform crossover,
+bounded mutation, and capacity-limited environmental selection. All four
+fitness objectives are maximized. A generation is configured with:
+
+```metta
+(HybridEvolutionConfiguration
+  capacity offspring-count crossover-rate mutation-rate mutation-scale seed)
+```
+
+For the agreed 50-member search, use capacity `50`; offspring count `25`
+matches the previous Python loop. `hs-produce-offspring` creates lineage-bearing
+drafts with no inherited fitness. `hs-evaluate-offspring-candidates` evaluates
+those drafts before `hs-environmental-select` combines them with the 50 parents.
+
+The complete recursive entry point is:
+
+```metta
+(run-hybrid-search-loop
+  initialization initial-evaluation-context
+  mcbride-configuration evolution-configuration
+  generation-contexts)
+```
+
+Each item in `generation-contexts` has the shape
+`(GenerationContexts generation offspring-context next-generation-context)`.
+The two explicit contexts provide candidate-specific optimality and Peircean
+evidence for offspring evaluation and survivor reevaluation. The loop returns
+`HybridSearchLoopResult` with the generation trace, final 50-member population,
+and one `GlobalParetoFront` over that population.
+
 Sampling is deliberately one-shot.  For bias values
 `(0 0.25 0.5 0.75 1)`, subproblem `j` uses
 
@@ -137,4 +176,7 @@ petta \
 
 petta \
   a_quantale_theoretic_approach/optimization/hybrid_search/tests/HybridSearchMcBrideRefinementValidation.metta
+
+petta \
+  a_quantale_theoretic_approach/optimization/hybrid_search/tests/HybridSearchEvolutionValidation.metta
 ```
