@@ -46,6 +46,7 @@
 ;; Candidate records and the four-objective population-evaluation stage.
 !(import! &self CandidateEvaluation)
 !(import! &self HybridSearchMcBrideRefinement)
+!(import! &self HybridSearchHabitDynamics)
 !(import! &self HybridSearchEvolution)
 
 (= (hs-enrich-compact $compact $seed)
@@ -272,4 +273,5 @@
          (GenericSpace $generic)
          (HabitTargetResult $target)
          (SamplingPopulations $populations)
-         (AggregatedPopulation $aggregated))))
+         (AggregatedPopulation $aggregated)
+         (HabitMemory $memory))))

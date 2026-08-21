@@ -174,6 +174,26 @@
          (Sources $source-a $source-b)
          (GenericSpace $generic)
          (HabitTargetResult $target)
+         (EvaluatedPopulation $population)
+         (HabitMemory $memory))
+      $configuration)
+   (let $refined
+      (hs-refine-aggregated-population
+         $population $source-a $source-b $configuration)
+      (HybridSearchMcBrideRefinementResult
+         $status
+         (Sources $source-a $source-b)
+         (GenericSpace $generic)
+         (HabitTargetResult $target)
+         (RefinedPopulation $refined)
+         (HabitMemory $memory))))
+
+(= (hs-refine-evaluation-result
+      (HybridSearchCandidateEvaluationResult
+         $status
+         (Sources $source-a $source-b)
+         (GenericSpace $generic)
+         (HabitTargetResult $target)
          (EvaluatedPopulation $population))
       $configuration)
    (let $refined

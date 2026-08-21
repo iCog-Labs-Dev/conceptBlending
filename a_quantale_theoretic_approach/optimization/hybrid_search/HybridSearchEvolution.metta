@@ -355,11 +355,11 @@
 
 ;; One complete generation. Current parent fitness remains frozen through
 ;; tournament and environmental selection. Only offspring are freshly scored.
-(= (hs-evolve-aggregated-generation
+(= (hs-select-aggregated-generation
       (AggregatedPopulationRefinement
          $status $candidate-schema $initial-mean $habit-vector $sampler
          $provenance $refinement-summary (Population $parents))
-      $generation $offspring-context $next-generation-context
+      $generation $offspring-context
       (HybridEvolutionConfiguration
          $capacity $offspring-count $crossover-rate
          $mutation-rate $mutation-scale $seed))
@@ -370,18 +370,84 @@
             $crossover-rate $mutation-rate $mutation-scale $seed))
       ($offspring
          (hs-evaluate-offspring-candidates $drafts $offspring-context))
-      ($selection (hs-environmental-select $parents $offspring $capacity))
+      ($selection (hs-environmental-select $parents $offspring $capacity)))
+      (HybridGenerationSelectionResult
+         (Generation $generation)
+         (RandomFinalState $final-state)
+         (OffspringDrafts $drafts)
+         (EvaluatedOffspring $offspring)
+         $selection)))
+
+(= (hs-evolve-aggregated-generation
+      (AggregatedPopulationRefinement
+         $status $candidate-schema $initial-mean $habit-vector $sampler
+         $provenance $refinement-summary (Population $parents))
+      $generation $offspring-context $next-generation-context
+      (HybridEvolutionConfiguration
+         $capacity $offspring-count $crossover-rate
+         $mutation-rate $mutation-scale $seed))
+   (let* (
+      ($refined
+         (AggregatedPopulationRefinement
+            $status $candidate-schema $initial-mean $habit-vector $sampler
+            $provenance $refinement-summary (Population $parents)))
+      ($configuration
+         (HybridEvolutionConfiguration
+            $capacity $offspring-count $crossover-rate
+            $mutation-rate $mutation-scale $seed))
+      ((HybridGenerationSelectionResult
+          $generation-record $random $drafts $offspring $selection)
+         (hs-select-aggregated-generation
+            $refined $generation $offspring-context $configuration))
       ($survivors (index-atom (index-atom $selection 3) 1))
       ($promoted (hs-promote-survivors $survivors))
       ($next-population
          (hs-evaluate-promoted-survivors
             $promoted $next-generation-context)))
       (HybridGenerationResult
-         (Generation $generation)
-         (RandomFinalState $final-state)
-         (OffspringDrafts $drafts)
-         (EvaluatedOffspring $offspring)
+         $generation-record $random $drafts $offspring
          $selection
+         (NextGenerationPopulation $next-population))))
+
+;; Paper lifecycle: selection uses frozen current fitness; only afterward do
+;; successful survivors form habits and all habits decay. Refreshed strengths
+;; therefore affect only promoted candidates evaluated for the next generation.
+(= (hs-update-habit-memory
+      $memory $survivors $habit-configuration)
+   (let $front (hs-global-pareto-front $survivors)
+      (hs-update-habit-memory-from-front
+         $memory $front $habit-configuration)))
+
+(= (hs-update-habit-memory-from-front
+      $memory (ParetoFront $successful) $habit-configuration)
+   (hs-update-habit-memory-from-successful
+      $memory $successful $habit-configuration))
+
+(= (hs-evolve-aggregated-generation-with-habits
+      $refined $generation $offspring-context $next-generation-context
+      $evolution-configuration $memory $habit-configuration)
+   (let* (
+      ((HybridGenerationSelectionResult
+          $generation-record $random $drafts $offspring $selection)
+         (hs-select-aggregated-generation
+            $refined $generation $offspring-context
+            $evolution-configuration))
+      ($survivors (index-atom (index-atom $selection 3) 1))
+      ((HabitEvolutionResult $updated-memory $habit-trace)
+         (hs-update-habit-memory
+            $memory $survivors $habit-configuration))
+      ($refreshed-next-context
+         (hs-refresh-evaluation-context-habits
+            $updated-memory $next-generation-context))
+      ($promoted (hs-promote-survivors $survivors))
+      ($next-population
+         (hs-evaluate-promoted-survivors
+            $promoted $refreshed-next-context)))
+      (HybridHabitGenerationResult
+         $generation-record $random $drafts $offspring
+         $selection
+         $habit-trace
+         (UpdatedHabitMemory $updated-memory)
          (NextGenerationPopulation $next-population))))
 
 (= (hs-final-pareto-from-generation
@@ -390,6 +456,16 @@
          (EnvironmentalSelection
             $capacity $eligible (Population $survivors) $fronts)
          $next-generation))
+   (HybridSearchParetoResult
+      Global (PopulationSize (hs-evolution-length $survivors))
+      (hs-global-pareto-front $survivors)))
+
+(= (hs-final-pareto-from-generation
+      (HybridHabitGenerationResult
+         $generation $random $drafts $offspring
+         (EnvironmentalSelection
+            $capacity $eligible (Population $survivors) $fronts)
+         $habit-trace $updated-memory $next-generation))
    (HybridSearchParetoResult
       Global (PopulationSize (hs-evolution-length $survivors))
       (hs-global-pareto-front $survivors)))
@@ -429,6 +505,7 @@
 (= (hs-run-hybrid-generations
       $remaining $generation $evaluation $source-a $source-b
       $refinement-configuration $evolution-configuration
+      $habit-configuration $memory
       $generation-contexts $history)
    (if (<= $remaining 0)
        (let* (
@@ -438,7 +515,8 @@
           (HybridSearchLoopResult Complete
              (Generations $history)
              (FinalPopulation $population)
-             (GlobalParetoFront $pareto)))
+             (GlobalParetoFront $pareto)
+             (UpdatedHabitMemory $memory)))
        (let* (
           ($contexts (car-atom $generation-contexts))
           ($rest-contexts (cdr-atom $generation-contexts))
@@ -454,11 +532,14 @@
              (hs-refine-aggregated-population
                 $evaluation $source-a $source-b $refinement-config))
           ($generation-result
-             (hs-evolve-aggregated-generation
+             (hs-evolve-aggregated-generation-with-habits
                 $refined (+ $generation 1)
-                $offspring-context $next-context $evolution-config))
+                $offspring-context $next-context $evolution-config
+                $memory $habit-configuration))
           ($next-population
-             (index-atom (index-atom $generation-result 6) 1))
+             (index-atom (index-atom $generation-result 8) 1))
+          ($updated-memory
+             (index-atom (index-atom $generation-result 7) 1))
           ($next-evaluation
              (hs-next-aggregated-evaluation
                 $evaluation $next-population)))
@@ -466,6 +547,7 @@
              (- $remaining 1) (+ $generation 1)
              $next-evaluation $source-a $source-b
              $refinement-configuration $evolution-configuration
+             $habit-configuration $updated-memory
              $rest-contexts
              (hs-evolution-append $history ($generation-result))))))
 
@@ -475,6 +557,7 @@
 (= (run-hybrid-search-loop
       $initialization $initial-evaluation-context
       $refinement-configuration $evolution-configuration
+      $habit-configuration
       $generation-contexts)
    (let* (
       ($evaluation-result
@@ -484,9 +567,23 @@
       ($source-a (index-atom $sources 1))
       ($source-b (index-atom $sources 2))
       ($evaluation
-         (index-atom (index-atom $evaluation-result 5) 1)))
+         (index-atom (index-atom $evaluation-result 5) 1))
+      ($memory
+         (index-atom (index-atom $evaluation-result 6) 1)))
       (hs-run-hybrid-generations
          (hs-evolution-length $generation-contexts) 0
          $evaluation $source-a $source-b
          $refinement-configuration $evolution-configuration
+         $habit-configuration $memory
          $generation-contexts ())))
+
+;; Backward-compatible entry point with a conservative default decay factor.
+(= (run-hybrid-search-loop
+      $initialization $initial-evaluation-context
+      $refinement-configuration $evolution-configuration
+      $generation-contexts)
+   (run-hybrid-search-loop
+      $initialization $initial-evaluation-context
+      $refinement-configuration $evolution-configuration
+      (hs-default-habit-evolution-configuration)
+      $generation-contexts))
