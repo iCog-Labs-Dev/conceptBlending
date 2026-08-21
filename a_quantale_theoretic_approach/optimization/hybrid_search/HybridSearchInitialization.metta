@@ -46,6 +46,7 @@
 ;; Candidate records and the four-objective population-evaluation stage.
 !(import! &self CandidateEvaluation)
 !(import! &self HybridSearchMcBrideRefinement)
+!(import! &self HybridSearchEvolution)
 
 (= (hs-enrich-compact $compact $seed)
    (let $_bridge (hs-register-python-bridge)
@@ -264,9 +265,11 @@
          (hs-build-habit-target
             $source-a $source-b $generic $memory $kappa))
       ($populations
-         (hs-sample-five-populations $generic $target (+ $seed 3))))
+         (hs-sample-five-populations $generic $target (+ $seed 3)))
+      ($aggregated (hs-aggregate-five-samples $populations)))
       (HybridSearchInitializationResult Ready
          (Sources $source-a $source-b)
          (GenericSpace $generic)
          (HabitTargetResult $target)
-         (Populations $populations))))
+         (SamplingPopulations $populations)
+         (AggregatedPopulation $aggregated))))
