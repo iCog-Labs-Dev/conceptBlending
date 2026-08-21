@@ -174,6 +174,25 @@
          (Sources $source-a $source-b)
          (GenericSpace $generic)
          (HabitTargetResult $target)
+         (EvaluatedPopulation $population))
+      $configuration)
+   (let $refined
+      (hs-refine-aggregated-population
+         $population $source-a $source-b $configuration)
+      (HybridSearchMcBrideRefinementResult
+         $status
+         (Sources $source-a $source-b)
+         (GenericSpace $generic)
+         (HabitTargetResult $target)
+         (RefinedPopulation $refined))))
+
+;; Compatibility with the earlier five-independent-populations result.
+(= (hs-refine-evaluation-result
+      (HybridSearchCandidateEvaluationResult
+         $status
+         (Sources $source-a $source-b)
+         (GenericSpace $generic)
+         (HabitTargetResult $target)
          (EvaluatedPopulations $populations))
       $configuration)
    (let $refined
@@ -185,6 +204,32 @@
          (GenericSpace $generic)
          (HabitTargetResult $target)
          (RefinedPopulations $refined))))
+
+;; Shared-population refinement. Sampling provenance is descriptive only; the
+;; flattened population is refined as one stream and later mates globally.
+(= (hs-refine-aggregated-population
+      (AggregatedPopulationEvaluation
+         $status $candidate-schema $initial-mean $habit-vector $sampler
+         $provenance (Population $candidates))
+      $source-a $source-b
+      (McBrideRefinementConfiguration
+         $eta $steps $threshold $patience $probability $seed))
+   (let* (
+      ($configuration
+         (McBrideRefinementConfiguration
+            $eta $steps $threshold $patience $probability $seed))
+      ($initial-state (hs-lcg-normalize $seed))
+      ((CandidateRefinementBatch $refined $final-state)
+         (hs-refine-candidates
+            $candidates $source-a $source-b
+            $configuration $initial-state)))
+      (AggregatedPopulationRefinement
+         $status $candidate-schema $initial-mean $habit-vector $sampler
+         $provenance
+         (RefinementSummary
+            (RefinedCount (hs-refinement-count $refined))
+            (DecisionStreamFinalState $final-state))
+         (Population $refined))))
 
 ;; --------------------------------------------------------------------------
 ;; Survivor promotion and delayed next-generation evaluation
