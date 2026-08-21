@@ -11,7 +11,9 @@ This component implements steps 1–4 of the memetic quantale-blending search:
    construct the habit target, and sample five batches of ten;
 5. immediately aggregate those batches into one shared population of 50;
 6. evaluate, refine, and evolve the shared population, then return one global
-   Pareto front.
+   Pareto front;
+7. after each environmental selection, reinforce successful blends and decay
+   habit memory before evaluating the next generation.
 
 The public PeTTa operation is:
 
@@ -22,7 +24,8 @@ The public PeTTa operation is:
 
 The result contains the two scalar source predicates, the generic V-predicate
 with property/world provenance, the habit target, the five sampling batches,
-and an `AggregatedPopulation` holding all 50 candidates. The original batch
+an `AggregatedPopulation` holding all 50 candidates, and the atomspace-augmented
+`HabitMemory` used to initialize the search. The original batch
 index and habit bias remain in `CandidateId`/`SamplingProvenance`, but are never
 used to partition mating or environmental selection.
 
@@ -130,9 +133,12 @@ The complete recursive entry point is:
 ```metta
 (run-hybrid-search-loop
   initialization initial-evaluation-context
-  mcbride-configuration evolution-configuration
+  mcbride-configuration evolution-configuration habit-configuration
   generation-contexts)
 ```
+
+Habit evolution is configured as `(HabitEvolutionConfiguration gamma)`. The
+five-argument loop form remains available and uses the default `gamma = 0.99`.
 
 Each item in `generation-contexts` has the shape
 `(GenerationContexts generation offspring-context next-generation-context)`.
@@ -140,6 +146,32 @@ The two explicit contexts provide candidate-specific optimality and Peircean
 evidence for offspring evaluation and survivor reevaluation. The loop returns
 `HybridSearchLoopResult` with the generation trace, final 50-member population,
 and one `GlobalParetoFront` over that population.
+
+## Habit formation and decay
+
+`HybridSearchHabitDynamics.metta` implements Algorithm 1's post-selection
+habit boundary. For every generation it takes the nondominated front of the
+environmentally selected population, converts each successful candidate to its
+property-name set, and reuses `reinforce-nondominated-blends` semantics to add
+those co-occurrences to memory. It then applies the configured decay factor.
+Associations absent from successful blends therefore receive decay without a
+new observation.
+
+The update happens after selection, so it never changes the fitness values that
+selected the current survivors. Before those survivors are promoted, existing
+`HabitPairStrength` entries in the next-generation context are recomputed with
+`get-habit-strength` from the updated memory. This makes the new habits affect
+the next generation's Peircean objective while leaving emergence/coherence and
+the McBride frozen-fitness rule intact. Sampling remains one-shot; evolved
+habits also become available to later search runs through the returned
+`UpdatedHabitMemory`.
+
+The pure loop does not write `habit_memory/memory.metta`. Durable persistence is
+an explicit final action:
+
+```metta
+(hs-persist-final-pareto! final-pareto-front)
+```
 
 Sampling is deliberately one-shot.  For bias values
 `(0 0.25 0.5 0.75 1)`, subproblem `j` uses
@@ -179,4 +211,7 @@ petta \
 
 petta \
   a_quantale_theoretic_approach/optimization/hybrid_search/tests/HybridSearchEvolutionValidation.metta
+
+petta \
+  a_quantale_theoretic_approach/optimization/hybrid_search/tests/HybridSearchHabitDynamicsValidation.metta
 ```
