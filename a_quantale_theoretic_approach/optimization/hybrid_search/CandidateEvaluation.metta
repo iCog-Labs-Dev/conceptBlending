@@ -551,8 +551,11 @@
 ;; Candidate and population traversal
 ;; --------------------------------------------------------------------------
 
-(= (hs-evaluate-candidate-components
-      $subproblem $individual $generation $vector $candidate $context)
+(= (hs-population-candidates (Population $candidates)) $candidates)
+
+(= (hs-evaluate-candidate-components-with-state
+      $subproblem $individual $generation $vector $candidate
+      $refinement-state $context)
    (let* (
       ($emergence
          (hs-evaluate-emergence
@@ -576,9 +579,15 @@
          (CandidateId $subproblem $individual $generation)
          (Vector $vector)
          (Blend $candidate)
-         (RefinementState Unrefined)
+         $refinement-state
          (CandidateFitness $objectives)
          (hs-make-fitness-vector $objectives))))
+
+(= (hs-evaluate-candidate-components
+      $subproblem $individual $generation $vector $candidate $context)
+   (hs-evaluate-candidate-components-with-state
+      $subproblem $individual $generation $vector $candidate
+      (RefinementState Unrefined) $context))
 
 (= (hs-evaluate-candidate
       (SampledCandidate
@@ -595,6 +604,27 @@
    (hs-evaluate-candidate-components
       $subproblem $individual $generation $vector $candidate $context))
 
+;; Offspring carry lineage and variation provenance, but never inherit either
+;; parent's fitness. Their four objectives are materialized at this boundary.
+(= (hs-evaluate-offspring-candidate
+      (OffspringCandidate
+         (CandidateId $subproblem $individual $generation)
+         (Parents $parent-a $parent-b)
+         (Vector $vector) (Blend $candidate) $variation-trace)
+      $context)
+   (hs-evaluate-candidate-components-with-state
+      $subproblem $individual $generation $vector $candidate
+      (RefinementState Unrefined
+         (Lineage $parent-a $parent-b) $variation-trace)
+      $context))
+
+(= (hs-evaluate-offspring-candidates () $context) ())
+(= (hs-evaluate-offspring-candidates
+      (cons $candidate $remaining) $context)
+   (cons-atom
+      (hs-evaluate-offspring-candidate $candidate $context)
+      (hs-evaluate-offspring-candidates $remaining $context)))
+
 (= (hs-evaluate-candidates () $context) ())
 (= (hs-evaluate-candidates (cons $candidate $remaining) $context)
    (cons-atom
@@ -609,7 +639,7 @@
       ($covariance (index-atom $subproblem 4))
       ($step-size (index-atom $subproblem 5))
       ($population (index-atom $subproblem 6))
-      ($candidates (cdr-atom $population))
+      ($candidates (hs-population-candidates $population))
       ($evaluated (hs-evaluate-candidates $candidates $context)))
       (EvaluatedSubproblemPopulation
          $index $habit-bias $mean $covariance $step-size
@@ -620,6 +650,53 @@
    (cons-atom
       (hs-evaluate-subproblem $subproblem $context)
       (hs-evaluate-subproblems $remaining $context)))
+
+;; --------------------------------------------------------------------------
+;; Five sampling distributions -> one shared evolutionary population
+;; --------------------------------------------------------------------------
+
+(= (hs-sampling-provenance ()) ())
+(= (hs-sampling-provenance (cons $subproblem $remaining))
+   (cons-atom
+      (SourceSample
+         (index-atom $subproblem 1)
+         (index-atom $subproblem 2))
+      (hs-sampling-provenance $remaining)))
+
+(= (hs-flatten-sampled-subproblems ()) ())
+(= (hs-flatten-sampled-subproblems (cons $subproblem $remaining))
+   (append
+      (hs-population-candidates (index-atom $subproblem 6))
+      (hs-flatten-sampled-subproblems $remaining)))
+
+(= (hs-aggregate-five-samples $initialization)
+   (let* (
+      ($candidate-schema (index-atom $initialization 2))
+      ($initial-mean (index-atom $initialization 3))
+      ($habit-vector (index-atom $initialization 4))
+      ($sampler (index-atom $initialization 5))
+      ($subproblems (index-atom (index-atom $initialization 6) 1))
+      ($provenance (hs-sampling-provenance $subproblems))
+      ($candidates (hs-flatten-sampled-subproblems $subproblems)))
+      (AggregatedPopulationInitialization Ready
+         $candidate-schema $initial-mean $habit-vector $sampler
+         (SamplingProvenance $provenance)
+         (Population $candidates))))
+
+(= (hs-evaluate-aggregated-population
+      (AggregatedPopulationInitialization
+         $status $candidate-schema $initial-mean $habit-vector $sampler
+         $provenance (Population $candidates))
+      $context)
+   (let* (
+      ($evaluated (hs-evaluate-candidates $candidates $context))
+      ($evaluation-status
+         (if (hs-evaluated-candidates-ready $evaluated)
+             Evaluated Blocked)))
+      (AggregatedPopulationEvaluation
+         $evaluation-status $candidate-schema $initial-mean
+         $habit-vector $sampler $provenance
+         (Population $evaluated))))
 
 (= (hs-evaluated-candidates-ready ()) True)
 (= (hs-evaluated-candidates-ready (cons $candidate $remaining))
@@ -641,7 +718,7 @@
       ($habit-vector (index-atom $initialization 4))
       ($sampler (index-atom $initialization 5))
       ($subproblem-block (index-atom $initialization 6))
-      ($subproblems (cdr-atom $subproblem-block))
+      ($subproblems (index-atom $subproblem-block 1))
       ($evaluated
          (hs-evaluate-subproblems $subproblems $context))
       ($status
@@ -651,6 +728,30 @@
          $status $candidate-schema $initial-mean $habit-vector $sampler
          (Subproblems $evaluated))))
 
+(= (hs-evaluate-initialization-result
+      (HybridSearchInitializationResult
+         Ready (Sources $source-a $source-b)
+         (GenericSpace $generic)
+         (HabitTargetResult $target)
+         (SamplingPopulations $populations)
+         (AggregatedPopulation $aggregated))
+      $context)
+   (if (and (== $source-a (hs-context-source-a $context))
+            (== $source-b (hs-context-source-b $context)))
+       (let $evaluated
+          (hs-evaluate-aggregated-population $aggregated $context)
+          (HybridSearchCandidateEvaluationResult
+             (index-atom $evaluated 1)
+             (Sources $source-a $source-b)
+             (GenericSpace $generic)
+             (HabitTargetResult $target)
+             (EvaluatedPopulation $evaluated)))
+       (HybridSearchCandidateEvaluationResult Blocked
+          (EvaluationContextSourceMismatch)
+          (Sources $source-a $source-b))))
+
+;; Compatibility with initialization records produced before aggregation was
+;; made explicit. New callers receive the shared-population result above.
 (= (hs-evaluate-initialization-result
       (HybridSearchInitializationResult
          Ready (Sources $source-a $source-b)
