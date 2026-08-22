@@ -1,9 +1,9 @@
 ;; Focused validation of the shared-population evolutionary boundary.
 
 !(import! &self ../../../../PeTTa/lib/lib_import)
-!(import! &self ../CandidateEvaluation)
-!(import! &self ../HybridSearchMcBrideRefinement)
-!(import! &self ../HybridSearchEvolution)
+!(import! &self ../candidate-evaluation)
+!(import! &self ../hybrid-search-mcbride-refinement)
+!(import! &self ../hybrid-search-evolution)
 
 (= (evolution-test-candidate $subproblem $individual $e $c $o $p)
    (HybridCandidate

@@ -5,10 +5,10 @@
 !(import! &self ../../../../habit_memory/embeddings)
 !(import! &self ../../../../habit_memory/habit_memory)
 !(import! &self ../../../../habit_memory/atomspace_memory)
-!(import! &self ../CandidateEvaluation)
-!(import! &self ../HybridSearchMcBrideRefinement)
-!(import! &self ../HybridSearchHabitDynamics)
-!(import! &self ../HybridSearchEvolution)
+!(import! &self ../candidate-evaluation)
+!(import! &self ../hybrid-search-mcbride-refinement)
+!(import! &self ../hybrid-search-habit-dynamics)
+!(import! &self ../hybrid-search-evolution)
 
 (= (habit-test-candidate $name $individual $left $right $e $c $o $p)
    (HybridCandidate

@@ -1,11 +1,11 @@
 ;; Habit formation and decay at the post-environmental-selection boundary.
-;; CandidateEvaluation supplies candidate/property accessors. Evolution passes
+;; candidate-evaluation supplies candidate/property accessors. Evolution passes
 ;; the already-selected successful front. Runtime updates are pure.
 
-!(import! &self ../../../habit_memory/habit_memory)
-!(import! &self ../../../habit_memory/embeddings)
-!(import! &self ../../../habit_memory/atomspace_memory)
-!(import! &self "../../../habit_memory/persist_memory.py")
+!(import! &self habit_memory/habit_memory)
+!(import! &self habit_memory/embeddings)
+!(import! &self habit_memory/atomspace_memory)
+!(import! &self "habit_memory/persist_memory.py")
 
 (= (hs-default-habit-evolution-configuration)
    (HabitEvolutionConfiguration 0.99))

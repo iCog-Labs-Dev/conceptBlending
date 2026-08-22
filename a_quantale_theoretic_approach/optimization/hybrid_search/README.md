@@ -68,7 +68,7 @@ a passing score. The traversal consumes candidate-bound
 `CandidateOptimalityResult` entries; an unmaterialized input is blocked.
 
 For a batch of raw `CandidateOptimalityInput` records, import
-`CandidateOptimalityEvaluation.metta` and call
+`candidate-optimality-evaluation.metta` and call
 `hs-materialize-optimality-entries` before constructing the shared evaluation
 context. Keeping this materialization boundary separate prevents PeTTa's
 transitive imports from duplicating V-predicate rewrite rules during the 50-way
@@ -113,7 +113,7 @@ generation, if the candidate survives selection.
 
 ## Global evolution
 
-`HybridSearchEvolution.metta` implements four-objective nondominated sorting,
+`hybrid-search-evolution.metta` implements four-objective nondominated sorting,
 crowding distance, seeded binary tournament selection, uniform crossover,
 bounded mutation, and capacity-limited environmental selection. All four
 fitness objectives are maximized. A generation is configured with:
@@ -149,7 +149,7 @@ and one `GlobalParetoFront` over that population.
 
 ## Habit formation and decay
 
-`HybridSearchHabitDynamics.metta` implements Algorithm 1's post-selection
+`hybrid-search-habit-dynamics.metta` implements Algorithm 1's post-selection
 habit boundary. For every generation it takes the nondominated front of the
 environmentally selected population, converts each successful candidate to its
 property-name set, and reuses `reinforce-nondominated-blends` semantics to add
@@ -201,17 +201,17 @@ python3 -B -m unittest \
   a_quantale_theoretic_approach.optimization.hybrid_search.tests.test_hybrid_sampling -v
 
 petta \
-  a_quantale_theoretic_approach/optimization/hybrid_search/tests/HybridSearchInitializationValidation.metta
+  a_quantale_theoretic_approach/optimization/hybrid_search/tests/hybrid-search-initialization-validation.metta
 
 petta \
-  a_quantale_theoretic_approach/optimization/hybrid_search/tests/CandidateEvaluationValidation.metta
+  a_quantale_theoretic_approach/optimization/hybrid_search/tests/candidate-evaluation-validation.metta
 
 petta \
-  a_quantale_theoretic_approach/optimization/hybrid_search/tests/HybridSearchMcBrideRefinementValidation.metta
+  a_quantale_theoretic_approach/optimization/hybrid_search/tests/hybrid-search-mcbride-refinement-validation.metta
 
 petta \
-  a_quantale_theoretic_approach/optimization/hybrid_search/tests/HybridSearchEvolutionValidation.metta
+  a_quantale_theoretic_approach/optimization/hybrid_search/tests/hybrid-search-evolution-validation.metta
 
 petta \
-  a_quantale_theoretic_approach/optimization/hybrid_search/tests/HybridSearchHabitDynamicsValidation.metta
+  a_quantale_theoretic_approach/optimization/hybrid_search/tests/hybrid-search-habit-dynamics-validation.metta
 ```

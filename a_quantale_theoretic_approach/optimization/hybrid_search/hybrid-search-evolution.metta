@@ -1,5 +1,5 @@
 ;; Global NSGA-II-style evolution for the aggregated hybrid-search population.
-;; CandidateEvaluation and HybridSearchMcBrideRefinement must be imported first.
+;; candidate-evaluation and hybrid-search-mcbride-refinement must be imported first.
 ;; All four objectives are maximized. Sampling origin is retained only in each
 ;; CandidateId and in SamplingProvenance; it never partitions mating/selection.
 
@@ -560,9 +560,11 @@
       $habit-configuration
       $generation-contexts)
    (let* (
+      ($_evaluation-started (hs-log-stage "candidate_evaluation_started"))
       ($evaluation-result
          (hs-evaluate-initialization-result
             $initialization $initial-evaluation-context))
+      ($_evaluation-ready (hs-log-stage "candidate_evaluation_materialized"))
       ($sources (index-atom $evaluation-result 2))
       ($source-a (index-atom $sources 1))
       ($source-b (index-atom $sources 2))
@@ -570,12 +572,14 @@
          (index-atom (index-atom $evaluation-result 5) 1))
       ($memory
          (index-atom (index-atom $evaluation-result 6) 1)))
+      (let $_generation-loop-started
+         (hs-log-stage "generation_loop_started")
       (hs-run-hybrid-generations
          (hs-evolution-length $generation-contexts) 0
          $evaluation $source-a $source-b
          $refinement-configuration $evolution-configuration
          $habit-configuration $memory
-         $generation-contexts ())))
+         $generation-contexts ()))))
 
 ;; Backward-compatible entry point with a conservative default decay factor.
 (= (run-hybrid-search-loop
