@@ -1,4 +1,4 @@
-!(import! &self a_quantale_theoretic_approach/optimality/OptimalityIntegration)
+!(import! &self a_quantale_theoretic_approach/optimality/optimality-integration)
 
 (= (IG) (VCategory IG (W) (g) ((g g (Q (W) 1.0)))))
 (= (IA) (VCategory IA (W) (a) ((a a (Q (W) 1.0)))))

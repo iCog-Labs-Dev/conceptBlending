@@ -141,7 +141,7 @@ quantale bottom.
 
 ## Staged pipeline integration
 
-`optimality/OptimalityIntegration.metta` consumes the existing producer records:
+`optimality/optimality-integration.metta` consumes the existing producer records:
 
 ```metta
 (structural-blend-preparation ...)
@@ -169,7 +169,7 @@ Their results can be cached and passed as inert records without duplicate transi
 imports. The future Hom extraction/building pipeline owns construction of
 `OptimalityEnrichmentArtifacts`; until it supplies them, integration correctly blocks.
 
-For executable whole-pipeline validation, `integration/CompleteBlendPipeline.metta`
+For executable whole-pipeline validation, `integration/complete-blend-pipeline.metta`
 does run the cached Cartesian generalizer, the world-aware quantale colimit, and
 the enriched optimality evaluator in one PeTTa call. Its contract consumes the
 compact V-predicate extractor output plus the later GNN scalar assignment. The
