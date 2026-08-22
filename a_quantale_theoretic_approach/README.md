@@ -83,3 +83,34 @@ The trainer will automatically parse `hasProperty` triples, apply min-max normal
 
 ### Pre-Trained Weights
 The current production weights (`extractor/gnn_weights.pth`) are loaded automatically by `demo_pipeline.py`. They were trained with Spearman correlation of **0.40** on 115 held-out concepts.
+# Quantale-theoretic conceptual blending
+
+The PeTTa entrypoint for the complete habit-biased hybrid search is
+`a_quantale_theoretic_approach/main.metta`. Its real-input example parameters
+are initialized near the end of the file. The example blends the real
+`playing_hockey` and `surfing` functional-use concepts, whose shared properties
+create a genuinely multi-objective population. Uncomment exactly one of the
+two example calls and run it from the repository root:
+
+```bash
+GENERALIZATION_LLM_MODE=off \
+GENERALIZATION_CACHE_MODE=on \
+petta a_quantale_theoretic_approach/main.metta
+```
+
+SentenceTransformer embeddings are used for habit similarity when the optional
+model is available. In a fully offline PeTTa environment, the same entrypoint
+uses a deterministic lexical-similarity fallback instead of aborting.
+
+The result is a compact `QuantaleBlendPipelineResult` containing completion and
+initialization statuses plus only the nondominated candidates in the global
+Pareto front. Each public `ParetoCandidate` carries its ID, blend/property
+degrees, and four-value fitness vector; detailed objective evidence remains in
+the internal candidate representation. Updated habit memory also stays inside
+the hybrid-search lifecycle, where it is threaded into each consequent
+generation, but is intentionally omitted from the public result. The internal
+`HybridSearchLoopResult` still carries the final shared population, generation
+trace, detailed candidates, and updated memory.
+`InitializedQuantaleBlendPipelineRequest` resumes from a previously
+materialized initialization result without repeating extraction,
+generalization, or sampling.
