@@ -21,6 +21,9 @@
 !(test (cosine-similarity (1.0 1.0) (1.0 1.0))
        0.9999999999999998)
 
+!(test (real-embedding-similarity commute_to_work commute_to_work)
+       1.0)
+
 !(test (> (habit-strength-embedding access_internet calculate_data) 0.0)
        True)
 

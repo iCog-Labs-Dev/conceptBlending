@@ -68,3 +68,18 @@
     (Property
       (access_internet (WorldSpecSet ()) 1.0)
       (carrying_groceries (WorldSpecSet ()) 1.0))))
+
+(Concept habit-access_internet-travel_to_shops-carrying_groceries
+  (HabitCount 1)
+  (V-predicate
+    (Property
+      (access_internet (WorldSpecSet ()) 1.0)
+      (travel_to_shops (WorldSpecSet ()) 1.0)
+      (carrying_groceries (WorldSpecSet ()) 1.0))))
+
+(Concept habit-chef-kitchen
+  (HabitCount 1)
+  (V-predicate
+    (Property
+      (chef (WorldSpecSet ()) 1.0)
+      (kitchen (WorldSpecSet ()) 1.0))))

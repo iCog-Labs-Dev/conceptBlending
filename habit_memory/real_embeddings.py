@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import re
 import sys
+from difflib import SequenceMatcher
 
 
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
@@ -86,7 +87,6 @@ def provider_mode():
 
 
 def provider_name():
-    _load_sentence_model()
     return f"sentence-transformers:{_MODEL_NAME}"
 
 
@@ -99,10 +99,24 @@ def provider_error():
 
 
 def provider_status():
-    return "error" if provider_error() else "ready"
+    return "lexical-fallback" if provider_error() else "ready"
+
+
+def _lexical_similarity(value_a, value_b):
+    """Deterministic offline fallback when the optional model is unavailable."""
+    text_a = _embedding_text(value_a)
+    text_b = _embedding_text(value_b)
+    return float(SequenceMatcher(None, text_a, text_b).ratio())
 
 
 def embedding_similarity(property_a, property_b):
-    vector_a = _real_embedding(property_a)
-    vector_b = _real_embedding(property_b)
-    return float(_cosine(vector_a, vector_b))
+    # Cosine similarity of an item with itself is exactly one; avoid loading
+    # the optional model for this deterministic case.
+    if _embedding_text(property_a) == _embedding_text(property_b):
+        return 1.0
+    try:
+        vector_a = _real_embedding(property_a)
+        vector_b = _real_embedding(property_b)
+        return float(_cosine(vector_a, vector_b))
+    except RuntimeError:
+        return _lexical_similarity(property_a, property_b)
