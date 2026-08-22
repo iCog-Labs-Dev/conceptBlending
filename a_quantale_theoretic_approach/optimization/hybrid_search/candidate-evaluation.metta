@@ -663,9 +663,14 @@
          (index-atom $subproblem 2))
       (hs-sampling-provenance $remaining)))
 
+(= (hs-candidate-list-append () $right) $right)
+(= (hs-candidate-list-append (cons $candidate $remaining) $right)
+   (cons-atom $candidate
+      (hs-candidate-list-append $remaining $right)))
+
 (= (hs-flatten-sampled-subproblems ()) ())
 (= (hs-flatten-sampled-subproblems (cons $subproblem $remaining))
-   (append
+   (hs-candidate-list-append
       (hs-population-candidates (index-atom $subproblem 6))
       (hs-flatten-sampled-subproblems $remaining)))
 

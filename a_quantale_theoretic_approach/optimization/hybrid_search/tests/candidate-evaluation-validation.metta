@@ -1,6 +1,6 @@
 ;; Candidate-evaluation contracts and full five-by-ten traversal.
 
-!(import! &self ../CandidateEvaluation)
+!(import! &self ../candidate-evaluation)
 !(import! &self a_quantale_theoretic_approach/mcbride_petta/emergence)
 
 (= (EvalSourceA)

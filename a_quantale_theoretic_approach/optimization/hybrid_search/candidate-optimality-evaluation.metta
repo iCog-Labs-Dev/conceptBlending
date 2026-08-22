@@ -1,8 +1,8 @@
-;; Optional raw-input adapter for candidate optimality. CandidateEvaluation
+;; Optional raw-input adapter for candidate optimality. candidate-evaluation
 ;; itself accepts cached CandidateOptimalityResult entries without importing
 ;; this large dependency graph into the four-objective traversal.
 
-!(import! &self CandidateEvaluation)
+!(import! &self a_quantale_theoretic_approach/optimization/hybrid_search/candidate-evaluation)
 !(import! &self a_quantale_theoretic_approach/optimality/enriched_optimality_constraints)
 
 (= (hs-materialize-optimality-entry
