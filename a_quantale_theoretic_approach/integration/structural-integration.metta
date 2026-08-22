@@ -48,4 +48,4 @@
     "../structural_reasoning/generalization-component/python/generalization_support.py")
 !(import! &self
     ../structural_reasoning/generalization-component/metta/GeneralizationPipeline)
-!(import! &self metta/StructuralIntegrationPipeline)
+!(import! &self metta/structural-integration-pipeline)

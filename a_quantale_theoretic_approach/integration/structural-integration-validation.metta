@@ -1,5 +1,5 @@
 ;; PeTTa currently requires eager component initializers at the top level.
-;; StructuralIntegration.metta is the corresponding production bootstrap.
+;; structural-integration.metta is the corresponding production bootstrap.
 !(import! &self ../../../PeTTa/lib/lib_import)
 !(import! &self "python/integration_support.py")
 !(integration_support.configure_component_roots)
@@ -22,7 +22,7 @@
 !(import! &self "../structural_reasoning/generalization-component/python/lcggenerator.py")
 !(import! &self "../structural_reasoning/generalization-component/python/generalization_support.py")
 !(import! &self ../structural_reasoning/generalization-component/metta/GeneralizationPipeline)
-!(import! &self metta/StructuralIntegrationPipeline)
+!(import! &self metta/structural-integration-pipeline)
 (= (integration-left-vp)
    (Concept boat functional_use
       (Properties
