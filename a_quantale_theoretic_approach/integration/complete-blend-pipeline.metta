@@ -31,12 +31,12 @@
    "../structural_reasoning/generalization-component/python/generalization_support.py")
 !(import! &self
    ../structural_reasoning/generalization-component/metta/GeneralizationPipeline)
-!(import! &self a_quantale_theoretic_approach/optimality/OptimalityIntegration)
+!(import! &self a_quantale_theoretic_approach/optimality/optimality-integration)
 ; Optimality supplies the shared quantale and V-predicate definitions. Import
 ; only the colimit's world helpers and definition-only core to avoid duplicate
 ; reductions of the same quantale operations.
 !(import! &self a_quantale_theoretic_approach/structural_reasoning/world_spec_colimit)
-!(import! &self a_quantale_theoretic_approach/structural_reasoning/quantale_colimit_core)
+!(import! &self a_quantale_theoretic_approach/structural_reasoning/quantale-colimit-core)
 
 (= (q-complete-pipeline-status
       (VOptimalityResult $status $constraints $value))

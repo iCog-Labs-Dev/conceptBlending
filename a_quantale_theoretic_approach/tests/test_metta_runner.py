@@ -163,7 +163,7 @@ class TestMettaVitalRelationRuntime(unittest.TestCase):
         tests_dir = os.path.dirname(os.path.abspath(__file__))
         repo_root = os.path.dirname(os.path.dirname(tests_dir))
         fixture = os.path.join(
-            tests_dir, "quantale_petta_vital_relations_smoke.metta"
+            tests_dir, "quantale-petta-vital-relations-smoke.metta"
         )
 
         completed = subprocess.run(
@@ -197,7 +197,7 @@ class TestMettaEnrichedOptimalityRuntime(unittest.TestCase):
         tests_dir = os.path.dirname(os.path.abspath(__file__))
         repo_root = os.path.dirname(os.path.dirname(tests_dir))
         fixture = os.path.join(
-            tests_dir, "quantale_petta_enriched_optimality_smoke.metta"
+            tests_dir, "quantale-petta-enriched-optimality-smoke.metta"
         )
 
         completed = subprocess.run(
@@ -231,7 +231,7 @@ class TestMettaOptimalityIntegrationRuntime(unittest.TestCase):
         tests_dir = os.path.dirname(os.path.abspath(__file__))
         repo_root = os.path.dirname(os.path.dirname(tests_dir))
         fixture = os.path.join(
-            tests_dir, "quantale_petta_optimality_integration_smoke.metta"
+            tests_dir, "quantale-petta-optimality-integration-smoke.metta"
         )
 
         completed = subprocess.run(
@@ -265,7 +265,7 @@ class TestMettaCompleteBlendPipelineRuntime(unittest.TestCase):
         tests_dir = os.path.dirname(os.path.abspath(__file__))
         repo_root = os.path.dirname(os.path.dirname(tests_dir))
         fixture = os.path.join(
-            tests_dir, "quantale_petta_complete_pipeline_smoke.metta"
+            tests_dir, "quantale-petta-complete-pipeline-smoke.metta"
         )
         environment = os.environ.copy()
         environment.update(

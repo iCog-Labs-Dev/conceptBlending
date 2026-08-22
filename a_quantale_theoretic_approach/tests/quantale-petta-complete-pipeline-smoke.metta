@@ -1,4 +1,4 @@
-!(import! &self a_quantale_theoretic_approach/integration/CompleteBlendPipeline)
+!(import! &self a_quantale_theoretic_approach/integration/complete-blend-pipeline)
 
 ; Compact V-predicates emitted by extraction before GNN scalar assignment.
 (= (PipelineCompactBoat)

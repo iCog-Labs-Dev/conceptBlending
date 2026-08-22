@@ -1,6 +1,6 @@
 # Structural integration
 
-`StructuralIntegration.metta` connects the perspective-aware V-predicate
+`structural-integration.metta` connects the perspective-aware V-predicate
 extraction pipeline to Cartesian generic-space construction.
 
 For two concept names and one perspective,
@@ -26,7 +26,7 @@ The stable component boundary accepts grounded MeTTa text. Freeze each
 already-computed producer result with `repr (reduce ...)`:
 
 ```metta
-!(import! &self StructuralIntegration)
+!(import! &self structural-integration)
 !(prepare-structural-blend-from-texts
     generic_name functional_use
     (repr (reduce (left-v-predicate-producer)))
@@ -44,10 +44,10 @@ owned by `main-lcg` and the generalization component.
 
 After truth scalars, enriched Homs, vital relations, and a V-colimit certificate
 are available, pass the already computed structural and colimit records to
-`optimality/OptimalityIntegration.metta`:
+`optimality/optimality-integration.metta`:
 
 ```metta
-!(import! &self a_quantale_theoretic_approach/optimality/OptimalityIntegration)
+!(import! &self a_quantale_theoretic_approach/optimality/optimality-integration)
 !(q-evaluate-integrated-optimality
     StructuralPreparation
     QuantaleVPredicateColimitResult
@@ -71,7 +71,7 @@ the stages from being independently cached or inspected.
 
 ## Executable complete pipeline
 
-`CompleteBlendPipeline.metta` is the executable orchestration facade. Its public
+`complete-blend-pipeline.metta` is the executable orchestration facade. Its public
 operation is:
 
 ```metta
@@ -105,7 +105,7 @@ Run the executable integration contract with:
 ```bash
 GENERALIZATION_LLM_MODE=off \
 GENERALIZATION_CACHE_MODE=on \
-petta a_quantale_theoretic_approach/tests/quantale_petta_complete_pipeline_smoke.metta
+petta a_quantale_theoretic_approach/tests/quantale-petta-complete-pipeline-smoke.metta
 ```
 
 The fixture checks all three outcomes—`Pending`, `Blocked`, and `Evaluated`—and
