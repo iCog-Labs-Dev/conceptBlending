@@ -289,6 +289,16 @@ class AlgebraicGeneralizationTests(unittest.TestCase):
         counts = support.cartesian_pair_counts("functional_use", left, right)
         self.assertEqual(counts["sorts"], 9)
 
+    def test_incompatible_logical_axiom_heads_are_skipped(self) -> None:
+        left = """(Concept car functional_use
+          (spec (sorts ()) (ops ()) (preds ())
+            (axioms (((= car car) (stv 0.9 0.8))))))"""
+        right = """(Concept bus functional_use
+          (spec (sorts ()) (ops ()) (preds ())
+            (axioms (((closedUnder bus vehicle) (stv 0.9 0.8))))))"""
+        result = support.build_cartesian_plan("functional_use", left, right)
+        self.assertNotIn("PairRequest pair_0 = closedUnder", result)
+
     def test_reconstructs_every_resolved_entry_pair(self) -> None:
         result = support.assemble_cartesian_spec(
             "vehicle",
@@ -383,6 +393,18 @@ class LCGSelectionTests(unittest.TestCase):
         parsed = support.parse_metta(result)
         self.assertEqual(len(parsed), 2)
         self.assertEqual({item[2] for item in parsed}, {"flying_entity", "aerial_entity"})
+
+    def test_downstream_resolutions_preserve_structured_request_ids(self) -> None:
+        normalized = support.normalize_lcg_proofs(
+            "sparrow", "airplane", self.PROOFS
+        )
+        request_id = ["WorldPairId", "flight", "fly", "travel", "bird", "plane"]
+        result = support.resolutions_from_proofs(
+            request_id, "sparrow", "airplane", normalized
+        )
+        parsed = support.parse_metta(result)
+        self.assertEqual(len(parsed), 2)
+        self.assertTrue(all(item[1] == request_id for item in parsed))
 
     def test_graph_paths_find_deep_sea_land_lcg(self) -> None:
         sea = """(((GeneralizationStep sea (stv 1 1))

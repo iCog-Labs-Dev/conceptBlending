@@ -111,7 +111,9 @@ def _axiom_template(
         a, b = str(left), str(right)
         if a in left_variables and b in right_variables:
             return left_variables[a] if left_variables[a] == right_variables[b] else None
-        if a == b and (a in LOGICAL_HEADS or a.replace(".", "", 1).isdigit()):
+        if a in LOGICAL_HEADS or b in LOGICAL_HEADS:
+            return a if a == b else None
+        if a == b and a.replace(".", "", 1).isdigit():
             return a
         return planner.request(a, b)
     if not left or not right:
@@ -120,11 +122,13 @@ def _axiom_template(
         return _forall_template(
             left, right, planner, left_variables, right_variables
         )
-    head = (
-        str(left[0])
-        if left[0] == right[0] and str(left[0]) in LOGICAL_HEADS
-        else planner.request(left[0], right[0])
-    )
+    left_head, right_head = str(left[0]), str(right[0])
+    if left_head in LOGICAL_HEADS or right_head in LOGICAL_HEADS:
+        if left_head != right_head:
+            return None
+        head = left_head
+    else:
+        head = planner.request(left[0], right[0])
     children = [
         _axiom_template(a, b, planner, left_variables, right_variables)
         for a, b in zip(left[1:], right[1:])
@@ -375,9 +379,12 @@ def resolutions_from_proofs(
     request_id: Any, left: Any, right: Any, proofs: Any
 ) -> str:
     """Preserve every selected LCG as a resolution for Cartesian expansion."""
-    request, c1, c2 = str(request_id), str(left), str(right)
+    request = request_id if isinstance(request_id, list) else str(request_id)
+    c1, c2 = str(left), str(right)
     if c1 == c2:
-        return f"((PairResolution {request} {c1} (stv 1 1)))"
+        return core.render_metta(
+            [["PairResolution", request, c1, ["stv", "1", "1"]]]
+        )
     parsed = core.parse_metta(proofs)
     resolutions: dict[str, tuple[float, float]] = {}
     for proof in parsed if isinstance(parsed, list) else []:
@@ -396,9 +403,12 @@ def resolutions_from_proofs(
 def resolution_from_proofs(
     request_id: Any, left: Any, right: Any, proofs: Any
 ) -> str:
-    request, c1, c2 = str(request_id), str(left), str(right)
+    request = request_id if isinstance(request_id, list) else str(request_id)
+    c1, c2 = str(left), str(right)
     if c1 == c2:
-        return f"(PairResolution {request} {c1} (stv 1 1))"
+        return core.render_metta(
+            ["PairResolution", request, c1, ["stv", "1", "1"]]
+        )
     parsed = core.parse_metta(proofs)
     candidates: list[tuple[float, float, str]] = []
     for proof in parsed if isinstance(parsed, list) else []:
@@ -420,9 +430,12 @@ def resolution_from_proofs(
         except (IndexError, TypeError, ValueError):
             continue
     if not candidates:
-        return f"(PairResolution {request} () ())"
+        return core.render_metta(["PairResolution", request, [], []])
     strength, confidence, lcg = max(candidates)
-    return f"(PairResolution {request} {lcg} (stv {strength:g} {confidence:g}))"
+    return core.render_metta(
+        ["PairResolution", request, lcg,
+         ["stv", f"{strength:g}", f"{confidence:g}"]]
+    )
 
 
 def _resolution_map(value: Any) -> dict[str, list[tuple[str, Any]]]:
