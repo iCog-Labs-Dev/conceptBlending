@@ -26,6 +26,7 @@ class ScalarAndGenericTests(unittest.TestCase):
 
     def test_enrichment_is_seeded_and_scalar(self):
         self.assertEqual(self.a, hybrid_sampling.enrich_compact_vpredicate(COMPACT_A, 11))
+        self.assertIn("(Property ((move_on_water", self.a)
         concept = hybrid_sampling._concept(self.a)
         self.assertEqual(concept.perspective, "functional_use")
         self.assertIsInstance(concept.properties[0].degree, float)
@@ -69,8 +70,28 @@ class ScalarAndGenericTests(unittest.TestCase):
             generic, plan, petta_samples
         )
         self.assertIn("(Sampler random-multivariate)", sampled)
+        self.assertIn("(Subproblems ((SubproblemPopulation", sampled)
+        self.assertIn("(Population ((SampledCandidate", sampled)
         self.assertEqual(hybrid_sampling.population_count(sampled), 5)
         self.assertEqual(hybrid_sampling.individual_counts(sampled), "(10 10 10 10 10)")
+
+    def test_seeded_subproblem_sampling_is_single_and_reproducible(self):
+        generic = hybrid_sampling.generic_vpredicate_result(
+            "vehicle", "functional_use", PROPERTY_RESOLUTIONS, WORLD_MAPPINGS, 13
+        )
+        strengths = """(HabitStrengths
+          ((HabitStrength locomotion move_on_water move_on_land 0.8)))"""
+        target = hybrid_sampling.habit_target(self.a, self.b, generic, strengths, 0.5)
+        plan = hybrid_sampling.sampling_plan(generic, target)
+        first = hybrid_sampling.sample_subproblems(plan, 19)
+        self.assertEqual(first, hybrid_sampling.sample_subproblems(plan, 19))
+        sampled = hybrid_sampling.materialize_populations(generic, plan, first)
+        self.assertEqual(hybrid_sampling.population_count(sampled), 5)
+        self.assertEqual(hybrid_sampling.individual_counts(sampled), "(10 10 10 10 10)")
+        fused = hybrid_sampling.sample_five_populations(generic, target, 19)
+        self.assertEqual(fused, hybrid_sampling.sample_five_populations(generic, target, 19))
+        self.assertEqual(hybrid_sampling.population_count(fused), 5)
+        self.assertEqual(hybrid_sampling.individual_counts(fused), "(10 10 10 10 10)")
 
 
 class AtomspaceEvidenceTests(unittest.TestCase):

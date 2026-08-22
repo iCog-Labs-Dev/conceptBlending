@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import math
 import os
 import random
 import re
+import time
 from dataclasses import dataclass
 from pathlib import Path
 import sys
@@ -22,6 +24,32 @@ from a_quantale_theoretic_approach.core_representation.sexpr import (  # noqa: E
 
 class HybridInitializationError(ValueError):
     pass
+
+
+_STAGE_STARTED = time.perf_counter()
+_STAGE_LAST = _STAGE_STARTED
+_STAGE_VISITS = {}
+
+
+def stage_log(stage):
+    """Emit bounded progress/timing output for PeTTa's relational lifecycle."""
+    global _STAGE_STARTED, _STAGE_LAST
+    name = str(stage).strip("'\"")
+    now = time.perf_counter()
+    if name == "initialization_started":
+        _STAGE_STARTED = now
+        _STAGE_LAST = now
+        _STAGE_VISITS.clear()
+    count = _STAGE_VISITS.get(name, 0) + 1
+    _STAGE_VISITS[name] = count
+    if count == 1 or count in (10, 100, 1000, 10000):
+        print(
+            f"[HYBRID][STAGE] {name} visit={count} "
+            f"elapsed={now - _STAGE_STARTED:.3f}s delta={now - _STAGE_LAST:.3f}s",
+            flush=True,
+        )
+        _STAGE_LAST = now
+    return True
 
 
 SAFE = re.compile(r"^[a-z_][a-zA-Z0-9_@-]*$")
@@ -94,7 +122,7 @@ def _concept_text(concept):
         for p in concept.properties
     )
     return (f"(Concept {_ma(concept.name)} {_ma(concept.perspective)} "
-            f"(V-predicate (Property {props})))")
+            f"(V-predicate (Property ({props}))))")
 
 
 def _compact(value):
@@ -129,8 +157,12 @@ def _concept(value):
     block = body[1]
     if not isinstance(block, list) or not block or block[0] != "Property":
         raise HybridInitializationError("missing Property block")
+    entries = block[1:]
+    if (len(entries) == 1 and isinstance(entries[0], list)
+            and (not entries[0] or isinstance(entries[0][0], list))):
+        entries = entries[0]
     properties = []
-    for entry in block[1:]:
+    for entry in entries:
         if not isinstance(entry, list) or len(entry) != 3:
             raise HybridInitializationError("property degree must be one scalar")
         world_set = entry[1]
@@ -256,6 +288,7 @@ def _generic_result(value):
     return concept, mappings
 
 
+@functools.lru_cache(maxsize=256)
 def habit_target(source_a, source_b, generic_result, strengths, kappa=0.5):
     """Construct h_i = s_i + kappa M_i (1-s_i), all scalar-valued."""
     left, right = _concept(source_a), _concept(source_b)
@@ -302,6 +335,7 @@ def _covariance(size):
     return f"({' '.join(rows)})"
 
 
+@functools.lru_cache(maxsize=256)
 def sampling_plan(generic_result, target, population_size=10,
                   sigma=0.15, betas="(0 0.25 0.5 0.75 1)"):
     """Describe five fixed CMA distributions without drawing any samples."""
@@ -342,8 +376,67 @@ def _sampling_plan(value):
     return node, schema
 
 
+def _cholesky(matrix):
+    size = len(matrix)
+    lower = [[0.0] * size for _ in range(size)]
+    for row in range(size):
+        for column in range(row + 1):
+            residual = matrix[row][column] - sum(
+                lower[row][k] * lower[column][k] for k in range(column)
+            )
+            if row == column:
+                if residual <= 0:
+                    raise HybridInitializationError("covariance must be positive definite")
+                lower[row][column] = math.sqrt(residual)
+            else:
+                lower[row][column] = residual / lower[column][column]
+    return lower
+
+
+@functools.lru_cache(maxsize=256)
+def sample_subproblems(plan, seed):
+    """Draw exactly one seeded five-by-ten sample batch from a PeTTa plan."""
+    plan_node, schema = _sampling_plan(plan)
+    rng = random.Random(_int(seed, "seed"))
+    sampled = []
+    for subproblem in plan_node[5][1:]:
+        index = _int(subproblem[1], "subproblem index")
+        mean = [_float(value, "mean") for value in subproblem[3][1]]
+        covariance = [
+            [_float(value, "covariance") for value in row]
+            for row in subproblem[4][1]
+        ]
+        step_size = _float(subproblem[5][1], "step size")
+        if len(mean) != len(schema) or len(covariance) != len(schema):
+            raise HybridInitializationError("sampling-plan dimension mismatch")
+        if any(len(row) != len(schema) for row in covariance):
+            raise HybridInitializationError("covariance must be square")
+        lower = _cholesky(covariance)
+        rows = []
+        for _ in range(10):
+            standard = [rng.gauss(0.0, 1.0) for _ in schema]
+            vector = []
+            for coordinate, center in enumerate(mean):
+                noise = sum(
+                    lower[coordinate][k] * standard[k]
+                    for k in range(coordinate + 1)
+                )
+                vector.append(min(0.99, max(0.01, center + step_size * noise)))
+            rows.append(vector)
+        sampled.append(["SampledSubproblem", str(index), rows])
+    return flatten_sexpr(["SampledSubproblems", sampled])
+
+
+@functools.lru_cache(maxsize=256)
+def sample_five_populations(generic_result, target, seed):
+    """Build, draw, and materialize one deterministic five-population batch."""
+    plan = sampling_plan(generic_result, target, 10, 0.15, "(0 0.25 0.5 0.75 1)")
+    sampled = sample_subproblems(plan, seed)
+    return materialize_populations(generic_result, plan, sampled)
+
+
 def materialize_populations(generic_result, plan, sampled_subproblems):
-    """Wrap vectors already drawn by PeTTa random-multivariate."""
+    """Wrap vectors drawn from the PeTTa-authored sampling plan."""
     concept, _ = _generic_result(generic_result)
     plan_node, schema = _sampling_plan(plan)
     root = _one(sampled_subproblems, "SampledSubproblems")
@@ -385,12 +478,12 @@ def materialize_populations(generic_result, plan, sampled_subproblems):
         populations.append(
             f"(SubproblemPopulation {index} {flatten_sexpr(subproblem[2])} "
             f"{flatten_sexpr(subproblem[3])} {flatten_sexpr(subproblem[4])} "
-            f"{flatten_sexpr(subproblem[5])} (Population {' '.join(candidates)}))"
+            f"{flatten_sexpr(subproblem[5])} (Population ({' '.join(candidates)})))"
         )
     return (f"(HabitBiasedPopulationInitialization Ready "
             f"{flatten_sexpr(plan_node[2])} {flatten_sexpr(plan_node[3])} "
             f"{flatten_sexpr(plan_node[4])} (Sampler random-multivariate) "
-            f"(Subproblems {' '.join(populations)}))")
+            f"(Subproblems ({' '.join(populations)})))")
 
 
 def seed_multivariate_stream(seed):
@@ -402,16 +495,28 @@ def seed_multivariate_stream(seed):
 def population_count(value):
     node = _one(value, "HabitBiasedPopulationInitialization")
     block = next(x for x in node if isinstance(x, list) and x and x[0] == "Subproblems")
-    return len(block) - 1
+    subproblems = block[1]
+    if not (len(block) == 2 and isinstance(subproblems, list)
+            and (not subproblems or isinstance(subproblems[0], list))):
+        subproblems = block[1:]
+    return len(subproblems)
 
 
 def individual_counts(value):
     node = _one(value, "HabitBiasedPopulationInitialization")
     block = next(x for x in node if isinstance(x, list) and x and x[0] == "Subproblems")
+    subproblems = block[1]
+    if not (len(block) == 2 and isinstance(subproblems, list)
+            and (not subproblems or isinstance(subproblems[0], list))):
+        subproblems = block[1:]
     counts = []
-    for subproblem in block[1:]:
+    for subproblem in subproblems:
         population = next(x for x in subproblem if isinstance(x, list) and x and x[0] == "Population")
-        counts.append(len(population) - 1)
+        candidates = population[1]
+        if not (len(population) == 2 and isinstance(candidates, list)
+                and (not candidates or isinstance(candidates[0], list))):
+            candidates = population[1:]
+        counts.append(len(candidates))
     return f"({' '.join(map(str, counts))})"
 
 
@@ -435,10 +540,13 @@ def register_petta_builtins():
         "hs_habit_target": habit_target,
         "hs_source_property_names": source_property_names,
         "hs_sampling_plan": sampling_plan,
+        "hs_sample_subproblems": sample_subproblems,
+        "hs_sample_five_populations": sample_five_populations,
         "hs_materialize_populations": materialize_populations,
         "hs_seed_multivariate_stream": seed_multivariate_stream,
         "hs_population_count": population_count,
         "hs_individual_counts": individual_counts,
+        "hs_stage_log": stage_log,
         "habit_load_evidence": importlib.import_module("atomspace_evidence").load_evidence,
     }
     exports["apply_args"] = lambda function, args: function(*args)
