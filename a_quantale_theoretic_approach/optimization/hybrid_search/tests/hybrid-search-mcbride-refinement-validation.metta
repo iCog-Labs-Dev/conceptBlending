@@ -4,9 +4,9 @@
 ;; PeTTa does not re-export nested imports to an importing caller. Load the
 ;; public component rules explicitly, then load the initialization entry point
 ;; to validate that it wires the same refinement stage.
-!(import! &self ../CandidateEvaluation)
-!(import! &self ../HybridSearchMcBrideRefinement)
-!(import! &self ../HybridSearchInitialization)
+!(import! &self ../candidate-evaluation)
+!(import! &self ../hybrid-search-mcbride-refinement)
+!(import! &self ../hybrid-search-initialization)
 
 (= (RefinementSourceA)
    (Concept source_a functional_use

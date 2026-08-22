@@ -1,5 +1,5 @@
 ;; McBride local refinement between current-generation evaluation and Pareto
-;; selection. CandidateEvaluation must be imported before this module.
+;; selection. candidate-evaluation must be imported before this module.
 ;;
 ;; Refinement changes only the candidate blend/vector. The current generation's
 ;; CandidateFitness and FitnessVector atoms are copied verbatim. Reevaluation is
