@@ -1,18 +1,17 @@
 import torch
 import torch.nn.functional as F
-import os
+import os, glob
 import re
 import random
 import argparse
 import numpy as np
 from collections import defaultdict
 from typing import Dict, List, Tuple
-from scipy.stats import spearmanr
+from scipy.stats import spearmanr, rankdata
 from .gnn_truth_value import QuantaleTruthValueGNN
 from .concept_extractor import ConceptEmbedder, build_concept_graph
 
-
-def parse_metta_triples(file_path: str) -> List[Tuple[str, str, float]]:
+def parse_all_metta_triples(data_dir: str) -> List[Tuple[str, str, float]]:
     """
     Parses hasProperty triples from AtomSpace .metta files.
 
@@ -20,36 +19,66 @@ def parse_metta_triples(file_path: str) -> List[Tuple[str, str, float]]:
     property retains a non-trivial truth value. Mapping to 0.0 causes the
     model to collapse to the global mean (flat-predictor problem).
     """
-    if not os.path.exists(file_path):
+    if not os.path.exists(data_dir):
+        print(f"Directory not found: {data_dir}")
+        return []
+    
+    metta_files = glob.glob(os.path.join(data_dir, "*.metta"))
+    if not metta_files:
+        print(f"No .metta files found in {data_dir}")
         return []
 
-    with open(file_path, 'r') as f:
-        content = f.read()
+    weight_pattern = re.compile(r'\(weight \(([^ ]+) (\S+) (\S+)\) ([\d.]+)\)')
+    triple_pattern = re.compile(r'^\(([^ ]+) (\S+) (\S+)\)')
 
-    weight_pattern = r'\(weight \(hasProperty (\S+) (\S+)\) ([\d.]+)\)'
-    weight_lookup = {(c, p): float(w) for c, p, w in re.findall(weight_pattern, content)}
+    weight_pattern = re.compile(r'\(weight \(([^ ]+) (\S+) (\S+)\) ([\d.]+)\)')
+    triple_pattern = re.compile(r'^\(([^ ]+) (\S+) (\S+)\)')
 
-    raw_triples = []
-    for line in content.splitlines():
-        m = re.match(r'^\(hasProperty (\S+) (\S+)\)', line)
-        if m:
-            concept, prop = m.group(1), m.group(2)
-            weight = weight_lookup.get((concept, prop), 1.0)
-            raw_triples.append((concept, prop.replace('_', ' '), weight))
+    raw_triples = []  
 
+    for file_path in metta_files:
+        with open(file_path, 'r') as f:
+            content = f.read()
+
+        # Extracting Weights first
+        weight_lookup = {}
+        for match in weight_pattern.finditer(content):
+            rel, concept, target, w = match.groups()
+            weight_lookup[(rel, concept, target)] = float(w)
+
+        # Extract the relation triples
+        for line in content.splitlines():
+            m = triple_pattern.match(line)
+            if m:
+                rel, concept, target = m.groups()
+                
+                # Combine relation and target (e.g., "IsA animal" or "UsedFor cutting")
+                # This ensures the language model embeds the contextual meaning properly
+                property_string = f"{rel} {target}".replace('_', ' ')
+                
+                weight = weight_lookup.get((rel, concept, target), 1.0)
+                raw_triples.append((concept, property_string, weight))
+    
     if not raw_triples:
         return []
 
     all_weights = [w for _, _, w in raw_triples]
-    w_min, w_max = min(all_weights), max(all_weights)
+    
+    # Rank data from 1 to N (handles ties gracefully)
+    ranks = rankdata(all_weights)
+    max_rank = len(all_weights)
 
-    # Map to [0.1, 1.0]: keeps a semantic floor so 0.0 is never a target
-    triples = [
-        (c, p, 0.1 + 0.9 * (w - w_min) / (w_max - w_min) if w_max > w_min else 0.5)
-        for c, p, w in raw_triples
-    ]
+    # Rank normalization to guarantee the result even spread from 0.1 to 1.0
+    triples = []
+    for (c, p, _), r in zip(raw_triples, ranks):
+        if max_rank > 1:
+            # Scale the rank proportionally across [0.1, 1.0]
+            normalized_w = 0.1 + 0.9 * ((r - 1) / (max_rank - 1))
+        else:
+            normalized_w = 0.5
+        triples.append((c, p, normalized_w))
+        
     return triples
-
 
 def ranking_loss(pred: torch.Tensor, target: torch.Tensor, margin: float = 0.05) -> torch.Tensor:
     """
@@ -70,7 +99,6 @@ def ranking_loss(pred: torch.Tensor, target: torch.Tensor, margin: float = 0.05)
                 count += 1
     return loss / max(count, 1)
 
-
 def evaluate_mse(model: QuantaleTruthValueGNN, graphs: list, device: str) -> float:
     """Returns mean MSE loss on a set of graphs."""
     model.eval()
@@ -84,7 +112,6 @@ def evaluate_mse(model: QuantaleTruthValueGNN, graphs: list, device: str) -> flo
                 losses.append(loss.item())
     model.train()
     return sum(losses) / max(len(losses), 1)
-
 
 def evaluate_spearman(model: QuantaleTruthValueGNN, graphs: list, device: str) -> float:
     """Returns mean Spearman rank correlation on a set of graphs."""
@@ -101,7 +128,6 @@ def evaluate_spearman(model: QuantaleTruthValueGNN, graphs: list, device: str) -
                     correlations.append(corr)
     model.train()
     return sum(correlations) / max(len(correlations), 1)
-
 
 def train_quantale_gnn(
     model: QuantaleTruthValueGNN,
@@ -188,7 +214,6 @@ def train_quantale_gnn(
         model.load_state_dict(best_state)
     return model, loss_history, test_loss_history, rank_history, best_epoch
 
-
 def main():
     parser = argparse.ArgumentParser(
         description="Train Quantale GNN on AtomSpace hasProperty data",
@@ -225,8 +250,8 @@ def main():
         args.data_dir,
         "hasprerequisite-sw-hasproperty-as-hassubevent-bw-isa-ad.metta"
     )
-    triples = parse_metta_triples(prop_file)
-    print(f"Loaded {len(triples)} triples.")
+    triples = parse_all_metta_triples(args.data_dir)
+    print(f"Loaded {len(triples)} triples from all .metta files.")
 
     concept_props = defaultdict(dict)
     for c, p, tv in triples:
@@ -281,7 +306,6 @@ def main():
     torch.save(trained_model.state_dict(), args.output)
     print(f"✓ Weights saved to {args.output}")
 
-
 def bootstrap_training_data(embedder: ConceptEmbedder):
     """Minimal fallback data for smoke-testing without the full AtomSpace dataset."""
     raw_data = [
@@ -290,7 +314,6 @@ def bootstrap_training_data(embedder: ConceptEmbedder):
         ("Fire", {"hot": 0.25, "dangerous": 0.30, "red": 0.28})
     ]
     return [build_concept_graph(c, p, embedder) for c, p in raw_data]
-
 
 if __name__ == "__main__":
     main()
