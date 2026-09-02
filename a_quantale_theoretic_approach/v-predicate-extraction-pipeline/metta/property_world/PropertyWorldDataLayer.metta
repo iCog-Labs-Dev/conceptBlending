@@ -1,5 +1,6 @@
 ;; Evaluate the one-time Python registration without importing llm.metta,
 ;; whose client state is unrelated to this verifier.
+!(import! &self metta/scoring/ConceptPropertyTV)
 (= (property-world-py-eval $str)
     (let $dict (py-call (dict))
         (py-call (quote (eval $str $dict $dict)))))
@@ -473,16 +474,17 @@
             (cdr-atom $worldRefs))))
 
 (= (store-world-specs-and-build-concept-result
-        $concept $requestedPerspective $finalPropertyWorldPairs $uniqueWorldRefs)
+        $concept $requestedPerspective $finalPropertyWorldPairs $uniqueWorldRefs $conceptTV)
     (let* (($_stored
                 (store-world-algebraic-specifications $uniqueWorldRefs))
            ($result
                 (Concept $concept $requestedPerspective
-                    $finalPropertyWorldPairs))
+                    $finalPropertyWorldPairs
+                    (quantale_tv $conceptTV)))
            ($_finished
                 (pipeline-finish
                     success $concept $requestedPerspective $result)))
-        $result))
+        $result))            
 
 (= (build-concept-property-world-specifications-unverified
         $concept $requestedPerspective)
@@ -568,23 +570,21 @@
                 (pipeline-success
                     property_world_pairs_built
                     $concept $requestedPerspective $propertyWorldPairs))
-            ;($_ (println! (propworldpair $propertyWorldPairs)))
             ($finalPropertyWorldPairs (cons Properties $propertyWorldPairs))
-            ;($_ (println! (finalpropworld $finalPropertyWorldPairs)))
            ($worldLists
                 (collect-verified-world-lists
                     $propertyPairs $requestedPerspective))
-            ;($_ (println! (worldlists $worldLists)))
            ($uniqueWorldRefs
                 (filter-unique-possible-worlds $worldLists))
            ($_worldsDeduplicated
                 (pipeline-success
                     worlds_deduplicated
                     $concept $requestedPerspective $uniqueWorldRefs))
-            ;($_ (println! (uniqueworldref $uniqueWorldRefs)))
-            ;($_ (println! (Algspecspacecontent (collapse (get-atoms &algspecspace)))))
+           ($conceptTV
+                (property-pairs-tv $concept $propertyPairs))
                 )
         (store-world-specs-and-build-concept-result
-        $concept $requestedPerspective $finalPropertyWorldPairs $uniqueWorldRefs)
+        $concept $requestedPerspective $finalPropertyWorldPairs $uniqueWorldRefs $conceptTV)
     )
 )
+
