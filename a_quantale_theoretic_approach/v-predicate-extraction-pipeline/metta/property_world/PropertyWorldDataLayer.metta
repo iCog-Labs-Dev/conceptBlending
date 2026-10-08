@@ -1,5 +1,7 @@
 ;; Evaluate the one-time Python registration without importing llm.metta,
 ;; whose client state is unrelated to this verifier.
+!(import! &self metta/scoring/ExtractorV1ScoringLayer)
+!(import! &self metta/scoring/WorldContextTV)
 !(import! &self metta/scoring/ConceptPropertyTV)
 (= (property-world-py-eval $str)
     (let $dict (py-call (dict))
@@ -69,11 +71,8 @@
                         $propertyTv $propertyPerspectiveTv
                         $worldTv)))))
 
-(: scoped-property-rb (-> Atom))
 (= (scoped-property-rb) (scoped-property-query-rule))
-(: scoped-world-rb (-> Atom))
 (= (scoped-world-rb) (scoped-world-query-rule))
-(: global-world-rb (-> Atom))
 (= (global-world-rb) (global-world-query-rule))
 
 (= (clean-property-ref-result
@@ -474,13 +473,12 @@
             (cdr-atom $worldRefs))))
 
 (= (store-world-specs-and-build-concept-result
-        $concept $requestedPerspective $finalPropertyWorldPairs $uniqueWorldRefs $conceptTV)
+        $concept $requestedPerspective $finalPropertyWorldPairs $uniqueWorldRefs)
     (let* (($_stored
                 (store-world-algebraic-specifications $uniqueWorldRefs))
            ($result
                 (Concept $concept $requestedPerspective
-                    $finalPropertyWorldPairs
-                    (quantale_tv $conceptTV)))
+                    $finalPropertyWorldPairs))
            ($_finished
                 (pipeline-finish
                     success $concept $requestedPerspective $result)))
@@ -570,7 +568,12 @@
                 (pipeline-success
                     property_world_pairs_built
                     $concept $requestedPerspective $propertyWorldPairs))
-            ($finalPropertyWorldPairs (cons Properties $propertyWorldPairs))
+            ($conceptTV
+                (property-pairs-tv $concept $propertyPairs))
+           ($evaluatedPairs
+                (attach-tv-to-pairs $concept $propertyWorldPairs $conceptTV))
+           ($finalPropertyWorldPairs
+                (cons-atom Properties (cons-atom $evaluatedPairs ())))
            ($worldLists
                 (collect-verified-world-lists
                     $propertyPairs $requestedPerspective))
@@ -580,11 +583,9 @@
                 (pipeline-success
                     worlds_deduplicated
                     $concept $requestedPerspective $uniqueWorldRefs))
-           ($conceptTV
-                (property-pairs-tv $concept $propertyPairs))
+
                 )
         (store-world-specs-and-build-concept-result
-        $concept $requestedPerspective $finalPropertyWorldPairs $uniqueWorldRefs $conceptTV)
+        $concept $requestedPerspective $finalPropertyWorldPairs $uniqueWorldRefs)
     )
 )
-
