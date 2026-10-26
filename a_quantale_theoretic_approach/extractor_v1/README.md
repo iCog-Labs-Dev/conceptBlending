@@ -49,13 +49,13 @@ pip install torch torch_geometric sentence-transformers
 ## Run the sample dataset to test
 
 ```bash
-python -m extractor.light_weight_extractor.sample_usage
+python -m extractor_v1.sample_usage
 ```
 
 ## Single triple
 
 ```python
-from extractor.light_weight_extractor.engine import ScoreEngine
+from extractor_v1.engine import ScoreEngine
 
 engine = ScoreEngine()
 score = engine.query("fire", "hasProperty", "hot")
