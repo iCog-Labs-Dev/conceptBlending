@@ -31,9 +31,9 @@ def run_demo():
     test_concepts = ["Art", "Dice", "Fire"]
     
     concept_properties = {
-        "Art": ["beautiful", "subjective", "abstract", "philosophical"],
-        "Dice": ["cube", "small", "hard", "numbered"],
-        "Fire": ["hot", "dangerous", "bright", "red"]
+        "Art": ["IsA abstract", "HasProperty beautiful", "RelatedTo philosophical", "HasProperty subjective"],
+        "Dice": ["IsA cube", "HasProperty small", "HasProperty hard", "HasProperty numbered"],
+        "Fire": ["HasProperty hot", "Causes dangerous", "HasProperty bright", "HasProperty red"]
     }
     
     universal_axioms = {
