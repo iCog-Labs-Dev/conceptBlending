@@ -1,0 +1,7 @@
+torch
+torch-geometric
+sentence-transformers
+openai
+requests
+pytest
+

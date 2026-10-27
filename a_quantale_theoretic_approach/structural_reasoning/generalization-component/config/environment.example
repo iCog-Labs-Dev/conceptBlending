@@ -1,0 +1,22 @@
+# Persistent generic-space and pair-LCG cache.
+GENERALIZATION_CACHE_MODE=on
+# GENERALIZATION_CACHE_PATH=/absolute/path/to/generalization_cache.jsonl
+GENERALIZATION_CACHE_TRACE=0
+
+# LLM repair is attempted only for pairs unresolved by cache, synthesis, and KB.
+GENERALIZATION_LLM_MODE=verify
+GENERALIZATION_LLM_FAILURE_POLICY=error
+GENERALIZATION_LLM_MAX_ATTEMPTS=3
+GENERALIZATION_LLM_MODEL=gpt-5.4
+GENERALIZATION_LLM_MAX_TOKENS=1200
+# OPENAI_API_KEY=
+
+# Strict by default. Set to omit only for an intentionally partial result.
+GENERALIZATION_UNRESOLVED_POLICY=error
+
+# Structured logging. These names and values match the V-predicate pipeline.
+PIPELINE_LOG_MODE=on
+PIPELINE_LOG_VERBOSITY=default
+# PIPELINE_LOG_PATH=/absolute/path/to/integrated-events.jsonl
+PIPELINE_LOG_STDERR=1
+PIPELINE_LOG_MAX_DETAIL_CHARS=2000

@@ -2,6 +2,9 @@ import requests
 import networkx as nx
 import matplotlib.pyplot as plt
 import os
+import time
+from .wordnet_adapter import get_wordnet_edges
+
 CONCEPTNET_API = "https://api.conceptnet.io/query"
 
 # List of 13 desired ConceptNet relationships
@@ -10,7 +13,6 @@ DESIRED_RELATIONS = {
     "AtLocation", "Causes", "HasSubevent", "HasFirstSubevent",
     "HasLastSubevent", "HasProperty", "Desires", "MadeOf", "RelatedTo"
 }
-
 def get_conceptnet_edges(concept, limit=100):
     """
     Fetches ConceptNet edges for a given concept term, including the weight (if available).
@@ -113,3 +115,17 @@ def visualize_conceptnet_graph(edges, concept, export_path=None):
         print(f"✅ PNG graph saved to: {export_path}")
     else:
         plt.show()
+
+def get_conceptnet_edges(concept, limit=100):
+    normalized = concept.lower().strip('"').replace(" ", "_")
+    url = f"{CONCEPTNET_API}?node=/c/en/{normalized}&limit={limit}"
+    response = None
+    for attempt in range(3):
+        response = requests.get(url)
+        if response.status_code == 200:
+            break
+        time.sleep(3)
+
+    if response is None or response.status_code != 200:
+        print(f"   [conceptnet_adapter] ConceptNet unavailable, falling back to WordNet for '{concept}'")
+        return get_wordnet_edges(concept, limit=limit)

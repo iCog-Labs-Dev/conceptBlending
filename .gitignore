@@ -1,5 +1,8 @@
 # Python virtual environment
 .venv/
+habit_memory/.python_deps/
+habit_memory/.cache/
+/venv/
 
 # Coverage data
 .coverage
@@ -12,3 +15,7 @@ __pycache__/
 a_naive_approch/.env
 an_infotheoretic_approach/.env
 an_infotheoretic_approach/.venv/
+a_quantale_theoretic_approach/v-predicate-extraction-pipeline/kb/
+a_quantale_theoretic_approach/v-predicate-extraction-pipeline/kb.tar.gz
+a_quantale_theoretic_approach/structural_reasoning/generalization-component/kb/*
+!a_quantale_theoretic_approach/structural_reasoning/generalization-component/kb/lcg_kb.metta
