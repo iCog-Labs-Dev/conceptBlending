@@ -317,7 +317,7 @@ class GeneOntologyAdapter(BaseSourceAdapter):
             facts.append(
                 MettaFact(
                     fact_type=FactType.HAS_AXIOM,
-                    expression=f"(has_axiom {edge_id} {record.concept} {record.perspective} {axiom_name} (implies {record.concept} {record.property_or_target}))",
+                    expression=f"(has_axiom {edge_id} {record.concept} {record.perspective} (axiom {axiom_name} (implies {record.concept} {record.property_or_target})))",
                     stv=stv,
                 )
             )
@@ -347,12 +347,11 @@ class GeneOntologyAdapter(BaseSourceAdapter):
             )
         )
 
-        # 2. Perspective Match assertion
-        pm_edge = _edge_id("pm_go", record.perspective)
+        # 2. Perspective Match assertion (arity 3 matching MeTTa rule contracts)
         facts.append(
             MettaFact(
                 fact_type=FactType.PERSPECTIVE_MATCH,
-                expression=f"(perspective_match {pm_edge} {record.perspective} {record.perspective} exact-perspective)",
+                expression=f"(perspective_match {record.perspective} {record.perspective} exact-perspective)",
                 stv=(1.0, 1.0),
             )
         )

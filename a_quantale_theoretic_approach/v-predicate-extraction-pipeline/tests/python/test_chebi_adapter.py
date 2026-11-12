@@ -103,6 +103,14 @@ class TestChebiAdapter:
         assert FactType.SCOPED_PROPERTY_HOLDS_IN in pw_types
         assert FactType.PERSPECTIVE_MATCH in pw_types
 
+        # Verify perspective_match has exact arity 3 matching MeTTa rule contracts
+        pm_facts = [f for f in all_pw if f.fact_type == FactType.PERSPECTIVE_MATCH]
+        assert len(pm_facts) > 0
+        for pm in pm_facts:
+            tokens = pm.expression.strip("()").split()
+            assert tokens[0] == "perspective_match"
+            assert len(tokens) == 4  # head + 3 arguments: (perspective_match req eff class)
+
         # Check that chemical entities serve as possible worlds
         holds_in = [f for f in all_pw if f.fact_type == FactType.SCOPED_PROPERTY_HOLDS_IN]
         assert len(holds_in) > 0

@@ -370,12 +370,11 @@ class WordNetAdapter(BaseSourceAdapter):
             )
         )
 
-        # 2. Perspective Match assertion
-        match_edge = _edge_id("pm", record.perspective)
+        # 2. Perspective Match assertion (arity 3 matching MeTTa rule contracts)
         facts.append(
             MettaFact(
                 fact_type=FactType.PERSPECTIVE_MATCH,
-                expression=f"(perspective_match {match_edge} {record.perspective} {record.perspective} exact-perspective)",
+                expression=f"(perspective_match {record.perspective} {record.perspective} exact-perspective)",
                 stv=(1.0, 1.0),
             )
         )

@@ -58,3 +58,4 @@ id: CHEBI:99999
 name: obsolete chemical entity
 def: "OBSOLETE: placeholder obsolete term for testing obsolete filtering." [PMID:9999]
 is_obsolete: true
+
