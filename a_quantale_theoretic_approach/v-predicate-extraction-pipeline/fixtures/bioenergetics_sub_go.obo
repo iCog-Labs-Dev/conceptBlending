@@ -1,0 +1,59 @@
+format-version: 1.2
+data-version: releases/2026-11-01
+ontology: go/subsets/bioenergetics
+
+[Term]
+id: GO:0015986
+name: ATP synthesis coupled proton transport
+namespace: biological_process
+def: "The process in which ATP is synthesized from ADP and inorganic phosphate using energy derived from a transmembrane proton electrochemical gradient." [GOC:ai, PMID:11875084]
+is_a: GO:0006119 ! oxidative phosphorylation
+relationship: part_of GO:0006119 ! oxidative phosphorylation
+
+[Term]
+id: GO:0046933
+name: proton-transporting ATP synthase activity, rotational mechanism
+namespace: molecular_function
+def: "Catalysis of the synthesis of ATP from ADP and phosphate, driven by a proton gradient across a membrane, utilizing a rotary catalytic mechanism." [PMID:10521334]
+is_a: GO:0015078 ! proton transmembrane transporter activity
+
+[Term]
+id: GO:0015078
+name: proton transmembrane transporter activity
+namespace: molecular_function
+def: "Enables the transfer of a proton from one side of a membrane to the other." [GOC:ai]
+
+[Term]
+id: GO:0005743
+name: mitochondrial inner membrane
+namespace: cellular_component
+def: "The inner of the two lipid bilayer membranes that enclose a mitochondrion." [PMID:11875084]
+is_a: GO:0031966 ! mitochondrial membrane
+
+[Term]
+id: GO:0045261
+name: proton-transporting ATP synthase complex, catalytic core F1
+namespace: cellular_component
+def: "A subcomplex of the ATP synthase that catalyzes ATP synthesis or hydrolysis." [PMID:10521334]
+relationship: part_of GO:0005743 ! mitochondrial inner membrane
+
+[Term]
+id: GO:0045263
+name: proton-transporting ATP synthase complex, coupling factor F0
+namespace: cellular_component
+def: "A membrane-embedded subcomplex of the ATP synthase that provides the proton translocation pathway." [PMID:10521334]
+relationship: part_of GO:0005743 ! mitochondrial inner membrane
+
+[Term]
+id: GO:0006119
+name: oxidative phosphorylation
+namespace: biological_process
+def: "The phosphorylation of ADP to ATP coupled to the transfer of electrons from a donor to an acceptor along an electron transport chain." [PMID:11875084]
+
+[Term]
+id: GO:0000002
+name: obsolete mitochondrial genome maintenance
+namespace: biological_process
+def: "OBSOLETE. The maintenance of the mitochondrial genome." [GOC:ai]
+is_obsolete: true
+
