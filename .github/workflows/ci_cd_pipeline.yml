@@ -30,6 +30,9 @@ jobs:
       run: |
         python3 -m venv /opt/venv
         echo "/opt/venv/bin" >> $GITHUB_PATH
+        echo "VIRTUAL_ENV=/opt/venv" >> $GITHUB_ENV
+        SITE_PKGS=$(/opt/venv/bin/python3 -c "import site; print(':'.join(site.getsitepackages()))")
+        echo "PYTHONPATH=$SITE_PKGS:$GITHUB_WORKSPACE/peTTa_version:$GITHUB_WORKSPACE/peTTa_version/libs/agents:$GITHUB_WORKSPACE/peTTa_version/op-constraints" >> $GITHUB_ENV
 
     # -----------------------------
     # Install System Dependencies
@@ -87,6 +90,8 @@ jobs:
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        VIRTUAL_ENV: /opt/venv
+        PYTHONPATH: /opt/venv/lib/python3.10/site-packages:peTTa_version:peTTa_version/libs/agents:peTTa_version/op-constraints
       run: |
         cd peTTa_version
         python3 scripts/run-tests.py
