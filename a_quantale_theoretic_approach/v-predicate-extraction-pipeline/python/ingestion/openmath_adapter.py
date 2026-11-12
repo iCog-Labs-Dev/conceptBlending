@@ -34,6 +34,22 @@ def _omobj_to_metta(elem: ET.Element) -> str:
             return _omobj_to_metta(elem[0])
         return "()"
 
+    if tag == "OMBIND":
+        # Binding structure: child 0 is binder (e.g. forall), child 1 is OMBVAR, child 2 is body
+        if len(elem) >= 3:
+            binder = _omobj_to_metta(elem[0])
+            bvar_elem = elem[1]
+            vars_list = [_omobj_to_metta(v) for v in bvar_elem]
+            body = _omobj_to_metta(elem[2])
+            return f"({binder} ({' '.join(vars_list)}) {body})"
+        elif len(elem) >= 1:
+            return _omobj_to_metta(elem[-1])
+        return "()"
+
+    if tag == "OMBVAR":
+        vars_list = [_omobj_to_metta(v) for v in elem]
+        return f"({' '.join(vars_list)})"
+
     if tag == "OMA":
         if not len(elem):
             return "()"
@@ -72,6 +88,7 @@ class OpenMathAdapter(BaseSourceAdapter):
     """Adapter for parsing OpenMath 2.0 Content Dictionaries and emitting CASL & Property-World facts."""
 
     def __init__(self, ocd_path: Optional[Path] = None) -> None:
+        self._formula_cache: Dict[str, str] = {}
         if ocd_path is not None:
             self.ocd_path = Path(ocd_path)
         else:
@@ -177,9 +194,11 @@ class OpenMathAdapter(BaseSourceAdapter):
             }
             if fmp_formula:
                 meta["formula"] = fmp_formula
+                self._formula_cache[name] = fmp_formula
+                self._formula_cache[safe_metta_symbol(name)] = fmp_formula
 
             # 1. Structural/Taxonomic sort (constructors or carrier types)
-            if role == "constructor" or name in {"group", "abelian_group"}:
+            if role == "constructor" or name in {"group", "abelian_group", "carrier", "element"}:
                 yield RawRecord(
                     source_id=f"om_sort_{name}",
                     concept_name=concept,
@@ -311,18 +330,20 @@ class OpenMathAdapter(BaseSourceAdapter):
                 )
             )
         elif record.perspective == "structural-composition" and record.relation == "satisfiesAxiom":
-            # Map canonical equational formulas
             raw_target = record.property_or_target
-            if "associative" in raw_target:
-                formula = f"(= (* (* $a $b) $c) (* $a (* $b $c)))"
-            elif "abelian" in raw_target:
-                formula = f"(= (* $a $b) (* $b $a))"
-            elif "identity" in raw_target:
-                formula = f"(= (* $x identity) $x)"
-            elif "inverse" in raw_target:
-                formula = f"(= (* $x (inv $x)) identity)"
-            else:
-                formula = f"(= ({raw_target} $x) $x)"
+            # Prefer extracted FMP formula from OpenMath XML if available
+            formula = self._formula_cache.get(raw_target)
+            if not formula:
+                if "associative" in raw_target:
+                    formula = "(= (* (* $a $b) $c) (* $a (* $b $c)))"
+                elif "abelian" in raw_target:
+                    formula = "(= (* $a $b) (* $b $a))"
+                elif "identity" in raw_target:
+                    formula = "(= (* $x identity) $x)"
+                elif "inverse" in raw_target:
+                    formula = "(= (* $x (inv $x)) identity)"
+                else:
+                    formula = f"(= ({raw_target} $x) $x)"
 
             axiom_name = f"ax_{raw_target}"
             facts.append(
@@ -387,6 +408,8 @@ class OpenMathAdapter(BaseSourceAdapter):
             "integers_under_addition",
             "abelian_group",
             "cyclic_group_z_n",
+            "rotation_group_so2",
+            "permutation_group_s_n",
         ]
         for idx, world in enumerate(candidate_worlds):
             w_edge = _edge_id("world_om", prop_id, world, str(idx))
@@ -399,3 +422,4 @@ class OpenMathAdapter(BaseSourceAdapter):
             )
 
         return facts
+

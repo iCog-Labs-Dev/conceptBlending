@@ -20,6 +20,13 @@
 </CDDefinition>
 
 <CDDefinition>
+<Name>carrier</Name>
+<Role>constructor</Role>
+<Description>The carrier set of elements belonging to the algebraic group.</Description>
+<CMP>A group has an underlying carrier set G of elements.</CMP>
+</CDDefinition>
+
+<CDDefinition>
 <Name>operation</Name>
 <Role>application</Role>
 <Description>The binary group multiplication operation.</Description>
@@ -133,3 +140,4 @@
 </CDDefinition>
 
 </CD>
+
