@@ -5,6 +5,7 @@ from __future__ import annotations
 from .base_adapter import BaseSourceAdapter
 from .chebi_adapter import ChebiAdapter
 from .go_adapter import GeneOntologyAdapter
+from .openmath_adapter import OpenMathAdapter
 from .models import (
     FactType,
     IngestionProvenance,
@@ -27,6 +28,7 @@ __all__ = [
     "MettaFact",
     "MettaFileSink",
     "NormalizedRecord",
+    "OpenMathAdapter",
     "PathMapSink",
     "RawRecord",
     "WordNetAdapter",
