@@ -49,7 +49,7 @@ jobs:
     - name: Install PeTTa in Editable Mode
       run: |
         cd PeTTa
-        CFLAGS="-Wno-error=incompatible-pointer-types" python3 -m pip install --break-system-packages -e .
+        CFLAGS="-Wno-error=incompatible-pointer-types" python3 -m pip install -e .
 
     # -----------------------------
     # Install ConceptBlending Dependencies
@@ -57,7 +57,7 @@ jobs:
     - name: Install Python Dependencies
       run: |
         cd peTTa_version
-        python3 -m pip install --break-system-packages -r requirements.txt
+        python3 -m pip install -r requirements.txt
 
     # -----------------------------
     # Create .env File
