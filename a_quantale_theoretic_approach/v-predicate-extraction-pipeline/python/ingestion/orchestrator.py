@@ -71,7 +71,6 @@ class MultiSourceOrchestrator:
         )
 
         pathmap_sinks = [s for s in self.sinks if isinstance(s, PathMapSink)]
-        other_sinks = [s for s in self.sinks if not isinstance(s, (MettaFileSink, PathMapSink))]
 
         total_raw = 0
         total_normalized = 0
@@ -118,8 +117,8 @@ class MultiSourceOrchestrator:
                         if casl_sink.write_fact(fact):
                             src_casl += 1
                             total_casl += 1
-                        for o_sink in other_sinks:
-                            o_sink.write_fact(fact)
+                        for s in self.sinks:
+                            s.write_fact(fact)
 
                 # Transform & route Property-World facts
                 for fact in adapter.transform_to_property_world(norm):
@@ -128,8 +127,8 @@ class MultiSourceOrchestrator:
                         if pw_sink.write_fact(fact):
                             src_pw += 1
                             total_pw += 1
-                        for o_sink in other_sinks:
-                            o_sink.write_fact(fact)
+                        for s in self.sinks:
+                            s.write_fact(fact)
 
             source_summaries[src] = {
                 "raw_records": src_raw,

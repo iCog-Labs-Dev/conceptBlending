@@ -53,17 +53,22 @@ class TestIngestionOrchestrator:
             output_dir=output_dir,
         )
         casl_kb = output_dir / "AlgebraicSpecificationKB.metta"
-        lines_pass1 = casl_kb.read_text(encoding="utf-8").splitlines()
+        pw_kb = output_dir / "PropertyWorldKB.metta"
+        casl_pass1 = casl_kb.read_text(encoding="utf-8").splitlines()
+        pw_pass1 = pw_kb.read_text(encoding="utf-8").splitlines()
 
         summary2 = orchestrator.run_ingestion(
             sources=[KnowledgeSource.WORDNET],
             limit_per_source=5,
             output_dir=output_dir,
         )
-        lines_pass2 = casl_kb.read_text(encoding="utf-8").splitlines()
+        casl_pass2 = casl_kb.read_text(encoding="utf-8").splitlines()
+        pw_pass2 = pw_kb.read_text(encoding="utf-8").splitlines()
 
-        assert len(lines_pass1) == len(lines_pass2)
-        assert len(lines_pass2) == len(set(lines_pass2))
+        assert len(casl_pass1) == len(casl_pass2)
+        assert len(casl_pass2) == len(set(casl_pass2))
+        assert len(pw_pass1) == len(pw_pass2)
+        assert len(pw_pass2) == len(set(pw_pass2))
 
     def test_metta_syntax_and_balance(self, tmp_path: Path):
         output_dir = tmp_path / "balance_test"

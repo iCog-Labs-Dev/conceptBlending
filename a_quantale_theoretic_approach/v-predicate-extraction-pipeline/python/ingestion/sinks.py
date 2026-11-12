@@ -5,7 +5,7 @@ from __future__ import annotations
 import fcntl
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Set
 
 from .models import FactType, MettaFact, NormalizedRecord
 
@@ -28,7 +28,7 @@ class MettaFileSink(BaseSink):
     def __init__(self, target_path: Path) -> None:
         self.target_path = Path(target_path)
         self.target_path.parent.mkdir(parents=True, exist_ok=True)
-        self._seen_keys: Set[Tuple[FactType, str]] = set()
+        self._seen_keys: Set[str] = set()
         self._buffer: List[str] = []
         self._load_existing_keys()
 
@@ -44,16 +44,15 @@ class MettaFileSink(BaseSink):
                         # Extract the expression up to the trailing (stv ...)
                         parts = line.rsplit("(stv", 1)
                         expr = parts[0].strip()
-                        self._seen_keys.add((FactType.HAS_SORT, expr))  # Generic key match
+                        self._seen_keys.add(expr)
         except Exception:
             pass
 
     def write_fact(self, fact: MettaFact) -> bool:
-        key = (fact.fact_type, fact.expression)
-        if key in self._seen_keys:
+        if fact.expression in self._seen_keys:
             return False
 
-        self._seen_keys.add(key)
+        self._seen_keys.add(fact.expression)
         self._buffer.append(fact.to_metta_line())
         return True
 
