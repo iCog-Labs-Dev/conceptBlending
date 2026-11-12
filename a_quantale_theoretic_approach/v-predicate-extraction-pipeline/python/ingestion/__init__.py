@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .base_adapter import BaseSourceAdapter
+from .chebi_adapter import ChebiAdapter
 from .go_adapter import GeneOntologyAdapter
 from .models import (
     FactType,
@@ -18,6 +19,7 @@ from .wordnet_adapter import WordNetAdapter, safe_metta_symbol
 __all__ = [
     "BaseSink",
     "BaseSourceAdapter",
+    "ChebiAdapter",
     "FactType",
     "GeneOntologyAdapter",
     "IngestionProvenance",
