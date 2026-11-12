@@ -336,11 +336,11 @@ class WordNetAdapter(BaseSourceAdapter):
                     stv=stv,
                 )
             )
-            sig_edge = _edge_id("sig", record.concept, op_name)
+            # operation_signature shares the same edge_id as has_operation for MeTTa spec-operation-rule unification
             facts.append(
                 MettaFact(
                     fact_type=FactType.OPERATION_SIGNATURE,
-                    expression=f"(operation_signature {sig_edge} {record.concept} {op_name} ({record.concept}) {op_name}_result)",
+                    expression=f"(operation_signature {edge_id} (-> ({record.concept}) {op_name}_result))",
                     stv=stv,
                 )
             )

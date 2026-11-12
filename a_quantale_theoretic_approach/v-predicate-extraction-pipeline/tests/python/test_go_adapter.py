@@ -78,6 +78,30 @@ class TestGeneOntologyAdapter(unittest.TestCase):
             self.assertEqual(line.count("("), line.count(")"))
             self.assertTrue(line.startswith("(") and line.endswith(")"))
 
+        # Verify operation_signature shares the same edge ID as has_operation for MeTTa unification
+        op_facts = {f.expression.split()[1]: f for f in all_casl if f.fact_type == FactType.HAS_OPERATION}
+        sig_facts = {f.expression.split()[1]: f for f in all_casl if f.fact_type == FactType.OPERATION_SIGNATURE}
+        self.assertGreater(len(op_facts), 0)
+        self.assertEqual(set(op_facts.keys()), set(sig_facts.keys()), "Operation and signature must share edge_id")
+
+    def test_modifier_and_alt_id_parsing(self):
+        obo_text = [
+            "[Term]\n",
+            "id: GO:9999001\n",
+            "name: test proton transport\n",
+            "namespace: biological_process\n",
+            "alt_id: GO:9999002\n",
+            "is_a: GO:0015986 {is_inferred=\"true\"} ! comment\n",
+            "relationship: part_of GO:0005743 {cardinality=\"1\"} ! comment\n",
+        ]
+        parsed = list(self.adapter.parse_obo(obo_text))
+        self.assertEqual(len(parsed), 1)
+        term = parsed[0]
+        self.assertEqual(term["id"], "GO:9999001")
+        self.assertIn("GO:9999002", term["alt_ids"])
+        self.assertIn("GO:0015986", term["is_a"])
+        self.assertEqual(term["relationships"], [("part_of", "GO:0005743")])
+
     def test_transform_to_property_world_facts(self):
         raw_records = list(self.adapter.extract_raw_records())
         all_pw = []

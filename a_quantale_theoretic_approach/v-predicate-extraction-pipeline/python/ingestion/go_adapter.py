@@ -127,14 +127,18 @@ class GeneOntologyAdapter(BaseSourceAdapter):
                 elif tag == "is_obsolete":
                     current_term["is_obsolete"] = val.lower() in {"true", "1"}
                 elif tag == "alt_id":
-                    current_term["alt_ids"].append(val)
+                    clean_alt = val.split("!")[0].strip()
+                    if clean_alt:
+                        current_term["alt_ids"].append(clean_alt)
                 elif tag == "is_a":
-                    # Format: is_a: GO:XXXXXXX ! comment
-                    target_id = val.split("!")[0].strip()
-                    current_term["is_a"].append(target_id)
+                    # Format: is_a: GO:XXXXXXX {qualifier} ! comment
+                    clean_val = re.sub(r"\{.*?\}", "", val).split("!")[0].strip()
+                    if clean_val:
+                        current_term["is_a"].append(clean_val)
                 elif tag == "relationship":
-                    # Format: relationship: part_of GO:XXXXXXX ! comment
-                    parts = val.split()
+                    # Format: relationship: part_of GO:XXXXXXX {qualifier} ! comment
+                    clean_val = re.sub(r"\{.*?\}", "", val).split("!")[0].strip()
+                    parts = clean_val.split()
                     if len(parts) >= 2:
                         rel_type = parts[0].strip()
                         target_id = parts[1].strip()
@@ -145,9 +149,13 @@ class GeneOntologyAdapter(BaseSourceAdapter):
                 yield current_term
 
     def extract_raw_records(self, limit: Optional[int] = None) -> Iterator[RawRecord]:
-        """Stream raw records from parsed OBO terms."""
+        """Stream raw records from parsed OBO terms with primary and alt_id resolution."""
         terms = list(self.parse_obo(self.obo_path))
-        id_to_term: Dict[str, Dict[str, Any]] = {t["id"]: t for t in terms}
+        id_to_term: Dict[str, Dict[str, Any]] = {}
+        for t in terms:
+            id_to_term[t["id"]] = t
+            for alt in t.get("alt_ids", []):
+                id_to_term[alt] = t
 
         # Find default cellular components to serve as possible worlds
         cellular_worlds = [
@@ -288,11 +296,11 @@ class GeneOntologyAdapter(BaseSourceAdapter):
                     stv=stv,
                 )
             )
-            sig_edge = _edge_id("sig_go", record.concept, op_name)
+            # operation_signature shares the same edge_id as has_operation for MeTTa spec-operation-rule unification
             facts.append(
                 MettaFact(
                     fact_type=FactType.OPERATION_SIGNATURE,
-                    expression=f"(operation_signature {sig_edge} {record.concept} {op_name} ({record.concept}) {op_name}_result)",
+                    expression=f"(operation_signature {edge_id} (-> ({record.concept}) {op_name}_result))",
                     stv=stv,
                 )
             )
