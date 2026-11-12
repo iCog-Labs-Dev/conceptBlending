@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout Repository
@@ -49,7 +49,7 @@ jobs:
     - name: Install PeTTa in Editable Mode
       run: |
         cd PeTTa
-        python3 -m pip install --break-system-packages -e .
+        CFLAGS="-Wno-error=incompatible-pointer-types" python3 -m pip install --break-system-packages -e .
 
     # -----------------------------
     # Install ConceptBlending Dependencies
