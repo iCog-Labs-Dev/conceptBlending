@@ -19,7 +19,7 @@ OFFLINE_MOCKS = {
     "gpt_network_selector": "gpt_double_scope",
     "gpt_simplex": "(Simplex (c1 c2 c3) expand (e1 e2))",
     "gpt_single_scope": "(SingleScope (c1 c2 c3) expand (e1 e2))",
-    "gpt_double_scope": "(DoubleScope (c1 c2 c3) expand (e1 e2))",
+    "gpt_double_scope": "(doubleScope (c1 c2 c3) houseboat (e1 e2))",
     "gpt_mirror": "(Mirror (c1 c2 c3) expand (e1 e2))",
     "gpt_vector_extraction": "((Concept bat@mammal (Property (p1 1.0) (p2 1.0) (p3 1.0) (p4 1.0) (p5 1.0) (p6 1.0) (p7 1.0) (p8 1.0))) (Concept man@human (Property (p1 1.0) (p2 1.0) (p3 1.0) (p4 1.0) (p5 1.0) (p6 1.0) (p7 1.0) (p8 1.0))))",
     "gpt_vital_relation": "((vr1 vr2) (vr3 vr4))",
