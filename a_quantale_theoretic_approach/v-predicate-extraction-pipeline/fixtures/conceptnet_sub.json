@@ -1,0 +1,112 @@
+{
+  "source": "conceptnet",
+  "version": "5.7.0",
+  "license": "CC-BY-SA-4.0",
+  "edges": [
+    {
+      "start": "computer",
+      "relation": "/r/IsA",
+      "end": "machine",
+      "weight": 3.46,
+      "surfaceText": "computer is a type of machine"
+    },
+    {
+      "start": "computer",
+      "relation": "/r/UsedFor",
+      "end": "compute",
+      "weight": 2.82,
+      "surfaceText": "computer is used for compute"
+    },
+    {
+      "start": "computer",
+      "relation": "/r/CapableOf",
+      "end": "process_information",
+      "weight": 2.0,
+      "surfaceText": "computer can process information"
+    },
+    {
+      "start": "computer",
+      "relation": "/r/AtLocation",
+      "end": "office",
+      "weight": 1.5,
+      "surfaceText": "computer is found at office"
+    },
+    {
+      "start": "computer",
+      "relation": "/r/HasProperty",
+      "end": "electronic",
+      "weight": 2.5,
+      "surfaceText": "computer is electronic"
+    },
+    {
+      "start": "phenol",
+      "relation": "/r/IsA",
+      "end": "chemical_compound",
+      "weight": 3.0,
+      "surfaceText": "phenol is a chemical compound"
+    },
+    {
+      "start": "phenol",
+      "relation": "/r/UsedFor",
+      "end": "antiseptic",
+      "weight": 2.5,
+      "surfaceText": "phenol is used as an antiseptic"
+    },
+    {
+      "start": "molecule",
+      "relation": "/r/IsA",
+      "end": "particle",
+      "weight": 2.2,
+      "surfaceText": "molecule is a particle"
+    },
+    {
+      "start": "molecule",
+      "relation": "/r/HasProperty",
+      "end": "microscopic",
+      "weight": 2.0,
+      "surfaceText": "molecule is microscopic"
+    },
+    {
+      "start": "calculator",
+      "relation": "/r/IsA",
+      "end": "electronic_device",
+      "weight": 2.8,
+      "surfaceText": "calculator is an electronic device"
+    },
+    {
+      "start": "calculator",
+      "relation": "/r/UsedFor",
+      "end": "calculate",
+      "weight": 3.0,
+      "surfaceText": "calculator is used to calculate"
+    },
+    {
+      "start": "processor",
+      "relation": "/r/PartOf",
+      "end": "computer",
+      "weight": 2.0,
+      "surfaceText": "processor is part of computer"
+    },
+    {
+      "start": "network",
+      "relation": "/r/IsA",
+      "end": "system",
+      "weight": 2.5,
+      "surfaceText": "network is a system"
+    },
+    {
+      "start": "energy",
+      "relation": "/r/HasProperty",
+      "end": "conserved",
+      "weight": 2.8,
+      "surfaceText": "energy is conserved"
+    },
+    {
+      "start": "short_circuit",
+      "relation": "/r/Causes",
+      "end": "power_outage",
+      "weight": 1.8,
+      "surfaceText": "short circuit causes power outage"
+    }
+  ]
+}

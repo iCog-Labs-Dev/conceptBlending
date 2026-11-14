@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .base_adapter import BaseSourceAdapter
 from .chebi_adapter import ChebiAdapter
+from .conceptnet_adapter import ConceptNetAdapter
 from .go_adapter import GeneOntologyAdapter
 from .openmath_adapter import OpenMathAdapter
 from .models import (
@@ -22,6 +23,7 @@ __all__ = [
     "BaseSink",
     "BaseSourceAdapter",
     "ChebiAdapter",
+    "ConceptNetAdapter",
     "FactType",
     "GeneOntologyAdapter",
     "IngestionProvenance",

@@ -1,44 +1,43 @@
-"""Abstract base adapter for knowledge source ingestion."""
+"""Abstract base adapter for knowledge source ingestion under v-predicate/1."""
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Iterator, List, Optional
+from typing import Iterator, Optional, Any
 
-from .models import IngestionProvenance, KnowledgeSource, MettaFact, NormalizedRecord, RawRecord
+from v_predicate_contract import FactRecord
 
 
 class BaseSourceAdapter(ABC):
     """Abstract contract for knowledge source adapters in the ingestion pipeline."""
 
     @property
-    @abstractmethod
-    def source_type(self) -> KnowledgeSource:
+    def source_type(self) -> Any:
         """The specific external knowledge repository handled by this adapter."""
+        return getattr(self, "_source_type", None)
 
     @property
-    @abstractmethod
-    def provenance(self) -> IngestionProvenance:
+    def provenance(self) -> Any:
         """Default provenance descriptor for records produced by this adapter."""
+        return getattr(self, "_provenance", None)
 
     @abstractmethod
     def fetch(self, download: bool = False, cache_dir: Optional[Path] = None) -> Path:
         """Locate or retrieve the raw ontology file, utilizing local cache when available."""
 
-    @abstractmethod
-    def extract_raw_records(self, limit: Optional[int] = None) -> Iterator[RawRecord]:
-        """Stream raw records from the underlying knowledge source."""
+    def stream_facts(self, limit: Optional[int] = None) -> Iterator[FactRecord]:
+        """Stream canonical typed V-predicate fact records.
 
-    @abstractmethod
-    def normalize_record(self, record: RawRecord) -> Optional[NormalizedRecord]:
-        """Convert a raw record into canonical MeTTa symbols and a validated perspective."""
+        Subclasses adopting v-predicate/1 should override this method to yield FactRecord
+        instances directly.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not implement canonical stream_facts() yet."
+        )
 
-    @abstractmethod
-    def transform_to_casl(self, record: NormalizedRecord) -> List[MettaFact]:
-        """Generate CASL Algebraic Specification facts from a normalized record."""
-
-    @abstractmethod
-    def transform_to_property_world(self, record: NormalizedRecord) -> List[MettaFact]:
-        """Generate Property-to-Possible-World mapping facts from a normalized record."""
-
+    def extract_raw_records(self, limit: Optional[int] = None) -> Iterator[Any]:
+        """Stream raw records from the underlying knowledge source (legacy interface)."""
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not implement extract_raw_records()."
+        )
