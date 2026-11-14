@@ -1,20 +1,39 @@
 import os
-from openai import OpenAI
-from google import genai
-from google.genai import types
-from dotenv import load_dotenv
 
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
 
-# Load environment variables
-load_dotenv()
+try:
+    from google import genai
+    from google.genai import types
+except ImportError:
+    genai = None
+    types = None
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 class ChatGPTAgent():
 
     def __init__(self, model="gpt-4o"):
         self._model = model
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
+        if not api_key or api_key in {"YOUR_OPENAI_API_KEY_HERE", "None"} or OpenAI is None:
+            self.client = None
+        else:
+            try:
+                self.client = OpenAI(api_key=api_key)
+            except Exception:
+                self.client = None
 
     def __call__(self, messages, functions=[]):
+        if self.client is None:
+            raise RuntimeError("OPENAI_API_KEY is not configured or OpenAI client is unavailable.")
         if functions == []:
             response = self.client.chat.completions.create(model=self._model,
                 messages=messages,
