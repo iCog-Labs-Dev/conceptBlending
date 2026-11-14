@@ -1,141 +1,160 @@
-#!/usr/bin/env python3
-"""Tests for Gene Ontology OBO adapter, tri-namespace routing, and CASL/Property-World transformations."""
+"""Unit tests for Gene Ontology (GO) source adapter under canonical v-predicate/1 contract."""
 
 from __future__ import annotations
 
-import unittest
 from pathlib import Path
+import unittest
 
 from ingestion.go_adapter import GeneOntologyAdapter
-from ingestion.models import FactType, KnowledgeSource, NormalizedRecord, RawRecord
+from v_predicate_contract import (
+    CONTRACT_VERSION,
+    FactKind,
+    FactOrigin,
+    Perspective,
+    PredicateFact,
+    PropertyFact,
+    PropertyWorldFact,
+    SortFact,
+    render_document,
+    validate_record_set,
+)
+
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]
 
 
 class TestGeneOntologyAdapter(unittest.TestCase):
-    def setUp(self):
-        self.fixture_path = (
-            Path(__file__).resolve().parents[2] / "fixtures" / "bioenergetics_sub_go.obo"
-        )
+    def setUp(self) -> None:
+        self.fixture_path = PIPELINE_ROOT / "fixtures" / "bioenergetics_sub_go.obo"
         self.adapter = GeneOntologyAdapter(obo_path=self.fixture_path)
 
-    def test_source_type(self):
-        self.assertEqual(self.adapter.source_type, KnowledgeSource.GENE_ONTOLOGY)
+    def test_adapter_metadata_and_dynamic_version(self) -> None:
+        self.assertEqual(self.adapter.source_name, "gene_ontology")
+        self.assertEqual(self.adapter.license, "CC-BY-4.0")
+        # Dynamic version extracted from OBO header 'data-version: releases/2026-11-01'
+        self.assertEqual(self.adapter.version, "releases/2026-11-01")
+        self.assertIn("geneontology.org", self.adapter.source_uri)
 
-    def test_obo_parsing_and_obsolete_purging(self):
-        # The fixture contains 8 terms total: 7 active and 1 obsolete (GO:0000002)
+    def test_obo_parsing_and_obsolete_purging(self) -> None:
+        # Fixture has 8 terms total: 7 active and 1 obsolete (GO:0000002)
         terms = list(self.adapter.parse_obo(self.fixture_path))
         self.assertEqual(len(terms), 7, "Obsolete terms must be strictly purged")
 
         term_ids = {t["id"] for t in terms}
-        self.assertNotIn("GO:0000002", term_ids, "GO:0000002 has is_obsolete: true and must not be present")
+        self.assertNotIn("GO:0000002", term_ids, "GO:0000002 has is_obsolete: true and must be filtered")
         self.assertIn("GO:0015986", term_ids)
         self.assertIn("GO:0046933", term_ids)
         self.assertIn("GO:0005743", term_ids)
 
-        # Inspect fields of ATP synthesis term
         atp_term = next(t for t in terms if t["id"] == "GO:0015986")
         self.assertEqual(atp_term["name"], "ATP synthesis coupled proton transport")
         self.assertEqual(atp_term["namespace"], "biological_process")
-        self.assertIn("GO:0006119", atp_term["is_a"])
-        self.assertTrue(any(rel[0] == "part_of" for rel in atp_term["relationships"]))
 
-    def test_tri_namespace_perspective_mapping(self):
-        raw_records = list(self.adapter.extract_raw_records())
-        self.assertGreater(len(raw_records), 0)
+    def test_stream_facts_generator_and_bounded_memory(self) -> None:
+        stream = self.adapter.stream_facts()
+        self.assertTrue(hasattr(stream, "__iter__"))
+        self.assertTrue(hasattr(stream, "__next__"))
+        first_fact = next(stream)
+        self.assertIsNotNone(first_fact)
+        self.assertTrue(hasattr(first_fact, "evidence_id"))
 
-        normalized = [self.adapter.normalize_record(r) for r in raw_records]
-        valid_norm = [n for n in normalized if n is not None]
-        self.assertGreater(len(valid_norm), 0)
+    def test_stream_facts_honors_limit(self) -> None:
+        stream = self.adapter.stream_facts(limit=4)
+        facts = list(stream)
+        self.assertEqual(len(facts), 4)
 
-        perspectives = {n.perspective for n in valid_norm}
-        # Must map to the three distinct canonical namespaces/perspectives
-        self.assertIn("structural-composition", perspectives)
-        self.assertIn("functional-use", perspectives)
-        self.assertIn("behavioral-process", perspectives)
+    def test_canonical_snake_case_perspectives(self) -> None:
+        facts = list(self.adapter.stream_facts(limit=50))
+        for f in facts:
+            self.assertIsInstance(f.perspective, Perspective)
+            self.assertNotIn("-", f.perspective.value)
+            self.assertIn(
+                f.perspective,
+                {
+                    Perspective.TAXONOMIC_KIND,
+                    Perspective.STRUCTURAL_COMPOSITION,
+                    Perspective.FUNCTIONAL_USE,
+                    Perspective.BEHAVIORAL_PROCESS,
+                    Perspective.CAUSAL_PREREQUISITE,
+                    Perspective.SPATIAL_CONTEXT,
+                    Perspective.DESCRIPTIVE_PROPERTY,
+                },
+            )
 
-        for n in valid_norm:
-            self.assertGreaterEqual(n.strength, 0.0)
-            self.assertLessEqual(n.strength, 1.0)
-            self.assertGreaterEqual(n.confidence, 0.0)
-            self.assertLessEqual(n.confidence, 1.0)
+    def test_relational_mappings_and_fact_kinds(self) -> None:
+        facts = list(self.adapter.stream_facts())
+        kinds = {f.kind for f in facts}
+        self.assertIn(FactKind.SORT, kinds)
+        self.assertIn(FactKind.PREDICATE, kinds)
+        self.assertIn(FactKind.PROPERTY, kinds)
+        self.assertIn(FactKind.PROPERTY_WORLD, kinds)
 
-    def test_transform_to_casl_facts(self):
-        raw_records = list(self.adapter.extract_raw_records())
-        all_casl = []
-        for r in raw_records:
-            norm = self.adapter.normalize_record(r)
-            if norm:
-                all_casl.extend(self.adapter.transform_to_casl(norm))
+        # 1. is_a -> SortFact (taxonomic_kind)
+        sort_facts = [f for f in facts if isinstance(f, SortFact)]
+        self.assertTrue(
+            any(
+                f.concept == "atp_synthesis_coupled_proton_transport"
+                and f.sort == "oxidative_phosphorylation"
+                for f in sort_facts
+            )
+        )
 
-        self.assertGreater(len(all_casl), 0)
-        types = {f.fact_type for f in all_casl}
-        self.assertIn(FactType.HAS_SORT, types)
-        self.assertIn(FactType.HAS_OPERATION, types)
-        self.assertIn(FactType.OPERATION_SIGNATURE, types)
-        self.assertIn(FactType.HAS_PREDICATE, types)
+        # 2. part_of -> PredicateFact (structural_composition)
+        pred_facts = [f for f in facts if isinstance(f, PredicateFact)]
+        part_of_facts = [f for f in pred_facts if f.perspective == Perspective.STRUCTURAL_COMPOSITION]
+        self.assertTrue(any("part_of" in f.predicate for f in part_of_facts))
 
-        for fact in all_casl:
-            line = fact.to_metta_line()
-            self.assertEqual(line.count("("), line.count(")"))
-            self.assertTrue(line.startswith("(") and line.endswith(")"))
+    def test_cellular_components_as_possible_worlds(self) -> None:
+        facts = list(self.adapter.stream_facts())
+        world_facts = [f for f in facts if isinstance(f, PropertyWorldFact)]
+        self.assertGreater(len(world_facts), 0)
 
-        # Verify operation_signature shares the same edge ID as has_operation for MeTTa unification
-        op_facts = {f.expression.split()[1]: f for f in all_casl if f.fact_type == FactType.HAS_OPERATION}
-        sig_facts = {f.expression.split()[1]: f for f in all_casl if f.fact_type == FactType.OPERATION_SIGNATURE}
-        self.assertGreater(len(op_facts), 0)
-        self.assertEqual(set(op_facts.keys()), set(sig_facts.keys()), "Operation and signature must share edge_id")
+        # Spatial context perspective
+        for wf in world_facts:
+            self.assertEqual(wf.perspective, Perspective.SPATIAL_CONTEXT)
+            self.assertEqual(wf.provenance.origin, FactOrigin.ASSERTED)
 
-    def test_modifier_and_alt_id_parsing(self):
-        obo_text = [
-            "[Term]\n",
-            "id: GO:9999001\n",
-            "name: test proton transport\n",
-            "namespace: biological_process\n",
-            "alt_id: GO:9999002\n",
-            "is_a: GO:0015986 {is_inferred=\"true\"} ! comment\n",
-            "relationship: part_of GO:0005743 {cardinality=\"1\"} ! comment\n",
-        ]
-        parsed = list(self.adapter.parse_obo(obo_text))
-        self.assertEqual(len(parsed), 1)
-        term = parsed[0]
-        self.assertEqual(term["id"], "GO:9999001")
-        self.assertIn("GO:9999002", term["alt_ids"])
-        self.assertIn("GO:0015986", term["is_a"])
-        self.assertEqual(term["relationships"], [("part_of", "GO:0005743")])
+        # Mitochondrial inner membrane should be present as a possible world
+        worlds = {wf.world for wf in world_facts}
+        self.assertIn("mitochondrial_inner_membrane", worlds)
 
-    def test_transform_to_property_world_facts(self):
-        raw_records = list(self.adapter.extract_raw_records())
-        all_pw = []
-        for r in raw_records:
-            norm = self.adapter.normalize_record(r)
-            if norm:
-                all_pw.extend(self.adapter.transform_to_property_world(norm))
+    def test_contract_validation_passes(self) -> None:
+        facts = list(self.adapter.stream_facts())
+        self.assertGreater(len(facts), 0)
+        # validate_record_set passes cleanly without raising ContractValidationError
+        validate_record_set(facts)
 
-        self.assertGreater(len(all_pw), 0)
-        types = {f.fact_type for f in all_pw}
-        self.assertIn(FactType.HAS_SCOPED_PROPERTY, types)
-        self.assertIn(FactType.SCOPED_PROPERTY_HOLDS_IN, types)
-        self.assertIn(FactType.PERSPECTIVE_MATCH, types)
+    def test_canonical_metta_document_rendering(self) -> None:
+        facts = list(self.adapter.stream_facts())
+        doc = render_document(facts)
+        self.assertIn(f"; V-predicate contract: {CONTRACT_VERSION}", doc)
+        self.assertIn("≞", doc)
+        self.assertIn("stv", doc)
+        self.assertIn("evidence_provenance", doc)
+        self.assertEqual(doc.count("("), doc.count(")"))
 
-        for fact in all_pw:
-            line = fact.to_metta_line()
-            self.assertEqual(line.count("("), line.count(")"))
+    def test_offline_determinism(self) -> None:
+        path = self.adapter.fetch(download=False)
+        self.assertTrue(path.exists())
+        self.assertEqual(path.resolve(), self.fixture_path.resolve())
 
-    def test_offline_determinism(self):
-        # Fetching without download flag must return the local fixture
-        fetched_path = self.adapter.fetch(download=False)
-        self.assertTrue(fetched_path.exists())
-        self.assertEqual(fetched_path.resolve(), self.fixture_path.resolve())
+        run1 = [f.to_metta() for f in self.adapter.stream_facts()]
+        run2 = [f.to_metta() for f in self.adapter.stream_facts()]
+        self.assertEqual(run1, run2, "stream_facts() must be 100% deterministic across reruns")
 
-        # Repeated extractions must produce identical counts
-        run1 = [n.to_metta_line() for r in self.adapter.extract_raw_records()
-                for n in [self.adapter.normalize_record(r)] if n
-                for n in self.adapter.transform_to_casl(n)]
-        run2 = [n.to_metta_line() for r in self.adapter.extract_raw_records()
-                for n in [self.adapter.normalize_record(r)] if n
-                for n in self.adapter.transform_to_casl(n)]
-        self.assertEqual(run1, run2, "Extraction must be deterministic across runs")
+    def test_dynamic_header_version_fallback(self) -> None:
+        sample_obo = (
+            "format-version: 1.2\n"
+            "date: 14:11:2026 12:00\n"
+            "ontology: test_ont\n"
+            "\n"
+            "[Term]\n"
+            "id: TEST:001\n"
+            "name: test item\n"
+        )
+        lines = sample_obo.splitlines(keepends=True)
+        meta = self.adapter._extract_obo_header(lines)
+        self.assertEqual(meta.get("date"), "14:11:2026 12:00")
 
 
 if __name__ == "__main__":
     unittest.main()
-

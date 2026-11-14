@@ -3,31 +3,86 @@
 from __future__ import annotations
 
 import hashlib
-import re
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+import re
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Union
 
 from .base_adapter import BaseSourceAdapter
 from .models import FactType, IngestionProvenance, KnowledgeSource, MettaFact, NormalizedRecord, RawRecord
 from .wordnet_adapter import safe_metta_symbol
+from v_predicate_contract import (
+    FactKind,
+    FactOrigin,
+    FactRecord,
+    Perspective,
+    PredicateFact,
+    PropertyFact,
+    PropertyWorldFact,
+    Provenance,
+    SortFact,
+    TruthValue,
+    stable_evidence_id,
+)
+
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _edge_id(prefix: str, *parts: str) -> str:
-    """Generate a deterministic, short edge identifier."""
+    """Generate a deterministic, short edge identifier for legacy CASL facts."""
     content = "_".join(str(p) for p in parts)
     digest = hashlib.sha256(content.encode("utf-8")).hexdigest()[:8]
     return f"{prefix}_{digest}"
 
 
 class ChebiAdapter(BaseSourceAdapter):
-    """Adapter for parsing OBO 1.4 formatted ChEBI and emitting CASL & Property-World facts."""
+    """Adapter for parsing OBO 1.4 formatted ChEBI and emitting canonical v-predicate/1 facts."""
 
-    def __init__(self, obo_path: Optional[Path] = None) -> None:
+    def __init__(
+        self,
+        obo_path: Optional[Path] = None,
+        cache_dir: Optional[Path] = None,
+    ) -> None:
         if obo_path is not None:
-            self.obo_path = Path(obo_path)
+            self.obo_path = Path(obo_path).resolve()
         else:
-            base_dir = Path(__file__).resolve().parents[2]
-            self.obo_path = base_dir / "fixtures" / "phenol_sub_chebi.obo"
+            self.obo_path = (PIPELINE_ROOT / "fixtures" / "phenol_sub_chebi.obo").resolve()
+
+        if cache_dir is not None:
+            self.cache_dir = Path(cache_dir).resolve()
+        else:
+            self.cache_dir = (PIPELINE_ROOT / "data" / "cache" / "chebi").resolve()
+
+        self.source_name = "chebi"
+        self.license = "CC-BY-4.0"
+        self.source_uri = "https://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi_lite.obo"
+        self.transformation = "chebi_adapter_v1"
+        self.version = self._get_file_version(self.obo_path)
+
+    @staticmethod
+    def _extract_obo_header(lines: Union[Iterator[str], Iterable[str]]) -> Dict[str, str]:
+        """Extract header key-value pairs before any stanza marker."""
+        header: Dict[str, str] = {}
+        for line in lines:
+            line = line.strip()
+            if not line or line.startswith("!"):
+                continue
+            if line.startswith("[") and line.endswith("]"):
+                break
+            if ":" in line:
+                k, v = line.split(":", 1)
+                header[k.strip().lower()] = v.strip()
+        return header
+
+    def _get_file_version(self, path: Path) -> str:
+        """Derive dynamic version from OBO data-version or date header."""
+        if not path.exists():
+            return "unknown"
+        try:
+            with path.open("r", encoding="utf-8", errors="replace") as f:
+                header = self._extract_obo_header(f)
+                return header.get("data-version") or header.get("date") or "unknown"
+        except Exception:
+            return "unknown"
 
     @property
     def source_type(self) -> KnowledgeSource:
@@ -37,29 +92,30 @@ class ChebiAdapter(BaseSourceAdapter):
     def provenance(self) -> IngestionProvenance:
         return IngestionProvenance(
             source=KnowledgeSource.CHEBI,
-            source_uri_or_path="https://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi_lite.obo",
-            source_version="2026-11",
-            license="CC-BY-4.0",
+            source_uri_or_path=self.source_uri,
+            source_version=self.version,
+            license=self.license,
         )
 
     def fetch(self, download: bool = False, cache_dir: Optional[Path] = None) -> Path:
-        cache = cache_dir or Path("kb/raw_sources")
+        cache = cache_dir.resolve() if cache_dir else self.cache_dir
         cached_file = cache / "chebi_lite.obo"
 
         if cached_file.exists():
+            self.version = self._get_file_version(cached_file)
             return cached_file
 
         if download:
             cache.mkdir(parents=True, exist_ok=True)
             import urllib.request
 
-            url = "https://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi_lite.obo"
             req = urllib.request.Request(
-                url, headers={"User-Agent": "conceptBlending/1.0 (Linux x86_64)"}
+                self.source_uri, headers={"User-Agent": "conceptBlending/1.0 (Linux x86_64)"}
             )
             with urllib.request.urlopen(req) as resp, cached_file.open("wb") as out:
                 while chunk := resp.read(65536):
                     out.write(chunk)
+            self.version = self._get_file_version(cached_file)
             return cached_file
 
         return self.obo_path
@@ -92,7 +148,9 @@ class ChebiAdapter(BaseSourceAdapter):
                     "name": "",
                     "def": "",
                     "is_a": [],
+                    "is_a_details": [],
                     "relationships": [],
+                    "relationship_details": [],
                     "is_obsolete": False,
                     "alt_ids": [],
                 }
@@ -126,35 +184,206 @@ class ChebiAdapter(BaseSourceAdapter):
                     if clean_alt:
                         current_term["alt_ids"].append(clean_alt)
                 elif tag == "is_a":
-                    clean_val = re.sub(r"\{.*?\}", "", val).split("!")[0].strip()
-                    if clean_val:
-                        current_term["is_a"].append(clean_val)
+                    if "!" in val:
+                        val_part, comment_part = val.split("!", 1)
+                        target_name = comment_part.strip()
+                    else:
+                        val_part = val
+                        target_name = ""
+                    target_id = re.sub(r"\{.*?\}", "", val_part).strip()
+                    if not target_name:
+                        target_name = target_id
+                    if target_id:
+                        current_term["is_a"].append(target_id)
+                        current_term["is_a_details"].append((target_id, target_name))
                 elif tag == "relationship":
-                    clean_val = re.sub(r"\{.*?\}", "", val).split("!")[0].strip()
-                    parts = clean_val.split()
+                    if "!" in val:
+                        val_part, comment_part = val.split("!", 1)
+                        target_name = comment_part.strip()
+                    else:
+                        val_part = val
+                        target_name = ""
+                    clean_rel = re.sub(r"\{.*?\}", "", val_part).strip()
+                    parts = clean_rel.split()
                     if len(parts) >= 2:
                         rel_type = parts[0].strip()
                         target_id = parts[1].strip()
+                        if not target_name:
+                            target_name = target_id
                         current_term["relationships"].append((rel_type, target_id))
+                        current_term["relationship_details"].append((rel_type, target_id, target_name))
 
         if in_term and current_term.get("id"):
             if not current_term.get("is_obsolete", False):
                 yield current_term
 
-    def extract_raw_records(self, limit: Optional[int] = None) -> Iterator[RawRecord]:
-        """Stream raw records from parsed ChEBI terms with primary and alt_id resolution."""
-        terms = list(self.parse_obo(self.obo_path))
-        id_to_term: Dict[str, Dict[str, Any]] = {}
-        for t in terms:
-            id_to_term[t["id"]] = t
-            for alt in t.get("alt_ids", []):
-                id_to_term[alt] = t
+    def stream_facts(self, limit: Optional[int] = None) -> Iterator[FactRecord]:
+        """Stream canonical typed V-predicate fact records under v-predicate/1 in bounded memory."""
+        resolved_path = self.fetch(download=False)
+        version = self._get_file_version(resolved_path)
+        emitted = 0
 
-        # Chemical solvent/medium worlds
+        for term in self.parse_obo(resolved_path):
+            concept = safe_metta_symbol(term["name"]).lower()
+            if not concept or concept == "c_empty":
+                continue
+            term_id = term["id"]
+
+            # 1. is_a -> SortFact (taxonomic_kind)
+            for parent_id, parent_name in term.get("is_a_details", []):
+                parent_sym = safe_metta_symbol(parent_name).lower()
+                if not parent_sym or parent_sym == "c_empty":
+                    continue
+                edge_id = stable_evidence_id("sort", "chebi", concept, parent_sym)
+                prov = Provenance(
+                    source="chebi",
+                    source_record_id=f"{term_id}_is_a_{parent_id}",
+                    source_uri=self.source_uri,
+                    source_version=version,
+                    license=self.license,
+                    transformation=self.transformation,
+                    origin=FactOrigin.ASSERTED,
+                )
+                yield SortFact(
+                    evidence_id=edge_id,
+                    edge_id=edge_id,
+                    concept=concept,
+                    perspective=Perspective.TAXONOMIC_KIND,
+                    sort=parent_sym,
+                    truth=TruthValue(0.95, 0.95),
+                    provenance=prov,
+                )
+                emitted += 1
+                if limit is not None and emitted >= limit:
+                    return
+
+            # 2. Chemical relationships (has_part, has_role, is_conjugate_acid_of)
+            for rel_type, target_id, target_name in term.get("relationship_details", []):
+                target_sym = safe_metta_symbol(target_name).lower()
+                if not target_sym or target_sym == "c_empty":
+                    continue
+
+                prov = Provenance(
+                    source="chebi",
+                    source_record_id=f"{term_id}_{rel_type}_{target_id}",
+                    source_uri=self.source_uri,
+                    source_version=version,
+                    license=self.license,
+                    transformation=self.transformation,
+                    origin=FactOrigin.ASSERTED,
+                )
+
+                if rel_type == "has_part":
+                    persp = Perspective.STRUCTURAL_COMPOSITION
+                    predicate_expr = f"(has_part {concept} {target_sym})"
+                    edge_id = stable_evidence_id("predicate", "chebi", concept, "has_part", target_sym)
+                    yield PredicateFact(
+                        evidence_id=edge_id,
+                        edge_id=edge_id,
+                        concept=concept,
+                        perspective=persp,
+                        predicate=predicate_expr,
+                        truth=TruthValue(0.95, 0.95),
+                        provenance=prov,
+                    )
+                elif rel_type == "has_role":
+                    persp = Perspective.FUNCTIONAL_USE
+                    predicate_expr = f"(has_role {concept} {target_sym})"
+                    edge_id = stable_evidence_id("predicate", "chebi", concept, "has_role", target_sym)
+                    yield PredicateFact(
+                        evidence_id=edge_id,
+                        edge_id=edge_id,
+                        concept=concept,
+                        perspective=persp,
+                        predicate=predicate_expr,
+                        truth=TruthValue(0.90, 0.95),
+                        provenance=prov,
+                    )
+                elif rel_type in {"is_conjugate_acid_of", "is_conjugate_base_of"}:
+                    persp = Perspective.STATE_LIFECYCLE
+                    rel_sym = safe_metta_symbol(rel_type).lower()
+                    predicate_expr = f"({rel_sym} {concept} {target_sym})"
+                    edge_id = stable_evidence_id("predicate", "chebi", concept, rel_sym, target_sym)
+                    yield PredicateFact(
+                        evidence_id=edge_id,
+                        edge_id=edge_id,
+                        concept=concept,
+                        perspective=persp,
+                        predicate=predicate_expr,
+                        truth=TruthValue(0.90, 0.95),
+                        provenance=prov,
+                    )
+                else:
+                    persp = Perspective.DESCRIPTIVE_PROPERTY
+                    rel_sym = safe_metta_symbol(rel_type).lower()
+                    predicate_expr = f"({rel_sym} {concept} {target_sym})"
+                    edge_id = stable_evidence_id("predicate", "chebi", concept, rel_sym, target_sym)
+                    yield PredicateFact(
+                        evidence_id=edge_id,
+                        edge_id=edge_id,
+                        concept=concept,
+                        perspective=persp,
+                        predicate=predicate_expr,
+                        truth=TruthValue(0.85, 0.85),
+                        provenance=prov,
+                    )
+
+                emitted += 1
+                if limit is not None and emitted >= limit:
+                    return
+
+            # 3. Possible Worlds for chemical states / solvation environments
+            prop_id = f"prop_{concept}_chemical_state"
+            p_edge = stable_evidence_id("property", "chebi", concept, prop_id)
+            prov_prop = Provenance(
+                source="chebi",
+                source_record_id=f"{term_id}_state",
+                source_uri=self.source_uri,
+                source_version=version,
+                license=self.license,
+                transformation=self.transformation,
+                origin=FactOrigin.ASSERTED,
+            )
+            yield PropertyFact(
+                evidence_id=p_edge,
+                edge_id=p_edge,
+                concept=concept,
+                perspective=Perspective.STATE_LIFECYCLE,
+                property_id=prop_id,
+                property_name="chemical_state",
+                truth=TruthValue(0.90, 0.90),
+                provenance=prov_prop,
+            )
+            emitted += 1
+            if limit is not None and emitted >= limit:
+                return
+
+            candidate_worlds = ["aqueous_solution", "water", "organic_phase"]
+            for world in candidate_worlds:
+                w_edge = stable_evidence_id("world", "chebi", prop_id, world)
+                yield PropertyWorldFact(
+                    evidence_id=w_edge,
+                    edge_id=w_edge,
+                    property_id=prop_id,
+                    perspective=Perspective.STATE_LIFECYCLE,
+                    world=world,
+                    truth=TruthValue(0.85, 0.90),
+                    provenance=prov_prop,
+                )
+                emitted += 1
+                if limit is not None and emitted >= limit:
+                    return
+
+    # -------------------------------------------------------------------------
+    # Legacy interfaces for backward compatibility with orchestrator / sinks
+    # -------------------------------------------------------------------------
+    def extract_raw_records(self, limit: Optional[int] = None) -> Iterator[RawRecord]:
+        """Stream raw records lazily term-by-term in bounded memory."""
+        resolved_path = self.fetch(download=False)
         chemical_worlds = ["water", "aqueous_solution", "organic_phase", "lipid_bilayer"]
 
         count = 0
-        for term in terms:
+        for term in self.parse_obo(resolved_path):
             concept = term["name"]
             meta = {
                 "chebi_id": term["id"],
@@ -162,10 +391,7 @@ class ChebiAdapter(BaseSourceAdapter):
                 "worlds": chemical_worlds,
             }
 
-            # 1. is_a taxonomic relations
-            for parent_id in term.get("is_a", []):
-                parent_term = id_to_term.get(parent_id)
-                parent_name = parent_term["name"] if parent_term else parent_id
+            for parent_id, parent_name in term.get("is_a_details", []):
                 yield RawRecord(
                     source_id=f"{term['id']}_is_a_{parent_id}",
                     concept_name=concept,
@@ -179,10 +405,7 @@ class ChebiAdapter(BaseSourceAdapter):
                 if limit and count >= limit:
                     return
 
-            # 2. explicit relationship edges (has_part, has_role, is_conjugate_acid_of)
-            for rel_type, target_id in term.get("relationships", []):
-                target_term = id_to_term.get(target_id)
-                target_name = target_term["name"] if target_term else target_id
+            for rel_type, target_id, target_name in term.get("relationship_details", []):
                 yield RawRecord(
                     source_id=f"{term['id']}_{rel_type}_{target_id}",
                     concept_name=concept,
@@ -205,7 +428,6 @@ class ChebiAdapter(BaseSourceAdapter):
 
         relation = record.relation
 
-        # Chemical relationship routing
         if relation == "is_a":
             perspective = "taxonomic-kind"
             canonical_rel = "isA"
@@ -286,7 +508,6 @@ class ChebiAdapter(BaseSourceAdapter):
                     stv=stv,
                 )
             )
-            # Equational axiom representing reversible dissociation
             axiom_name = f"ax_dissociation_{record.concept}"
             facts.append(
                 MettaFact(
@@ -312,7 +533,6 @@ class ChebiAdapter(BaseSourceAdapter):
         prop_id = f"prop_{record.concept}_{record.property_or_target}"
         edge_id = _edge_id("pw_chebi", record.concept, record.perspective, prop_id)
 
-        # 1. Concept-Property assertion
         facts.append(
             MettaFact(
                 fact_type=FactType.HAS_SCOPED_PROPERTY,
@@ -320,8 +540,6 @@ class ChebiAdapter(BaseSourceAdapter):
                 stv=stv,
             )
         )
-
-        # 2. Perspective Match assertion (arity 3 matching MeTTa rule contracts)
         facts.append(
             MettaFact(
                 fact_type=FactType.PERSPECTIVE_MATCH,
@@ -330,7 +548,6 @@ class ChebiAdapter(BaseSourceAdapter):
             )
         )
 
-        # 3. Possible Worlds assertions (chemical solvents / environments)
         chemical_worlds = [
             "water",
             "aqueous_solution",
@@ -347,4 +564,3 @@ class ChebiAdapter(BaseSourceAdapter):
             )
 
         return facts
-
