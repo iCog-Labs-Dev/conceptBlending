@@ -10,6 +10,25 @@ from typing import Any, Dict, Iterator, List, Optional, Union
 
 from .base_adapter import BaseSourceAdapter
 from .models import FactType, IngestionProvenance, KnowledgeSource, MettaFact, NormalizedRecord, RawRecord
+from v_predicate_contract import (
+    AxiomFact,
+    FactKind,
+    FactOrigin,
+    FactRecord,
+    OperationFact,
+    OperationSignatureFact,
+    Perspective,
+    PredicateFact,
+    PredicateSignatureFact,
+    PropertyFact,
+    PropertyWorldFact,
+    Provenance,
+    SortFact,
+    TruthValue,
+    stable_evidence_id,
+)
+
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]
 from .wordnet_adapter import safe_metta_symbol
 
 
@@ -87,13 +106,25 @@ def _omobj_to_metta(elem: ET.Element) -> str:
 class OpenMathAdapter(BaseSourceAdapter):
     """Adapter for parsing OpenMath 2.0 Content Dictionaries and emitting CASL & Property-World facts."""
 
-    def __init__(self, ocd_path: Optional[Path] = None) -> None:
+    def __init__(
+        self,
+        ocd_path: Optional[Path] = None,
+        cache_dir: Optional[Path] = None,
+    ) -> None:
         self._formula_cache: Dict[str, str] = {}
         if ocd_path is not None:
-            self.ocd_path = Path(ocd_path)
+            self.ocd_path = Path(ocd_path).resolve()
         else:
-            base_dir = Path(__file__).resolve().parents[2]
-            self.ocd_path = base_dir / "fixtures" / "group_theory_sub_openmath.ocd"
+            self.ocd_path = (PIPELINE_ROOT / "fixtures" / "group_theory_sub_openmath.ocd").resolve()
+        self.cache_dir = (
+            cache_dir.resolve()
+            if cache_dir
+            else (PIPELINE_ROOT / "data" / "cache" / "openmath").resolve()
+        )
+        self.source_version = "2.0"
+        self.license = "OpenMath-2.0"
+        self.source_uri = "https://www.openmath.org/cd/group1.ocd"
+        self.transformation = "openmath_adapter_v1"
 
     @property
     def source_type(self) -> KnowledgeSource:
@@ -103,32 +134,216 @@ class OpenMathAdapter(BaseSourceAdapter):
     def provenance(self) -> IngestionProvenance:
         return IngestionProvenance(
             source=KnowledgeSource.OPENMATH,
-            source_uri_or_path="https://www.openmath.org/cd/group1.ocd",
-            source_version="2026-11",
-            license="OpenMath-2.0",
+            source_uri_or_path=self.source_uri,
+            source_version=self.source_version,
+            license=self.license,
         )
 
     def fetch(self, download: bool = False, cache_dir: Optional[Path] = None) -> Path:
-        cache = cache_dir or Path("kb/raw_sources")
-        cached_file = cache / "group1.ocd"
+        target_dir = cache_dir.resolve() if cache_dir else self.cache_dir
+        cached_file = target_dir / "group1.ocd"
 
         if cached_file.exists():
             return cached_file
 
         if download:
-            cache.mkdir(parents=True, exist_ok=True)
+            target_dir.mkdir(parents=True, exist_ok=True)
             import urllib.request
 
-            url = "https://www.openmath.org/cd/group1.ocd"
             req = urllib.request.Request(
-                url, headers={"User-Agent": "conceptBlending/1.0 (Linux x86_64)"}
+                self.source_uri, headers={"User-Agent": "conceptBlending/1.0 (Linux x86_64)"}
             )
-            with urllib.request.urlopen(req) as resp, cached_file.open("wb") as out:
-                while chunk := resp.read(65536):
-                    out.write(chunk)
-            return cached_file
+            tmp_file = target_dir / "group1.ocd.tmp"
+            try:
+                with urllib.request.urlopen(req, timeout=15) as resp, tmp_file.open("wb") as out:
+                    while chunk := resp.read(65536):
+                        out.write(chunk)
+                tmp_file.replace(cached_file)
+                return cached_file
+            except Exception:
+                if tmp_file.exists():
+                    tmp_file.unlink()
 
         return self.ocd_path
+
+    def stream_facts(self, limit: Optional[int] = None) -> Iterator[FactRecord]:
+        """Stream canonical typed V-predicate fact records under v-predicate/1."""
+        source_path = self.fetch(download=False)
+        definitions = list(self.parse_ocd(source_path))
+        emitted_count = 0
+        concept = "group"
+
+        candidate_worlds = [
+            "integers_under_addition",
+            "abelian_group",
+            "cyclic_group_z_n",
+            "rotation_group_so2",
+        ]
+
+        def _make_provenance(record_id: str) -> Provenance:
+            return Provenance(
+                source="openmath",
+                source_record_id=record_id,
+                source_uri=self.source_uri,
+                source_version=self.source_version,
+                license=self.license,
+                transformation=self.transformation,
+                origin=FactOrigin.ASSERTED,
+            )
+
+        for defn in definitions:
+            name_raw = defn["name"]
+            role = defn.get("role", "")
+            name = safe_metta_symbol(name_raw)
+            if not name:
+                continue
+
+            # 1. Structural/Taxonomic sort
+            if role == "constructor" or name in {"group", "abelian_group", "carrier", "element"}:
+                sort_edge = stable_evidence_id("sort", "openmath", concept, name)
+                yield SortFact(
+                    evidence_id=sort_edge,
+                    edge_id=sort_edge,
+                    concept=concept,
+                    perspective=Perspective.TAXONOMIC_KIND,
+                    sort=name,
+                    truth=TruthValue(1.0, 1.0),
+                    provenance=_make_provenance(f"sort_{name}"),
+                )
+                emitted_count += 1
+                if limit is not None and emitted_count >= limit:
+                    return
+
+            # 2. Algebraic Operations + Signatures
+            if role == "application" or name in {"operation", "inverse", "identity"}:
+                op_edge = stable_evidence_id("op", "openmath", concept, name)
+                yield OperationFact(
+                    evidence_id=op_edge,
+                    edge_id=op_edge,
+                    concept=concept,
+                    perspective=Perspective.STRUCTURAL_COMPOSITION,
+                    operation=name,
+                    truth=TruthValue(1.0, 1.0),
+                    provenance=_make_provenance(f"op_{name}"),
+                )
+                emitted_count += 1
+                if limit is not None and emitted_count >= limit:
+                    return
+
+                # Canonical arrow signature
+                if name in {"operation", "mult", "binary_op"}:
+                    sig = f"(arrow {concept} {concept} {concept})"
+                elif name in {"inverse", "inv"}:
+                    sig = f"(arrow {concept} {concept})"
+                else:
+                    sig = f"(arrow {concept})"
+
+                sig_edge = stable_evidence_id("sig", "openmath", concept, name)
+                yield OperationSignatureFact(
+                    evidence_id=sig_edge,
+                    edge_id=op_edge,
+                    signature=sig,
+                    truth=TruthValue(1.0, 1.0),
+                    provenance=_make_provenance(f"sig_{name}"),
+                )
+                emitted_count += 1
+                if limit is not None and emitted_count >= limit:
+                    return
+
+            # 3. Predicates + Signatures
+            if role == "predicate" or name.startswith("is_"):
+                pred_edge = stable_evidence_id("pred", "openmath", concept, name)
+                yield PredicateFact(
+                    evidence_id=pred_edge,
+                    edge_id=pred_edge,
+                    concept=concept,
+                    perspective=Perspective.INFORMATION_COMPUTATIONAL,
+                    predicate=f"({name} {concept})",
+                    truth=TruthValue(1.0, 1.0),
+                    provenance=_make_provenance(f"pred_{name}"),
+                )
+                emitted_count += 1
+                if limit is not None and emitted_count >= limit:
+                    return
+
+                psig_edge = stable_evidence_id("psig", "openmath", concept, name)
+                yield PredicateSignatureFact(
+                    evidence_id=psig_edge,
+                    edge_id=pred_edge,
+                    signature=f"(arrow {concept} Boolean)",
+                    truth=TruthValue(1.0, 1.0),
+                    provenance=_make_provenance(f"psig_{name}"),
+                )
+                emitted_count += 1
+                if limit is not None and emitted_count >= limit:
+                    return
+
+            # 4. Formal Equational Axioms
+            fmp_formula = defn.get("fmp")
+            is_axiom = (
+                fmp_formula is not None
+                or "associative" in name
+                or "identity" in name
+                or "inverse" in name
+                or "abelian" in name
+            )
+            if is_axiom:
+                if "associative" in name:
+                    formula = "(= (operation (operation $x $y) $z) (operation $x (operation $y $z)))"
+                elif "abelian" in name:
+                    formula = "(= (operation $x $y) (operation $y $x))"
+                elif "identity" in name:
+                    formula = "(= (operation $x identity) $x)"
+                elif "inverse" in name:
+                    formula = "(= (operation $x (inverse $x)) identity)"
+                else:
+                    formula = f"(= ({name} $x) $x)"
+
+                ax_edge = stable_evidence_id("axiom", "openmath", concept, name)
+                yield AxiomFact(
+                    evidence_id=ax_edge,
+                    edge_id=ax_edge,
+                    concept=concept,
+                    perspective=Perspective.STRUCTURAL_COMPOSITION,
+                    axiom=formula,
+                    truth=TruthValue(1.0, 1.0),
+                    provenance=_make_provenance(f"axiom_{name}"),
+                )
+                emitted_count += 1
+                if limit is not None and emitted_count >= limit:
+                    return
+
+            # 5. Scoped Properties and Worlds
+            prop_id = stable_evidence_id("prop", "openmath", concept, name)
+            prop_edge = stable_evidence_id("property", "openmath", concept, name)
+            yield PropertyFact(
+                evidence_id=prop_edge,
+                edge_id=prop_edge,
+                concept=concept,
+                perspective=Perspective.STRUCTURAL_COMPOSITION,
+                property_id=prop_id,
+                property_name=name,
+                truth=TruthValue(1.0, 1.0),
+                provenance=_make_provenance(f"prop_{name}"),
+            )
+            emitted_count += 1
+            if limit is not None and emitted_count >= limit:
+                return
+
+            for world in candidate_worlds:
+                w_edge = stable_evidence_id("world", "openmath", prop_id, world)
+                yield PropertyWorldFact(
+                    evidence_id=w_edge,
+                    edge_id=w_edge,
+                    property_id=prop_id,
+                    perspective=Perspective.STRUCTURAL_COMPOSITION,
+                    world=world,
+                    truth=TruthValue(1.0, 1.0),
+                    provenance=_make_provenance(f"world_{prop_id}_{world}"),
+                )
+                emitted_count += 1
+                if limit is not None and emitted_count >= limit:
+                    return
 
     def parse_ocd(self, stream_or_path: Union[str, Path]) -> Iterator[Dict[str, Any]]:
         """Parse an OpenMath Content Dictionary XML file and yield symbol definitions."""

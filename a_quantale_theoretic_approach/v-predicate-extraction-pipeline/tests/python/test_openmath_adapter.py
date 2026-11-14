@@ -5,6 +5,21 @@ import pytest
 
 from ingestion.models import FactType, KnowledgeSource
 from ingestion.openmath_adapter import OpenMathAdapter
+from v_predicate_contract import (
+    AxiomFact,
+    FactKind,
+    FactOrigin,
+    OperationFact,
+    OperationSignatureFact,
+    Perspective,
+    PredicateFact,
+    PredicateSignatureFact,
+    PropertyFact,
+    PropertyWorldFact,
+    SortFact,
+    render_document,
+    validate_record_set,
+)
 
 
 @pytest.fixture
@@ -149,15 +164,45 @@ class TestOpenMathAdapter:
         inv_records = [r for r in norm_records if r.relation == "hasOperation" and r.property_or_target == "inverse"]
         assert len(inv_records) > 0
 
-        # 3. Emergent Abelian Blend: commutativity axiom and predicate
-        comm_records = [r for r in norm_records if "abelian" in r.property_or_target]
-        assert len(comm_records) > 0
+    def test_v_predicate_stream_facts_contract(self, openmath_adapter: OpenMathAdapter):
+        facts = list(openmath_adapter.stream_facts())
+        assert len(facts) > 0
 
-        # CASL validation: verify equational commutativity axiom
-        casl_facts = []
-        for r in norm_records:
-            casl_facts.extend(openmath_adapter.transform_to_casl(r))
+        # Validate complete record set against v-predicate/1
+        validate_record_set(facts)
 
-        axiom_facts = [f for f in casl_facts if f.fact_type == FactType.HAS_AXIOM]
-        assert any("ax_is_abelian" in f.expression and "(* $a $b)" in f.expression and "(* $b $a)" in f.expression for f in axiom_facts)
+        # Check for operations paired with operation signatures
+        op_facts = {f.edge_id: f for f in facts if isinstance(f, OperationFact)}
+        sig_facts = {f.edge_id: f for f in facts if isinstance(f, OperationSignatureFact)}
+        assert len(op_facts) > 0
+        assert len(sig_facts) > 0
+        # Every signature must reference an existing operation edge
+        for edge_id in sig_facts:
+            assert edge_id in op_facts
+            assert "(arrow " in sig_facts[edge_id].signature
+
+        # Check for predicates paired with predicate signatures
+        pred_facts = {f.edge_id: f for f in facts if isinstance(f, PredicateFact)}
+        psig_facts = {f.edge_id: f for f in facts if isinstance(f, PredicateSignatureFact)}
+        assert len(pred_facts) > 0
+        assert len(psig_facts) > 0
+        for edge_id in psig_facts:
+            assert edge_id in pred_facts
+
+        # Check for executable axioms
+        axiom_facts = [f for f in facts if isinstance(f, AxiomFact)]
+        assert len(axiom_facts) >= 3
+        for ax in axiom_facts:
+            assert ax.axiom.startswith("(= ")
+            assert ax.truth.strength == 1.0
+            assert ax.truth.confidence == 1.0
+            assert ax.provenance.origin == FactOrigin.ASSERTED
+
+        # Verify MeTTa rendering
+        rendered = render_document(facts[:10])
+        assert "; V-predicate contract: v-predicate/1" in rendered
+
+        # Emergent Abelian Blend: commutativity axiom in facts
+        comm_axioms = [f for f in axiom_facts if "abelian" in f.evidence_id or "operation $y $x" in f.axiom]
+        assert len(comm_axioms) > 0
 

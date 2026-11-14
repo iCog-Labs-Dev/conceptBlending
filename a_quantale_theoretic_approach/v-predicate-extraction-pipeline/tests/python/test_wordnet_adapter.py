@@ -10,6 +10,17 @@ from pathlib import Path
 from ingestion.models import FactType, KnowledgeSource, NormalizedRecord, RawRecord
 from ingestion.sinks import MettaFileSink, PathMapSink
 from ingestion.wordnet_adapter import WordNetAdapter, safe_metta_symbol
+from v_predicate_contract import (
+    FactKind,
+    FactOrigin,
+    Perspective,
+    PredicateFact,
+    PropertyFact,
+    PropertyWorldFact,
+    SortFact,
+    render_document,
+    validate_record_set,
+)
 
 
 class TestWordNetAdapter(unittest.TestCase):
@@ -142,6 +153,50 @@ class TestWordNetAdapter(unittest.TestCase):
                 success = sink.register_atomspace_record(norm)
                 self.assertTrue(success)
         self.assertEqual(len(sink.get_registered_records()), len([r for r in records if self.adapter.normalize_record(r)]))
+
+    def test_v_predicate_stream_facts_offline(self):
+        adapter = WordNetAdapter(use_nltk=False)
+        facts = list(adapter.stream_facts(limit=20))
+        self.assertGreater(len(facts), 0)
+        self.assertLessEqual(len(facts), 20)
+
+        # Validate types
+        kinds = {f.kind for f in facts}
+        self.assertTrue(kinds.intersection({FactKind.SORT, FactKind.PREDICATE, FactKind.PROPERTY}))
+
+        # Assert canonical snake_case perspectives
+        for f in facts:
+            self.assertIsInstance(f.perspective, Perspective)
+            self.assertIn("_", f.perspective.value if "_" in f.perspective.value else f.perspective.value)
+            self.assertNotIn("-", f.perspective.value)
+
+        # Validate contract compliance
+        validate_record_set(facts)
+
+    def test_v_predicate_stream_facts_origin_distinction(self):
+        adapter = WordNetAdapter(use_nltk=False)
+        facts = list(adapter.stream_facts())
+
+        # Direct facts should be ASSERTED
+        asserted_facts = [f for f in facts if f.provenance.origin == FactOrigin.ASSERTED]
+        self.assertGreater(len(asserted_facts), 0)
+
+        # Heuristically generated worlds should be GENERATED with confidence <= 0.8
+        generated_facts = [f for f in facts if f.provenance.origin == FactOrigin.GENERATED]
+        self.assertGreater(len(generated_facts), 0)
+        for gf in generated_facts:
+            self.assertEqual(gf.provenance.transformation, "wordnet_heuristic_world_projection")
+            self.assertLessEqual(gf.truth.confidence, 0.80)
+
+    def test_v_predicate_full_traversal_support(self):
+        # Full traversal parameter exists and can be enabled
+        adapter = WordNetAdapter(full_traversal=True)
+        self.assertTrue(adapter.full_traversal)
+        # Verify generator streaming works
+        stream = adapter.stream_facts(limit=5)
+        facts = list(stream)
+        self.assertEqual(len(facts), 5)
+        validate_record_set(facts)
 
 
 if __name__ == "__main__":
