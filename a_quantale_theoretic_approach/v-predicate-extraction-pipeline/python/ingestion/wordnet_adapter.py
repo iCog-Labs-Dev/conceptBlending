@@ -108,9 +108,14 @@ class WordNetAdapter(BaseSourceAdapter):
             if cache_dir
             else (PIPELINE_ROOT / "data" / "cache" / "wordnet").resolve()
         )
+        self.source_name = "wordnet"
+        self.version = "3.1"
+        self.license = "WordNet-3.0"
+        self.transformation = "wordnet_adapter_v1"
         self._wn: Any = None
         if self.use_nltk:
             self._try_init_nltk()
+        self.source_uri = "nltk://wordnet-3.1" if self._wn else "bundled://wordnet_offline"
 
     def _try_init_nltk(self) -> None:
         try:

@@ -121,6 +121,8 @@ class OpenMathAdapter(BaseSourceAdapter):
             if cache_dir
             else (PIPELINE_ROOT / "data" / "cache" / "openmath").resolve()
         )
+        self.source_name = "openmath"
+        self.version = "2.0"
         self.source_version = "2.0"
         self.license = "OpenMath-2.0"
         self.source_uri = "https://www.openmath.org/cd/group1.ocd"
