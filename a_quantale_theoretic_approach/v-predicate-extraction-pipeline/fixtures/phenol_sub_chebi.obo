@@ -1,0 +1,61 @@
+format-version: 1.2
+data-version: releases/2026-11-01
+ontology: chebi/subsets/phenol
+
+[Term]
+id: CHEBI:16127
+name: phenol
+def: "A member of the class of phenols that is benzene in which a single hydrogen atom has been replaced by a hydroxy group." [PMID:1000]
+is_a: CHEBI:33579 ! main group molecular entity
+relationship: has_part CHEBI:43176 ! hydroxyl group
+relationship: has_part CHEBI:22712 ! benzene
+relationship: is_conjugate_acid_of CHEBI:33854 ! phenolate
+relationship: has_role CHEBI:33282 ! antiseptic
+
+[Term]
+id: CHEBI:22712
+name: benzene
+def: "A six-carbon aromatic hydrocarbon containing a planar ring of six carbon atoms with alternating double bonds." [PMID:1001]
+is_a: CHEBI:33579 ! main group molecular entity
+
+[Term]
+id: CHEBI:43176
+name: hydroxyl group
+def: "A univalent radical or functional group -OH consisting of a hydrogen atom bonded to an oxygen atom." [PMID:1002]
+is_a: CHEBI:24431 ! chemical entity
+
+[Term]
+id: CHEBI:33854
+name: phenolate
+def: "An organic anion obtained by deprotonation of the hydroxy group of phenol." [PMID:1003]
+is_a: CHEBI:33579 ! main group molecular entity
+
+[Term]
+id: CHEBI:24431
+name: chemical entity
+def: "A chemical entity is a constitutionally or isotopically distinct atom, molecule, ion, ion pair, radical, radical ion, complex, conformer etc." [PMID:1004]
+
+[Term]
+id: CHEBI:33579
+name: main group molecular entity
+def: "A molecular entity containing one or more atoms from the s or p blocks." [PMID:1005]
+is_a: CHEBI:24431 ! chemical entity
+
+[Term]
+id: CHEBI:15377
+name: water
+def: "An oxygen hydride consisting of an oxygen atom that is covalently bonded to two hydrogen atoms." [PMID:1006]
+is_a: CHEBI:33579 ! main group molecular entity
+
+[Term]
+id: CHEBI:33282
+name: antiseptic
+def: "A substance that inhibits the growth and development of microorganisms." [PMID:1007]
+is_a: CHEBI:24431 ! chemical entity
+
+[Term]
+id: CHEBI:99999
+name: obsolete chemical entity
+def: "OBSOLETE: placeholder obsolete term for testing obsolete filtering." [PMID:9999]
+is_obsolete: true
+

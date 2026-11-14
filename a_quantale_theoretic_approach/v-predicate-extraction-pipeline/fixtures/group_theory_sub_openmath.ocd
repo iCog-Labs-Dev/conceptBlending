@@ -1,0 +1,143 @@
+<CD xmlns="http://www.openmath.org/OpenMathCD">
+<CDComment>
+     OpenMath Content Dictionary subset for Group Theory and Conceptual Blending (Experiment 4).
+</CDComment>
+
+<CDName>group_theory_test</CDName>
+<CDBase>http://www.openmath.org/cd</CDBase>
+<CDURL>http://www.openmath.org/cd/group1.ocd</CDURL>
+<CDDate>2026-11-12</CDDate>
+<CDVersion>2</CDVersion>
+<CDRevision>0</CDRevision>
+<CDStatus>experimental</CDStatus>
+<Description>Content Dictionary for Group Theory, Monoids, Inverses, and Abelian Groups</Description>
+
+<CDDefinition>
+<Name>group</Name>
+<Role>constructor</Role>
+<Description>The constructor for an algebraic group structure.</Description>
+<CMP>A group is an algebraic structure consisting of a set of elements together with an associative binary operation, an identity element, and inverse elements.</CMP>
+</CDDefinition>
+
+<CDDefinition>
+<Name>carrier</Name>
+<Role>constructor</Role>
+<Description>The carrier set of elements belonging to the algebraic group.</Description>
+<CMP>A group has an underlying carrier set G of elements.</CMP>
+</CDDefinition>
+
+<CDDefinition>
+<Name>operation</Name>
+<Role>application</Role>
+<Description>The binary group multiplication operation.</Description>
+<CMP>Multiplication maps G x G to G.</CMP>
+</CDDefinition>
+
+<CDDefinition>
+<Name>identity</Name>
+<Role>constant</Role>
+<Description>The unique identity element of the algebraic group.</Description>
+<CMP>For all x in G, x * e = x and e * x = x.</CMP>
+<FMP>
+  <OMOBJ xmlns="http://www.openmath.org/OpenMath">
+    <OMA>
+      <OMS cd="relation1" name="eq"/>
+      <OMA>
+        <OMS cd="group_theory_test" name="operation"/>
+        <OMV name="x"/>
+        <OMS cd="group_theory_test" name="identity"/>
+      </OMA>
+      <OMV name="x"/>
+    </OMA>
+  </OMOBJ>
+</FMP>
+</CDDefinition>
+
+<CDDefinition>
+<Name>inverse</Name>
+<Role>application</Role>
+<Description>The unary inverse operation in a group.</Description>
+<CMP>For all x in G, x * inv(x) = e.</CMP>
+<FMP>
+  <OMOBJ xmlns="http://www.openmath.org/OpenMath">
+    <OMA>
+      <OMS cd="relation1" name="eq"/>
+      <OMA>
+        <OMS cd="group_theory_test" name="operation"/>
+        <OMV name="x"/>
+        <OMA>
+          <OMS cd="group_theory_test" name="inverse"/>
+          <OMV name="x"/>
+        </OMA>
+      </OMA>
+      <OMS cd="group_theory_test" name="identity"/>
+    </OMA>
+  </OMOBJ>
+</FMP>
+</CDDefinition>
+
+<CDDefinition>
+<Name>is_associative</Name>
+<Role>predicate</Role>
+<Description>Associativity law for the binary operation.</Description>
+<CMP>For all a, b, c in G, (a * b) * c = a * (b * c).</CMP>
+<FMP>
+  <OMOBJ xmlns="http://www.openmath.org/OpenMath">
+    <OMA>
+      <OMS cd="relation1" name="eq"/>
+      <OMA>
+        <OMS cd="group_theory_test" name="operation"/>
+        <OMA>
+          <OMS cd="group_theory_test" name="operation"/>
+          <OMV name="a"/>
+          <OMV name="b"/>
+        </OMA>
+        <OMV name="c"/>
+      </OMA>
+      <OMA>
+        <OMS cd="group_theory_test" name="operation"/>
+        <OMV name="a"/>
+        <OMA>
+          <OMS cd="group_theory_test" name="operation"/>
+          <OMV name="b"/>
+          <OMV name="c"/>
+        </OMA>
+      </OMA>
+    </OMA>
+  </OMOBJ>
+</FMP>
+</CDDefinition>
+
+<CDDefinition>
+<Name>is_abelian</Name>
+<Role>predicate</Role>
+<Description>Commutativity property defining an Abelian group.</Description>
+<CMP>For all a, b in G, a * b = b * a.</CMP>
+<FMP>
+  <OMOBJ xmlns="http://www.openmath.org/OpenMath">
+    <OMA>
+      <OMS cd="relation1" name="eq"/>
+      <OMA>
+        <OMS cd="group_theory_test" name="operation"/>
+        <OMV name="a"/>
+        <OMV name="b"/>
+      </OMA>
+      <OMA>
+        <OMS cd="group_theory_test" name="operation"/>
+        <OMV name="b"/>
+        <OMV name="a"/>
+      </OMA>
+    </OMA>
+  </OMOBJ>
+</FMP>
+</CDDefinition>
+
+<CDDefinition>
+<Name>abelian_group</Name>
+<Role>constructor</Role>
+<Description>An Abelian group is a group where the binary operation is commutative.</Description>
+<CMP>An abelian group is a group that satisfies commutativity for all elements.</CMP>
+</CDDefinition>
+
+</CD>
+

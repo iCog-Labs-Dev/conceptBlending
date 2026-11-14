@@ -4,13 +4,15 @@ on:
   push:
     branches:
       - main
+      - q3/pathmap-vpredicate-atomspace
   pull_request:
     branches:
       - main
+      - q3/pathmap-vpredicate-atomspace
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout Repository
@@ -23,7 +25,16 @@ jobs:
         python3 \
         python3-pip \
         python3-dev \
+        python3-venv \
         build-essential
+
+    - name: Setup Isolated Virtual Environment
+      run: |
+        python3 -m venv /opt/venv
+        echo "/opt/venv/bin" >> $GITHUB_PATH
+        echo "VIRTUAL_ENV=/opt/venv" >> $GITHUB_ENV
+        SITE_PKGS=$(/opt/venv/bin/python3 -c "import site; print(':'.join(site.getsitepackages()))")
+        echo "PYTHONPATH=$SITE_PKGS:$GITHUB_WORKSPACE/peTTa_version:$GITHUB_WORKSPACE/peTTa_version/libs/agents:$GITHUB_WORKSPACE/peTTa_version/op-constraints:$GITHUB_WORKSPACE/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
     # -----------------------------
     # Install System Dependencies
@@ -49,15 +60,18 @@ jobs:
     - name: Install PeTTa in Editable Mode
       run: |
         cd PeTTa
-        python3 -m pip install --break-system-packages -e .
+        pip install --upgrade pip setuptools wheel
+        CFLAGS="-Wno-error=incompatible-pointer-types -Wno-error=int-conversion" pip install -e .
 
     # -----------------------------
     # Install ConceptBlending Dependencies
     # -----------------------------
     - name: Install Python Dependencies
       run: |
+        pip install --upgrade pip setuptools wheel
+        pip install pytest pytest-xdist
         cd peTTa_version
-        python3 -m pip install --break-system-packages -r requirements.txt
+        pip install -r requirements.txt
 
     # -----------------------------
     # Create .env File
@@ -80,6 +94,48 @@ jobs:
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        VIRTUAL_ENV: /opt/venv
       run: |
         cd peTTa_version
         python3 scripts/run-tests.py
+
+    # -----------------------------
+    # Run V-Predicate & Quantale Regression Suite
+    # -----------------------------
+    - name: Run V-Predicate & Quantale Regression Suite
+      env:
+        VIRTUAL_ENV: /opt/venv
+      run: |
+        pytest -n 2 \
+          a_quantale_theoretic_approach/tests/test_quantale_laws.py \
+          a_quantale_theoretic_approach/tests/test_v_enriched.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_v_predicate_contract.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_conceptnet_adapter.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_ingestion_models.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_wordnet_adapter.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_go_adapter.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_chebi_adapter.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_openmath_adapter.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_ingestion_orchestrator.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_acceptance_scenario.py
+
+    # -----------------------------
+    # Run Ingestion Pipeline Smoke Test
+    # -----------------------------
+    - name: Run Multi-Source Ingestion Pipeline Smoke Test
+      env:
+        VIRTUAL_ENV: /opt/venv
+      run: |
+        python3 a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/ingestion/ingest_cli.py \
+          --sources all \
+          --output-dir /tmp/ci_kb_output \
+          --verbose
+        
+        # Assert output files exist and are non-empty
+        test -s /tmp/ci_kb_output/AlgebraicSpecificationKB.metta
+        test -s /tmp/ci_kb_output/PropertyWorldKB.metta
+        test -s /tmp/ci_kb_output/run_manifest.json
+        
+        # Verify manifest status
+        python3 -c "import json; m=json.load(open('/tmp/ci_kb_output/run_manifest.json')); assert m['validation']['status'] == 'PASSED', 'Manifest validation failed'"
+        echo "Ingestion Smoke Test Succeeded!"
