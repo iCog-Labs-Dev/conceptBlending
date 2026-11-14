@@ -16,7 +16,7 @@ from .models import (
     RawRecord,
 )
 from .orchestrator import IngestionSummary, MultiSourceOrchestrator
-from .sinks import BaseSink, MettaFileSink, PathMapSink
+from .sinks import BaseSink, InMemoryTestSink, MettaFileSink, PathMapSink
 from .wordnet_adapter import WordNetAdapter, safe_metta_symbol
 
 __all__ = [
@@ -26,6 +26,7 @@ __all__ = [
     "ConceptNetAdapter",
     "FactType",
     "GeneOntologyAdapter",
+    "InMemoryTestSink",
     "IngestionProvenance",
     "IngestionSummary",
     "KnowledgeSource",

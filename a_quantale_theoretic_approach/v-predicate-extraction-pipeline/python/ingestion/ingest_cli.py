@@ -4,49 +4,52 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
+import sys
 from typing import List, Optional
 
-from ingestion.models import KnowledgeSource
 from ingestion.orchestrator import MultiSourceOrchestrator
 
 
-def parse_sources(source_str: str) -> Optional[List[KnowledgeSource]]:
-    """Parse comma-separated source tokens into KnowledgeSource enums."""
+def parse_sources(source_str: str) -> Optional[List[str]]:
+    """Parse comma-separated source tokens into canonical source name strings."""
     tokens = [s.strip().lower() for s in source_str.split(",") if s.strip()]
     if "all" in tokens:
         return None
 
-    sources: List[KnowledgeSource] = []
+    sources: List[str] = []
     mapping = {
-        "wordnet": KnowledgeSource.WORDNET,
-        "wn": KnowledgeSource.WORDNET,
-        "go": KnowledgeSource.GENE_ONTOLOGY,
-        "gene_ontology": KnowledgeSource.GENE_ONTOLOGY,
-        "chebi": KnowledgeSource.CHEBI,
-        "openmath": KnowledgeSource.OPENMATH,
-        "om": KnowledgeSource.OPENMATH,
+        "wordnet": "wordnet",
+        "wn": "wordnet",
+        "go": "gene_ontology",
+        "gene_ontology": "gene_ontology",
+        "chebi": "chebi",
+        "openmath": "openmath",
+        "om": "openmath",
+        "conceptnet": "conceptnet",
+        "cnet": "conceptnet",
     }
 
     for tok in tokens:
         if tok in mapping:
             sources.append(mapping[tok])
         else:
-            raise ValueError(f"Unknown knowledge source: '{tok}'. Valid options: {list(mapping.keys())} or 'all'")
+            raise ValueError(
+                f"Unknown knowledge source: '{tok}'. Valid options: {list(mapping.keys())} or 'all'"
+            )
 
     return sources
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Unified Knowledge Ingestion Pipeline for Conceptual Blending AtomSpaces."
+        description="Unified Knowledge Ingestion Pipeline for Conceptual Blending AtomSpaces under v-predicate/1."
     )
     parser.add_argument(
         "--sources",
         type=str,
         default="all",
-        help="Comma-separated knowledge sources to ingest (e.g. 'wordnet,go,chebi,openmath' or 'all'). Default: all",
+        help="Comma-separated knowledge sources to ingest ('wordnet,go,chebi,openmath,conceptnet' or 'all'). Default: all",
     )
     parser.add_argument(
         "--output-dir",
@@ -63,7 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--limit",
         type=int,
         default=None,
-        help="Limit number of raw records extracted per source (useful for smoke tests).",
+        help="Limit number of records extracted per source (useful for testing).",
     )
     parser.add_argument(
         "--verbose",
@@ -87,8 +90,8 @@ def main(args: Optional[List[str]] = None) -> int:
     output_dir = Path(parsed_args.output_dir)
 
     if parsed_args.verbose:
-        src_names = [s.value for s in sources] if sources else "ALL"
-        print(f"=== Starting Multi-Source Ingestion ===")
+        src_names = sources if sources else "ALL (wordnet, go, chebi, openmath, conceptnet)"
+        print("=== Starting Multi-Source Ingestion ===")
         print(f"Sources: {src_names}")
         print(f"Output Directory: {output_dir}")
         print(f"Download Live Data: {parsed_args.download}")
@@ -106,8 +109,10 @@ def main(args: Optional[List[str]] = None) -> int:
     print("\n=== Ingestion Complete ===")
     print(f"Total Raw Records Extracted: {summary.total_raw_records}")
     print(f"Total Normalized Records:    {summary.total_normalized_records}")
-    print(f"Total CASL Facts Written:     {summary.total_casl_facts}")
-    print(f"Total Property-World Facts:   {summary.total_property_world_facts}")
+    print(f"Total CASL Facts Written:    {summary.total_casl_facts}")
+    print(f"Total Property-World Facts:  {summary.total_property_world_facts}")
+    if summary.manifest_path:
+        print(f"Execution Manifest:          {summary.manifest_path}")
     print("Generated Files:")
     for out_file in summary.output_files:
         print(f"  - {out_file} ({out_file.stat().st_size if out_file.exists() else 0} bytes)")
