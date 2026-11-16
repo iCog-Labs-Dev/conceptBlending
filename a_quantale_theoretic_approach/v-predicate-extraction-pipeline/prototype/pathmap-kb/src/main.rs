@@ -6,7 +6,7 @@ use std::time::Instant;
 
 fn usage() -> ! {
     eprintln!(
-        "usage:\n  perspective-pathmap-prototype build --property-kb FILE --algebraic-kb FILE --out DIR [--limit-per-kind N]\n  perspective-pathmap-prototype benchmark --index DIR --perspective P --concept C [--iterations N] [--extensions N]\n  perspective-pathmap-prototype properties --index DIR --perspective P --concept C\n  perspective-pathmap-prototype worlds --index DIR --perspective P --concept C --property NAME\n  perspective-pathmap-prototype property-name --index DIR --perspective P --property NAME\n  perspective-pathmap-prototype algebra --index DIR --perspective P --concept C --family sort|operation|predicate|axiom"
+        "usage:\n  perspective-pathmap-prototype build --property-kb FILE --algebraic-kb FILE --out DIR [--limit-per-kind N]\n  perspective-pathmap-prototype benchmark --index DIR --perspective P --concept C [--iterations N] [--extensions N]\n  perspective-pathmap-prototype properties --index DIR --perspective P --concept C\n  perspective-pathmap-prototype worlds --index DIR --perspective P --concept C --property NAME\n  perspective-pathmap-prototype property-name --index DIR --perspective P --property NAME\n  perspective-pathmap-prototype algebra --index DIR --perspective P --concept C --family sort|operation|predicate|axiom\n  perspective-pathmap-prototype perspective-relations --index DIR --perspective P --family definition|subperspective|match"
     );
     std::process::exit(2)
 }
@@ -25,15 +25,18 @@ fn required(args: &[String], name: &str) -> String {
 fn print_rows(rows: Vec<ResultRow>) {
     for row in rows {
         println!(
-            "concept={}\tfamily={}\tfeature={}\tworld={}\tstrength={:.3}\tconfidence={:.3}\tpayload={}\tevidence={}",
+            "concept={}\tfamily={}\tfeature={}\tworld={}\tevaluation_perspective={}\tstrength={:.3}\tconfidence={:.3}\tpayload={}\tevidence={}\torigin={}\tprovenance={}",
             row.concept,
             row.family,
             row.feature,
             row.world.as_deref().unwrap_or("-"),
+            row.evaluation_perspective.as_deref().unwrap_or("-"),
             row.strength,
             row.confidence,
             row.payload.as_deref().unwrap_or("-"),
-            row.evidence
+            row.evidence,
+            row.origin.unwrap_or("-"),
+            row.provenance.as_deref().unwrap_or("-")
         );
         if let (Some(strength), Some(confidence)) = (row.payload_strength, row.payload_confidence) {
             println!(
@@ -145,6 +148,10 @@ fn main() -> io::Result<()> {
         "algebra" => index.query_algebra(
             &perspective,
             &required(&args, "--concept"),
+            &required(&args, "--family"),
+        ),
+        "perspective-relations" => index.query_perspective_relations(
+            &perspective,
             &required(&args, "--family"),
         ),
         _ => usage(),

@@ -70,6 +70,23 @@ cargo run --release -- benchmark \
   --concept a0 --iterations 20 --extensions 10000
 ```
 
+Ingestion adapters can bypass manual file management by passing their canonical typed records to
+`python/pathmap_kb_integration.py`:
+
+```python
+from pathmap_kb_integration import compile_records
+
+result = compile_records(
+    records,
+    "/path/to/index",
+    compiler="/path/to/perspective-pathmap-prototype",
+)
+```
+
+The bridge validates the complete record set, renders the CASL and property-world documents,
+invokes the real Rust compiler, checks all required index artifacts, and publishes the completed
+index atomically. It never exposes a partially compiled index.
+
 Omit `--limit-per-kind` for a complete build. The option caps each indexed relation independently,
 but still scans the source files because relation groups occur at different offsets.
 

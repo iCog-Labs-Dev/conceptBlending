@@ -16,6 +16,7 @@ typedef struct {
     uint8_t family;
     byte_slice_t feature;
     byte_slice_t world;
+    byte_slice_t evaluation_perspective;
     byte_slice_t payload;
     byte_slice_t evidence;
     byte_slice_t payload_evidence;
@@ -215,14 +216,15 @@ static int put_row(row_context_t *context, term_t term,
 
     if (row->family == 5) {
         if (!put_atom_slice(items + 2, row->world) ||
-            !put_tv(items + 3, row->strength, row->confidence) ||
-            !put_atom_slice(items + 4, row->evidence)) {
+            !put_atom_slice(items + 3, row->evaluation_perspective) ||
+            !put_tv(items + 4, row->strength, row->confidence) ||
+            !put_atom_slice(items + 5, row->evidence)) {
             return FALSE;
         }
         return put_list(term,
                         (term_t[]){items, items + 1, items + 2, items + 3,
-                                   items + 4},
-                        5);
+                                   items + 4, items + 5},
+                        6);
     }
 
     if (!put_tv(items + 2, row->strength, row->confidence) ||
