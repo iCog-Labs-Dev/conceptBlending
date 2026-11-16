@@ -105,12 +105,14 @@ class TestGeneOntologyAdapter(unittest.TestCase):
 
     def test_cellular_components_as_possible_worlds(self) -> None:
         facts = list(self.adapter.stream_facts())
+        prop_facts = {f.property_id: f for f in facts if isinstance(f, PropertyFact)}
         world_facts = [f for f in facts if isinstance(f, PropertyWorldFact)]
         self.assertGreater(len(world_facts), 0)
 
-        # Spatial context perspective
+        # World assertions inherit the perspective of the referenced property
         for wf in world_facts:
-            self.assertEqual(wf.perspective, Perspective.SPATIAL_CONTEXT)
+            self.assertIn(wf.property_id, prop_facts)
+            self.assertEqual(wf.perspective, prop_facts[wf.property_id].perspective)
             self.assertEqual(wf.provenance.origin, FactOrigin.ASSERTED)
 
         # Mitochondrial inner membrane should be present as a possible world

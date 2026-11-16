@@ -30,6 +30,12 @@ Every item of mentor review feedback has been systematically addressed, implemen
 | **14** | **Hardware Throttling (`pytest -n 2`)** | Enforced `-n 2` worker limit across local tests, `.git/hooks/pre-push`, and CI/CD pipelines to guarantee memory safety and prevent out-of-memory lockups. |
 | **15** | **Zero Repository Root Pollution** | Ensured all file paths and cache directories resolve explicitly relative to `output_dir` or package fixtures. Banned untracked `kb/` creation in repo root. |
 | **16** | **GitHub Actions CI/CD Integration** | Updated `.github/workflows/ci_cd_pipeline.yml`: added branch triggers for `q3/pathmap-vpredicate-atomspace`, isolated `/opt/venv` environment, injected GCC 14 compatibility flags (`CFLAGS="-Wno-error=incompatible-pointer-types -Wno-error=int-conversion"`), added the 11-module regression suite under `pytest -n 2`, and added a production ingestion smoke test step. |
+| **17** | **PR Target Branch Alignment** | Set target branch to `quantale-pipeline-optimization-expansion` (containing the PathMap KB prototype, typed PeTTa FFI, and authoritative contract). |
+| **18** | **Trial Merge & Add/Add Conflict Resolution** | Merged `upstream/quantale-pipeline-optimization-expansion` (`c36cc4b4`), cleanly resolving the single add/add conflict in `v_predicate_contract/__init__.py` while preserving the PR's `FactRecord` export. |
+| **19** | **Perspective Colocation in Gene Ontology** | Updated `GeneOntologyAdapter` (`go_adapter.py`) so world assertions inherit the property perspective (`perspective = persp`), eliminating the 7 cross-perspective mismatches. PathMap compilation of `prop_atp_synthesis_coupled_proton_transport_process` succeeds with `skipped_worlds: 0`. |
+| **20** | **End-to-End Storage Boundary Acceptance Suite** | Implemented `test_pathmap_storage_boundary.py` exercising 5-source ingestion $\to$ PathMap compilation $\to$ CASL queries (`group` operations/axioms) and Property-World queries (`atp_synthesis_coupled_proton_transport` in `mitochondrial_inner_membrane`, `phenol` in `aqueous_solution`). |
+| **21** | **CI Workflow Target Branch & PathMap Step** | Added `quantale-pipeline-optimization-expansion` to `pull_request.branches` in `.github/workflows/ci_cd_pipeline.yml`, added PathMap cloning & release compilation step, and registered `test_pathmap_storage_boundary.py` in the test runner. |
+| **22** | **Git Tree Hygiene & Scope Isolation** | Removed generated `training.log`, and reverted unrelated GNN trainer and weight files (`gnn_trainer.py`, `gnn_weights.pth`) back to upstream base to keep PR reviewable and strictly focused on V-predicate ingestion. Documented PeTTa offline mock fallbacks as essential for CI execution without external API keys. |
 
 ---
 
@@ -87,7 +93,7 @@ A single run of `ingest_cli.py --sources all` yields exactly **230 facts** distr
 ## Verification & Quality Gates
 
 ### 1. Test Suite Results
-All 101 unit, integration, and acceptance tests pass cleanly under `pytest -n 2` in ~23 seconds:
+All 104 unit, integration, and acceptance tests pass cleanly under `pytest -n 2` in ~42 seconds:
 - `a_quantale_theoretic_approach/tests/test_quantale_laws.py` (2 tests)
 - `a_quantale_theoretic_approach/tests/test_v_enriched.py` (2 tests)
 - `.../tests/python/test_v_predicate_contract.py` (66 tests)
@@ -99,6 +105,7 @@ All 101 unit, integration, and acceptance tests pass cleanly under `pytest -n 2`
 - `.../tests/python/test_openmath_adapter.py` (2 tests)
 - `.../tests/python/test_ingestion_orchestrator.py` (2 tests)
 - `.../tests/python/test_acceptance_scenario.py` (4 tests)
+- `.../tests/python/test_pathmap_storage_boundary.py` (3 tests)
 
 ### 2. Determinism & Balance Invariants
 - **Parenthetical Balance**: Every line in `AlgebraicSpecificationKB.metta` and `PropertyWorldKB.metta` strictly begins with `(: `, ends with `))`, and has a net parenthesis depth of exactly 0.

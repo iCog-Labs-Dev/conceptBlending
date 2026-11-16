@@ -1,6 +1,6 @@
 use pathmap::PathMap;
 use pathmap::paths_serialization::{deserialize_paths_with_auxdata, serialize_paths_with_auxdata};
-use pathmap::zipper::{ZipperIteration, ZipperMoving, ZipperValues};
+use pathmap::zipper::{ZipperIteration, ZipperPath, ZipperValues};
 use std::collections::{HashMap, hash_map::Entry};
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
