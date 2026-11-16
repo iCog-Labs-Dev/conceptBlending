@@ -3,28 +3,25 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
+from unittest.mock import MagicMock
 
 PIPELINE_ROOT = Path(__file__).resolve().parents[2]
 if str(PIPELINE_ROOT / "python") not in sys.path:
     sys.path.insert(0, str(PIPELINE_ROOT / "python"))
 
 from ingestion.orchestrator import IngestionSummary, MultiSourceOrchestrator
-from ingestion.sinks import InMemoryTestSink, MettaFileSink, PathMapSink
+from ingestion.sinks import InMemoryTestSink, PathMapSink
 from v_predicate_contract import (
     CONTRACT_VERSION,
-    ContractValidationError,
     FactOrigin,
-    Perspective,
-    SortFact,
-    TruthValue,
-    stable_evidence_id,
+    Provenance,
 )
-
-PIPELINE_ROOT = Path(__file__).resolve().parents[2]
 
 
 class TestIngestionOrchestrator(unittest.TestCase):
@@ -38,7 +35,6 @@ class TestIngestionOrchestrator(unittest.TestCase):
         )
 
     def test_multisource_offline_run_and_manifest(self) -> None:
-        import tempfile
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir) / "output"
             orchestrator = MultiSourceOrchestrator()
@@ -83,7 +79,6 @@ class TestIngestionOrchestrator(unittest.TestCase):
         sink = InMemoryTestSink()
         orchestrator = MultiSourceOrchestrator(sinks=[sink])
 
-        import tempfile
         with tempfile.TemporaryDirectory() as tmp_dir:
             summary = orchestrator.run_ingestion(
                 sources=["conceptnet"],
@@ -94,7 +89,6 @@ class TestIngestionOrchestrator(unittest.TestCase):
             self.assertGreater(len(facts), 0)
 
     def test_fact_deduplication_and_idempotence(self) -> None:
-        import tempfile
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir) / "dedup"
             orchestrator = MultiSourceOrchestrator()
@@ -123,7 +117,6 @@ class TestIngestionOrchestrator(unittest.TestCase):
             self.assertEqual(len(pw_lines_1), len(pw_lines_2))
 
     def test_metta_syntax_and_balancing(self) -> None:
-        import tempfile
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir) / "syntax_check"
             orchestrator = MultiSourceOrchestrator()
@@ -141,9 +134,6 @@ class TestIngestionOrchestrator(unittest.TestCase):
                         self.assertTrue(line.startswith("(") and line.endswith(")"))
 
     def test_validation_rollback_cleans_staging(self) -> None:
-        import tempfile
-        from unittest.mock import MagicMock
-
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir) / "staging_rollback"
 
@@ -153,7 +143,6 @@ class TestIngestionOrchestrator(unittest.TestCase):
             mock_adapter.fetch.return_value = Path("dummy")
 
             # Yield a SortFact with illegal symbol characters (violating _SYMBOL)
-            from v_predicate_contract import Provenance
             prov = Provenance(
                 source="mock",
                 source_record_id="bad_1",
@@ -179,8 +168,6 @@ class TestIngestionOrchestrator(unittest.TestCase):
             self.assertFalse((out_dir / ".staging").exists())
 
     def test_cli_invocation_all_sources(self) -> None:
-        import os
-        import tempfile
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir) / "cli_out"
             cli_path = PIPELINE_ROOT / "python" / "ingestion" / "ingest_cli.py"
@@ -214,8 +201,6 @@ class TestIngestionOrchestrator(unittest.TestCase):
             self.assertIn("Ingestion Complete", result.stdout)
 
     def test_cli_invocation_conceptnet(self) -> None:
-        import os
-        import tempfile
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir) / "cli_cnet"
             cli_path = PIPELINE_ROOT / "python" / "ingestion" / "ingest_cli.py"

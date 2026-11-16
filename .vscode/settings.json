@@ -1,0 +1,13 @@
+{
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python",
+    "${workspaceFolder}/peTTa_version",
+    "${workspaceFolder}/peTTa_version/libs/agents"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python",
+    "${workspaceFolder}/peTTa_version",
+    "${workspaceFolder}/peTTa_version/libs/agents"
+  ]
+}
+

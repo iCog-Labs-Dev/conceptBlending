@@ -12,6 +12,8 @@ from v_predicate_contract import FactRecord
 class BaseSourceAdapter(ABC):
     """Abstract contract for knowledge source adapters in the ingestion pipeline."""
 
+    source_name: str = ""
+
     @property
     def source_type(self) -> Any:
         """The specific external knowledge repository handled by this adapter."""

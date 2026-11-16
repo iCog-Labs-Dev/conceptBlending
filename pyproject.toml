@@ -1,0 +1,13 @@
+[tool.pyright]
+extraPaths = [
+    "a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python",
+    "peTTa_version",
+    "peTTa_version/libs/agents"
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "a_quantale_theoretic_approach/tests",
+    "a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python"
+]
+
