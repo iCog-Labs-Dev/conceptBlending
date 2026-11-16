@@ -87,6 +87,25 @@ The bridge validates the complete record set, renders the CASL and property-worl
 invokes the real Rust compiler, checks all required index artifacts, and publishes the completed
 index atomically. It never exposes a partially compiled index.
 
+## Correctness and performance gate
+
+The build records elapsed compilation time and Linux peak RSS in `build-stats.txt` (`0` denotes a
+platform where process RSS accounting is unavailable). Evaluate the
+five-source index with representative WordNet, GO, ChEBI, OpenMath, and ConceptNet queries using:
+
+```bash
+python ../../python/pathmap_kb_evaluation.py \
+  --compiler ./target/release/perspective-pathmap-prototype \
+  --index ./index \
+  --cases ../../benchmarks/five_source_acceptance.json \
+  --iterations 20 \
+  --output ./evaluation.json
+```
+
+The evaluator rejects skipped worlds, incomplete provenance coverage, missing representative
+results, and failed queries. A previous report can be supplied with `--baseline`; by default it
+rejects query-latency regressions over 25% and peak-memory regressions over 15%.
+
 Omit `--limit-per-kind` for a complete build. The option caps each indexed relation independently,
 but still scans the source files because relation groups occur at different offsets.
 

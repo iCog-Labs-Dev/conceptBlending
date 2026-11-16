@@ -32,7 +32,7 @@ class PathMapBuildResult:
     index_dir: Path
     property_records: int
     algebraic_records: int
-    stats: dict[str, int]
+    stats: dict[str, float]
 
 
 _ALGEBRA_TYPES = (
@@ -60,13 +60,13 @@ def split_records(
     return property_records, algebraic_records
 
 
-def _read_stats(path: Path) -> dict[str, int]:
-    stats: dict[str, int] = {}
+def _read_stats(path: Path) -> dict[str, float]:
+    stats: dict[str, float] = {}
     for line in path.read_text(encoding="utf-8").splitlines():
         name, separator, value = line.partition("=")
         if not separator:
             raise PathMapCompileError(f"malformed PathMap build statistic: {line!r}")
-        stats[name] = int(value)
+        stats[name] = float(value)
     return stats
 
 

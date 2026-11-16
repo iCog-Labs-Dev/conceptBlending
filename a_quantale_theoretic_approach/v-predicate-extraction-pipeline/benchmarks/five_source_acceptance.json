@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "source": "wordnet",
+      "perspective": "taxonomic_kind",
+      "concept": "computer",
+      "command": "algebra",
+      "family": "sort",
+      "min_rows": 1
+    },
+    {
+      "source": "gene_ontology",
+      "perspective": "taxonomic_kind",
+      "concept": "atp_synthesis_coupled_proton_transport",
+      "command": "algebra",
+      "family": "sort",
+      "min_rows": 1
+    },
+    {
+      "source": "gene_ontology_cross_perspective",
+      "perspective": "behavioral_process",
+      "concept": "atp_synthesis_coupled_proton_transport",
+      "command": "worlds",
+      "property": "atp_synthesis_coupled_proton_transport",
+      "contains": "evaluation_perspective=spatial_context",
+      "min_rows": 1
+    },
+    {
+      "source": "chebi",
+      "perspective": "functional_use",
+      "concept": "phenol",
+      "command": "algebra",
+      "family": "predicate",
+      "min_rows": 1
+    },
+    {
+      "source": "openmath",
+      "perspective": "structural_composition",
+      "concept": "group",
+      "command": "algebra",
+      "family": "axiom",
+      "min_rows": 1
+    },
+    {
+      "source": "conceptnet",
+      "perspective": "functional_use",
+      "concept": "calculator",
+      "command": "algebra",
+      "family": "predicate",
+      "min_rows": 1
+    }
+  ]
+}

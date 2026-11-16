@@ -1,6 +1,7 @@
 use perspective_pathmap_prototype::{BuildStats, Index, ResultRow, stable_id};
 use std::env;
-use std::io;
+use std::fs::{self, OpenOptions};
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
@@ -47,12 +48,39 @@ fn print_rows(rows: Vec<ResultRow>) {
     }
 }
 
+fn peak_rss_kib() -> Option<u64> {
+    let mut usage = std::mem::MaybeUninit::<libc::rusage>::uninit();
+    if unsafe { libc::getrusage(libc::RUSAGE_SELF, usage.as_mut_ptr()) } == 0 {
+        let peak = unsafe { usage.assume_init() }.ru_maxrss;
+        if peak > 0 {
+            return Some(peak as u64);
+        }
+    }
+    let status = fs::read_to_string("/proc/self/status").ok()?;
+    status
+        .lines()
+        .filter_map(|line| {
+            let value = line
+                .strip_prefix("VmHWM:")
+                .or_else(|| line.strip_prefix("VmRSS:"))?
+                .trim();
+            value
+                .strip_suffix(" kB")
+                .unwrap_or(value)
+                .trim()
+                .parse()
+                .ok()
+        })
+        .max()
+}
+
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let Some(command) = args.get(1).map(String::as_str) else {
         usage()
     };
     if command == "build" {
+        let build_start = Instant::now();
         let mut index = Index::default();
         let mut stats = BuildStats::default();
         let limit =
@@ -71,8 +99,15 @@ fn main() -> io::Result<()> {
         )?;
         let out = PathBuf::from(required(&args, "--out"));
         index.save(&out, stats)?;
+        let build_elapsed_ms = build_start.elapsed().as_secs_f64() * 1000.0;
+        let peak_rss = peak_rss_kib().unwrap_or(0);
+        let mut summary = OpenOptions::new()
+            .append(true)
+            .open(out.join("build-stats.txt"))?;
+        writeln!(summary, "build_elapsed_ms={build_elapsed_ms:.3}")?;
+        writeln!(summary, "peak_rss_kib={peak_rss}")?;
         eprintln!(
-            "built {} perspective shards at {}: {:?}",
+            "built {} perspective shards at {}: {:?}; build_elapsed_ms={build_elapsed_ms:.3} peak_rss_kib={peak_rss}",
             index.shards.len(),
             out.display(),
             stats
@@ -123,7 +158,7 @@ fn main() -> io::Result<()> {
         let extension_query_time = extension_query_start.elapsed();
         assert_eq!(visible_extensions as u64, extensions);
         println!(
-            "backend=pathmap load_ms={:.3} rows={} iterations={} query_total_ms={:.3} query_mean_us={:.3} checksum={} extension_count={} extension_ms={:.3} extension_query_us={:.3}",
+            "backend=pathmap load_ms={:.3} rows={} iterations={} query_total_ms={:.3} query_mean_us={:.3} checksum={} extension_count={} extension_ms={:.3} extension_query_us={:.3} peak_rss_kib={}",
             load_time.as_secs_f64() * 1000.0,
             row_count,
             iterations,
@@ -133,6 +168,7 @@ fn main() -> io::Result<()> {
             extensions,
             extension_time.as_secs_f64() * 1000.0,
             extension_query_time.as_secs_f64() * 1_000_000.0,
+            peak_rss_kib().unwrap_or(0),
         );
         return Ok(());
     }
@@ -150,10 +186,9 @@ fn main() -> io::Result<()> {
             &required(&args, "--concept"),
             &required(&args, "--family"),
         ),
-        "perspective-relations" => index.query_perspective_relations(
-            &perspective,
-            &required(&args, "--family"),
-        ),
+        "perspective-relations" => {
+            index.query_perspective_relations(&perspective, &required(&args, "--family"))
+        }
         _ => usage(),
     };
     print_rows(rows);
