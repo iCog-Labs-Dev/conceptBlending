@@ -526,7 +526,7 @@ def validate_record_set(records: Sequence[FactRecord]) -> None:
     evidence_ids: set[str] = set()
     operation_edges: set[str] = set()
     predicate_edges: set[str] = set()
-    property_ids: set[str] = set()
+    property_declarations: dict[str, PropertyFact] = {}
 
     for record in records:
         if record.evidence_id in evidence_ids:
@@ -537,14 +537,27 @@ def validate_record_set(records: Sequence[FactRecord]) -> None:
         elif isinstance(record, PredicateFact):
             predicate_edges.add(record.edge_id)
         elif isinstance(record, PropertyFact):
-            property_ids.add(record.property_id)
+            previous = property_declarations.get(record.property_id)
+            if previous is not None and (
+                previous.concept != record.concept
+                or previous.perspective != record.perspective
+                or previous.property_name != record.property_name
+            ):
+                errors.append(
+                    f"conflicting property declaration: {record.property_id}"
+                )
+            else:
+                property_declarations[record.property_id] = record
 
     for record in records:
         if isinstance(record, OperationSignatureFact) and record.edge_id not in operation_edges:
             errors.append(f"operation signature references missing edge: {record.edge_id}")
         elif isinstance(record, PredicateSignatureFact) and record.edge_id not in predicate_edges:
             errors.append(f"predicate signature references missing edge: {record.edge_id}")
-        elif isinstance(record, PropertyWorldFact) and record.property_id not in property_ids:
+        elif (
+            isinstance(record, PropertyWorldFact)
+            and record.property_id not in property_declarations
+        ):
             errors.append(f"property world references missing property: {record.property_id}")
 
     if errors:

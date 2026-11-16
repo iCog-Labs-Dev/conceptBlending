@@ -177,6 +177,57 @@ class VPredicateContractTests(unittest.TestCase):
         )
         validate_record_set([world_fact, property_fact])
 
+    def test_property_world_may_use_a_different_evaluation_perspective(self) -> None:
+        property_fact = PropertyFact(
+            evidence_id="atp_process_edge",
+            edge_id="atp_process_edge",
+            concept="atp_synthesis",
+            perspective="behavioral_process",
+            property_id="atp_process_property_id",
+            property_name="proton_transport",
+            truth=TruthValue(0.9, 0.9),
+            provenance=provenance(),
+        )
+        world_fact = PropertyWorldFact(
+            evidence_id="atp_membrane_world_edge",
+            edge_id="atp_membrane_world_edge",
+            property_id="atp_process_property_id",
+            perspective="spatial_context",
+            world="mitochondrial_inner_membrane",
+            truth=TruthValue(0.85, 0.9),
+            provenance=provenance(),
+        )
+
+        validate_record_set([world_fact, property_fact])
+        self.assertIn("spatial_context", world_fact.to_metta())
+
+    def test_conflicting_property_declarations_are_rejected(self) -> None:
+        first = PropertyFact(
+            evidence_id="first_property_edge",
+            edge_id="first_property_edge",
+            concept="computer",
+            perspective="functional_use",
+            property_id="shared_property_id",
+            property_name="compute",
+            truth=TruthValue(0.9, 0.9),
+            provenance=provenance(),
+        )
+        conflicting = PropertyFact(
+            evidence_id="second_property_edge",
+            edge_id="second_property_edge",
+            concept="computer",
+            perspective="behavioral_process",
+            property_id="shared_property_id",
+            property_name="process_information",
+            truth=TruthValue(0.9, 0.9),
+            provenance=provenance(),
+        )
+
+        with self.assertRaisesRegex(
+            ContractValidationError, "conflicting property declaration"
+        ):
+            validate_record_set([first, conflicting])
+
     def test_authoritative_fixture_is_canonical(self) -> None:
         fixture = PIPELINE_ROOT / "fixtures" / "v_predicate_contract_v1.metta"
         text = fixture.read_text(encoding="utf-8")
