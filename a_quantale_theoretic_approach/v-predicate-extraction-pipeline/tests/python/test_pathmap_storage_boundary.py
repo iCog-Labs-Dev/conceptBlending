@@ -6,8 +6,13 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
+
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]
+if str(PIPELINE_ROOT / "python") not in sys.path:
+    sys.path.insert(0, str(PIPELINE_ROOT / "python"))
 
 from ingestion.orchestrator import IngestionSummary, MultiSourceOrchestrator
 

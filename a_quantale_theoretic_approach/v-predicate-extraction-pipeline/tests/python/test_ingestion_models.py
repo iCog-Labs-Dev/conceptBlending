@@ -5,6 +5,12 @@ from __future__ import annotations
 
 import unittest
 from dataclasses import FrozenInstanceError
+from pathlib import Path
+import sys
+
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]
+if str(PIPELINE_ROOT / "python") not in sys.path:
+    sys.path.insert(0, str(PIPELINE_ROOT / "python"))
 
 from ingestion.models import (
     FactType,

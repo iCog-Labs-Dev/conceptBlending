@@ -1,7 +1,12 @@
 """Unit tests for OpenMath source adapter under canonical v-predicate/1 contract."""
 
 from pathlib import Path
+import sys
 import pytest
+
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]
+if str(PIPELINE_ROOT / "python") not in sys.path:
+    sys.path.insert(0, str(PIPELINE_ROOT / "python"))
 
 from ingestion.openmath_adapter import OpenMathAdapter
 from v_predicate_contract import (

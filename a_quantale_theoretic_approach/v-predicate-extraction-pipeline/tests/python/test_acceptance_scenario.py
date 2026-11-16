@@ -7,6 +7,11 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import sys
+
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]
+if str(PIPELINE_ROOT / "python") not in sys.path:
+    sys.path.insert(0, str(PIPELINE_ROOT / "python"))
 
 from ingestion.orchestrator import IngestionSummary, MultiSourceOrchestrator
 from v_predicate_contract import CONTRACT_VERSION
