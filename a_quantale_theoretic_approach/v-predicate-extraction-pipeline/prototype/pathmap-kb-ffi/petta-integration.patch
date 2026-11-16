@@ -1,0 +1,18 @@
+diff --git a/src/metta.pl b/src/metta.pl
+index 1578eb0..c573a5a 100644
+--- a/src/metta.pl
++++ b/src/metta.pl
+@@ -23,0 +24,5 @@ library(X, Y, Path) :- library_path(Base), atomic_list_concat([Base, '/../', X,
++:- library('pathmap_kb_ffi', 'pathmaplib.so', PathMapLibrary),
++   ( exists_file(PathMapLibrary)
++   -> ensure_loaded('../pathmap_kb_ffi/pathmapspaces')
++   ;  true
++   ).
+@@ -319,0 +325,7 @@ register_fun(N) :- (fun(N) -> true ; assertz(fun(N))).
++:- ( current_predicate(pathmap_kb/3)
++   -> maplist(register_fun,
++              ['pathmap-open!', 'pathmap-close!', 'pathmap-query-algebra',
++               'pathmap-query-properties', 'pathmap-query-worlds',
++               'pathmap-build-specification'])
++   ;  true
++   ).

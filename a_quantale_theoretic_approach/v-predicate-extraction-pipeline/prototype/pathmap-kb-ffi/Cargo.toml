@@ -1,0 +1,12 @@
+[package]
+name = "pathmap_kb_ffi"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+perspective-pathmap-prototype = { path = "../pathmap-kb" }
+
+[lib]
+name = "pathmap_kb_ffi"
+crate-type = ["cdylib"]
