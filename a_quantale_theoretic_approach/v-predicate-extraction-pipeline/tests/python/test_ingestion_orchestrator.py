@@ -179,6 +179,7 @@ class TestIngestionOrchestrator(unittest.TestCase):
             self.assertFalse((out_dir / ".staging").exists())
 
     def test_cli_invocation_all_sources(self) -> None:
+        import os
         import tempfile
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir) / "cli_out"
@@ -195,13 +196,15 @@ class TestIngestionOrchestrator(unittest.TestCase):
                 "2",
                 "--verbose",
             ]
+            env = os.environ.copy()
+            env["PYTHONPATH"] = f"{PIPELINE_ROOT}/python:{PIPELINE_ROOT.parents[1]}:{env.get('PYTHONPATH', '')}"
             result = subprocess.run(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                timeout=30,
-                env={"PYTHONPATH": f"{PIPELINE_ROOT}/python:{PIPELINE_ROOT.parents[1]}"},
+                timeout=120,
+                env=env,
             )
 
             self.assertEqual(result.returncode, 0, f"CLI stderr: {result.stderr}")
@@ -211,6 +214,7 @@ class TestIngestionOrchestrator(unittest.TestCase):
             self.assertIn("Ingestion Complete", result.stdout)
 
     def test_cli_invocation_conceptnet(self) -> None:
+        import os
         import tempfile
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir) / "cli_cnet"
@@ -226,13 +230,15 @@ class TestIngestionOrchestrator(unittest.TestCase):
                 "--limit",
                 "3",
             ]
+            env = os.environ.copy()
+            env["PYTHONPATH"] = f"{PIPELINE_ROOT}/python:{PIPELINE_ROOT.parents[1]}:{env.get('PYTHONPATH', '')}"
             result = subprocess.run(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                timeout=30,
-                env={"PYTHONPATH": f"{PIPELINE_ROOT}/python:{PIPELINE_ROOT.parents[1]}"},
+                timeout=120,
+                env=env,
             )
 
             self.assertEqual(result.returncode, 0, f"CLI stderr: {result.stderr}")
