@@ -13,6 +13,11 @@ pub const SORT: u8 = 0x20;
 pub const OPERATION: u8 = 0x30;
 pub const PREDICATE: u8 = 0x40;
 pub const AXIOM: u8 = 0x50;
+pub const PERSPECTIVE_DEFINITION: u8 = 0x60;
+pub const SUBPERSPECTIVE: u8 = 0x61;
+pub const PERSPECTIVE_MATCH: u8 = 0x62;
+pub const CONTRACT_VERSION: &str = "v-predicate/1";
+pub const INDEX_FORMAT_VERSION: &str = "pathmap-kb/2";
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct RecordValue {
@@ -23,10 +28,15 @@ pub struct RecordValue {
     pub payload: u64,
     pub evidence: u64,
     pub payload_evidence: u64,
+    pub provenance: u64,
+    pub payload_provenance: u64,
+    pub world_perspective: u64,
+    pub origin: u8,
+    pub payload_origin: u8,
 }
 
 impl RecordValue {
-    const SIZE: usize = 32;
+    const SIZE: usize = 64;
 
     fn bytes(self) -> [u8; Self::SIZE] {
         let mut out = [0; Self::SIZE];
@@ -37,6 +47,11 @@ impl RecordValue {
         out[8..16].copy_from_slice(&self.payload.to_le_bytes());
         out[16..24].copy_from_slice(&self.evidence.to_le_bytes());
         out[24..32].copy_from_slice(&self.payload_evidence.to_le_bytes());
+        out[32..40].copy_from_slice(&self.provenance.to_le_bytes());
+        out[40..48].copy_from_slice(&self.payload_provenance.to_le_bytes());
+        out[48..56].copy_from_slice(&self.world_perspective.to_le_bytes());
+        out[56] = self.origin;
+        out[57] = self.payload_origin;
         out
     }
 
@@ -49,6 +64,11 @@ impl RecordValue {
             payload: u64::from_le_bytes(bytes[8..16].try_into().unwrap()),
             evidence: u64::from_le_bytes(bytes[16..24].try_into().unwrap()),
             payload_evidence: u64::from_le_bytes(bytes[24..32].try_into().unwrap()),
+            provenance: u64::from_le_bytes(bytes[32..40].try_into().unwrap()),
+            payload_provenance: u64::from_le_bytes(bytes[40..48].try_into().unwrap()),
+            world_perspective: u64::from_le_bytes(bytes[48..56].try_into().unwrap()),
+            origin: bytes[56],
+            payload_origin: bytes[57],
         }
     }
 }
@@ -57,6 +77,7 @@ impl RecordValue {
 pub struct Shard {
     pub primary: PathMap<RecordValue>,
     pub property_name: PathMap<RecordValue>,
+    pub perspectives: PathMap<RecordValue>,
 }
 
 #[derive(Default)]
@@ -66,6 +87,9 @@ pub struct Index {
     pub payloads: HashMap<u64, String>,
     property_refs: HashMap<String, PropertyRef>,
     operations: HashMap<String, OperationRef>,
+    predicates: HashMap<String, OperationRef>,
+    provenance: HashMap<String, ProvenanceRef>,
+    perspective_records: HashMap<String, u64>,
 }
 
 #[derive(Clone)]
@@ -84,6 +108,12 @@ struct OperationRef {
     value: RecordValue,
 }
 
+#[derive(Clone, Copy)]
+struct ProvenanceRef {
+    payload: u64,
+    origin: u8,
+}
+
 #[derive(Default, Debug, Clone, Copy)]
 pub struct BuildStats {
     pub property_facts: u64,
@@ -93,6 +123,10 @@ pub struct BuildStats {
     pub predicates: u64,
     pub axioms: u64,
     pub skipped_worlds: u64,
+    pub perspective_definitions: u64,
+    pub subperspectives: u64,
+    pub perspective_matches: u64,
+    pub provenance_records: u64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -108,6 +142,11 @@ pub struct ResultRow {
     pub payload_strength: Option<f32>,
     pub payload_confidence: Option<f32>,
     pub payload_evidence: Option<String>,
+    pub evaluation_perspective: Option<String>,
+    pub provenance: Option<String>,
+    pub origin: Option<&'static str>,
+    pub payload_provenance: Option<String>,
+    pub payload_origin: Option<&'static str>,
 }
 
 pub fn stable_id(text: &str) -> u64 {
@@ -186,6 +225,32 @@ fn outer_evidence(text: &str) -> Option<&str> {
     text.strip_prefix("(: ")?.split_ascii_whitespace().next()
 }
 
+fn origin_code(origin: &str) -> Option<u8> {
+    match origin {
+        "asserted" => Some(1),
+        "inferred" => Some(2),
+        "generated" => Some(3),
+        _ => None,
+    }
+}
+
+fn origin_name(origin: u8) -> Option<&'static str> {
+    match origin {
+        1 => Some("asserted"),
+        2 => Some("inferred"),
+        3 => Some("generated"),
+        _ => None,
+    }
+}
+
+fn for_each_line(path: &Path, mut visit: impl FnMut(&str) -> io::Result<()>) -> io::Result<()> {
+    let reader = BufReader::with_capacity(1024 * 1024, File::open(path)?);
+    for line in reader.lines() {
+        visit(&line?)?;
+    }
+    Ok(())
+}
+
 impl Index {
     fn intern_symbol(&mut self, symbol: &str) -> io::Result<u64> {
         let id = stable_id(symbol);
@@ -229,6 +294,7 @@ impl Index {
     ) -> io::Result<RecordValue> {
         let (strength, confidence) = tv(line)
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing or invalid stv"))?;
+        let provenance = self.provenance.get(evidence).copied();
         Ok(RecordValue {
             strength,
             confidence,
@@ -240,7 +306,45 @@ impl Index {
             },
             evidence: self.intern_symbol(evidence)?,
             payload_evidence: 0,
+            provenance: provenance.map_or(0, |record| record.payload),
+            origin: provenance.map_or(0, |record| record.origin),
+            ..RecordValue::default()
         })
+    }
+
+    fn ingest_provenance_line(&mut self, line: &str, stats: &mut BuildStats) -> io::Result<bool> {
+        let Some(arguments) = list_args(line, "evidence_provenance") else {
+            return Ok(false);
+        };
+        if arguments.len() != 8 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "evidence_provenance requires eight arguments",
+            ));
+        }
+        let origin = origin_code(&arguments[7]).ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("unknown fact origin: {}", arguments[7]),
+            )
+        })?;
+        let expression = format!("(evidence_provenance {})", arguments.join(" "));
+        let payload = self.intern_payload(&expression)?;
+        match self
+            .provenance
+            .insert(arguments[0].clone(), ProvenanceRef { payload, origin })
+        {
+            Some(previous) if previous.payload != payload || previous.origin != origin => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("conflicting provenance for {}", arguments[0]),
+                ));
+            }
+            Some(_) => return Ok(true),
+            None => {}
+        }
+        stats.provenance_records += 1;
+        Ok(true)
     }
 
     pub fn ingest_property_line(&mut self, line: &str, stats: &mut BuildStats) -> io::Result<bool> {
@@ -279,21 +383,17 @@ impl Index {
             if a.len() != 4 {
                 return Ok(false);
             }
-            let Some(reference) = self.property_refs.get(&a[1]).cloned() else {
-                stats.skipped_worlds += 1;
-                return Ok(false);
-            };
-            let evidence = self.intern_symbol(&a[0])?;
-            let stated_perspective = self.intern_symbol(&a[2])?;
-            if stated_perspective != reference.perspective {
-                return Err(io::Error::new(
+            let reference = self.property_refs.get(&a[1]).cloned().ok_or_else(|| {
+                io::Error::new(
                     io::ErrorKind::InvalidData,
-                    format!("perspective mismatch for property ref {}", a[1]),
-                ));
-            }
+                    format!("property world references missing property: {}", a[1]),
+                )
+            })?;
+            let evidence = self.intern_symbol(&a[0])?;
+            let evaluation_perspective = self.intern_symbol(&a[2])?;
             let world = self.intern_symbol(&a[3])?;
-            let value = self.value(line, &a[0], None)?;
-            let shard = self.shards.entry(reference.perspective).or_default();
+            let mut value = self.value(line, &a[0], None)?;
+            value.world_perspective = evaluation_perspective;
             let mut primary = Vec::with_capacity(34);
             push_id(&mut primary, reference.concept);
             primary.push(PROPERTY);
@@ -301,14 +401,22 @@ impl Index {
             primary.push(PROPERTY_WORLD);
             push_id(&mut primary, world);
             push_id(&mut primary, evidence);
-            shard.primary.insert(primary, value);
+            self.shards
+                .entry(reference.perspective)
+                .or_default()
+                .primary
+                .insert(primary, value);
 
             let mut inverted = Vec::with_capacity(32);
             push_id(&mut inverted, reference.property);
             push_id(&mut inverted, world);
             push_id(&mut inverted, reference.concept);
             push_id(&mut inverted, evidence);
-            shard.property_name.insert(inverted, value);
+            self.shards
+                .entry(evaluation_perspective)
+                .or_default()
+                .property_name
+                .insert(inverted, value);
             stats.world_facts += 1;
             return Ok(true);
         }
@@ -329,16 +437,28 @@ impl Index {
                 evidence: value.evidence,
                 value,
             };
+            self.insert_algebra(
+                op.perspective,
+                op.concept,
+                OPERATION,
+                op.operation,
+                op.evidence,
+                op.value,
+            );
             self.operations.insert(a[0].clone(), op);
+            stats.operations += 1;
             return Ok(true);
         }
         if let Some(a) = list_args(line, "operation_signature") {
             if a.len() != 2 {
                 return Ok(false);
             }
-            let Some(op) = self.operations.get(&a[0]).cloned() else {
-                return Ok(false);
-            };
+            let op = self.operations.get(&a[0]).cloned().ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("operation signature references missing edge: {}", a[0]),
+                )
+            })?;
             let mut value = op.value;
             value.payload = self.intern_payload(&a[1])?;
             let (signature_strength, signature_confidence) = tv(line).ok_or_else(|| {
@@ -349,7 +469,12 @@ impl Index {
             })?;
             value.payload_strength = signature_strength;
             value.payload_confidence = signature_confidence;
-            value.payload_evidence = self.intern_symbol(outer_evidence(line).unwrap_or(&a[0]))?;
+            let signature_evidence = outer_evidence(line).unwrap_or(&a[0]);
+            value.payload_evidence = self.intern_symbol(signature_evidence)?;
+            if let Some(provenance) = self.provenance.get(signature_evidence) {
+                value.payload_provenance = provenance.payload;
+                value.payload_origin = provenance.origin;
+            }
             self.insert_algebra(
                 op.perspective,
                 op.concept,
@@ -358,7 +483,42 @@ impl Index {
                 op.evidence,
                 value,
             );
-            stats.operations += 1;
+            return Ok(true);
+        }
+        if let Some(a) = list_args(line, "predicate_signature") {
+            if a.len() != 2 {
+                return Ok(false);
+            }
+            let predicate = self.predicates.get(&a[0]).cloned().ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("predicate signature references missing edge: {}", a[0]),
+                )
+            })?;
+            let mut value = predicate.value;
+            value.payload = self.intern_payload(&a[1])?;
+            let (strength, confidence) = tv(line).ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "missing predicate-signature stv",
+                )
+            })?;
+            value.payload_strength = strength;
+            value.payload_confidence = confidence;
+            let signature_evidence = outer_evidence(line).unwrap_or(&a[0]);
+            value.payload_evidence = self.intern_symbol(signature_evidence)?;
+            if let Some(provenance) = self.provenance.get(signature_evidence) {
+                value.payload_provenance = provenance.payload;
+                value.payload_origin = provenance.origin;
+            }
+            self.insert_algebra(
+                predicate.perspective,
+                predicate.concept,
+                PREDICATE,
+                predicate.operation,
+                predicate.evidence,
+                value,
+            );
             return Ok(true);
         }
         for (predicate, tag) in [
@@ -379,8 +539,20 @@ impl Index {
                 } else {
                     self.intern_symbol(&a[3])?
                 };
-                let value = self.value(line, &a[0], nested.then_some(a[3].as_str()))?;
+                let value = self.value(line, &a[0], None)?;
                 self.insert_algebra(perspective, concept, tag, feature, evidence, value);
+                if tag == PREDICATE {
+                    self.predicates.insert(
+                        a[0].clone(),
+                        OperationRef {
+                            perspective,
+                            concept,
+                            operation: feature,
+                            evidence,
+                            value,
+                        },
+                    );
+                }
                 match tag {
                     SORT => stats.sorts += 1,
                     PREDICATE => stats.predicates += 1,
@@ -391,6 +563,75 @@ impl Index {
             }
         }
         Ok(false)
+    }
+
+    pub fn ingest_perspective_line(
+        &mut self,
+        line: &str,
+        stats: &mut BuildStats,
+    ) -> io::Result<bool> {
+        let (predicate, tag, count) = if line.contains("(classified_perspective ") {
+            ("classified_perspective", PERSPECTIVE_DEFINITION, 2)
+        } else if line.contains("(subperspective ") {
+            ("subperspective", SUBPERSPECTIVE, 2)
+        } else if line.contains("(perspective_match ") {
+            ("perspective_match", PERSPECTIVE_MATCH, 3)
+        } else {
+            return Ok(false);
+        };
+        let arguments = list_args(line, predicate).ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("invalid {predicate} record"),
+            )
+        })?;
+        if arguments.len() != count {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("{predicate} requires {count} arguments"),
+            ));
+        }
+        let shard_perspective = self.intern_symbol(&arguments[0])?;
+        let evidence_name = outer_evidence(line).ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "missing outer evidence identifier",
+            )
+        })?;
+        let relation_id = stable_id(&format!("{predicate}\u{1f}{}", arguments.join("\u{1f}")));
+        match self
+            .perspective_records
+            .insert(evidence_name.to_owned(), relation_id)
+        {
+            Some(previous) if previous != relation_id => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("conflicting perspective record for {evidence_name}"),
+                ));
+            }
+            Some(_) => return Ok(true),
+            None => {}
+        }
+        let evidence = self.intern_symbol(evidence_name)?;
+        let mut key = Vec::with_capacity(25);
+        key.push(tag);
+        for argument in &arguments[1..] {
+            push_id(&mut key, self.intern_symbol(argument)?);
+        }
+        push_id(&mut key, evidence);
+        let value = self.value(line, evidence_name, None)?;
+        self.shards
+            .entry(shard_perspective)
+            .or_default()
+            .perspectives
+            .insert(key, value);
+        match tag {
+            PERSPECTIVE_DEFINITION => stats.perspective_definitions += 1,
+            SUBPERSPECTIVE => stats.subperspectives += 1,
+            PERSPECTIVE_MATCH => stats.perspective_matches += 1,
+            _ => unreachable!(),
+        }
+        Ok(true)
     }
 
     fn insert_algebra(
@@ -421,35 +662,97 @@ impl Index {
         limit_per_kind: Option<u64>,
         stats: &mut BuildStats,
     ) -> io::Result<()> {
-        let reader = BufReader::with_capacity(1024 * 1024, File::open(path)?);
-        for line in reader.lines() {
-            let line = line?;
-            if property_kb {
-                let is_property = line.contains("(has_scoped_property ");
-                let is_world = line.contains("(scoped_property_holds_in ");
-                if is_property && limit_per_kind.is_some_and(|n| stats.property_facts >= n) {
-                    continue;
+        // Collect provenance before materializing values, regardless of source ordering.
+        for_each_line(path, |line| {
+            self.ingest_provenance_line(line, stats)?;
+            Ok(())
+        })?;
+        for_each_line(path, |line| {
+            self.ingest_perspective_line(line, stats)?;
+            Ok(())
+        })?;
+
+        if property_kb {
+            for_each_line(path, |line| {
+                if !line.contains("(has_scoped_property ") {
+                    return Ok(());
                 }
-                if is_world && limit_per_kind.is_some_and(|n| stats.world_facts >= n) {
-                    continue;
+                if limit_per_kind.is_some_and(|limit| stats.property_facts >= limit) {
+                    return Ok(());
                 }
-                self.ingest_property_line(&line, stats)?;
-            } else {
-                let capped = |count| limit_per_kind.is_some_and(|n| count >= n);
-                if (line.contains("(has_sort ") && capped(stats.sorts))
-                    || (line.contains("(operation_signature ") && capped(stats.operations))
-                    || (line.contains("(has_predicate ") && capped(stats.predicates))
-                    || (line.contains("(has_axiom ") && capped(stats.axioms))
+                self.ingest_property_line(line, stats)?;
+                Ok(())
+            })?;
+            for_each_line(path, |line| {
+                if !line.contains("(scoped_property_holds_in ") {
+                    return Ok(());
+                }
+                if limit_per_kind.is_some_and(|limit| stats.world_facts >= limit) {
+                    return Ok(());
+                }
+                let property_id = list_args(line, "scoped_property_holds_in")
+                    .and_then(|arguments| arguments.get(1).cloned());
+                if limit_per_kind.is_some()
+                    && property_id
+                        .as_ref()
+                        .is_some_and(|id| !self.property_refs.contains_key(id))
                 {
-                    continue;
+                    stats.skipped_worlds += 1;
+                    return Ok(());
                 }
-                // Keep has_operation records until enough signatures have been resolved.
-                if line.contains("(has_operation ") && capped(stats.operations) {
-                    continue;
-                }
-                self.ingest_algebra_line(&line, stats)?;
-            }
+                self.ingest_property_line(line, stats)?;
+                Ok(())
+            })?;
+            return Ok(());
         }
+
+        for_each_line(path, |line| {
+            if (line.contains("(has_sort ")
+                && limit_per_kind.is_some_and(|limit| stats.sorts >= limit))
+                || (line.contains("(has_operation ")
+                    && limit_per_kind.is_some_and(|limit| stats.operations >= limit))
+                || (line.contains("(has_predicate ")
+                    && limit_per_kind.is_some_and(|limit| stats.predicates >= limit))
+                || (line.contains("(has_axiom ")
+                    && limit_per_kind.is_some_and(|limit| stats.axioms >= limit))
+            {
+                return Ok(());
+            }
+            if line.contains("(has_sort ")
+                || line.contains("(has_operation ")
+                || line.contains("(has_predicate ")
+                || line.contains("(has_axiom ")
+            {
+                self.ingest_algebra_line(line, stats)?;
+            }
+            Ok(())
+        })?;
+        for_each_line(path, |line| {
+            if line.contains("(operation_signature ") {
+                let edge = list_args(line, "operation_signature")
+                    .and_then(|arguments| arguments.first().cloned());
+                if limit_per_kind.is_some()
+                    && edge
+                        .as_ref()
+                        .is_some_and(|id| !self.operations.contains_key(id))
+                {
+                    return Ok(());
+                }
+                self.ingest_algebra_line(line, stats)?;
+            } else if line.contains("(predicate_signature ") {
+                let edge = list_args(line, "predicate_signature")
+                    .and_then(|arguments| arguments.first().cloned());
+                if limit_per_kind.is_some()
+                    && edge
+                        .as_ref()
+                        .is_some_and(|id| !self.predicates.contains_key(id))
+                {
+                    return Ok(());
+                }
+                self.ingest_algebra_line(line, stats)?;
+            }
+            Ok(())
+        })?;
         Ok(())
     }
 
@@ -503,6 +806,11 @@ impl Index {
             payload_strength: None,
             payload_confidence: None,
             payload_evidence: None,
+            evaluation_perspective: None,
+            provenance: self.payload(value.provenance),
+            origin: origin_name(value.origin),
+            payload_provenance: None,
+            payload_origin: None,
         })
         .into_iter()
         .filter(|row| row.world.is_none())
@@ -530,6 +838,12 @@ impl Index {
             payload_strength: None,
             payload_confidence: None,
             payload_evidence: None,
+            evaluation_perspective: (value.world_perspective != 0)
+                .then(|| self.symbol(value.world_perspective)),
+            provenance: self.payload(value.provenance),
+            origin: origin_name(value.origin),
+            payload_provenance: None,
+            payload_origin: None,
         })
     }
 
@@ -551,6 +865,12 @@ impl Index {
             payload_strength: None,
             payload_confidence: None,
             payload_evidence: None,
+            evaluation_perspective: (value.world_perspective != 0)
+                .then(|| self.symbol(value.world_perspective)),
+            provenance: self.payload(value.provenance),
+            origin: origin_name(value.origin),
+            payload_provenance: None,
+            payload_origin: None,
         })
     }
 
@@ -596,7 +916,42 @@ impl Index {
                     .then_some(value.payload_confidence as f32 / 1000.0),
                 payload_evidence: (value.payload_evidence != 0)
                     .then(|| self.symbol(value.payload_evidence)),
+                evaluation_perspective: None,
+                provenance: self.payload(value.provenance),
+                origin: origin_name(value.origin),
+                payload_provenance: self.payload(value.payload_provenance),
+                payload_origin: origin_name(value.payload_origin),
             }
+        })
+    }
+
+    pub fn query_perspective_relations(&self, perspective: &str, family: &str) -> Vec<ResultRow> {
+        let (tag, family) = match family {
+            "definition" => (PERSPECTIVE_DEFINITION, "perspective-definition"),
+            "subperspective" => (SUBPERSPECTIVE, "subperspective"),
+            "match" => (PERSPECTIVE_MATCH, "perspective-match"),
+            _ => return vec![],
+        };
+        let Some(shard) = self.shards.get(&stable_id(perspective)) else {
+            return vec![];
+        };
+        self.rows_at(&shard.perspectives, &[tag], |key, value| ResultRow {
+            concept: perspective.to_owned(),
+            family,
+            feature: self.symbol(id_at(key, 0)),
+            world: None,
+            payload: (tag == PERSPECTIVE_MATCH).then(|| self.symbol(id_at(key, 8))),
+            evidence: self.symbol(value.evidence),
+            strength: value.strength as f32 / 1000.0,
+            confidence: value.confidence as f32 / 1000.0,
+            payload_strength: None,
+            payload_confidence: None,
+            payload_evidence: None,
+            evaluation_perspective: None,
+            provenance: self.payload(value.provenance),
+            origin: origin_name(value.origin),
+            payload_provenance: None,
+            payload_origin: None,
         })
     }
 
@@ -645,12 +1000,20 @@ impl Index {
 
     pub fn save(&self, root: &Path, stats: BuildStats) -> io::Result<()> {
         fs::create_dir_all(root)?;
+        fs::write(
+            root.join("contract-version.txt"),
+            format!("{CONTRACT_VERSION}\n"),
+        )?;
+        fs::write(
+            root.join("index-format-version.txt"),
+            format!("{INDEX_FORMAT_VERSION}\n"),
+        )?;
         write_dictionary(root.join("symbols.tsv"), &self.symbols)?;
         write_dictionary(root.join("payloads.tsv"), &self.payloads)?;
         let mut manifest = BufWriter::new(File::create(root.join("manifest.tsv"))?);
         writeln!(
             manifest,
-            "# perspective_id\tperspective\tprimary_paths\tproperty_name_paths"
+            "# perspective_id\tperspective\tprimary_paths\tproperty_name_paths\tperspective_paths"
         )?;
         let mut shard_ids: Vec<_> = self.shards.keys().copied().collect();
         shard_ids.sort_unstable();
@@ -661,9 +1024,10 @@ impl Index {
             let shard = &self.shards[&id];
             let primary_count = save_map(&shard.primary, &dir.join("primary"))?;
             let inverted_count = save_map(&shard.property_name, &dir.join("property-name"))?;
+            let perspective_count = save_map(&shard.perspectives, &dir.join("perspectives"))?;
             writeln!(
                 manifest,
-                "{id:016x}\t{}\t{primary_count}\t{inverted_count}",
+                "{id:016x}\t{}\t{primary_count}\t{inverted_count}\t{perspective_count}",
                 self.symbol(id)
             )?;
         }
@@ -675,10 +1039,19 @@ impl Index {
         writeln!(summary, "predicates={}", stats.predicates)?;
         writeln!(summary, "axioms={}", stats.axioms)?;
         writeln!(summary, "skipped_worlds={}", stats.skipped_worlds)?;
+        writeln!(
+            summary,
+            "perspective_definitions={}",
+            stats.perspective_definitions
+        )?;
+        writeln!(summary, "subperspectives={}", stats.subperspectives)?;
+        writeln!(summary, "perspective_matches={}", stats.perspective_matches)?;
+        writeln!(summary, "provenance_records={}", stats.provenance_records)?;
         Ok(())
     }
 
     pub fn load_shard(root: &Path, perspective: &str) -> io::Result<Self> {
+        validate_index_version(root)?;
         let mut index = Self {
             symbols: read_dictionary(root.join("symbols.tsv"))?,
             payloads: read_dictionary(root.join("payloads.tsv"))?,
@@ -707,10 +1080,27 @@ impl Index {
             Shard {
                 primary: load_map(&dir.join("primary"))?,
                 property_name: load_map(&dir.join("property-name"))?,
+                perspectives: load_map(&dir.join("perspectives"))?,
             },
         );
         Ok(true)
     }
+}
+
+fn validate_index_version(root: &Path) -> io::Result<()> {
+    let contract = fs::read_to_string(root.join("contract-version.txt"))?;
+    let format = fs::read_to_string(root.join("index-format-version.txt"))?;
+    if contract.trim() != CONTRACT_VERSION || format.trim() != INDEX_FORMAT_VERSION {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!(
+                "incompatible index: contract={} format={}",
+                contract.trim(),
+                format.trim()
+            ),
+        ));
+    }
+    Ok(())
 }
 
 fn write_dictionary(path: PathBuf, dictionary: &HashMap<u64, String>) -> io::Result<()> {
@@ -780,12 +1170,25 @@ fn load_map(base: &Path) -> io::Result<PathMap<RecordValue>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     const PROPERTY_LINE: &str = "(: property_ev (≞ (has_scoped_property property_ev computer functional_use property_key_computer_functional_use_process_information process_information) (stv 0.649 0.477)))";
     const WORLD_LINE: &str = "(: world_ev (≞ (scoped_property_holds_in world_ev property_key_computer_functional_use_process_information functional_use software) (stv 0.627 0.480)))";
     const OP_LINE: &str =
         "(: op_ev (≞ (has_operation op_ev computer functional_use process) (stv 0.649 0.697)))";
     const SIG_LINE: &str = "(: sig_ev (≞ (operation_signature op_ev (arrow computer information output)) (stv 0.900 0.860)))";
+
+    const CROSS_WORLD_LINE: &str = "(: cross_world_ev (≞ (scoped_property_holds_in cross_world_ev property_key_computer_functional_use_process_information spatial_context workstation) (stv 0.700 0.800)))";
+
+    fn temporary_file(name: &str, contents: &str) -> PathBuf {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!("pathmap-kb-{name}-{nonce}.metta"));
+        fs::write(&path, contents).unwrap();
+        path
+    }
 
     #[test]
     fn parses_nested_arguments() {
@@ -829,6 +1232,95 @@ mod tests {
         );
         assert_eq!(rows[0].payload_strength, Some(0.9));
         assert_eq!(rows[0].payload_evidence.as_deref(), Some("sig_ev"));
+    }
+
+    #[test]
+    fn cross_perspective_worlds_preserve_both_perspectives() {
+        let mut index = Index::default();
+        let mut stats = BuildStats::default();
+        index
+            .ingest_property_line(PROPERTY_LINE, &mut stats)
+            .unwrap();
+        index
+            .ingest_property_line(CROSS_WORLD_LINE, &mut stats)
+            .unwrap();
+
+        let worlds = index.query_worlds("functional_use", "computer", "process_information");
+        assert_eq!(worlds.len(), 1);
+        assert_eq!(
+            worlds[0].evaluation_perspective.as_deref(),
+            Some("spatial_context")
+        );
+        assert_eq!(
+            index
+                .query_property_name("spatial_context", "process_information")
+                .len(),
+            1
+        );
+    }
+
+    #[test]
+    fn file_ingestion_is_order_independent_and_preserves_provenance() {
+        let property_file = temporary_file(
+            "property-order",
+            &format!(
+                "{CROSS_WORLD_LINE}\n{PROPERTY_LINE}\n(: property_ev_provenance (≞ (evidence_provenance property_ev wordnet \"computer.v.01\" \"nltk://wordnet\" \"3.1\" \"WordNet-3.0\" adapter asserted) (stv 1.000 1.000)))\n(: cross_world_ev_provenance (≞ (evidence_provenance cross_world_ev wordnet \"generated-world\" \"nltk://wordnet\" \"3.1\" \"WordNet-3.0\" heuristic generated) (stv 1.000 1.000)))\n"
+            ),
+        );
+        let algebra_file = temporary_file(
+            "algebra-order",
+            &format!(
+                "{SIG_LINE}\n{OP_LINE}\n(: op_ev_provenance (≞ (evidence_provenance op_ev wordnet \"operation\" \"nltk://wordnet\" \"3.1\" \"WordNet-3.0\" adapter asserted) (stv 1.000 1.000)))\n(: sig_ev_provenance (≞ (evidence_provenance sig_ev wordnet \"signature\" \"nltk://wordnet\" \"3.1\" \"WordNet-3.0\" adapter inferred) (stv 1.000 1.000)))\n"
+            ),
+        );
+        let mut index = Index::default();
+        let mut stats = BuildStats::default();
+        index
+            .ingest_file(&property_file, true, None, &mut stats)
+            .unwrap();
+        index
+            .ingest_file(&algebra_file, false, None, &mut stats)
+            .unwrap();
+        fs::remove_file(property_file).unwrap();
+        fs::remove_file(algebra_file).unwrap();
+
+        let world = index.query_worlds("functional_use", "computer", "process_information");
+        assert_eq!(world[0].origin, Some("generated"));
+        assert!(
+            world[0]
+                .provenance
+                .as_deref()
+                .unwrap()
+                .contains("generated-world")
+        );
+        let operation = index.query_algebra("functional_use", "computer", "operation");
+        assert_eq!(operation[0].origin, Some("asserted"));
+        assert_eq!(operation[0].payload_origin, Some("inferred"));
+        assert!(
+            operation[0]
+                .payload_provenance
+                .as_deref()
+                .unwrap()
+                .contains("signature")
+        );
+    }
+
+    #[test]
+    fn perspective_relations_are_indexed_with_provenance() {
+        let definition = "(: perspective_ev (≞ (classified_perspective functional_use function_role) (stv 1.000 1.000)))";
+        let provenance = "(: perspective_ev_provenance (≞ (evidence_provenance perspective_ev framework \"registry\" \"repository://contract\" \"1\" \"internal\" registry asserted) (stv 1.000 1.000)))";
+        let mut index = Index::default();
+        let mut stats = BuildStats::default();
+        index
+            .ingest_provenance_line(provenance, &mut stats)
+            .unwrap();
+        index
+            .ingest_perspective_line(definition, &mut stats)
+            .unwrap();
+        let rows = index.query_perspective_relations("functional_use", "definition");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].feature, "function_role");
+        assert_eq!(rows[0].origin, Some("asserted"));
     }
 
     #[test]

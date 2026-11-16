@@ -26,11 +26,27 @@ Every shard also has the inverted index needed by global property-name queries:
 property / world / concept / evidence
 ```
 
+Property declarations are stored in their declaration-perspective shard. Property-world mappings
+remain reachable from that primary shard, while their inverted entry is stored in the mapping's
+evaluation-perspective shard. This preserves valid cross-perspective statements such as a
+`behavioral_process` property evaluated in a `spatial_context` world.
+
+Each shard also contains a perspective-relation map for `classified_perspective`,
+`subperspective`, and `perspective_match` records.
+
 Truth values plus payload/evidence references are values, not path prefixes. Operation signatures
 and their separate truth/provenance metadata are co-located as operation values. Nested predicates
 and axioms live once in `payloads.tsv`.
+Canonical `evidence_provenance` payloads and `asserted`, `inferred`, or `generated` origins are
+stored with their facts. Declaration signatures retain their own truth values, evidence,
+provenance, and origin alongside the declaration.
 The `.paths` files are PathMap's compressed path serialization; fixed-width `.values` files are in
 the exact same traversal order.
+
+Compilation is order-independent without loading the entire input into memory: the compiler makes
+bounded-memory passes for provenance, declarations, and dependent records. Worlds and signatures
+therefore may appear before the records they reference. Indexes record both `v-predicate/1` and
+`pathmap-kb/2`; older prototype indexes must be rebuilt.
 
 ## Try it
 
