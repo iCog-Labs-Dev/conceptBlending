@@ -110,8 +110,9 @@ fn row_to_metta(row: &ResultRow) -> String {
         "axiom" => format!("(axiom {feature} {truth} {evidence})"),
         "property" => format!("(property {feature} {truth} {evidence})"),
         "property-world" => format!(
-            "(property-world {feature} {} {truth} {evidence})",
-            safe_atom(row.world.as_deref().unwrap_or(""))
+            "(property-world {feature} {} {} {truth} {evidence})",
+            safe_atom(row.world.as_deref().unwrap_or("")),
+            safe_atom(row.evaluation_perspective.as_deref().unwrap_or(""))
         ),
         other => format!("(row {} {feature} {truth} {evidence})", safe_atom(other)),
     }
@@ -273,6 +274,7 @@ pub struct RowView {
     family: u8,
     feature: ByteSlice,
     world: ByteSlice,
+    evaluation_perspective: ByteSlice,
     payload: ByteSlice,
     evidence: ByteSlice,
     payload_evidence: ByteSlice,
@@ -306,6 +308,7 @@ impl RowView {
             family,
             feature: ByteSlice::new(Some(&row.feature)),
             world: ByteSlice::new(row.world.as_deref()),
+            evaluation_perspective: ByteSlice::new(row.evaluation_perspective.as_deref()),
             payload: ByteSlice::new(row.payload.as_deref()),
             evidence: ByteSlice::new(Some(&row.evidence)),
             payload_evidence: ByteSlice::new(row.payload_evidence.as_deref()),
@@ -390,10 +393,49 @@ pub extern "C" fn rust_pathmap_kb_string_free(pointer: *mut c_char) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use perspective_pathmap_prototype::BuildStats;
+    use std::fs;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn unsafe_atoms_are_quoted() {
         assert_eq!(safe_atom("plain_atom"), "plain_atom");
         assert_eq!(safe_atom("two words"), "\"two words\"");
+    }
+
+    #[test]
+    fn ffi_build_specification_preserves_world_evaluation_perspective() {
+        let property = "(: property_ev (≞ (has_scoped_property property_ev computer behavioral_process process_property process_information) (stv 0.900 0.800)))";
+        let world = "(: world_ev (≞ (scoped_property_holds_in world_ev process_property spatial_context data_center) (stv 0.850 0.900)))";
+        let mut index = Index::default();
+        let mut stats = BuildStats::default();
+        index.ingest_property_line(property, &mut stats).unwrap();
+        index.ingest_property_line(world, &mut stats).unwrap();
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("pathmap-ffi-integration-{nonce}"));
+        index.save(&root, stats).unwrap();
+
+        let handle = format!("integration_{nonce}");
+        execute("open", &format!("{handle}\t{}", root.display())).unwrap();
+        let output = execute(
+            "build-specification",
+            &format!("{handle}\tbehavioral_process\tcomputer"),
+        )
+        .unwrap();
+        assert!(output.contains("property-world process_information data_center spatial_context"));
+        let rows = query_rows(
+            "query-worlds",
+            &format!("{handle}\tbehavioral_process\tcomputer\tprocess_information"),
+        )
+        .unwrap();
+        assert_eq!(
+            rows[0].evaluation_perspective.as_deref(),
+            Some("spatial_context")
+        );
+        execute("close", &handle).unwrap();
+        fs::remove_dir_all(root).unwrap();
     }
 }

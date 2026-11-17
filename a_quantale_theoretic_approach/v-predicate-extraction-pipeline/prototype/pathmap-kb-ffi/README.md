@@ -31,6 +31,16 @@ PeTTa functions:
 !(pathmap-close! spec-kb)
 ```
 
+Property-world rows include both the world and its evaluation perspective:
+
+```metta
+(property-world process_information workstation spatial_context (stv 0.850 0.900) evidence_id)
+```
+
+The perspective used to select the shard remains the property's declaration perspective. This
+keeps cross-perspective mappings available to specification building without losing the contextual
+axis on which the world assertion was made.
+
 The fused call can be used as the storage leaf of a PeTTa algorithm:
 
 ```metta

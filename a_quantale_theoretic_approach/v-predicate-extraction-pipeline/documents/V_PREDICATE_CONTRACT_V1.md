@@ -15,6 +15,8 @@ forms. MeTTa and PathMap sinks consume the same records.
 - Predicates and axioms retain structured MeTTa expressions; a relation is not reduced to its target.
 - Operation and predicate signatures reference the edge identifier of their declaration.
 - Property-world facts reference a declared property identifier.
+- A property's declaration perspective and a property-world assertion's evaluation perspective are
+  independent. Cross-perspective mappings are valid and both perspectives must be preserved.
 - Canonical files use one annotated atom per line: `(: evidence (≞ fact (stv s c)))`.
 
 The contract version is `v-predicate/1`. Persisted manifests and PathMap indexes must record this
@@ -74,6 +76,13 @@ has_scoped_property(edge, concept, perspective, property_id, property_name)
 scoped_property_holds_in(edge, property_id, perspective, world)
 ```
 
+For `has_scoped_property`, `perspective` is the **declaration perspective**: it classifies the
+property itself. For `scoped_property_holds_in`, `perspective` is the **evaluation perspective**:
+it identifies the contextual axis under which the property holds in `world`. These values may be
+equal, but equality is not required. For example, a `behavioral_process` property may hold in a
+`spatial_context` world. Storage backends must retain both values and must not reject, rewrite, or
+silently drop cross-perspective mappings.
+
 `predicate_expression` must preserve the source relation, for example `(hasRole phenol antiseptic)`.
 An axiom is its executable formula, not an adapter-specific wrapper. Signature expressions use the
 currently established `arrow` vocabulary unless a domain contract explicitly defines another form.
@@ -105,9 +114,10 @@ An adapter fetches and parses source data, assigns a canonical perspective, and 
 records. It must not write PathMap internals or manually concatenate MeTTa.
 
 A sink validates a complete record set before publication. A MeTTa sink calls `render_document`.
-The PathMap sink uses the same record fields and must preserve evidence and provenance. Invalid
-references, duplicate evidence identifiers, unknown perspectives, and out-of-range truth values are
-hard errors.
+The PathMap sink uses the same record fields and must preserve evidence, provenance, fact origin,
+declaration perspective, and evaluation perspective. Invalid references, duplicate evidence
+identifiers, conflicting property declarations, unknown perspectives, and out-of-range truth
+values are hard errors.
 
 The authoritative example is `fixtures/v_predicate_contract_v1.metta`, and executable behavior is
 covered by `tests/python/test_v_predicate_contract.py`.
