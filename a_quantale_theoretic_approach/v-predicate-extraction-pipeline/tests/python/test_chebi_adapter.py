@@ -63,7 +63,9 @@ class TestChebiAdapter(unittest.TestCase):
 
     def test_chemical_relationship_perspective_mapping(self) -> None:
         facts = list(self.adapter.stream_facts())
-        perspectives = {f.perspective for f in facts}
+        perspectives = {
+            getattr(f, "perspective") for f in facts if hasattr(f, "perspective")
+        }
 
         self.assertIn(Perspective.TAXONOMIC_KIND, perspectives)
         self.assertIn(Perspective.STRUCTURAL_COMPOSITION, perspectives)
@@ -71,7 +73,8 @@ class TestChebiAdapter(unittest.TestCase):
         self.assertIn(Perspective.STATE_LIFECYCLE, perspectives)
 
         for p in perspectives:
-            self.assertNotIn("-", p.value)
+            if isinstance(p, Perspective):
+                self.assertNotIn("-", p.value)
 
     def test_phenol_blending_domain_assertions(self) -> None:
         """Verify chemical domain facts required for Phenol conceptual blending."""

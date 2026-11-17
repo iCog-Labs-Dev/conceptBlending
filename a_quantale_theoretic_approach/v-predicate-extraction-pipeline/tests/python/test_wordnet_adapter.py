@@ -58,18 +58,21 @@ class TestWordNetAdapter(unittest.TestCase):
     def test_canonical_snake_case_perspectives(self) -> None:
         facts = list(self.adapter.stream_facts(limit=30))
         for f in facts:
-            self.assertIsInstance(f.perspective, Perspective)
-            self.assertNotIn("-", f.perspective.value)
-            # Persisted perspectives must match registered canonical values
-            self.assertIn(
-                f.perspective,
-                {
-                    Perspective.TAXONOMIC_KIND,
-                    Perspective.STRUCTURAL_COMPOSITION,
-                    Perspective.FUNCTIONAL_USE,
-                    Perspective.DESCRIPTIVE_PROPERTY,
-                },
-            )
+            self.assertTrue(hasattr(f, "perspective"))
+            perspective = getattr(f, "perspective", None)
+            self.assertIsInstance(perspective, Perspective)
+            if isinstance(perspective, Perspective):
+                self.assertNotIn("-", perspective.value)
+                # Persisted perspectives must match registered canonical values
+                self.assertIn(
+                    perspective,
+                    {
+                        Perspective.TAXONOMIC_KIND,
+                        Perspective.STRUCTURAL_COMPOSITION,
+                        Perspective.FUNCTIONAL_USE,
+                        Perspective.DESCRIPTIVE_PROPERTY,
+                    },
+                )
 
     def test_relational_mappings_and_fact_kinds(self) -> None:
         facts = list(self.adapter.stream_facts(limit=50))

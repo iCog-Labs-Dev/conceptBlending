@@ -77,13 +77,15 @@ class TestOpenMathAdapter:
         perspective_facts = [f for f in facts if hasattr(f, "perspective")]
         assert len(perspective_facts) > 0
         for f in perspective_facts:
-            assert isinstance(f.perspective, Perspective)
-            assert "-" not in f.perspective.value
-            assert f.perspective in {
-                Perspective.TAXONOMIC_KIND,
-                Perspective.STRUCTURAL_COMPOSITION,
-                Perspective.INFORMATION_COMPUTATIONAL,
-            }
+            p = getattr(f, "perspective", None)
+            assert isinstance(p, Perspective)
+            if isinstance(p, Perspective):
+                assert "-" not in p.value
+                assert p in {
+                    Perspective.TAXONOMIC_KIND,
+                    Perspective.STRUCTURAL_COMPOSITION,
+                    Perspective.INFORMATION_COMPUTATIONAL,
+                }
 
     def test_paired_operations_and_signatures(self, openmath_adapter: OpenMathAdapter):
         facts = list(openmath_adapter.stream_facts())
