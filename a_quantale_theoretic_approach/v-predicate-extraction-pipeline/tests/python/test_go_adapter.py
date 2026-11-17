@@ -114,10 +114,10 @@ class TestGeneOntologyAdapter(unittest.TestCase):
         world_facts = [f for f in facts if isinstance(f, PropertyWorldFact)]
         self.assertGreater(len(world_facts), 0)
 
-        # World assertions inherit the perspective of the referenced property
+        # Cross-perspective evaluation: world facts are evaluated under spatial context
         for wf in world_facts:
             self.assertIn(wf.property_id, prop_facts)
-            self.assertEqual(wf.perspective, prop_facts[wf.property_id].perspective)
+            self.assertEqual(wf.perspective, Perspective.SPATIAL_CONTEXT)
             self.assertEqual(wf.provenance.origin, FactOrigin.ASSERTED)
 
         # Mitochondrial inner membrane should be present as a possible world
