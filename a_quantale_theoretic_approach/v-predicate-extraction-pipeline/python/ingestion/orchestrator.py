@@ -119,8 +119,9 @@ class MultiSourceOrchestrator:
         if sources:
             source_filter_keys = set()
             for s in sources:
-                if hasattr(s, "value"):
-                    source_filter_keys.add(s.value.lower())
+                val = getattr(s, "value", None)
+                if isinstance(val, str):
+                    source_filter_keys.add(val.lower())
                 else:
                     tok = str(s).strip().lower()
                     if tok in {"go", "gene_ontology"}:
@@ -164,7 +165,8 @@ class MultiSourceOrchestrator:
 
                 # Stream via canonical v-predicate/1 stream_facts if supported
                 if hasattr(adapter, "stream_facts") and callable(adapter.stream_facts):
-                    for fact in adapter.stream_facts(limit=limit_per_source):
+                    stream_iter = adapter.stream_facts(limit=limit_per_source)  # type: ignore[assignment]
+                    for fact in stream_iter:
                         all_emitted_facts.append(fact)
                         src_facts.append(fact)
                         src_raw += 1

@@ -1,9 +1,16 @@
 [tool.pyright]
 extraPaths = [
     "a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python",
+    "a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/generation",
+    "a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/ingestion",
+    "a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/scoring",
+    "a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/storage",
+    "a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/verification",
+    "a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/v_predicate_contract",
     "peTTa_version",
     "peTTa_version/libs/agents"
 ]
+reportMissingImports = false
 
 [tool.pytest.ini_options]
 testpaths = [

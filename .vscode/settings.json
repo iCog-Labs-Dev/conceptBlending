@@ -1,11 +1,23 @@
 {
   "python.analysis.extraPaths": [
     "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/generation",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/ingestion",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/scoring",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/storage",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/verification",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/v_predicate_contract",
     "${workspaceFolder}/peTTa_version",
     "${workspaceFolder}/peTTa_version/libs/agents"
   ],
   "python.autoComplete.extraPaths": [
     "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/generation",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/ingestion",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/scoring",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/storage",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/verification",
+    "${workspaceFolder}/a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/v_predicate_contract",
     "${workspaceFolder}/peTTa_version",
     "${workspaceFolder}/peTTa_version/libs/agents"
   ]

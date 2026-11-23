@@ -1,22 +1,36 @@
 import os
 
 try:
-    from openai import OpenAI
+    from openai import OpenAI  # type: ignore
 except ImportError:
     OpenAI = None
 
 try:
-    from google import genai
-    from google.genai import types
+    from google import genai  # type: ignore
+    from google.genai import types  # type: ignore
 except ImportError:
     genai = None
     types = None
 
 try:
-    from dotenv import load_dotenv
+    from dotenv import load_dotenv  # type: ignore
     load_dotenv()
 except ImportError:
     pass
+
+
+def is_offline_mock_enabled() -> bool:
+    """
+    Check if offline LLM mock responses are explicitly enabled.
+    Returns True in CI environments (CI=true, GITHUB_ACTIONS=true)
+    or when PETTA_OFFLINE_MOCK=true is explicitly set.
+    """
+    return (
+        os.getenv("CI", "").strip().lower() in {"true", "1"}
+        or os.getenv("GITHUB_ACTIONS", "").strip().lower() in {"true", "1"}
+        or os.getenv("PETTA_OFFLINE_MOCK", "").strip().lower() in {"true", "1"}
+    )
+
 
 class ChatGPTAgent():
 
@@ -33,6 +47,12 @@ class ChatGPTAgent():
 
     def __call__(self, messages, functions=[]):
         if self.client is None:
+            api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
+            if not api_key or api_key in {"YOUR_OPENAI_API_KEY_HERE", "None"}:
+                raise ValueError(
+                    "OPENAI_API_KEY environment variable is not set. "
+                    "To run offline tests, set PETTA_OFFLINE_MOCK=true."
+                )
             raise RuntimeError("OPENAI_API_KEY is not configured or OpenAI client is unavailable.")
         if functions == []:
             response = self.client.chat.completions.create(model=self._model,
@@ -51,13 +71,19 @@ class ChatGPTAgent():
 class GeminiAgent():
     def __init__(self, model="gemini-2.5-flash"):
         self._model = model
-        self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        if genai is None:
+            self.client = None
+        else:
+            self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
     def __call__(self, messages, tools=[]):
         """
         messages: list of dicts, e.g. [{"role": "user", "content": "Hello"}]
         tools: list of tool schemas (if any), similar to OpenAI's 'functions'
         """
+        if self.client is None or types is None:
+            raise RuntimeError("google-genai client is not available or not installed.")
+
         # Gemini expects a simpler input format than OpenAI’s chat array.
         # We'll convert your 'messages' list into a single string conversation.
         contents = "\n".join(

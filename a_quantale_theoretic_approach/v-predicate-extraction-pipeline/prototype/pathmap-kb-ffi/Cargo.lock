@@ -99,7 +99,7 @@ dependencies = [
 
 [[package]]
 name = "pathmap"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "arrayvec",
  "dyn-clone",
@@ -112,12 +112,13 @@ dependencies = [
  "pathmap-derive",
  "reusing-vec",
  "smallvec",
+ "span-timing",
  "xxhash-rust",
 ]
 
 [[package]]
 name = "pathmap-derive"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -183,6 +184,12 @@ name = "smallvec"
 version = "1.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9395f0f0eee849a9b707b2f06bb92a6a422090e2123bb2ef8e87a0e61892a8e"
+
+[[package]]
+name = "span-timing"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6d18f132ea17d8e294fe77795171f281b1c3bf4e72aa59be1dd5db087ea260f"
 
 [[package]]
 name = "syn"

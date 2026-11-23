@@ -3,6 +3,11 @@
 This optional foreign library exposes the adjacent perspective-sharded PathMap index to PeTTa
 without routing queries through MORK's generic S-expression matcher.
 
+## Prerequisites
+
+This library depends on `perspective-pathmap-prototype` and **PathMap 0.4**.
+See [`../pathmap-kb/README.md`](../pathmap-kb/README.md) for PathMap sibling checkout instructions.
+
 Build it with:
 
 ```bash
