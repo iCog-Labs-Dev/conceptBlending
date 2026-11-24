@@ -103,13 +103,11 @@ jobs:
         python3 scripts/run-tests.py
 
     # -----------------------------
-    # Clone and Build PathMap Dependency
+    # Verify the pinned PathMap API against the compiler and typed FFI.
     # -----------------------------
-    - name: Clone and Build PathMap Dependency
+    - name: Verify PathMap Dependency Compatibility
       run: |
-        git clone https://github.com/Adam-Vandervorst/PathMap.git "$GITHUB_WORKSPACE/../PathMap"
-        cd a_quantale_theoretic_approach/v-predicate-extraction-pipeline/prototype/pathmap-kb
-        cargo build --release
+        bash a_quantale_theoretic_approach/v-predicate-extraction-pipeline/prototype/pathmap-kb/check-compatibility.sh
 
     # -----------------------------
     # Run V-Predicate & Quantale Regression Suite
