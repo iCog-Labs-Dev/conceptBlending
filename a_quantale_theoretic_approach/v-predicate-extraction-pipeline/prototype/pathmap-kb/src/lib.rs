@@ -1,5 +1,6 @@
 pub mod canonical_jsonl;
 
+use canonical_jsonl::{CanonicalKind, visit_jsonl_file};
 use pathmap::PathMap;
 use pathmap::paths_serialization::{deserialize_paths_with_auxdata, serialize_paths_with_auxdata};
 use pathmap::zipper::{ZipperIteration, ZipperPath, ZipperValues};
@@ -758,6 +759,72 @@ impl Index {
         Ok(())
     }
 
+    /// Compile canonical JSONL in bounded-memory passes.
+    ///
+    /// The passes deliberately mirror the reference resolution graph: provenance and perspective
+    /// relations first, declarations second, and worlds/signatures last. Input order therefore has
+    /// no effect on the resulting index, while no collection of source records is retained.
+    pub fn ingest_canonical_jsonl(
+        &mut self,
+        path: &Path,
+        stats: &mut BuildStats,
+    ) -> io::Result<u64> {
+        let records = visit_jsonl_file(path, |line_number, record| {
+            let provenance = record.provenance_line()?;
+            self.ingest_provenance_line(&provenance, stats)
+                .map_err(|error| jsonl_ingest_error(line_number, error))?;
+            if matches!(
+                record.kind,
+                CanonicalKind::ClassifiedPerspective
+                    | CanonicalKind::Subperspective
+                    | CanonicalKind::PerspectiveMatch
+            ) {
+                let fact = record.fact_line()?;
+                self.ingest_perspective_line(&fact, stats)
+                    .map_err(|error| jsonl_ingest_error(line_number, error))?;
+            }
+            Ok(())
+        })?;
+
+        visit_jsonl_file(path, |line_number, record| {
+            let fact = record.fact_line()?;
+            let result = match record.kind {
+                CanonicalKind::HasScopedProperty => self.ingest_property_line(&fact, stats),
+                CanonicalKind::HasSort
+                | CanonicalKind::HasOperation
+                | CanonicalKind::HasPredicate
+                | CanonicalKind::HasAxiom => self.ingest_algebra_line(&fact, stats),
+                _ => return Ok(()),
+            };
+            if !result.map_err(|error| jsonl_ingest_error(line_number, error))? {
+                return Err(jsonl_ingest_error(
+                    line_number,
+                    io::Error::new(io::ErrorKind::InvalidData, "record was not indexed"),
+                ));
+            }
+            Ok(())
+        })?;
+
+        visit_jsonl_file(path, |line_number, record| {
+            let fact = record.fact_line()?;
+            let result = match record.kind {
+                CanonicalKind::ScopedPropertyHoldsIn => self.ingest_property_line(&fact, stats),
+                CanonicalKind::OperationSignature | CanonicalKind::PredicateSignature => {
+                    self.ingest_algebra_line(&fact, stats)
+                }
+                _ => return Ok(()),
+            };
+            if !result.map_err(|error| jsonl_ingest_error(line_number, error))? {
+                return Err(jsonl_ingest_error(
+                    line_number,
+                    io::Error::new(io::ErrorKind::InvalidData, "record was not indexed"),
+                ));
+            }
+            Ok(())
+        })?;
+        Ok(records)
+    }
+
     fn symbol(&self, id: u64) -> String {
         self.symbols
             .get(&id)
@@ -1087,6 +1154,13 @@ impl Index {
         );
         Ok(true)
     }
+}
+
+fn jsonl_ingest_error(line_number: u64, error: io::Error) -> io::Error {
+    io::Error::new(
+        error.kind(),
+        format!("canonical JSONL line {line_number}: {error}"),
+    )
 }
 
 fn validate_index_version(root: &Path) -> io::Result<()> {

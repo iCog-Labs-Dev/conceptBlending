@@ -7,7 +7,7 @@ use std::time::Instant;
 
 fn usage() -> ! {
     eprintln!(
-        "usage:\n  perspective-pathmap-prototype build --property-kb FILE --algebraic-kb FILE --out DIR [--limit-per-kind N]\n  perspective-pathmap-prototype benchmark --index DIR --perspective P --concept C [--iterations N] [--extensions N]\n  perspective-pathmap-prototype properties --index DIR --perspective P --concept C\n  perspective-pathmap-prototype worlds --index DIR --perspective P --concept C --property NAME\n  perspective-pathmap-prototype property-name --index DIR --perspective P --property NAME\n  perspective-pathmap-prototype algebra --index DIR --perspective P --concept C --family sort|operation|predicate|axiom\n  perspective-pathmap-prototype perspective-relations --index DIR --perspective P --family definition|subperspective|match"
+        "usage:\n  perspective-pathmap-prototype build --property-kb FILE --algebraic-kb FILE --out DIR [--limit-per-kind N]\n  perspective-pathmap-prototype build-jsonl --input FILE --out DIR\n  perspective-pathmap-prototype benchmark --index DIR --perspective P --concept C [--iterations N] [--extensions N]\n  perspective-pathmap-prototype properties --index DIR --perspective P --concept C\n  perspective-pathmap-prototype worlds --index DIR --perspective P --concept C --property NAME\n  perspective-pathmap-prototype property-name --index DIR --perspective P --property NAME\n  perspective-pathmap-prototype algebra --index DIR --perspective P --concept C --family sort|operation|predicate|axiom\n  perspective-pathmap-prototype perspective-relations --index DIR --perspective P --family definition|subperspective|match"
     );
     std::process::exit(2)
 }
@@ -111,6 +111,29 @@ fn main() -> io::Result<()> {
             index.shards.len(),
             out.display(),
             stats
+        );
+        return Ok(());
+    }
+    if command == "build-jsonl" {
+        let build_start = Instant::now();
+        let mut index = Index::default();
+        let mut stats = BuildStats::default();
+        let input = PathBuf::from(required(&args, "--input"));
+        let records = index.ingest_canonical_jsonl(&input, &mut stats)?;
+        let out = PathBuf::from(required(&args, "--out"));
+        index.save(&out, stats)?;
+        let build_elapsed_ms = build_start.elapsed().as_secs_f64() * 1000.0;
+        let peak_rss = peak_rss_kib().unwrap_or(0);
+        let mut summary = OpenOptions::new()
+            .append(true)
+            .open(out.join("build-stats.txt"))?;
+        writeln!(summary, "canonical_records={records}")?;
+        writeln!(summary, "build_elapsed_ms={build_elapsed_ms:.3}")?;
+        writeln!(summary, "peak_rss_kib={peak_rss}")?;
+        eprintln!(
+            "compiled {records} canonical records into {} perspective shards at {}; build_elapsed_ms={build_elapsed_ms:.3} peak_rss_kib={peak_rss}",
+            index.shards.len(),
+            out.display(),
         );
         return Ok(());
     }
