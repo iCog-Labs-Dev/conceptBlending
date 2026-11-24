@@ -5,6 +5,7 @@ from __future__ import annotations
 from .acquisition import (
     AcquisitionConfig,
     ProvenanceType,
+    SourceAcquisitionEngine,
     SourceAcquisitionError,
     SourceArtifact,
 )
@@ -45,6 +46,7 @@ __all__ = [
     "PathMapSink",
     "ProvenanceType",
     "RawRecord",
+    "SourceAcquisitionEngine",
     "SourceAcquisitionError",
     "SourceArtifact",
     "WordNetAdapter",
