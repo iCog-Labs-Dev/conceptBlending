@@ -166,7 +166,24 @@ class MultiSourceOrchestrator:
                     print(f"[Orchestrator] Processing knowledge source: {src_key}")
 
                 # Ensure source data is localized
-                resolved_file = adapter.fetch(download=download)
+                if hasattr(adapter, "fetch_artifact") and callable(getattr(adapter, "fetch_artifact")):
+                    try:
+                        artifact = adapter.fetch_artifact(download=download)
+                        resolved_file = artifact.local_path
+                        if verbose:
+                            prov_label = (
+                                artifact.provenance_type.value.upper()
+                                if hasattr(artifact.provenance_type, "value")
+                                else str(artifact.provenance_type).upper()
+                            )
+                            print(
+                                f"[Acquisition] {src_key} -> {prov_label} "
+                                f"(SHA-256: {artifact.sha256_checksum[:12]}..., bytes: {artifact.byte_size})"
+                            )
+                    except NotImplementedError:
+                        resolved_file = adapter.fetch(download=download)
+                else:
+                    resolved_file = adapter.fetch(download=download)
 
                 src_raw = 0
                 src_norm = 0
@@ -274,11 +291,15 @@ class MultiSourceOrchestrator:
                 license_str = getattr(adapter, "license", "unknown")
                 uri = getattr(adapter, "source_uri", str(resolved_file))
 
+                last_art = getattr(adapter, "last_artifact", None)
+                art_dict = last_art.to_dict() if last_art is not None and hasattr(last_art, "to_dict") else None
+
                 source_summaries[src_key] = {
                     "source_name": src_key,
                     "version": version,
                     "license": license_str,
                     "uri": uri,
+                    "artifact": art_dict,
                     "facts_emitted": len(src_facts) if src_facts else src_raw,
                     "casl_facts": src_casl,
                     "property_world_facts": src_pw,
