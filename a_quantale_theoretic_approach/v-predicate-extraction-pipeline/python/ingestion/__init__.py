@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from .acquisition import (
+    AcquisitionConfig,
+    ProvenanceType,
+    SourceAcquisitionError,
+    SourceArtifact,
+)
 from .base_adapter import BaseSourceAdapter
 from .chebi_adapter import ChebiAdapter
 from .conceptnet_adapter import ConceptNetAdapter
@@ -20,6 +26,7 @@ from .sinks import BaseSink, InMemoryTestSink, MettaFileSink, PathMapSink
 from .wordnet_adapter import WordNetAdapter, safe_metta_symbol
 
 __all__ = [
+    "AcquisitionConfig",
     "BaseSink",
     "BaseSourceAdapter",
     "ChebiAdapter",
@@ -36,7 +43,10 @@ __all__ = [
     "NormalizedRecord",
     "OpenMathAdapter",
     "PathMapSink",
+    "ProvenanceType",
     "RawRecord",
+    "SourceAcquisitionError",
+    "SourceArtifact",
     "WordNetAdapter",
     "safe_metta_symbol",
 ]
