@@ -33,6 +33,8 @@ cargo test
 ```
 
 Do not commit a local override. `cargo build --locked` is the reproducibility check used by CI.
+The compatibility script also enables the AES and SSE2 target features required by PathMap's
+`gxhash` backend on generic x86 CI runners; non-x86 targets are left unchanged.
 
 ## Layout
 
