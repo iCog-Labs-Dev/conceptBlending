@@ -6,4 +6,4 @@ publish = false
 
 [dependencies]
 libc = "0.2"
-pathmap = { path = "../../../../../PathMap" }
+pathmap = { git = "https://github.com/Adam-Vandervorst/PathMap.git", rev = "72ebdba08095d01ac31bb609190589436efd6854" }

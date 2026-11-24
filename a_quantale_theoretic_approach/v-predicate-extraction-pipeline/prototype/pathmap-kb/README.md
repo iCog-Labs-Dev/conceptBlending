@@ -5,31 +5,23 @@ It does not replace the current MeTTa files.
 
 ## Prerequisites & PathMap Dependency
 
-This prototype builds against **PathMap 0.4** (`radix-256` prefix trie with path compression).
-Because PathMap is developed in a separate repository, it is referenced as a path dependency:
-`pathmap = { path = "../../../../../PathMap" }`
+This prototype builds against **PathMap 0.4** (`radix-256` prefix trie with path compression),
+pinned to upstream revision
+`72ebdba08095d01ac31bb609190589436efd6854`. The Cargo lockfile records the same revision,
+so normal local and CI builds use identical PathMap code and do not depend on a sibling checkout.
 
-### Setup Instructions
+### Optional local PathMap development
 
-Clone the PathMap repository as a sibling directory to your `conceptBlending` workspace root:
+Ordinary builds require no manual PathMap setup. To test unpublished PathMap changes, clone it and
+temporarily opt into a Cargo source override without changing the committed dependency:
 
 ```bash
-# From your workspace root (e.g., conceptBlending/):
 git clone https://github.com/Adam-Vandervorst/PathMap.git ../PathMap
-```
+git -C ../PathMap checkout 72ebdba08095d01ac31bb609190589436efd6854
 
-Ensure the directory structure matches:
-```text
-parent_dir/
-├── conceptBlending/
-│   └── a_quantale_theoretic_approach/
-│       └── v-predicate-extraction-pipeline/
-│           └── prototype/
-│               ├── pathmap-kb/
-│               └── pathmap-kb-ffi/
-└── PathMap/
-    ├── Cargo.toml
-    └── src/
+# Put this in .cargo/config.toml for the local experiment only:
+# [patch."https://github.com/Adam-Vandervorst/PathMap.git"]
+# pathmap = { path = "../PathMap" }
 ```
 
 ### Building and Verifying
@@ -40,15 +32,7 @@ cargo build --release
 cargo test
 ```
 
-### CI Parity
-
-In CI workflows (such as `.github/workflows/ci_cd_pipeline.yml`), PathMap is cloned directly into the parent workspace before building:
-
-```bash
-git clone https://github.com/Adam-Vandervorst/PathMap.git "$GITHUB_WORKSPACE/../PathMap"
-cd a_quantale_theoretic_approach/v-predicate-extraction-pipeline/prototype/pathmap-kb
-cargo build --release
-```
+Do not commit a local override. `cargo build --locked` is the reproducibility check used by CI.
 
 ## Layout
 
