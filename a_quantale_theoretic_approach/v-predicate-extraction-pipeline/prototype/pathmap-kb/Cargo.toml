@@ -6,7 +6,8 @@ publish = false
 
 [dependencies]
 libc = "0.2"
+memmap2 = "0.9"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
-pathmap = { git = "https://github.com/Adam-Vandervorst/PathMap.git", rev = "72ebdba08095d01ac31bb609190589436efd6854" }
+pathmap = { git = "https://github.com/Adam-Vandervorst/PathMap.git", rev = "72ebdba08095d01ac31bb609190589436efd6854", features = ["arena_compact"] }

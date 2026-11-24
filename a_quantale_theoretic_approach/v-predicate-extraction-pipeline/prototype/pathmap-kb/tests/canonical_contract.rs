@@ -1,4 +1,6 @@
-use perspective_pathmap_prototype::{BuildStats, CONTRACT_VERSION, INDEX_FORMAT_VERSION, Index};
+use perspective_pathmap_prototype::{
+    BuildStats, CONTRACT_VERSION, INDEX_FORMAT_VERSION, ImmutableShardStore, Index,
+};
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -84,6 +86,31 @@ fn canonical_contract_builds_saves_loads_and_answers_specification_queries() {
             .query_algebra("taxonomic_kind", "computer", "sort")
             .len(),
         1
+    );
+
+    let store = ImmutableShardStore::open(&root).unwrap();
+    assert!(
+        store
+            .available_perspectives()
+            .any(|perspective| perspective == "functional_use")
+    );
+    let mapped_functional = store.load("functional_use").unwrap();
+    assert_eq!(
+        mapped_functional
+            .query_algebra("computer", "operation")
+            .unwrap(),
+        operation
+    );
+    assert_eq!(
+        mapped_functional
+            .query_worlds("functional_use", "computer", "process_information")
+            .unwrap(),
+        functional.query_worlds("functional_use", "computer", "process_information")
+    );
+    let mapped_structural = store.load("structural_composition").unwrap();
+    assert_eq!(
+        mapped_structural.query_algebra("group", "axiom").unwrap(),
+        structural.query_algebra("structural_composition", "group", "axiom")
     );
 
     fs::remove_dir_all(root).unwrap();

@@ -41,27 +41,43 @@ pub struct MapMetadata {
     pub name: String,
     pub paths_file: String,
     pub values_file: String,
+    pub act_file: String,
+    pub act_values_file: String,
     pub path_count: usize,
     pub paths_bytes: u64,
     pub values_bytes: u64,
+    pub act_bytes: u64,
+    pub act_values_bytes: u64,
     pub paths_sha256: String,
     pub values_sha256: String,
+    pub act_sha256: String,
+    pub act_values_sha256: String,
 }
 
 pub fn map_metadata(directory: &Path, name: &str, path_count: usize) -> io::Result<MapMetadata> {
     let paths_file = format!("{name}.paths");
     let values_file = format!("{name}.values");
+    let act_file = format!("{name}.act");
+    let act_values_file = format!("{name}.act-values");
     let paths = directory.join(&paths_file);
     let values = directory.join(&values_file);
+    let act = directory.join(&act_file);
+    let act_values = directory.join(&act_values_file);
     Ok(MapMetadata {
         name: name.to_owned(),
         paths_file,
         values_file,
+        act_file,
+        act_values_file,
         path_count,
         paths_bytes: paths.metadata()?.len(),
         values_bytes: values.metadata()?.len(),
+        act_bytes: act.metadata()?.len(),
+        act_values_bytes: act_values.metadata()?.len(),
         paths_sha256: sha256_file(&paths)?,
         values_sha256: sha256_file(&values)?,
+        act_sha256: sha256_file(&act)?,
+        act_values_sha256: sha256_file(&act_values)?,
     })
 }
 

@@ -2,17 +2,21 @@ pub mod canonical_jsonl;
 pub mod shard_format;
 
 use canonical_jsonl::{CanonicalKind, visit_jsonl_file};
+use memmap2::Mmap;
 use pathmap::PathMap;
+use pathmap::arena_compact::{ACTMmap, ArenaCompactTree};
 use pathmap::paths_serialization::{deserialize_paths_with_auxdata, serialize_paths_with_auxdata};
 use pathmap::zipper::{ZipperIteration, ZipperPath, ZipperValues};
 use shard_format::{
     INDEX_METADATA_FILE, IndexMetadata, SHARD_FORMAT_VERSION, SHARD_METADATA_FILE, ShardDescriptor,
     ShardMetadata, map_metadata, write_json,
 };
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, hash_map::Entry};
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub const PROPERTY: u8 = 0x10;
 pub const PROPERTY_FACT: u8 = 0x00;
@@ -86,6 +90,378 @@ pub struct Shard {
     pub primary: PathMap<RecordValue>,
     pub property_name: PathMap<RecordValue>,
     pub perspectives: PathMap<RecordValue>,
+}
+
+struct MappedMap {
+    tree: ACTMmap,
+    values: Mmap,
+}
+
+impl MappedMap {
+    fn open(directory: &Path, metadata: &shard_format::MapMetadata) -> io::Result<Self> {
+        let tree = ArenaCompactTree::open_mmap(directory.join(&metadata.act_file))?;
+        let file = File::open(directory.join(&metadata.act_values_file))?;
+        // SAFETY: immutable index snapshots are never modified in place; publication creates a new
+        // directory. The mapping remains owned by this object for every borrowed value.
+        let values = unsafe { Mmap::map(&file)? };
+        if values.len() % RecordValue::SIZE != 0 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("{} has a truncated ACT values file", metadata.name),
+            ));
+        }
+        Ok(Self { tree, values })
+    }
+
+    fn value(&self, index: u64) -> io::Result<RecordValue> {
+        let offset = usize::try_from(index)
+            .ok()
+            .and_then(|index| index.checked_mul(RecordValue::SIZE))
+            .ok_or_else(|| {
+                io::Error::new(io::ErrorKind::InvalidData, "ACT value index overflow")
+            })?;
+        let bytes = self
+            .values
+            .get(offset..offset + RecordValue::SIZE)
+            .ok_or_else(|| {
+                io::Error::new(io::ErrorKind::InvalidData, "ACT value index out of range")
+            })?;
+        Ok(RecordValue::from_bytes(bytes))
+    }
+
+    fn rows_at(
+        &self,
+        prefix: &[u8],
+        mut decode: impl FnMut(&[u8], RecordValue) -> ResultRow,
+    ) -> io::Result<Vec<ResultRow>> {
+        let mut zipper = self.tree.read_zipper_at_path_u64(prefix);
+        let mut rows = Vec::new();
+        while zipper.to_next_val() {
+            let value = self.value(*zipper.val().unwrap())?;
+            rows.push(decode(zipper.path(), value));
+        }
+        Ok(rows)
+    }
+}
+
+/// One immutable perspective shard backed by memory-mapped ACT and value files.
+pub struct MappedShardIndex {
+    perspective: String,
+    primary: MappedMap,
+    property_name: MappedMap,
+    perspectives: MappedMap,
+    symbols: Arc<HashMap<u64, String>>,
+    payloads: Arc<HashMap<u64, String>>,
+}
+
+/// Opens index metadata and dictionaries only; perspective files are mapped by [`Self::load`].
+pub struct ImmutableShardStore {
+    root: PathBuf,
+    metadata: IndexMetadata,
+    by_perspective: HashMap<String, ShardDescriptor>,
+    symbols: Arc<HashMap<u64, String>>,
+    payloads: Arc<HashMap<u64, String>>,
+}
+
+impl ImmutableShardStore {
+    pub fn open(root: impl Into<PathBuf>) -> io::Result<Self> {
+        let root = root.into();
+        validate_index_version(&root)?;
+        let metadata: IndexMetadata = shard_format::read_json(&root.join(INDEX_METADATA_FILE))?;
+        if metadata.format_version != INDEX_FORMAT_VERSION
+            || metadata.contract_version != CONTRACT_VERSION
+            || metadata.shard_format_version != SHARD_FORMAT_VERSION
+            || metadata.record_value_size != RecordValue::SIZE
+            || metadata.shard_count != metadata.shards.len()
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "incompatible immutable index metadata",
+            ));
+        }
+        let mut by_perspective = HashMap::with_capacity(metadata.shards.len());
+        for descriptor in &metadata.shards {
+            if descriptor.perspective_id != format!("{:016x}", stable_id(&descriptor.perspective)) {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("perspective ID mismatch for {}", descriptor.perspective),
+                ));
+            }
+            if by_perspective
+                .insert(descriptor.perspective.clone(), descriptor.clone())
+                .is_some()
+            {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("duplicate perspective metadata: {}", descriptor.perspective),
+                ));
+            }
+        }
+        Ok(Self {
+            symbols: Arc::new(read_dictionary(root.join("symbols.tsv"))?),
+            payloads: Arc::new(read_dictionary(root.join("payloads.tsv"))?),
+            root,
+            metadata,
+            by_perspective,
+        })
+    }
+
+    pub fn available_perspectives(&self) -> impl Iterator<Item = &str> {
+        self.metadata
+            .shards
+            .iter()
+            .map(|descriptor| descriptor.perspective.as_str())
+    }
+
+    pub fn load(&self, perspective: &str) -> io::Result<MappedShardIndex> {
+        let descriptor = self.by_perspective.get(perspective).ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("no immutable shard for {perspective}"),
+            )
+        })?;
+        let directory = self.root.join(&descriptor.directory);
+        let metadata: ShardMetadata =
+            shard_format::read_json(&directory.join(&descriptor.metadata_file))?;
+        if metadata.format_version != SHARD_FORMAT_VERSION
+            || metadata.perspective != perspective
+            || metadata.perspective_id != descriptor.perspective_id
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("incompatible shard metadata for {perspective}"),
+            ));
+        }
+        let open_map = |name: &str| {
+            let map = metadata
+                .maps
+                .iter()
+                .find(|map| map.name == name)
+                .ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::InvalidData, format!("missing {name} map"))
+                })?;
+            MappedMap::open(&directory, map)
+        };
+        Ok(MappedShardIndex {
+            perspective: perspective.to_owned(),
+            primary: open_map("primary")?,
+            property_name: open_map("property-name")?,
+            perspectives: open_map("perspectives")?,
+            symbols: Arc::clone(&self.symbols),
+            payloads: Arc::clone(&self.payloads),
+        })
+    }
+}
+
+impl MappedShardIndex {
+    pub fn perspective(&self) -> &str {
+        &self.perspective
+    }
+
+    fn symbol(&self, id: u64) -> String {
+        self.symbols
+            .get(&id)
+            .cloned()
+            .unwrap_or_else(|| format!("#{id:016x}"))
+    }
+
+    fn payload(&self, id: u64) -> Option<String> {
+        (id != 0).then(|| {
+            self.payloads
+                .get(&id)
+                .cloned()
+                .unwrap_or_else(|| format!("#{id:016x}"))
+        })
+    }
+
+    fn require_perspective(&self, perspective: &str) -> io::Result<()> {
+        if self.perspective == perspective {
+            Ok(())
+        } else {
+            Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!(
+                    "loaded shard is {}, query requested {perspective}",
+                    self.perspective
+                ),
+            ))
+        }
+    }
+
+    pub fn query_properties(&self, perspective: &str, concept: &str) -> io::Result<Vec<ResultRow>> {
+        self.require_perspective(perspective)?;
+        let mut prefix = Vec::with_capacity(9);
+        push_id(&mut prefix, stable_id(concept));
+        prefix.push(PROPERTY);
+        Ok(self
+            .primary
+            .rows_at(&prefix, |key, value| ResultRow {
+                concept: concept.to_owned(),
+                family: "property",
+                feature: self.symbol(id_at(key, 0)),
+                world: (key.get(8) == Some(&PROPERTY_WORLD)).then(|| self.symbol(id_at(key, 9))),
+                payload: None,
+                evidence: self.symbol(value.evidence),
+                strength: value.strength as f32 / 1000.0,
+                confidence: value.confidence as f32 / 1000.0,
+                payload_strength: None,
+                payload_confidence: None,
+                payload_evidence: None,
+                evaluation_perspective: None,
+                provenance: self.payload(value.provenance),
+                origin: origin_name(value.origin),
+                payload_provenance: None,
+                payload_origin: None,
+            })?
+            .into_iter()
+            .filter(|row| row.world.is_none())
+            .collect())
+    }
+
+    pub fn query_worlds(
+        &self,
+        perspective: &str,
+        concept: &str,
+        property: &str,
+    ) -> io::Result<Vec<ResultRow>> {
+        self.require_perspective(perspective)?;
+        let mut prefix = Vec::with_capacity(18);
+        push_id(&mut prefix, stable_id(concept));
+        prefix.push(PROPERTY);
+        push_id(&mut prefix, stable_id(property));
+        prefix.push(PROPERTY_WORLD);
+        self.primary.rows_at(&prefix, |key, value| ResultRow {
+            concept: concept.to_owned(),
+            family: "property-world",
+            feature: property.to_owned(),
+            world: Some(self.symbol(id_at(key, 0))),
+            payload: None,
+            evidence: self.symbol(value.evidence),
+            strength: value.strength as f32 / 1000.0,
+            confidence: value.confidence as f32 / 1000.0,
+            payload_strength: None,
+            payload_confidence: None,
+            payload_evidence: None,
+            evaluation_perspective: (value.world_perspective != 0)
+                .then(|| self.symbol(value.world_perspective)),
+            provenance: self.payload(value.provenance),
+            origin: origin_name(value.origin),
+            payload_provenance: None,
+            payload_origin: None,
+        })
+    }
+
+    pub fn query_property_name(&self, property: &str) -> io::Result<Vec<ResultRow>> {
+        let mut prefix = Vec::with_capacity(8);
+        push_id(&mut prefix, stable_id(property));
+        self.property_name.rows_at(&prefix, |key, value| ResultRow {
+            concept: self.symbol(id_at(key, 8)),
+            family: "property-name",
+            feature: property.to_owned(),
+            world: Some(self.symbol(id_at(key, 0))),
+            payload: None,
+            evidence: self.symbol(value.evidence),
+            strength: value.strength as f32 / 1000.0,
+            confidence: value.confidence as f32 / 1000.0,
+            payload_strength: None,
+            payload_confidence: None,
+            payload_evidence: None,
+            evaluation_perspective: (value.world_perspective != 0)
+                .then(|| self.symbol(value.world_perspective)),
+            provenance: self.payload(value.provenance),
+            origin: origin_name(value.origin),
+            payload_provenance: None,
+            payload_origin: None,
+        })
+    }
+
+    pub fn query_algebra(&self, concept: &str, family: &str) -> io::Result<Vec<ResultRow>> {
+        let tag = match family {
+            "sort" => SORT,
+            "operation" => OPERATION,
+            "predicate" => PREDICATE,
+            "axiom" => AXIOM,
+            _ => return Ok(vec![]),
+        };
+        let mut prefix = Vec::with_capacity(9);
+        push_id(&mut prefix, stable_id(concept));
+        prefix.push(tag);
+        self.primary.rows_at(&prefix, |key, value| {
+            let feature_id = id_at(key, 0);
+            ResultRow {
+                concept: concept.to_owned(),
+                family: match tag {
+                    SORT => "sort",
+                    OPERATION => "operation",
+                    PREDICATE => "predicate",
+                    AXIOM => "axiom",
+                    _ => unreachable!(),
+                },
+                feature: self
+                    .symbols
+                    .get(&feature_id)
+                    .cloned()
+                    .or_else(|| self.payloads.get(&feature_id).cloned())
+                    .unwrap_or_else(|| format!("#{feature_id:016x}")),
+                world: None,
+                payload: self.payload(value.payload),
+                evidence: self.symbol(value.evidence),
+                strength: value.strength as f32 / 1000.0,
+                confidence: value.confidence as f32 / 1000.0,
+                payload_strength: (value.payload_strength != 0)
+                    .then_some(value.payload_strength as f32 / 1000.0),
+                payload_confidence: (value.payload_confidence != 0)
+                    .then_some(value.payload_confidence as f32 / 1000.0),
+                payload_evidence: (value.payload_evidence != 0)
+                    .then(|| self.symbol(value.payload_evidence)),
+                evaluation_perspective: None,
+                provenance: self.payload(value.provenance),
+                origin: origin_name(value.origin),
+                payload_provenance: self.payload(value.payload_provenance),
+                payload_origin: origin_name(value.payload_origin),
+            }
+        })
+    }
+
+    pub fn query_perspective_relations(&self, family: &str) -> io::Result<Vec<ResultRow>> {
+        let (tag, family) = match family {
+            "definition" => (PERSPECTIVE_DEFINITION, "perspective-definition"),
+            "subperspective" => (SUBPERSPECTIVE, "subperspective"),
+            "match" => (PERSPECTIVE_MATCH, "perspective-match"),
+            _ => return Ok(vec![]),
+        };
+        self.perspectives.rows_at(&[tag], |key, value| ResultRow {
+            concept: self.perspective.clone(),
+            family,
+            feature: self.symbol(id_at(key, 0)),
+            world: None,
+            payload: (tag == PERSPECTIVE_MATCH).then(|| self.symbol(id_at(key, 8))),
+            evidence: self.symbol(value.evidence),
+            strength: value.strength as f32 / 1000.0,
+            confidence: value.confidence as f32 / 1000.0,
+            payload_strength: None,
+            payload_confidence: None,
+            payload_evidence: None,
+            evaluation_perspective: None,
+            provenance: self.payload(value.provenance),
+            origin: origin_name(value.origin),
+            payload_provenance: None,
+            payload_origin: None,
+        })
+    }
+
+    pub fn build_specification(&self, concept: &str) -> io::Result<Vec<ResultRow>> {
+        let properties = self.query_properties(&self.perspective, concept)?;
+        let mut rows = Vec::new();
+        for family in ["sort", "operation", "predicate", "axiom"] {
+            rows.extend(self.query_algebra(concept, family)?);
+        }
+        for property in &properties {
+            rows.extend(self.query_worlds(&self.perspective, concept, &property.feature)?);
+        }
+        rows.extend(properties);
+        Ok(rows)
+    }
 }
 
 #[derive(Default)]
@@ -1249,7 +1625,26 @@ fn save_map(map: &PathMap<RecordValue>, base: &Path) -> io::Result<usize> {
             .expect("writing adjacent values file");
     })?;
     values.flush()?;
+    save_act_map(map, base)?;
     Ok(serialized.path_count)
+}
+
+fn save_act_map(map: &PathMap<RecordValue>, base: &Path) -> io::Result<()> {
+    let next_index = Cell::new(0u64);
+    let values = RefCell::new(BufWriter::new(File::create(
+        base.with_extension("act-values"),
+    )?));
+    let tree = ArenaCompactTree::from_zipper(map.read_zipper(), |value| {
+        let index = next_index.get();
+        next_index.set(index + 1);
+        values
+            .borrow_mut()
+            .write_all(&value.bytes())
+            .expect("writing adjacent ACT values file");
+        index
+    });
+    values.into_inner().flush()?;
+    fs::write(base.with_extension("act"), tree.get_data())
 }
 
 fn load_map(base: &Path) -> io::Result<PathMap<RecordValue>> {
