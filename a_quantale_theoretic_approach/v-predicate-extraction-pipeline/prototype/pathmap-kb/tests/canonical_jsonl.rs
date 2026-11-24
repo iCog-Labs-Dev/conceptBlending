@@ -45,7 +45,7 @@ fn temporary_jsonl(contents: &str) -> PathBuf {
 
 #[test]
 fn shuffled_jsonl_matches_metta_semantics_and_cross_perspective_queries() {
-    let lines = vec![
+    let lines = [
         record(
             "operation_signature",
             "sig_ev",

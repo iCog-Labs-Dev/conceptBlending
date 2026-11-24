@@ -9,13 +9,14 @@ use pathmap::paths_serialization::{deserialize_paths_with_auxdata, serialize_pat
 use pathmap::zipper::{ZipperIteration, ZipperPath, ZipperValues};
 use shard_format::{
     INDEX_METADATA_FILE, IndexMetadata, SHARD_FORMAT_VERSION, SHARD_METADATA_FILE, ShardDescriptor,
-    ShardMetadata, map_metadata, write_json,
+    ShardMetadata, file_metadata, map_metadata, validate_file, validate_map, write_json,
 };
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, hash_map::Entry};
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use std::sync::Arc;
 
 pub const PROPERTY: u8 = 0x10;
@@ -161,10 +162,44 @@ pub struct ImmutableShardStore {
     by_perspective: HashMap<String, ShardDescriptor>,
     symbols: Arc<HashMap<u64, String>>,
     payloads: Arc<HashMap<u64, String>>,
+    cache: RefCell<ShardCache>,
+}
+
+struct CachedShard {
+    shard: Rc<MappedShardIndex>,
+    last_used: u64,
+}
+
+struct ShardCache {
+    capacity: usize,
+    clock: u64,
+    hits: u64,
+    loads: u64,
+    evictions: u64,
+    entries: HashMap<String, CachedShard>,
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct ShardCacheStats {
+    pub hits: u64,
+    pub loads: u64,
+    pub evictions: u64,
+    pub resident: usize,
+    pub capacity: usize,
 }
 
 impl ImmutableShardStore {
     pub fn open(root: impl Into<PathBuf>) -> io::Result<Self> {
+        Self::open_with_capacity(root, 8)
+    }
+
+    pub fn open_with_capacity(root: impl Into<PathBuf>, cache_capacity: usize) -> io::Result<Self> {
+        if cache_capacity == 0 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "immutable shard cache capacity must be positive",
+            ));
+        }
         let root = root.into();
         validate_index_version(&root)?;
         let metadata: IndexMetadata = shard_format::read_json(&root.join(INDEX_METADATA_FILE))?;
@@ -179,6 +214,8 @@ impl ImmutableShardStore {
                 "incompatible immutable index metadata",
             ));
         }
+        validate_file(&root, &metadata.symbols)?;
+        validate_file(&root, &metadata.payloads)?;
         let mut by_perspective = HashMap::with_capacity(metadata.shards.len());
         for descriptor in &metadata.shards {
             if descriptor.perspective_id != format!("{:016x}", stable_id(&descriptor.perspective)) {
@@ -203,6 +240,14 @@ impl ImmutableShardStore {
             root,
             metadata,
             by_perspective,
+            cache: RefCell::new(ShardCache {
+                capacity: cache_capacity,
+                clock: 0,
+                hits: 0,
+                loads: 0,
+                evictions: 0,
+                entries: HashMap::new(),
+            }),
         })
     }
 
@@ -213,7 +258,62 @@ impl ImmutableShardStore {
             .map(|descriptor| descriptor.perspective.as_str())
     }
 
-    pub fn load(&self, perspective: &str) -> io::Result<MappedShardIndex> {
+    pub fn load(&self, perspective: &str) -> io::Result<Rc<MappedShardIndex>> {
+        {
+            let mut cache = self.cache.borrow_mut();
+            cache.clock += 1;
+            let now = cache.clock;
+            if let Some(entry) = cache.entries.get_mut(perspective) {
+                entry.last_used = now;
+                let shard = Rc::clone(&entry.shard);
+                cache.hits += 1;
+                return Ok(shard);
+            }
+        }
+
+        let shard = Rc::new(self.load_uncached(perspective)?);
+        let mut cache = self.cache.borrow_mut();
+        cache.loads += 1;
+        if cache.entries.len() == cache.capacity {
+            let oldest = cache
+                .entries
+                .iter()
+                .min_by_key(|(_, entry)| entry.last_used)
+                .map(|(perspective, _)| perspective.clone())
+                .expect("a full positive-capacity cache has an entry");
+            cache.entries.remove(&oldest);
+            cache.evictions += 1;
+        }
+        let now = cache.clock;
+        cache.entries.insert(
+            perspective.to_owned(),
+            CachedShard {
+                shard: Rc::clone(&shard),
+                last_used: now,
+            },
+        );
+        Ok(shard)
+    }
+
+    pub fn cache_stats(&self) -> ShardCacheStats {
+        let cache = self.cache.borrow();
+        ShardCacheStats {
+            hits: cache.hits,
+            loads: cache.loads,
+            evictions: cache.evictions,
+            resident: cache.entries.len(),
+            capacity: cache.capacity,
+        }
+    }
+
+    pub fn cached_perspectives(&self) -> Vec<String> {
+        let cache = self.cache.borrow();
+        let mut perspectives: Vec<_> = cache.entries.keys().cloned().collect();
+        perspectives.sort();
+        perspectives
+    }
+
+    fn load_uncached(&self, perspective: &str) -> io::Result<MappedShardIndex> {
         let descriptor = self.by_perspective.get(perspective).ok_or_else(|| {
             io::Error::new(
                 io::ErrorKind::NotFound,
@@ -221,6 +321,15 @@ impl ImmutableShardStore {
             )
         })?;
         let directory = self.root.join(&descriptor.directory);
+        let expected_directory = format!("shards/{}", descriptor.perspective_id);
+        if descriptor.directory != expected_directory
+            || descriptor.metadata_file != SHARD_METADATA_FILE
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("unsafe shard location for {perspective}"),
+            ));
+        }
         let metadata: ShardMetadata =
             shard_format::read_json(&directory.join(&descriptor.metadata_file))?;
         if metadata.format_version != SHARD_FORMAT_VERSION
@@ -231,6 +340,26 @@ impl ImmutableShardStore {
                 io::ErrorKind::InvalidData,
                 format!("incompatible shard metadata for {perspective}"),
             ));
+        }
+        if metadata.maps.len() != 3 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("shard {perspective} must contain exactly three maps"),
+            ));
+        }
+        for name in ["primary", "property-name", "perspectives"] {
+            let maps: Vec<_> = metadata
+                .maps
+                .iter()
+                .filter(|map| map.name == name)
+                .collect();
+            if maps.len() != 1 {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("shard {perspective} requires exactly one {name} map"),
+                ));
+            }
+            validate_map(&directory, maps[0], RecordValue::SIZE)?;
         }
         let open_map = |name: &str| {
             let map = metadata
@@ -1482,9 +1611,9 @@ impl Index {
                 perspective_id: name.clone(),
                 perspective: perspective.clone(),
                 maps: vec![
-                    map_metadata(&dir, "primary", primary_count)?,
-                    map_metadata(&dir, "property-name", inverted_count)?,
-                    map_metadata(&dir, "perspectives", perspective_count)?,
+                    map_metadata(&dir, "primary", primary_count, RecordValue::SIZE)?,
+                    map_metadata(&dir, "property-name", inverted_count, RecordValue::SIZE)?,
+                    map_metadata(&dir, "perspectives", perspective_count, RecordValue::SIZE)?,
                 ],
             };
             write_json(&dir.join(SHARD_METADATA_FILE), &metadata)?;
@@ -1508,6 +1637,8 @@ impl Index {
                 shard_format_version: SHARD_FORMAT_VERSION.to_owned(),
                 record_value_size: RecordValue::SIZE,
                 shard_count: descriptors.len(),
+                symbols: file_metadata(root, "symbols.tsv")?,
+                payloads: file_metadata(root, "payloads.tsv")?,
                 shards: descriptors,
             },
         )?;

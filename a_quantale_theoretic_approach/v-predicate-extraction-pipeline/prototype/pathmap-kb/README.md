@@ -71,8 +71,10 @@ and axioms live once in `payloads.tsv`.
 Canonical `evidence_provenance` payloads and `asserted`, `inferred`, or `generated` origins are
 stored with their facts. Declaration signatures retain their own truth values, evidence,
 provenance, and origin alongside the declaration.
-The `.paths` files are PathMap's compressed path serialization; fixed-width `.values` files are in
-the exact same traversal order.
+Each immutable map is written in two forms. `.paths` plus fixed-width `.values` retain the portable
+PathMap serialization used by the compatibility loader. `.act` plus `.act-values` are the compact
+arena trie and adjacent fixed-width values used by the production mmap loader. The ACT trie and
+values stay file-backed while queries traverse the selected perspective.
 
 Compilation is order-independent without loading the entire input into memory: the compiler makes
 bounded-memory passes for provenance, declarations, and dependent records. Worlds and signatures
@@ -159,9 +161,12 @@ rejects query-latency regressions over 25% and peak-memory regressions over 15%.
 Omit `--limit-per-kind` for a complete build. The option caps each indexed relation independently,
 but still scans the source files because relation groups occur at different offsets.
 
-This prototype uses PathMap's portable `.paths` serializer. A production version should dump the
-finished immutable shards to ACT and memory-map them, while keeping mutable verified/session facts
-in separate overlay maps.
+Every snapshot contains `index-metadata.json` and one `shard-metadata.json` per perspective. The
+metadata records format versions, record width, counts, sizes, and SHA-256 digests. Opening a store
+validates the shared dictionaries; loading a perspective validates all of that shard's files before
+mapping them. `ImmutableShardStore` maps perspectives only when requested and retains them in a
+bounded LRU cache (eight perspectives by default, configurable with `open_with_capacity`). Mutable
+verified or session facts remain future overlay work and are not written into immutable snapshots.
 
 The comparison harness in `benchmarks/metta_atomspace_bench.pl` applies the same specification
 workload to the compiled SWI-Prolog QLF atomspaces generated from the MeTTa KBs. It is a benchmark
