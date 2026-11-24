@@ -113,6 +113,21 @@ the domain assertion.
 An adapter fetches and parses source data, assigns a canonical perspective, and returns typed
 records. It must not write PathMap internals or manually concatenate MeTTa.
 
+### Source Acquisition and Provenance Foundation
+
+Starting with Issue #112 ([Ingestion 1/5]), source data localization is governed by the shared
+`SourceAcquisitionEngine`:
+- **Atomic Two-Phase Staging**: Downloads stream to temporary staging files (`.tmp.<uuid>`) and are
+  promoted to the cache path via atomic swap only after stream completion and SHA-256 validation.
+- **Sidecar Metadata**: Every cached file is accompanied by `<filename>.meta.json` recording
+  `source_uri`, `source_version`, `retrieval_time`, `byte_size`, and `sha256_checksum`.
+- **Cache Integrity & Recovery**: Cached files are verified against SHA-256 digests. Corrupted or
+  tampered caches are automatically purged and cleanly re-acquired.
+- **Fail-Fast Production Invariant**: When `download=True` is requested, failures fail fast via
+  `SourceAcquisitionError`; adapters never silently fall back to offline fixtures in production mode.
+- **Explicit Provenance Classification**: Downstream manifests record the provenance type:
+  `fixture` (bundled offline fixture), `cached` (verified local cache), or `downloaded` (fresh network download).
+
 A sink validates a complete record set before publication. A MeTTa sink calls `render_document`.
 The PathMap sink uses the same record fields and must preserve evidence, provenance, fact origin,
 declaration perspective, and evaluation perspective. Invalid references, duplicate evidence
