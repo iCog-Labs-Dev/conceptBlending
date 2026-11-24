@@ -1,3 +1,5 @@
+pub mod canonical_jsonl;
+
 use pathmap::PathMap;
 use pathmap::paths_serialization::{deserialize_paths_with_auxdata, serialize_paths_with_auxdata};
 use pathmap::zipper::{ZipperIteration, ZipperPath, ZipperValues};
