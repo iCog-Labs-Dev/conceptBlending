@@ -79,6 +79,25 @@ bounded-memory passes for provenance, declarations, and dependent records. World
 therefore may appear before the records they reference. Indexes record both `v-predicate/1` and
 `pathmap-kb/2`; older prototype indexes must be rebuilt.
 
+## Canonical JSONL input
+
+The production ingestion boundary is one typed `v-predicate/1` record per JSON line. Every record
+contains `contract_version`, `kind`, `evidence_id`, `truth`, `provenance`, and the fields required by
+its kind. The compiler parses one line at a time and makes dependency-ordered passes over the file;
+input order does not affect the index and source-record memory is bounded by the largest line.
+
+```json
+{"contract_version":"v-predicate/1","kind":"has_sort","evidence_id":"sort_ev","truth":{"strength":0.9,"confidence":0.8},"provenance":{"source":"wordnet","source_record_id":"n:1","source_uri":"https://wordnet.example/n:1","source_version":"3.1","license":"WordNet","transformation":"wordnet_to_sort","origin":"asserted"},"edge_id":"sort_ev","concept":"computer","perspective":"taxonomic_kind","sort":"artifact"}
+```
+
+Compile a published JSONL snapshot directly:
+
+```bash
+cargo run --release -- build-jsonl \
+  --input ./canonical_records.jsonl \
+  --out ./index
+```
+
 ## Try it
 
 ```bash
