@@ -1,9 +1,14 @@
 pub mod canonical_jsonl;
+pub mod shard_format;
 
 use canonical_jsonl::{CanonicalKind, visit_jsonl_file};
 use pathmap::PathMap;
 use pathmap::paths_serialization::{deserialize_paths_with_auxdata, serialize_paths_with_auxdata};
 use pathmap::zipper::{ZipperIteration, ZipperPath, ZipperValues};
+use shard_format::{
+    INDEX_METADATA_FILE, IndexMetadata, SHARD_FORMAT_VERSION, SHARD_METADATA_FILE, ShardDescriptor,
+    ShardMetadata, map_metadata, write_json,
+};
 use std::collections::{HashMap, hash_map::Entry};
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
@@ -20,7 +25,7 @@ pub const PERSPECTIVE_DEFINITION: u8 = 0x60;
 pub const SUBPERSPECTIVE: u8 = 0x61;
 pub const PERSPECTIVE_MATCH: u8 = 0x62;
 pub const CONTRACT_VERSION: &str = "v-predicate/1";
-pub const INDEX_FORMAT_VERSION: &str = "pathmap-kb/2";
+pub const INDEX_FORMAT_VERSION: &str = "pathmap-kb/3";
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct RecordValue {
@@ -1084,6 +1089,7 @@ impl Index {
             manifest,
             "# perspective_id\tperspective\tprimary_paths\tproperty_name_paths\tperspective_paths"
         )?;
+        let mut descriptors = Vec::with_capacity(self.shards.len());
         let mut shard_ids: Vec<_> = self.shards.keys().copied().collect();
         shard_ids.sort_unstable();
         for id in shard_ids {
@@ -1094,12 +1100,41 @@ impl Index {
             let primary_count = save_map(&shard.primary, &dir.join("primary"))?;
             let inverted_count = save_map(&shard.property_name, &dir.join("property-name"))?;
             let perspective_count = save_map(&shard.perspectives, &dir.join("perspectives"))?;
+            let perspective = self.symbol(id);
+            let metadata = ShardMetadata {
+                format_version: SHARD_FORMAT_VERSION.to_owned(),
+                perspective_id: name.clone(),
+                perspective: perspective.clone(),
+                maps: vec![
+                    map_metadata(&dir, "primary", primary_count)?,
+                    map_metadata(&dir, "property-name", inverted_count)?,
+                    map_metadata(&dir, "perspectives", perspective_count)?,
+                ],
+            };
+            write_json(&dir.join(SHARD_METADATA_FILE), &metadata)?;
+            descriptors.push(ShardDescriptor {
+                perspective_id: name.clone(),
+                perspective: perspective.clone(),
+                directory: format!("shards/{name}"),
+                metadata_file: SHARD_METADATA_FILE.to_owned(),
+            });
             writeln!(
                 manifest,
                 "{id:016x}\t{}\t{primary_count}\t{inverted_count}\t{perspective_count}",
-                self.symbol(id)
+                perspective
             )?;
         }
+        write_json(
+            &root.join(INDEX_METADATA_FILE),
+            &IndexMetadata {
+                format_version: INDEX_FORMAT_VERSION.to_owned(),
+                contract_version: CONTRACT_VERSION.to_owned(),
+                shard_format_version: SHARD_FORMAT_VERSION.to_owned(),
+                record_value_size: RecordValue::SIZE,
+                shard_count: descriptors.len(),
+                shards: descriptors,
+            },
+        )?;
         let mut summary = BufWriter::new(File::create(root.join("build-stats.txt"))?);
         writeln!(summary, "property_facts={}", stats.property_facts)?;
         writeln!(summary, "world_facts={}", stats.world_facts)?;
