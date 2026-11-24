@@ -6,13 +6,11 @@ on:
       - main
       - q3/pathmap-vpredicate-atomspace
       - quantale-pipeline-optimization-expansion
-      - followup/ci-mock-gating-pathmap-docs
   pull_request:
     branches:
       - main
       - q3/pathmap-vpredicate-atomspace
       - quantale-pipeline-optimization-expansion
-      - followup/ci-mock-gating-pathmap-docs
 
 jobs:
   build:
@@ -98,6 +96,7 @@ jobs:
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        PETTA_OFFLINE_MOCK: "true"
         VIRTUAL_ENV: /opt/venv
       run: |
         cd peTTa_version

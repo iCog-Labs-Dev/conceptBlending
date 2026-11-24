@@ -22,18 +22,18 @@ class TestLLMMockGating(unittest.TestCase):
     """Verify that offline LLM mocks are strictly gated by CI/offline flags."""
 
     def test_is_offline_mock_enabled(self) -> None:
-        """Test environment flag resolution for mock gating."""
+        """Only the explicit offline flag enables deterministic mocks."""
         with patch.dict(os.environ, {"CI": "", "GITHUB_ACTIONS": "", "PETTA_OFFLINE_MOCK": ""}):
             self.assertFalse(is_offline_mock_enabled())
 
         with patch.dict(os.environ, {"CI": "true", "GITHUB_ACTIONS": "", "PETTA_OFFLINE_MOCK": ""}):
-            self.assertTrue(is_offline_mock_enabled())
+            self.assertFalse(is_offline_mock_enabled())
 
         with patch.dict(os.environ, {"CI": "1", "GITHUB_ACTIONS": "", "PETTA_OFFLINE_MOCK": ""}):
-            self.assertTrue(is_offline_mock_enabled())
+            self.assertFalse(is_offline_mock_enabled())
 
         with patch.dict(os.environ, {"CI": "", "GITHUB_ACTIONS": "true", "PETTA_OFFLINE_MOCK": ""}):
-            self.assertTrue(is_offline_mock_enabled())
+            self.assertFalse(is_offline_mock_enabled())
 
         with patch.dict(os.environ, {"CI": "", "GITHUB_ACTIONS": "", "PETTA_OFFLINE_MOCK": "true"}):
             self.assertTrue(is_offline_mock_enabled())
@@ -62,12 +62,12 @@ class TestLLMMockGating(unittest.TestCase):
             self.assertIn("OPENAI_API_KEY", str(ctx2.exception))
             self.assertIn("PETTA_OFFLINE_MOCK", str(ctx2.exception))
 
-    def test_ci_offline_mode_returns_mock_when_api_key_missing(self) -> None:
-        """In CI/offline mode, missing OPENAI_API_KEY returns deterministic mock structures."""
+    def test_explicit_offline_mode_returns_mock_when_api_key_missing(self) -> None:
+        """The explicit offline flag enables deterministic mock structures."""
         mock_env = {
             "CI": "true",
             "GITHUB_ACTIONS": "",
-            "PETTA_OFFLINE_MOCK": "",
+            "PETTA_OFFLINE_MOCK": "true",
             "OPENAI_API_KEY": "",
         }
         with patch.dict(os.environ, mock_env):
@@ -97,12 +97,12 @@ class TestLLMMockGating(unittest.TestCase):
                     gpt_agents._call_with_validation("test prompt", "gpt_network_selector", retries=1)
                 self.assertIn("API Network Timeout", str(ctx.exception))
 
-    def test_ci_offline_mode_falls_back_on_call_exception(self) -> None:
-        """In CI mode, if API call fails, it falls back to mock structure."""
+    def test_explicit_offline_mode_falls_back_on_call_exception(self) -> None:
+        """Explicit offline mode falls back when a provider call fails."""
         ci_env = {
             "CI": "true",
             "GITHUB_ACTIONS": "",
-            "PETTA_OFFLINE_MOCK": "",
+            "PETTA_OFFLINE_MOCK": "true",
             "OPENAI_API_KEY": "sk-real-looking-key-for-test",
         }
         with patch.dict(os.environ, ci_env):

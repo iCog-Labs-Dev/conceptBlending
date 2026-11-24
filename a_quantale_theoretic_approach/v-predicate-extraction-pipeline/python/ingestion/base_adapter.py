@@ -38,14 +38,6 @@ class BaseSourceAdapter(ABC):
             f"{self.__class__.__name__} does not implement canonical stream_facts() yet."
         )
 
-    def normalize_record(self, raw: Any) -> Any:
-        """Normalize raw record (legacy hook)."""
-        return raw
-
-    def transform_to_casl(self, norm: Any) -> Iterator[Any]:
-        """Transform normalized record to CASL facts (legacy hook)."""
-        return iter(())
-
     def extract_raw_records(self, limit: Optional[int] = None) -> Iterator[Any]:
         """Stream raw records from the underlying knowledge source (legacy interface)."""
         raise NotImplementedError(

@@ -8,7 +8,18 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
-from typing import Any, Dict, Iterator, List, Optional, Set, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Union,
+    cast,
+)
 
 from .base_adapter import BaseSourceAdapter
 from .chebi_adapter import ChebiAdapter
@@ -163,10 +174,13 @@ class MultiSourceOrchestrator:
                 src_pw = 0
                 src_facts: List[Any] = []
 
-                # Stream via canonical v-predicate/1 stream_facts if supported
-                if hasattr(adapter, "stream_facts") and callable(adapter.stream_facts):
-                    stream_iter = adapter.stream_facts(limit=limit_per_source)  # type: ignore[assignment]
-                    for fact in stream_iter:
+                # BaseSourceAdapter supplies a fail-fast placeholder, so capability means the
+                # concrete adapter actually overrides the canonical stream method.
+                supports_canonical_stream = (
+                    type(adapter).stream_facts is not BaseSourceAdapter.stream_facts
+                )
+                if supports_canonical_stream:
+                    for fact in adapter.stream_facts(limit=limit_per_source):
                         all_emitted_facts.append(fact)
                         src_facts.append(fact)
                         src_raw += 1
@@ -204,27 +218,51 @@ class MultiSourceOrchestrator:
                             s.write_fact(fact)
                 else:
                     # Legacy fallback
+                    normalize_record = getattr(adapter, "normalize_record", None)
+                    transform_to_casl = getattr(adapter, "transform_to_casl", None)
+                    transform_to_property_world = getattr(
+                        adapter, "transform_to_property_world", None
+                    )
+                    if (
+                        not callable(normalize_record)
+                        or not callable(transform_to_casl)
+                        or not callable(transform_to_property_world)
+                    ):
+                        raise TypeError(
+                            f"{adapter.__class__.__name__} implements neither canonical "
+                            "stream_facts() nor the complete legacy transformation hooks"
+                        )
+
+                    normalize = cast(Callable[[Any], Any], normalize_record)
+                    casl_transform = cast(
+                        Callable[[Any], Iterable[Any]], transform_to_casl
+                    )
+                    property_world_transform = cast(
+                        Callable[[Any], Iterable[Any]], transform_to_property_world
+                    )
+
                     for raw in adapter.extract_raw_records(limit=limit_per_source):
                         src_raw += 1
                         total_raw += 1
-                        norm = adapter.normalize_record(raw)
+                        norm = normalize(raw)
                         if not norm:
                             continue
                         src_norm += 1
                         total_normalized += 1
 
                         for sink in self.sinks:
-                            if hasattr(sink, "register_atomspace_record"):
-                                sink.register_atomspace_record(norm)
+                            register_record = getattr(sink, "register_atomspace_record", None)
+                            if callable(register_record):
+                                register_record(norm)
 
-                        for fact in adapter.transform_to_casl(norm):
+                        for fact in casl_transform(norm):
                             if casl_sink.write_fact(fact):
                                 src_casl += 1
                                 total_casl += 1
                             for s in self.sinks:
                                 s.write_fact(fact)
 
-                        for fact in adapter.transform_to_property_world(norm):
+                        for fact in property_world_transform(norm):
                             if pw_sink.write_fact(fact):
                                 src_pw += 1
                                 total_pw += 1

@@ -10,7 +10,6 @@ extraPaths = [
     "peTTa_version",
     "peTTa_version/libs/agents"
 ]
-reportMissingImports = false
 
 [tool.pytest.ini_options]
 testpaths = [

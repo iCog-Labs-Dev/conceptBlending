@@ -32,7 +32,7 @@ def use_GPT(prompt):
     api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
     if not api_key or api_key in {"YOUR_OPENAI_API_KEY_HERE", "None"}:
         if is_offline_mock_enabled():
-            print("[MOCK] CI/Offline mock active for use_GPT")
+            print("[MOCK] Explicit offline mock active for use_GPT")
             return "(mock)"
         raise ValueError(
             "OPENAI_API_KEY environment variable is not set. To run offline tests, set PETTA_OFFLINE_MOCK=true."
@@ -43,15 +43,15 @@ def use_GPT(prompt):
         return llm_agent(messages).content.strip()
     except Exception as e:
         if is_offline_mock_enabled():
-            print(f"[MOCK] CI/Offline mock active for use_GPT (call failed: {e})")
+            print(f"[MOCK] Explicit offline mock active for use_GPT (call failed: {e})")
             return "(mock)"
         raise e
 
 def _call_with_validation(prompt: str, method: str, retries: int = 3):
     """
     Helper function to call the LLM and validate output structure.
-    If offline mock is enabled (CI/test environment), falls back to deterministic
-    mock responses when OPENAI_API_KEY is missing or authentication fails.
+    If offline mocking is explicitly enabled, falls back to deterministic mock
+    responses when OPENAI_API_KEY is missing or authentication fails.
     In production / local dev, missing API keys or call failures raise errors.
     """
     api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
@@ -59,7 +59,7 @@ def _call_with_validation(prompt: str, method: str, retries: int = 3):
 
     if not api_key or api_key in {"YOUR_OPENAI_API_KEY_HERE", "None"}:
         if mock_enabled:
-            print(f"[MOCK] CI/Offline mock active for {method}")
+            print(f"[MOCK] Explicit offline mock active for {method}")
             if method in OFFLINE_MOCKS:
                 return OFFLINE_MOCKS[method]
         raise ValueError(
@@ -83,19 +83,19 @@ def _call_with_validation(prompt: str, method: str, retries: int = 3):
             err_str = str(e)
             if "AuthenticationError" in type(e).__name__ or "API key" in err_str or "401" in err_str or isinstance(e, RuntimeError):
                 if mock_enabled:
-                    print(f"[MOCK] CI/Offline mock active for {method} (authentication failed: {e})")
+                    print(f"[MOCK] Explicit offline mock active for {method} (authentication failed: {e})")
                     if method in OFFLINE_MOCKS:
                         return OFFLINE_MOCKS[method]
                 raise e
             if attempt == retries:
                 if mock_enabled:
-                    print(f"[MOCK] CI/Offline mock active for {method} (all retries failed: {e})")
+                    print(f"[MOCK] Explicit offline mock active for {method} (all retries failed: {e})")
                     if method in OFFLINE_MOCKS:
                         return OFFLINE_MOCKS[method]
                 raise e
 
     if mock_enabled and method in OFFLINE_MOCKS:
-        print(f"[MOCK] CI/Offline mock active for {method} (invalid output after retries)")
+        print(f"[MOCK] Explicit offline mock active for {method} (invalid output after retries)")
         return OFFLINE_MOCKS[method]
     if last_error:
         raise last_error

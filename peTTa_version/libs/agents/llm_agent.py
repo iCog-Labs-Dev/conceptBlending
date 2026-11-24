@@ -22,14 +22,12 @@ except ImportError:
 def is_offline_mock_enabled() -> bool:
     """
     Check if offline LLM mock responses are explicitly enabled.
-    Returns True in CI environments (CI=true, GITHUB_ACTIONS=true)
-    or when PETTA_OFFLINE_MOCK=true is explicitly set.
+
+    CI is deliberately not an implicit opt-in: integration tests that intend
+    to exercise a real provider must still fail if that provider fails.  The
+    workflow or caller must set PETTA_OFFLINE_MOCK=true explicitly.
     """
-    return (
-        os.getenv("CI", "").strip().lower() in {"true", "1"}
-        or os.getenv("GITHUB_ACTIONS", "").strip().lower() in {"true", "1"}
-        or os.getenv("PETTA_OFFLINE_MOCK", "").strip().lower() in {"true", "1"}
-    )
+    return os.getenv("PETTA_OFFLINE_MOCK", "").strip().lower() in {"true", "1"}
 
 
 class ChatGPTAgent():

@@ -15,6 +15,7 @@ PIPELINE_ROOT = Path(__file__).resolve().parents[2]
 if str(PIPELINE_ROOT / "python") not in sys.path:
     sys.path.insert(0, str(PIPELINE_ROOT / "python"))
 
+from ingestion.base_adapter import BaseSourceAdapter
 from ingestion.orchestrator import IngestionSummary, MultiSourceOrchestrator
 from ingestion.sinks import InMemoryTestSink, PathMapSink
 from v_predicate_contract import (
@@ -165,6 +166,25 @@ class TestIngestionOrchestrator(unittest.TestCase):
                 orchestrator.run_ingestion(output_dir=out_dir)
 
             # Staging directory must be cleaned up on failure
+            self.assertFalse((out_dir / ".staging").exists())
+
+    def test_incomplete_legacy_adapter_fails_instead_of_dropping_facts(self) -> None:
+        class IncompleteLegacyAdapter(BaseSourceAdapter):
+            source_name = "incomplete_legacy"
+
+            def fetch(self, download: bool = False, cache_dir: Path | None = None) -> Path:
+                return Path("unused")
+
+            def extract_raw_records(self, limit: int | None = None):
+                yield {"concept": "must_not_be_silently_dropped"}
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out_dir = Path(tmp_dir) / "incomplete_legacy"
+            orchestrator = MultiSourceOrchestrator(adapters=[IncompleteLegacyAdapter()])
+
+            with self.assertRaisesRegex(TypeError, "complete legacy transformation hooks"):
+                orchestrator.run_ingestion(output_dir=out_dir)
+
             self.assertFalse((out_dir / ".staging").exists())
 
     def test_cli_invocation_all_sources(self) -> None:
