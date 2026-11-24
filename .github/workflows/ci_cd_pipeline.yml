@@ -6,11 +6,13 @@ on:
       - main
       - q3/pathmap-vpredicate-atomspace
       - quantale-pipeline-optimization-expansion
+      - followup/ci-mock-gating-pathmap-docs
   pull_request:
     branches:
       - main
       - q3/pathmap-vpredicate-atomspace
       - quantale-pipeline-optimization-expansion
+      - followup/ci-mock-gating-pathmap-docs
 
 jobs:
   build:
@@ -129,7 +131,10 @@ jobs:
           a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_openmath_adapter.py \
           a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_ingestion_orchestrator.py \
           a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_acceptance_scenario.py \
-          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_pathmap_storage_boundary.py
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_pathmap_kb_integration.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_pathmap_kb_evaluation.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_pathmap_storage_boundary.py \
+          a_quantale_theoretic_approach/v-predicate-extraction-pipeline/tests/python/test_llm_mock_gating.py
 
     # -----------------------------
     # Run Ingestion Pipeline Smoke Test

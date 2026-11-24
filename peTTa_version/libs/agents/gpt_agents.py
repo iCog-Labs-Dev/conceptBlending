@@ -8,7 +8,7 @@ from prompts.vector_extraction import VECTOR_EXTRACTION_PROMPT
 from prompts.vital_relation_extraction import VITAL_RELATION_PROMPT
 from prompts.context_preprocessing import CONTEXT_PREPROCESSING_PROMPT
 from prompts.good_reason import GOOD_REASON
-from llm_agent import ChatGPTAgent
+from llm_agent import ChatGPTAgent, is_offline_mock_enabled
 from structure_validator import validate_gpt_output
 
 
@@ -29,24 +29,44 @@ OFFLINE_MOCKS = {
 
 def use_GPT(prompt):
     print(f"Using GPT with prompt:\n{prompt}\n")
+    api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
+    if not api_key or api_key in {"YOUR_OPENAI_API_KEY_HERE", "None"}:
+        if is_offline_mock_enabled():
+            print("[MOCK] CI/Offline mock active for use_GPT")
+            return "(mock)"
+        raise ValueError(
+            "OPENAI_API_KEY environment variable is not set. To run offline tests, set PETTA_OFFLINE_MOCK=true."
+        )
+
     try:
         messages = [{"role": "system", "content": prompt}]
         return llm_agent(messages).content.strip()
     except Exception as e:
-        print(f"[use_GPT] Call failed or API key missing ({e}). Returning offline mock.")
-        return "(mock)"
+        if is_offline_mock_enabled():
+            print(f"[MOCK] CI/Offline mock active for use_GPT (call failed: {e})")
+            return "(mock)"
+        raise e
 
 def _call_with_validation(prompt: str, method: str, retries: int = 3):
     """
     Helper function to call the LLM and validate output structure.
-    If no API key is available or authentication fails, gracefully falls back
-    to deterministic offline mock responses to keep test suites green in CI.
+    If offline mock is enabled (CI/test environment), falls back to deterministic
+    mock responses when OPENAI_API_KEY is missing or authentication fails.
+    In production / local dev, missing API keys or call failures raise errors.
     """
     api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
-    if not api_key or api_key in {"YOUR_OPENAI_API_KEY_HERE", "None"}:
-        if method in OFFLINE_MOCKS:
-            return OFFLINE_MOCKS[method]
+    mock_enabled = is_offline_mock_enabled()
 
+    if not api_key or api_key in {"YOUR_OPENAI_API_KEY_HERE", "None"}:
+        if mock_enabled:
+            print(f"[MOCK] CI/Offline mock active for {method}")
+            if method in OFFLINE_MOCKS:
+                return OFFLINE_MOCKS[method]
+        raise ValueError(
+            "OPENAI_API_KEY environment variable is not set. To run offline tests, set PETTA_OFFLINE_MOCK=true."
+        )
+
+    last_error = None
     for attempt in range(1, retries + 1):
         try:
             messages = [{"role": "system", "content": prompt}]
@@ -59,19 +79,26 @@ def _call_with_validation(prompt: str, method: str, retries: int = 3):
                 else:
                     print(f"[{method}] Output invalid, last attempt {attempt} failed")
         except Exception as e:
+            last_error = e
             err_str = str(e)
             if "AuthenticationError" in type(e).__name__ or "API key" in err_str or "401" in err_str or isinstance(e, RuntimeError):
-                print(f"[{method}] OpenAI authentication failed ({e}). Using offline mock.")
-                if method in OFFLINE_MOCKS:
-                    return OFFLINE_MOCKS[method]
+                if mock_enabled:
+                    print(f"[MOCK] CI/Offline mock active for {method} (authentication failed: {e})")
+                    if method in OFFLINE_MOCKS:
+                        return OFFLINE_MOCKS[method]
+                raise e
             if attempt == retries:
-                if method in OFFLINE_MOCKS:
-                    print(f"[{method}] All retries failed ({e}). Using offline mock.")
-                    return OFFLINE_MOCKS[method]
+                if mock_enabled:
+                    print(f"[MOCK] CI/Offline mock active for {method} (all retries failed: {e})")
+                    if method in OFFLINE_MOCKS:
+                        return OFFLINE_MOCKS[method]
                 raise e
 
-    if method in OFFLINE_MOCKS:
+    if mock_enabled and method in OFFLINE_MOCKS:
+        print(f"[MOCK] CI/Offline mock active for {method} (invalid output after retries)")
         return OFFLINE_MOCKS[method]
+    if last_error:
+        raise last_error
     raise ValueError(f"Failed to generate valid {method} output after {retries} retries")
 
 def gpt_good_reason(blend, properties, context):

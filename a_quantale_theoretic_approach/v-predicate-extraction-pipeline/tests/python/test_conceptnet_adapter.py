@@ -63,6 +63,7 @@ class ConceptNetAdapterTests(unittest.TestCase):
         sort_facts = [f for f in facts if isinstance(f, SortFact)]
         computer_sort = next((f for f in sort_facts if f.concept == "computer"), None)
         self.assertIsNotNone(computer_sort)
+        assert computer_sort is not None
         self.assertEqual(computer_sort.perspective, Perspective.TAXONOMIC_KIND)
         self.assertEqual(computer_sort.sort, "machine")
 

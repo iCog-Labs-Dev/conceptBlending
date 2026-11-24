@@ -3,6 +3,53 @@
 This is a deliberately small side-by-side compiler for the generated perspective-aware KBs.
 It does not replace the current MeTTa files.
 
+## Prerequisites & PathMap Dependency
+
+This prototype builds against **PathMap 0.4** (`radix-256` prefix trie with path compression).
+Because PathMap is developed in a separate repository, it is referenced as a path dependency:
+`pathmap = { path = "../../../../../PathMap" }`
+
+### Setup Instructions
+
+Clone the PathMap repository as a sibling directory to your `conceptBlending` workspace root:
+
+```bash
+# From your workspace root (e.g., conceptBlending/):
+git clone https://github.com/Adam-Vandervorst/PathMap.git ../PathMap
+```
+
+Ensure the directory structure matches:
+```text
+parent_dir/
+├── conceptBlending/
+│   └── a_quantale_theoretic_approach/
+│       └── v-predicate-extraction-pipeline/
+│           └── prototype/
+│               ├── pathmap-kb/
+│               └── pathmap-kb-ffi/
+└── PathMap/
+    ├── Cargo.toml
+    └── src/
+```
+
+### Building and Verifying
+
+```bash
+cd a_quantale_theoretic_approach/v-predicate-extraction-pipeline/prototype/pathmap-kb
+cargo build --release
+cargo test
+```
+
+### CI Parity
+
+In CI workflows (such as `.github/workflows/ci_cd_pipeline.yml`), PathMap is cloned directly into the parent workspace before building:
+
+```bash
+git clone https://github.com/Adam-Vandervorst/PathMap.git "$GITHUB_WORKSPACE/../PathMap"
+cd a_quantale_theoretic_approach/v-predicate-extraction-pipeline/prototype/pathmap-kb
+cargo build --release
+```
+
 ## Layout
 
 Each perspective is a separate radix-256 `PathMap` shard, so the perspective is selected before
