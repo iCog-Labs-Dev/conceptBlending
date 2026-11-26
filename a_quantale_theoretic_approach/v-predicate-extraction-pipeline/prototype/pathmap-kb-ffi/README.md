@@ -36,6 +36,11 @@ PeTTa functions:
 !(pathmap-close! spec-kb)
 ```
 
+The same query names with a `-detailed` suffix append a metadata term without changing the
+legacy row shapes, for example `(metadata $provenance $origin $payload-provenance
+$payload-origin)`. This exposes asserted/inferred/generated origin and both fact and signature
+provenance to algorithms that need auditable results.
+
 Property-world rows include both the world and its evaluation perspective:
 
 ```metta

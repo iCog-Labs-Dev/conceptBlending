@@ -20,6 +20,10 @@ typedef struct {
     byte_slice_t payload;
     byte_slice_t evidence;
     byte_slice_t payload_evidence;
+    byte_slice_t provenance;
+    byte_slice_t origin;
+    byte_slice_t payload_provenance;
+    byte_slice_t payload_origin;
     double strength;
     double confidence;
     double payload_strength;
@@ -38,6 +42,7 @@ typedef struct {
     term_t flat;
     term_t flat_tail;
     predicate_t sread;
+    int detailed;
 } row_context_t;
 
 #define PARSED_CACHE_BUCKETS 4096
@@ -167,6 +172,19 @@ static int put_tv(term_t term, double strength, double confidence)
            put_list(term, (term_t[]){items, items + 1, items + 2}, 3);
 }
 
+static int put_metadata(row_context_t *context, term_t term,
+                        const row_view_t *row)
+{
+    term_t items = PL_new_term_refs(5);
+    return PL_put_atom_chars(items, "metadata") &&
+           put_parsed_slice(context, items + 1, row->provenance) &&
+           put_atom_slice(items + 2, row->origin) &&
+           put_parsed_slice(context, items + 3, row->payload_provenance) &&
+           put_atom_slice(items + 4, row->payload_origin) &&
+           put_list(term, (term_t[]){items, items + 1, items + 2, items + 3,
+                                     items + 4}, 5);
+}
+
 static int put_row(row_context_t *context, term_t term,
                    const row_view_t *row)
 {
@@ -178,7 +196,7 @@ static int put_row(row_context_t *context, term_t term,
         return FALSE;
     }
 
-    term_t items = PL_new_term_refs(7);
+    term_t items = PL_new_term_refs(8);
     if (!PL_put_atom_chars(items, tags[row->family])) {
         return FALSE;
     }
@@ -208,10 +226,15 @@ static int put_row(row_context_t *context, term_t term,
             !put_atom_slice(items + 6, row->payload_evidence)) {
             return FALSE;
         }
-        return put_list(term,
-                        (term_t[]){items, items + 1, items + 2, items + 3,
-                                   items + 4, items + 5, items + 6},
-                        7);
+        if (context->detailed) {
+            if (!put_metadata(context, items + 7, row)) return FALSE;
+            return put_list(term,
+                            (term_t[]){items, items + 1, items + 2, items + 3,
+                                       items + 4, items + 5, items + 6, items + 7},
+                            8);
+        }
+        return put_list(term, (term_t[]){items, items + 1, items + 2, items + 3,
+                                         items + 4, items + 5, items + 6}, 7);
     }
 
     if (row->family == 5) {
@@ -221,18 +244,26 @@ static int put_row(row_context_t *context, term_t term,
             !put_atom_slice(items + 5, row->evidence)) {
             return FALSE;
         }
-        return put_list(term,
-                        (term_t[]){items, items + 1, items + 2, items + 3,
-                                   items + 4, items + 5},
-                        6);
+        if (context->detailed) {
+            if (!put_metadata(context, items + 6, row)) return FALSE;
+            return put_list(term,
+                            (term_t[]){items, items + 1, items + 2, items + 3,
+                                       items + 4, items + 5, items + 6}, 7);
+        }
+        return put_list(term, (term_t[]){items, items + 1, items + 2, items + 3,
+                                         items + 4, items + 5}, 6);
     }
 
     if (!put_tv(items + 2, row->strength, row->confidence) ||
         !put_atom_slice(items + 3, row->evidence)) {
         return FALSE;
     }
-    return put_list(term, (term_t[]){items, items + 1, items + 2, items + 3},
-                    4);
+    if (context->detailed) {
+        if (!put_metadata(context, items + 4, row)) return FALSE;
+        return put_list(term, (term_t[]){items, items + 1, items + 2, items + 3,
+                                         items + 4}, 5);
+    }
+    return put_list(term, (term_t[]){items, items + 1, items + 2, items + 3}, 4);
 }
 
 static int append_row(term_t tail, term_t row)
@@ -310,6 +341,7 @@ static foreign_t pl_pathmap_kb_typed(term_t command_term, term_t input_term,
         return FALSE;
     }
     context.sread = PL_predicate("sread", 2, NULL);
+    context.detailed = strstr(command, "-detailed") != NULL;
 
     char *error = rust_pathmap_kb_visit(command, input, visit_row, &context);
     if (error) {
@@ -327,7 +359,8 @@ static foreign_t pl_pathmap_kb_typed(term_t command_term, term_t input_term,
         return FALSE;
     }
 
-    if (strcmp(command, "build-specification") == 0) {
+    if (strcmp(command, "build-specification") == 0 ||
+        strcmp(command, "build-specification-detailed") == 0) {
         term_t tag = PL_new_term_ref();
         term_t result = PL_new_term_ref();
         if (!PL_put_atom_chars(tag, "specification") ||

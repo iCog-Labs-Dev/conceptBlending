@@ -45,6 +45,18 @@ pathmap_typed(Command, Fields, Result) :-
 'pathmap-build-specification'(Handle, Perspective, Concept, Result) :-
     pathmap_typed("build-specification", [Handle, Perspective, Concept], Result).
 
+'pathmap-query-algebra-detailed'(Handle, Perspective, Concept, Family, Result) :-
+    pathmap_typed("query-algebra-detailed", [Handle, Perspective, Concept, Family], Result).
+
+'pathmap-query-properties-detailed'(Handle, Perspective, Concept, Result) :-
+    pathmap_typed("query-properties-detailed", [Handle, Perspective, Concept], Result).
+
+'pathmap-query-worlds-detailed'(Handle, Perspective, Concept, Property, Result) :-
+    pathmap_typed("query-worlds-detailed", [Handle, Perspective, Concept, Property], Result).
+
+'pathmap-build-specification-detailed'(Handle, Perspective, Concept, Result) :-
+    pathmap_typed("build-specification-detailed", [Handle, Perspective, Concept], Result).
+
 :- library('pathmap_kb_ffi', 'pathmaplib.so', Library),
    ( exists_file(Library)
    -> use_foreign_library(Library)

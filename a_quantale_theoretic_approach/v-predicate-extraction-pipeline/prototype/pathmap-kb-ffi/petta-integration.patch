@@ -13,6 +13,10 @@ index 1578eb0..c573a5a 100644
 +   -> maplist(register_fun,
 +              ['pathmap-open!', 'pathmap-close!', 'pathmap-query-algebra',
 +               'pathmap-query-properties', 'pathmap-query-worlds',
-+               'pathmap-build-specification'])
++               'pathmap-build-specification',
++               'pathmap-query-algebra-detailed',
++               'pathmap-query-properties-detailed',
++               'pathmap-query-worlds-detailed',
++               'pathmap-build-specification-detailed'])
 +   ;  true
 +   ).

@@ -229,6 +229,7 @@ fn execute(command: &str, input: &str) -> Result<String, String> {
 }
 
 fn query_rows(command: &str, input: &str) -> Result<Vec<ResultRow>, String> {
+    let command = command.strip_suffix("-detailed").unwrap_or(command);
     match command {
         "query-algebra" => {
             let parts = fields(input, 4)?;
@@ -288,6 +289,10 @@ pub struct RowView {
     payload: ByteSlice,
     evidence: ByteSlice,
     payload_evidence: ByteSlice,
+    provenance: ByteSlice,
+    origin: ByteSlice,
+    payload_provenance: ByteSlice,
+    payload_origin: ByteSlice,
     strength: f64,
     confidence: f64,
     payload_strength: f64,
@@ -322,6 +327,10 @@ impl RowView {
             payload: ByteSlice::new(row.payload.as_deref()),
             evidence: ByteSlice::new(Some(&row.evidence)),
             payload_evidence: ByteSlice::new(row.payload_evidence.as_deref()),
+            provenance: ByteSlice::new(row.provenance.as_deref()),
+            origin: ByteSlice::new(row.origin),
+            payload_provenance: ByteSlice::new(row.payload_provenance.as_deref()),
+            payload_origin: ByteSlice::new(row.payload_origin),
             strength: metta_float(row.strength),
             confidence: metta_float(row.confidence),
             payload_strength: metta_float(row.payload_strength.unwrap_or_default()),
@@ -411,6 +420,39 @@ mod tests {
     fn unsafe_atoms_are_quoted() {
         assert_eq!(safe_atom("plain_atom"), "plain_atom");
         assert_eq!(safe_atom("two words"), "\"two words\"");
+    }
+
+    #[test]
+    fn typed_view_carries_fact_and_payload_provenance() {
+        let row = ResultRow {
+            concept: "computer".to_owned(),
+            family: "operation",
+            feature: "compute".to_owned(),
+            world: None,
+            payload: Some("(-> computer output)".to_owned()),
+            evidence: "fact_ev".to_owned(),
+            strength: 0.9,
+            confidence: 0.8,
+            payload_strength: Some(1.0),
+            payload_confidence: Some(0.95),
+            payload_evidence: Some("signature_ev".to_owned()),
+            evaluation_perspective: None,
+            provenance: Some("(provenance source fact)".to_owned()),
+            origin: Some("asserted"),
+            payload_provenance: Some("(provenance source signature)".to_owned()),
+            payload_origin: Some("generated"),
+        };
+        let view = RowView::new(&row).unwrap();
+        assert_eq!(
+            view.provenance.length,
+            row.provenance.as_ref().unwrap().len()
+        );
+        assert_eq!(view.origin.length, "asserted".len());
+        assert_eq!(
+            view.payload_provenance.length,
+            row.payload_provenance.as_ref().unwrap().len()
+        );
+        assert_eq!(view.payload_origin.length, "generated".len());
     }
 
     #[test]
