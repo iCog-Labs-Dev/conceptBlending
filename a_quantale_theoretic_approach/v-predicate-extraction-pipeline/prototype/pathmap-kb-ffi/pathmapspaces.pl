@@ -28,6 +28,16 @@ pathmap_typed(Command, Fields, Result) :-
     pathmap_kb("open", Request, Response),
     pathmap_response(Response, Result).
 
+'pathmap-open-cached!'(Handle, Root, Capacity, Result) :-
+    pathmap_request([Handle, Root, Capacity], Request),
+    pathmap_kb("open-capacity", Request, Response),
+    pathmap_response(Response, Result).
+
+'pathmap-cache-stats'(Handle, Result) :-
+    pathmap_request([Handle], Request),
+    pathmap_kb("cache-stats", Request, Response),
+    pathmap_response(Response, Result).
+
 'pathmap-close!'(Handle, Result) :-
     pathmap_request([Handle], Request),
     pathmap_kb("close", Request, Response),

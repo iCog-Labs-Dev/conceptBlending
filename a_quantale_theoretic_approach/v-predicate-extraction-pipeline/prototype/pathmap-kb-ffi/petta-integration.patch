@@ -11,7 +11,8 @@ index 1578eb0..c573a5a 100644
 @@ -319,0 +325,7 @@ register_fun(N) :- (fun(N) -> true ; assertz(fun(N))).
 +:- ( current_predicate(pathmap_kb/3)
 +   -> maplist(register_fun,
-+              ['pathmap-open!', 'pathmap-close!', 'pathmap-query-algebra',
++              ['pathmap-open!', 'pathmap-open-cached!', 'pathmap-cache-stats',
++               'pathmap-close!', 'pathmap-query-algebra',
 +               'pathmap-query-properties', 'pathmap-query-worlds',
 +               'pathmap-build-specification',
 +               'pathmap-query-algebra-detailed',

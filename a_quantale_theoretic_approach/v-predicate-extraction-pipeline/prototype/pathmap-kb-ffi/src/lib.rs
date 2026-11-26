@@ -11,6 +11,7 @@ use std::sync::{Mutex, OnceLock};
 struct RegisteredIndex {
     root: PathBuf,
     store: Option<ImmutableShardStore>,
+    cache_capacity: usize,
 }
 
 #[derive(Default)]
@@ -48,12 +49,8 @@ fn with_index<T>(
         .get_mut(handle)
         .ok_or_else(|| format!("unknown index handle: {handle}"))?;
     if registered.store.is_none() {
-        let capacity = std::env::var("PATHMAP_KB_SHARD_CACHE_CAPACITY")
-            .ok()
-            .and_then(|value| value.parse().ok())
-            .unwrap_or(8);
         registered.store = Some(
-            ImmutableShardStore::open_with_capacity(&registered.root, capacity)
+            ImmutableShardStore::open_with_capacity(&registered.root, registered.cache_capacity)
                 .map_err(|error| format!("failed to open immutable index: {error}"))?,
         );
     }
@@ -164,10 +161,24 @@ fn specification_to_metta(rows: &[ResultRow]) -> String {
 
 fn execute(command: &str, input: &str) -> Result<String, String> {
     match command {
-        "open" => {
-            let parts = fields(input, 2)?;
+        "open" | "open-capacity" => {
+            let expected = if command == "open" { 2 } else { 3 };
+            let parts = fields(input, expected)?;
             let handle = parts[0];
             let root = Path::new(parts[1]);
+            let cache_capacity = if command == "open-capacity" {
+                parts[2]
+                    .parse::<usize>()
+                    .map_err(|_| "cache capacity must be a positive integer".to_owned())?
+            } else {
+                std::env::var("PATHMAP_KB_SHARD_CACHE_CAPACITY")
+                    .ok()
+                    .and_then(|value| value.parse().ok())
+                    .unwrap_or(8)
+            };
+            if cache_capacity == 0 {
+                return Err("cache capacity must be positive".to_owned());
+            }
             if handle.is_empty() {
                 return Err("index handle must not be empty".to_owned());
             }
@@ -182,6 +193,7 @@ fn execute(command: &str, input: &str) -> Result<String, String> {
                 RegisteredIndex {
                     root: root.to_owned(),
                     store: None,
+                    cache_capacity,
                 },
             );
             Ok("true".to_owned())
@@ -195,6 +207,25 @@ fn execute(command: &str, input: &str) -> Result<String, String> {
                 .remove(parts[0])
                 .is_some();
             Ok(if removed { "true" } else { "false" }.to_owned())
+        }
+        "cache-stats" => {
+            let parts = fields(input, 1)?;
+            let registry = registry()
+                .lock()
+                .map_err(|_| "index registry is poisoned".to_owned())?;
+            let registered = registry
+                .indexes
+                .get(parts[0])
+                .ok_or_else(|| format!("unknown index handle: {}", parts[0]))?;
+            let stats = registered
+                .store
+                .as_ref()
+                .map(ImmutableShardStore::cache_stats)
+                .unwrap_or_default();
+            Ok(format!(
+                "(cache-stats {} {} {} {} {})",
+                stats.hits, stats.loads, stats.evictions, stats.resident, stats.capacity
+            ))
         }
         "query-algebra" => {
             let parts = fields(input, 4)?;
@@ -486,6 +517,43 @@ mod tests {
         assert_eq!(
             rows[0].evaluation_perspective.as_deref(),
             Some("spatial_context")
+        );
+        execute("close", &handle).unwrap();
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn ffi_mmap_cache_is_bounded_and_legacy_results_match() {
+        let mut index = Index::default();
+        let mut stats = BuildStats::default();
+        for (perspective, concept, sort, evidence) in [
+            ("p1", "c1", "s1", "e1"),
+            ("p2", "c2", "s2", "e2"),
+            ("p3", "c3", "s3", "e3"),
+        ] {
+            let line = format!(
+                "(: {evidence} (≞ (has_sort {evidence} {concept} {perspective} {sort}) (stv 1.000 0.900)))"
+            );
+            index.ingest_algebra_line(&line, &mut stats).unwrap();
+        }
+        let expected = index.query_algebra("p1", "c1", "sort");
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("pathmap-ffi-cache-{nonce}"));
+        index.save(&root, stats).unwrap();
+        let handle = format!("cache_{nonce}");
+        execute("open-capacity", &format!("{handle}\t{}\t2", root.display())).unwrap();
+        assert_eq!(
+            query_rows("query-algebra", &format!("{handle}\tp1\tc1\tsort")).unwrap(),
+            expected
+        );
+        query_rows("query-algebra", &format!("{handle}\tp2\tc2\tsort")).unwrap();
+        query_rows("query-algebra", &format!("{handle}\tp3\tc3\tsort")).unwrap();
+        assert_eq!(
+            execute("cache-stats", &handle).unwrap(),
+            "(cache-stats 0 3 1 2 2)"
         );
         execute("close", &handle).unwrap();
         fs::remove_dir_all(root).unwrap();

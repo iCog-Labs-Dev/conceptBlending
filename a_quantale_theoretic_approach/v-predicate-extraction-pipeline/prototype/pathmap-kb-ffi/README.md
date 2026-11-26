@@ -29,12 +29,17 @@ PeTTa functions:
 
 ```metta
 !(pathmap-open! spec-kb "/path/to/index")
+!(pathmap-open-cached! spec-kb "/path/to/index" 8)
+!(pathmap-cache-stats spec-kb)
 !(pathmap-query-algebra spec-kb descriptive_property a2 sort)
 !(pathmap-query-properties spec-kb descriptive_property a2)
 !(pathmap-query-worlds spec-kb descriptive_property a2 cardiology)
 !(pathmap-build-specification spec-kb descriptive_property a2)
 !(pathmap-close! spec-kb)
 ```
+
+`pathmap-open-cached!` sets a per-handle shard limit. The stats tuple reports cache hits, loads,
+evictions, resident shards, and capacity, which makes memory-bound behavior directly testable.
 
 The same query names with a `-detailed` suffix append a metadata term without changing the
 legacy row shapes, for example `(metadata $provenance $origin $payload-provenance
