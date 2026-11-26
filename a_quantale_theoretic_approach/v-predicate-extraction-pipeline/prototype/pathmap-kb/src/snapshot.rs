@@ -198,6 +198,18 @@ mod tests {
         manager.switch("generation-1").unwrap();
         assert_eq!(manager.current_generation().unwrap(), "generation-1");
         assert!(manager.switch("../escape").is_err());
+
+        let manifest = manager
+            .root()
+            .join("generations/generation-2/snapshot.json");
+        fs::write(&manifest, b"{\"format_version\":\"broken\"}").unwrap();
+        assert!(manager.switch("generation-2").is_err());
+        assert_eq!(manager.current_generation().unwrap(), "generation-1");
+
+        let incomplete = root.join("incomplete");
+        fs::create_dir(&incomplete).unwrap();
+        assert!(manager.publish("generation-3", &incomplete).is_err());
+        assert_eq!(manager.current_generation().unwrap(), "generation-1");
         fs::remove_dir_all(root).unwrap();
     }
 }

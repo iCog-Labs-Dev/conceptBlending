@@ -167,8 +167,19 @@ Every snapshot contains `index-metadata.json` and one `shard-metadata.json` per 
 metadata records format versions, record width, counts, sizes, and SHA-256 digests. Opening a store
 validates the shared dictionaries; loading a perspective validates all of that shard's files before
 mapping them. `ImmutableShardStore` maps perspectives only when requested and retains them in a
-bounded LRU cache (eight perspectives by default, configurable with `open_with_capacity`). Mutable
-verified or session facts remain future overlay work and are not written into immutable snapshots.
+bounded LRU cache (eight perspectives by default, configurable with `open_with_capacity`). The
+typed PeTTa FFI uses this store directly, so the cache bound applies to the actual query path.
+
+Mutable corrected, session, inferred, and generated facts are stored in a separate versioned
+overlay. Overlay upserts and tombstones use stable logical fact keys, deterministic layer
+precedence, and atomic persistence. Queries merge the overlay with the selected immutable shard;
+the mapped snapshot is never changed in place.
+
+`SnapshotManager` publishes validated indexes under `generations/<name>/index`, records a
+versioned manifest, and atomically selects a generation through the `current` file. Switching a
+typed-FFI handle discards its old mmap/LRU store and opens the selected generation. A failed or
+incompatible selection leaves the previous generation active, and selecting an older generation
+provides rollback while the independently persisted overlay remains available.
 
 The comparison harness in `benchmarks/metta_atomspace_bench.pl` applies the same specification
 workload to the compiled SWI-Prolog QLF atomspaces generated from the MeTTa KBs. It is a benchmark

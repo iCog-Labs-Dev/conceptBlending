@@ -32,6 +32,25 @@ impl FactKey {
             evaluation_perspective: row.evaluation_perspective.clone(),
         }
     }
+
+    fn validate(&self) -> io::Result<()> {
+        if self.perspective.is_empty()
+            || self.concept.is_empty()
+            || self.feature.is_empty()
+            || !matches!(
+                self.family.as_str(),
+                "sort" | "operation" | "predicate" | "axiom" | "property" | "property-world"
+            )
+            || (self.family == "property-world") != self.world.is_some()
+            || (self.evaluation_perspective.is_some() && self.family != "property-world")
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "invalid overlay logical fact key",
+            ));
+        }
+        Ok(())
+    }
 }
 
 /// Higher layers deterministically override lower layers for the same logical fact.
@@ -60,6 +79,27 @@ pub struct OverlayFact {
 }
 
 impl OverlayFact {
+    fn validate(&self) -> io::Result<()> {
+        self.key.validate()?;
+        if self.evidence.is_empty()
+            || !valid_truth(self.strength)
+            || !valid_truth(self.confidence)
+            || self.payload_strength.is_some() != self.payload_confidence.is_some()
+            || self
+                .payload_strength
+                .is_some_and(|value| !valid_truth(value))
+            || self
+                .payload_confidence
+                .is_some_and(|value| !valid_truth(value))
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "invalid overlay fact metadata",
+            ));
+        }
+        Ok(())
+    }
+
     pub fn to_result_row(&self) -> ResultRow {
         ResultRow {
             concept: self.key.concept.clone(),
@@ -186,6 +226,10 @@ impl OverlayStore {
     }
 
     fn apply(&mut self, action: OverlayAction) -> io::Result<bool> {
+        match &action {
+            OverlayAction::Upsert { fact } => fact.validate()?,
+            OverlayAction::Retract { key, .. } => key.validate()?,
+        }
         let mut candidate = self.overlay.clone();
         if !candidate.apply(action) {
             return Ok(false);
@@ -324,6 +368,10 @@ fn invalid_json(error: serde_json::Error) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, error)
 }
 
+fn valid_truth(value: f32) -> bool {
+    value.is_finite() && (0.0..=1.0).contains(&value)
+}
+
 fn compare_entries(left: &OverlayEntry, right: &OverlayEntry) -> Ordering {
     left.layer()
         .cmp(&right.layer())
@@ -442,6 +490,21 @@ mod tests {
                 .merge("functional_use", Vec::new())
                 .is_empty()
         );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn durable_store_rejects_invalid_facts_without_publishing() {
+        let root =
+            std::env::temp_dir().join(format!("pathmap-invalid-overlay-{}", std::process::id()));
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("overlay.json");
+        let mut store = OverlayStore::open(&path).unwrap();
+        let mut invalid = fact(OverlayLayer::Session, "invalid");
+        invalid.strength = f32::NAN;
+        assert!(store.upsert(invalid).is_err());
+        assert_eq!(store.overlay().revision(), 0);
+        assert!(!path.exists());
         fs::remove_dir_all(root).unwrap();
     }
 }

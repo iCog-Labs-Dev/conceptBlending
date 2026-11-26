@@ -838,4 +838,96 @@ mod tests {
         execute("close", &handle).unwrap();
         fs::remove_dir_all(root).unwrap();
     }
+
+    #[test]
+    fn overlay_survives_snapshot_upgrade_and_handle_reopen() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("pathmap-ffi-lifecycle-{nonce}"));
+        fs::create_dir_all(&root).unwrap();
+        let manager = SnapshotManager::open(root.join("repository")).unwrap();
+        for generation in ["one", "two"] {
+            let mut index = Index::default();
+            let mut stats = BuildStats::default();
+            index
+                .ingest_algebra_line(
+                    &format!(
+                        "(: {generation}_ev (≞ (has_sort {generation}_ev computer taxonomic_kind artifact) (stv 0.500 0.600)))"
+                    ),
+                    &mut stats,
+                )
+                .unwrap();
+            let staged = root.join(format!("staged-{generation}"));
+            index.save(&staged, stats).unwrap();
+            manager.publish(generation, &staged).unwrap();
+        }
+        manager.switch("one").unwrap();
+        let overlay_path = root.join("session-overlay.json");
+        let handle = format!("lifecycle_{nonce}");
+        execute(
+            "open-snapshot-overlay",
+            &format!(
+                "{handle}\t{}\t{}\t2",
+                manager.root().display(),
+                overlay_path.display()
+            ),
+        )
+        .unwrap();
+        let action = OverlayAction::Upsert {
+            fact: OverlayFact {
+                key: FactKey {
+                    perspective: "taxonomic_kind".to_owned(),
+                    concept: "computer".to_owned(),
+                    family: "sort".to_owned(),
+                    feature: "artifact".to_owned(),
+                    world: None,
+                    evaluation_perspective: None,
+                },
+                payload: None,
+                evidence: "manual_ev".to_owned(),
+                strength: 1.0,
+                confidence: 1.0,
+                payload_strength: None,
+                payload_confidence: None,
+                payload_evidence: None,
+                provenance: Some("(manual correction)".to_owned()),
+                payload_provenance: None,
+                layer: OverlayLayer::Corrected,
+            },
+        };
+        execute(
+            "overlay-apply",
+            &format!("{handle}\t{}", serde_json::to_string(&action).unwrap()),
+        )
+        .unwrap();
+        execute("snapshot-switch", &format!("{handle}\ttwo")).unwrap();
+        let rows = query_rows(
+            "query-algebra",
+            &format!("{handle}\ttaxonomic_kind\tcomputer\tsort"),
+        )
+        .unwrap();
+        assert_eq!(rows[0].evidence, "manual_ev");
+        execute("close", &handle).unwrap();
+
+        let reopened = format!("reopened_{nonce}");
+        execute(
+            "open-snapshot-overlay",
+            &format!(
+                "{reopened}\t{}\t{}\t2",
+                manager.root().display(),
+                overlay_path.display()
+            ),
+        )
+        .unwrap();
+        let rows = query_rows(
+            "query-algebra",
+            &format!("{reopened}\ttaxonomic_kind\tcomputer\tsort"),
+        )
+        .unwrap();
+        assert_eq!(rows[0].evidence, "manual_ev");
+        execute("close", &reopened).unwrap();
+        fs::remove_dir_all(root).unwrap();
+    }
 }
