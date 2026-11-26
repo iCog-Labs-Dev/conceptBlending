@@ -16,8 +16,7 @@ use std::collections::{HashMap, hash_map::Entry};
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 pub const PROPERTY: u8 = 0x10;
 pub const PROPERTY_FACT: u8 = 0x00;
@@ -155,6 +154,10 @@ pub struct MappedShardIndex {
     payloads: Arc<HashMap<u64, String>>,
 }
 
+/// Thread-safe ownership handle for one mapped shard. PathMap's mmap reader uses internal
+/// cursors, so queries on the same shard are serialized while different shards remain independent.
+pub type MappedShardHandle = Arc<Mutex<MappedShardIndex>>;
+
 /// Opens index metadata and dictionaries only; perspective files are mapped by [`Self::load`].
 pub struct ImmutableShardStore {
     root: PathBuf,
@@ -162,11 +165,11 @@ pub struct ImmutableShardStore {
     by_perspective: HashMap<String, ShardDescriptor>,
     symbols: Arc<HashMap<u64, String>>,
     payloads: Arc<HashMap<u64, String>>,
-    cache: RefCell<ShardCache>,
+    cache: Mutex<ShardCache>,
 }
 
 struct CachedShard {
-    shard: Rc<MappedShardIndex>,
+    shard: MappedShardHandle,
     last_used: u64,
 }
 
@@ -240,7 +243,7 @@ impl ImmutableShardStore {
             root,
             metadata,
             by_perspective,
-            cache: RefCell::new(ShardCache {
+            cache: Mutex::new(ShardCache {
                 capacity: cache_capacity,
                 clock: 0,
                 hits: 0,
@@ -258,21 +261,27 @@ impl ImmutableShardStore {
             .map(|descriptor| descriptor.perspective.as_str())
     }
 
-    pub fn load(&self, perspective: &str) -> io::Result<Rc<MappedShardIndex>> {
+    pub fn load(&self, perspective: &str) -> io::Result<MappedShardHandle> {
         {
-            let mut cache = self.cache.borrow_mut();
+            let mut cache = self
+                .cache
+                .lock()
+                .map_err(|_| io::Error::other("immutable shard cache lock is poisoned"))?;
             cache.clock += 1;
             let now = cache.clock;
             if let Some(entry) = cache.entries.get_mut(perspective) {
                 entry.last_used = now;
-                let shard = Rc::clone(&entry.shard);
+                let shard = Arc::clone(&entry.shard);
                 cache.hits += 1;
                 return Ok(shard);
             }
         }
 
-        let shard = Rc::new(self.load_uncached(perspective)?);
-        let mut cache = self.cache.borrow_mut();
+        let shard = Arc::new(Mutex::new(self.load_uncached(perspective)?));
+        let mut cache = self
+            .cache
+            .lock()
+            .map_err(|_| io::Error::other("immutable shard cache lock is poisoned"))?;
         cache.loads += 1;
         if cache.entries.len() == cache.capacity {
             let oldest = cache
@@ -288,7 +297,7 @@ impl ImmutableShardStore {
         cache.entries.insert(
             perspective.to_owned(),
             CachedShard {
-                shard: Rc::clone(&shard),
+                shard: Arc::clone(&shard),
                 last_used: now,
             },
         );
@@ -296,7 +305,10 @@ impl ImmutableShardStore {
     }
 
     pub fn cache_stats(&self) -> ShardCacheStats {
-        let cache = self.cache.borrow();
+        let cache = self
+            .cache
+            .lock()
+            .expect("immutable shard cache lock is poisoned");
         ShardCacheStats {
             hits: cache.hits,
             loads: cache.loads,
@@ -307,7 +319,10 @@ impl ImmutableShardStore {
     }
 
     pub fn cached_perspectives(&self) -> Vec<String> {
-        let cache = self.cache.borrow();
+        let cache = self
+            .cache
+            .lock()
+            .expect("immutable shard cache lock is poisoned");
         let mut perspectives: Vec<_> = cache.entries.keys().cloned().collect();
         perspectives.sort();
         perspectives

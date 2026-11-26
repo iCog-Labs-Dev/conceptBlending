@@ -106,23 +106,31 @@ fn canonical_contract_builds_saves_loads_and_answers_specification_queries() {
     let mapped_functional = store.load("functional_use").unwrap();
     assert_eq!(
         mapped_functional
+            .lock()
+            .unwrap()
             .query_algebra("computer", "operation")
             .unwrap(),
         operation
     );
     assert_eq!(
         mapped_functional
+            .lock()
+            .unwrap()
             .query_worlds("functional_use", "computer", "process_information")
             .unwrap(),
         functional.query_worlds("functional_use", "computer", "process_information")
     );
-    assert!(std::rc::Rc::ptr_eq(
+    assert!(std::sync::Arc::ptr_eq(
         &mapped_functional,
         &store.load("functional_use").unwrap()
     ));
     let mapped_structural = store.load("structural_composition").unwrap();
     assert_eq!(
-        mapped_structural.query_algebra("group", "axiom").unwrap(),
+        mapped_structural
+            .lock()
+            .unwrap()
+            .query_algebra("group", "axiom")
+            .unwrap(),
         structural.query_algebra("structural_composition", "group", "axiom")
     );
     store.load("taxonomic_kind").unwrap();

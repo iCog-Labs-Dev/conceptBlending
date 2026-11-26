@@ -1,7 +1,8 @@
-use perspective_pathmap_prototype::{Index, ResultRow};
+use perspective_pathmap_prototype::{ImmutableShardStore, MappedShardIndex, ResultRow};
 use std::collections::HashMap;
 use std::ffi::c_void;
 use std::ffi::{CStr, CString};
+use std::io;
 use std::os::raw::c_char;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
@@ -9,7 +10,7 @@ use std::sync::{Mutex, OnceLock};
 #[derive(Default)]
 struct RegisteredIndex {
     root: PathBuf,
-    index: Option<Index>,
+    store: Option<ImmutableShardStore>,
 }
 
 #[derive(Default)]
@@ -37,7 +38,7 @@ fn fields(input: &str, expected: usize) -> Result<Vec<&str>, String> {
 fn with_index<T>(
     handle: &str,
     perspective: &str,
-    query: impl FnOnce(&Index) -> T,
+    query: impl FnOnce(&MappedShardIndex) -> io::Result<T>,
 ) -> Result<T, String> {
     let mut registry = registry()
         .lock()
@@ -46,17 +47,26 @@ fn with_index<T>(
         .indexes
         .get_mut(handle)
         .ok_or_else(|| format!("unknown index handle: {handle}"))?;
-    if let Some(index) = registered.index.as_mut() {
-        index
-            .load_perspective_shard(&registered.root, perspective)
-            .map_err(|error| format!("failed to load perspective {perspective}: {error}"))?;
-    } else {
-        registered.index = Some(
-            Index::load_shard(&registered.root, perspective)
-                .map_err(|error| format!("failed to load perspective {perspective}: {error}"))?,
+    if registered.store.is_none() {
+        let capacity = std::env::var("PATHMAP_KB_SHARD_CACHE_CAPACITY")
+            .ok()
+            .and_then(|value| value.parse().ok())
+            .unwrap_or(8);
+        registered.store = Some(
+            ImmutableShardStore::open_with_capacity(&registered.root, capacity)
+                .map_err(|error| format!("failed to open immutable index: {error}"))?,
         );
     }
-    Ok(query(registered.index.as_ref().unwrap()))
+    let shard = registered
+        .store
+        .as_ref()
+        .unwrap()
+        .load(perspective)
+        .map_err(|error| format!("failed to load perspective {perspective}: {error}"))?;
+    let shard = shard
+        .lock()
+        .map_err(|_| format!("mapped shard lock is poisoned: {perspective}"))?;
+    query(&shard).map_err(|error| format!("mapped query failed: {error}"))
 }
 
 fn safe_atom(value: &str) -> String {
@@ -171,7 +181,7 @@ fn execute(command: &str, input: &str) -> Result<String, String> {
                 handle.to_owned(),
                 RegisteredIndex {
                     root: root.to_owned(),
-                    index: None,
+                    store: None,
                 },
             );
             Ok("true".to_owned())
@@ -189,7 +199,7 @@ fn execute(command: &str, input: &str) -> Result<String, String> {
         "query-algebra" => {
             let parts = fields(input, 4)?;
             let rows = with_index(parts[0], parts[1], |index| {
-                index.query_algebra(parts[1], parts[2], parts[3])
+                index.query_algebra(parts[2], parts[3])
             })?;
             Ok(rows_to_metta(&rows))
         }
@@ -210,7 +220,7 @@ fn execute(command: &str, input: &str) -> Result<String, String> {
         "build-specification" => {
             let parts = fields(input, 3)?;
             let rows = with_index(parts[0], parts[1], |index| {
-                index.build_specification(parts[1], parts[2])
+                index.build_specification(parts[2])
             })?;
             Ok(specification_to_metta(&rows))
         }
@@ -223,7 +233,7 @@ fn query_rows(command: &str, input: &str) -> Result<Vec<ResultRow>, String> {
         "query-algebra" => {
             let parts = fields(input, 4)?;
             with_index(parts[0], parts[1], |index| {
-                index.query_algebra(parts[1], parts[2], parts[3])
+                index.query_algebra(parts[2], parts[3])
             })
         }
         "query-properties" => {
@@ -241,7 +251,7 @@ fn query_rows(command: &str, input: &str) -> Result<Vec<ResultRow>, String> {
         "build-specification" => {
             let parts = fields(input, 3)?;
             with_index(parts[0], parts[1], |index| {
-                index.build_specification(parts[1], parts[2])
+                index.build_specification(parts[2])
             })
         }
         _ => Err(format!("command does not return rows: {command}")),
@@ -393,7 +403,7 @@ pub extern "C" fn rust_pathmap_kb_string_free(pointer: *mut c_char) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use perspective_pathmap_prototype::BuildStats;
+    use perspective_pathmap_prototype::{BuildStats, Index};
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
