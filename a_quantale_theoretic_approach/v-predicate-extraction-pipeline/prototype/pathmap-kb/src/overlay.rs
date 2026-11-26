@@ -4,6 +4,11 @@ use crate::ResultRow;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::fs::{self, File};
+use std::io::{self, BufReader, BufWriter, Write};
+use std::path::{Path, PathBuf};
+
+pub const OVERLAY_FORMAT_VERSION: &str = "pathmap-overlay/1";
 
 /// Stable logical identity independent of evidence and truth-value updates.
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -117,13 +122,124 @@ impl OverlayEntry {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct MutableOverlay {
     revision: u64,
     entries: HashMap<FactKey, OverlayEntry>,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+struct OverlaySnapshot {
+    format_version: String,
+    revision: u64,
+    entries: Vec<OverlayEntry>,
+}
+
+/// Durable overlay snapshot. Updates are written and fsynced to a sibling file before rename.
+pub struct OverlayStore {
+    path: PathBuf,
+    overlay: MutableOverlay,
+}
+
+impl OverlayStore {
+    pub fn open(path: impl Into<PathBuf>) -> io::Result<Self> {
+        let path = path.into();
+        let overlay = if path.exists() {
+            let snapshot: OverlaySnapshot =
+                serde_json::from_reader(BufReader::new(File::open(&path)?))
+                    .map_err(invalid_json)?;
+            if snapshot.format_version != OVERLAY_FORMAT_VERSION {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("unsupported overlay format: {}", snapshot.format_version),
+                ));
+            }
+            MutableOverlay::from_entries(snapshot.revision, snapshot.entries)?
+        } else {
+            MutableOverlay::default()
+        };
+        Ok(Self { path, overlay })
+    }
+
+    pub fn overlay(&self) -> &MutableOverlay {
+        &self.overlay
+    }
+
+    pub fn upsert(&mut self, fact: OverlayFact) -> io::Result<bool> {
+        self.apply(OverlayAction::Upsert { fact })
+    }
+
+    pub fn retract(&mut self, key: FactKey, layer: OverlayLayer) -> io::Result<bool> {
+        self.apply(OverlayAction::Retract { key, layer })
+    }
+
+    pub fn clear(&mut self) -> io::Result<()> {
+        let mut candidate = self.overlay.clone();
+        candidate.clear();
+        self.persist(&candidate)?;
+        self.overlay = candidate;
+        Ok(())
+    }
+
+    fn apply(&mut self, action: OverlayAction) -> io::Result<bool> {
+        let mut candidate = self.overlay.clone();
+        if !candidate.apply(action) {
+            return Ok(false);
+        }
+        self.persist(&candidate)?;
+        self.overlay = candidate;
+        Ok(true)
+    }
+
+    fn persist(&self, overlay: &MutableOverlay) -> io::Result<()> {
+        let parent = self.path.parent().unwrap_or_else(|| Path::new("."));
+        fs::create_dir_all(parent)?;
+        let file_name = self
+            .path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("overlay.json");
+        let temporary = parent.join(format!(".{file_name}.tmp-{}", std::process::id()));
+        let snapshot = OverlaySnapshot {
+            format_version: OVERLAY_FORMAT_VERSION.to_owned(),
+            revision: overlay.revision,
+            entries: overlay.entries.values().cloned().collect(),
+        };
+        let file = File::create(&temporary)?;
+        let mut writer = BufWriter::new(file);
+        serde_json::to_writer_pretty(&mut writer, &snapshot).map_err(invalid_json)?;
+        writer.write_all(b"\n")?;
+        writer.flush()?;
+        writer.get_ref().sync_all()?;
+        fs::rename(&temporary, &self.path)?;
+        File::open(parent)?.sync_all()?;
+        Ok(())
+    }
+}
+
 impl MutableOverlay {
+    fn from_entries(revision: u64, entries: Vec<OverlayEntry>) -> io::Result<Self> {
+        let mut by_key = HashMap::with_capacity(entries.len());
+        for entry in entries {
+            if entry.revision > revision {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "overlay entry revision exceeds snapshot revision",
+                ));
+            }
+            if by_key.insert(entry.key().clone(), entry).is_some() {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "duplicate logical fact in overlay snapshot",
+                ));
+            }
+        }
+        Ok(Self {
+            revision,
+            entries: by_key,
+        })
+    }
+
     pub fn revision(&self) -> u64 {
         self.revision
     }
@@ -189,6 +305,10 @@ impl MutableOverlay {
         rows.sort_by(|left, right| result_order(left, right));
         rows
     }
+}
+
+fn invalid_json(error: serde_json::Error) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidData, error)
 }
 
 fn compare_entries(left: &OverlayEntry, right: &OverlayEntry) -> Ordering {
@@ -275,5 +395,40 @@ mod tests {
             layer: OverlayLayer::Session,
         });
         assert!(overlay.merge("functional_use", vec![base]).is_empty());
+    }
+
+    #[test]
+    fn durable_store_reopens_updates_and_tombstones() {
+        let root = std::env::temp_dir().join(format!(
+            "pathmap-overlay-{}-{}",
+            std::process::id(),
+            std::thread::current().name().unwrap_or("test")
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("overlay.json");
+        let mut store = OverlayStore::open(&path).unwrap();
+        assert!(
+            store
+                .upsert(fact(OverlayLayer::Inferred, "inferred"))
+                .unwrap()
+        );
+        drop(store);
+
+        let mut reopened = OverlayStore::open(&path).unwrap();
+        assert_eq!(reopened.overlay().revision(), 1);
+        assert_eq!(
+            reopened.overlay().merge("functional_use", Vec::new())[0].evidence,
+            "inferred"
+        );
+        assert!(reopened.retract(key(), OverlayLayer::Corrected).unwrap());
+        drop(reopened);
+        let reopened = OverlayStore::open(&path).unwrap();
+        assert!(
+            reopened
+                .overlay()
+                .merge("functional_use", Vec::new())
+                .is_empty()
+        );
+        fs::remove_dir_all(root).unwrap();
     }
 }
