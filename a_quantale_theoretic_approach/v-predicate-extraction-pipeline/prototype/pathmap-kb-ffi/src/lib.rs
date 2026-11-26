@@ -1,3 +1,4 @@
+use perspective_pathmap_prototype::overlay::{FactKey, OverlayAction, OverlayStore};
 use perspective_pathmap_prototype::{ImmutableShardStore, MappedShardIndex, ResultRow};
 use std::collections::HashMap;
 use std::ffi::c_void;
@@ -12,6 +13,29 @@ struct RegisteredIndex {
     root: PathBuf,
     store: Option<ImmutableShardStore>,
     cache_capacity: usize,
+    overlay: Option<OverlayStore>,
+}
+
+enum QueryScope<'a> {
+    Algebra { concept: &'a str, family: &'a str },
+    Properties { concept: &'a str },
+    Worlds { concept: &'a str, property: &'a str },
+    Specification { concept: &'a str },
+}
+
+impl QueryScope<'_> {
+    fn matches(&self, key: &FactKey) -> bool {
+        match self {
+            Self::Algebra { concept, family } => key.concept == *concept && key.family == *family,
+            Self::Properties { concept } => key.concept == *concept && key.family == "property",
+            Self::Worlds { concept, property } => {
+                key.concept == *concept
+                    && key.family == "property-world"
+                    && key.feature == *property
+            }
+            Self::Specification { concept } => key.concept == *concept,
+        }
+    }
 }
 
 #[derive(Default)]
@@ -36,11 +60,12 @@ fn fields(input: &str, expected: usize) -> Result<Vec<&str>, String> {
     Ok(fields)
 }
 
-fn with_index<T>(
+fn with_index(
     handle: &str,
     perspective: &str,
-    query: impl FnOnce(&MappedShardIndex) -> io::Result<T>,
-) -> Result<T, String> {
+    scope: QueryScope<'_>,
+    query: impl FnOnce(&MappedShardIndex) -> io::Result<Vec<ResultRow>>,
+) -> Result<Vec<ResultRow>, String> {
     let mut registry = registry()
         .lock()
         .map_err(|_| "index registry is poisoned".to_owned())?;
@@ -63,7 +88,16 @@ fn with_index<T>(
     let shard = shard
         .lock()
         .map_err(|_| format!("mapped shard lock is poisoned: {perspective}"))?;
-    query(&shard).map_err(|error| format!("mapped query failed: {error}"))
+    let rows = query(&shard).map_err(|error| format!("mapped query failed: {error}"))?;
+    Ok(registered
+        .overlay
+        .as_ref()
+        .map(|overlay| {
+            overlay
+                .overlay()
+                .merge_matching(perspective, rows.clone(), |key| scope.matches(key))
+        })
+        .unwrap_or(rows))
 }
 
 fn safe_atom(value: &str) -> String {
@@ -161,13 +195,17 @@ fn specification_to_metta(rows: &[ResultRow]) -> String {
 
 fn execute(command: &str, input: &str) -> Result<String, String> {
     match command {
-        "open" | "open-capacity" => {
-            let expected = if command == "open" { 2 } else { 3 };
+        "open" | "open-capacity" | "open-overlay" => {
+            let expected = match command {
+                "open" => 2,
+                "open-capacity" => 3,
+                _ => 4,
+            };
             let parts = fields(input, expected)?;
             let handle = parts[0];
             let root = Path::new(parts[1]);
-            let cache_capacity = if command == "open-capacity" {
-                parts[2]
+            let cache_capacity = if command != "open" {
+                parts[expected - 1]
                     .parse::<usize>()
                     .map_err(|_| "cache capacity must be a positive integer".to_owned())?
             } else {
@@ -194,6 +232,14 @@ fn execute(command: &str, input: &str) -> Result<String, String> {
                     root: root.to_owned(),
                     store: None,
                     cache_capacity,
+                    overlay: if command == "open-overlay" {
+                        Some(
+                            OverlayStore::open(PathBuf::from(parts[2]))
+                                .map_err(|error| format!("failed to open overlay: {error}"))?,
+                        )
+                    } else {
+                        None
+                    },
                 },
             );
             Ok("true".to_owned())
@@ -227,32 +273,82 @@ fn execute(command: &str, input: &str) -> Result<String, String> {
                 stats.hits, stats.loads, stats.evictions, stats.resident, stats.capacity
             ))
         }
+        "overlay-apply" => {
+            let parts = fields(input, 2)?;
+            let action: OverlayAction = serde_json::from_str(parts[1])
+                .map_err(|error| format!("invalid overlay action: {error}"))?;
+            let mut registry = registry()
+                .lock()
+                .map_err(|_| "index registry is poisoned".to_owned())?;
+            let overlay = registry
+                .indexes
+                .get_mut(parts[0])
+                .and_then(|registered| registered.overlay.as_mut())
+                .ok_or_else(|| format!("handle has no mutable overlay: {}", parts[0]))?;
+            overlay
+                .apply_action(action)
+                .map(|changed| changed.to_string())
+                .map_err(|error| format!("failed to persist overlay: {error}"))
+        }
+        "overlay-clear" => {
+            let parts = fields(input, 1)?;
+            let mut registry = registry()
+                .lock()
+                .map_err(|_| "index registry is poisoned".to_owned())?;
+            let overlay = registry
+                .indexes
+                .get_mut(parts[0])
+                .and_then(|registered| registered.overlay.as_mut())
+                .ok_or_else(|| format!("handle has no mutable overlay: {}", parts[0]))?;
+            overlay
+                .clear()
+                .map(|()| "true".to_owned())
+                .map_err(|error| format!("failed to clear overlay: {error}"))
+        }
         "query-algebra" => {
             let parts = fields(input, 4)?;
-            let rows = with_index(parts[0], parts[1], |index| {
-                index.query_algebra(parts[2], parts[3])
-            })?;
+            let rows = with_index(
+                parts[0],
+                parts[1],
+                QueryScope::Algebra {
+                    concept: parts[2],
+                    family: parts[3],
+                },
+                |index| index.query_algebra(parts[2], parts[3]),
+            )?;
             Ok(rows_to_metta(&rows))
         }
         "query-properties" => {
             let parts = fields(input, 3)?;
-            let rows = with_index(parts[0], parts[1], |index| {
-                index.query_properties(parts[1], parts[2])
-            })?;
+            let rows = with_index(
+                parts[0],
+                parts[1],
+                QueryScope::Properties { concept: parts[2] },
+                |index| index.query_properties(parts[1], parts[2]),
+            )?;
             Ok(rows_to_metta(&rows))
         }
         "query-worlds" => {
             let parts = fields(input, 4)?;
-            let rows = with_index(parts[0], parts[1], |index| {
-                index.query_worlds(parts[1], parts[2], parts[3])
-            })?;
+            let rows = with_index(
+                parts[0],
+                parts[1],
+                QueryScope::Worlds {
+                    concept: parts[2],
+                    property: parts[3],
+                },
+                |index| index.query_worlds(parts[1], parts[2], parts[3]),
+            )?;
             Ok(rows_to_metta(&rows))
         }
         "build-specification" => {
             let parts = fields(input, 3)?;
-            let rows = with_index(parts[0], parts[1], |index| {
-                index.build_specification(parts[2])
-            })?;
+            let rows = with_index(
+                parts[0],
+                parts[1],
+                QueryScope::Specification { concept: parts[2] },
+                |index| index.build_specification(parts[2]),
+            )?;
             Ok(specification_to_metta(&rows))
         }
         _ => Err(format!("unknown command: {command}")),
@@ -264,27 +360,45 @@ fn query_rows(command: &str, input: &str) -> Result<Vec<ResultRow>, String> {
     match command {
         "query-algebra" => {
             let parts = fields(input, 4)?;
-            with_index(parts[0], parts[1], |index| {
-                index.query_algebra(parts[2], parts[3])
-            })
+            with_index(
+                parts[0],
+                parts[1],
+                QueryScope::Algebra {
+                    concept: parts[2],
+                    family: parts[3],
+                },
+                |index| index.query_algebra(parts[2], parts[3]),
+            )
         }
         "query-properties" => {
             let parts = fields(input, 3)?;
-            with_index(parts[0], parts[1], |index| {
-                index.query_properties(parts[1], parts[2])
-            })
+            with_index(
+                parts[0],
+                parts[1],
+                QueryScope::Properties { concept: parts[2] },
+                |index| index.query_properties(parts[1], parts[2]),
+            )
         }
         "query-worlds" => {
             let parts = fields(input, 4)?;
-            with_index(parts[0], parts[1], |index| {
-                index.query_worlds(parts[1], parts[2], parts[3])
-            })
+            with_index(
+                parts[0],
+                parts[1],
+                QueryScope::Worlds {
+                    concept: parts[2],
+                    property: parts[3],
+                },
+                |index| index.query_worlds(parts[1], parts[2], parts[3]),
+            )
         }
         "build-specification" => {
             let parts = fields(input, 3)?;
-            with_index(parts[0], parts[1], |index| {
-                index.build_specification(parts[2])
-            })
+            with_index(
+                parts[0],
+                parts[1],
+                QueryScope::Specification { concept: parts[2] },
+                |index| index.build_specification(parts[2]),
+            )
         }
         _ => Err(format!("command does not return rows: {command}")),
     }
@@ -443,6 +557,7 @@ pub extern "C" fn rust_pathmap_kb_string_free(pointer: *mut c_char) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use perspective_pathmap_prototype::overlay::{OverlayFact, OverlayLayer};
     use perspective_pathmap_prototype::{BuildStats, Index};
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -557,5 +672,90 @@ mod tests {
         );
         execute("close", &handle).unwrap();
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn ffi_queries_merge_durable_overlay_updates_and_tombstones() {
+        let mut index = Index::default();
+        let mut stats = BuildStats::default();
+        index
+            .ingest_algebra_line(
+                "(: base_ev (≞ (has_sort base_ev computer taxonomic_kind artifact) (stv 0.700 0.800)))",
+                &mut stats,
+            )
+            .unwrap();
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("pathmap-ffi-overlay-{nonce}"));
+        index.save(&root, stats).unwrap();
+        let overlay_path = root.parent().unwrap().join(format!("overlay-{nonce}.json"));
+        let handle = format!("overlay_{nonce}");
+        execute(
+            "open-overlay",
+            &format!(
+                "{handle}\t{}\t{}\t2",
+                root.display(),
+                overlay_path.display()
+            ),
+        )
+        .unwrap();
+        let key = FactKey {
+            perspective: "taxonomic_kind".to_owned(),
+            concept: "computer".to_owned(),
+            family: "sort".to_owned(),
+            feature: "artifact".to_owned(),
+            world: None,
+            evaluation_perspective: None,
+        };
+        let upsert = OverlayAction::Upsert {
+            fact: OverlayFact {
+                key: key.clone(),
+                payload: None,
+                evidence: "corrected_ev".to_owned(),
+                strength: 1.0,
+                confidence: 0.99,
+                payload_strength: None,
+                payload_confidence: None,
+                payload_evidence: None,
+                provenance: Some("(manual correction)".to_owned()),
+                payload_provenance: None,
+                layer: OverlayLayer::Corrected,
+            },
+        };
+        execute(
+            "overlay-apply",
+            &format!("{handle}\t{}", serde_json::to_string(&upsert).unwrap()),
+        )
+        .unwrap();
+        let rows = query_rows(
+            "query-algebra",
+            &format!("{handle}\ttaxonomic_kind\tcomputer\tsort"),
+        )
+        .unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].evidence, "corrected_ev");
+
+        let retract = OverlayAction::Retract {
+            key,
+            layer: OverlayLayer::Corrected,
+        };
+        execute(
+            "overlay-apply",
+            &format!("{handle}\t{}", serde_json::to_string(&retract).unwrap()),
+        )
+        .unwrap();
+        assert!(
+            query_rows(
+                "query-algebra",
+                &format!("{handle}\ttaxonomic_kind\tcomputer\tsort"),
+            )
+            .unwrap()
+            .is_empty()
+        );
+        execute("close", &handle).unwrap();
+        fs::remove_dir_all(root).unwrap();
+        fs::remove_file(overlay_path).unwrap();
     }
 }

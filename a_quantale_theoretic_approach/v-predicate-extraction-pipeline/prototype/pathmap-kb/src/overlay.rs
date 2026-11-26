@@ -173,6 +173,10 @@ impl OverlayStore {
         self.apply(OverlayAction::Retract { key, layer })
     }
 
+    pub fn apply_action(&mut self, action: OverlayAction) -> io::Result<bool> {
+        self.apply(action)
+    }
+
     pub fn clear(&mut self) -> io::Result<()> {
         let mut candidate = self.overlay.clone();
         candidate.clear();
@@ -281,6 +285,15 @@ impl MutableOverlay {
     }
 
     pub fn merge(&self, perspective: &str, base: Vec<ResultRow>) -> Vec<ResultRow> {
+        self.merge_matching(perspective, base, |_| true)
+    }
+
+    pub fn merge_matching(
+        &self,
+        perspective: &str,
+        base: Vec<ResultRow>,
+        matches: impl Fn(&FactKey) -> bool,
+    ) -> Vec<ResultRow> {
         let mut rows: HashMap<FactKey, ResultRow> = base
             .into_iter()
             .map(|row| (FactKey::from_row(perspective, &row), row))
@@ -288,7 +301,7 @@ impl MutableOverlay {
         let mut entries: Vec<_> = self
             .entries
             .values()
-            .filter(|entry| entry.key().perspective == perspective)
+            .filter(|entry| entry.key().perspective == perspective && matches(entry.key()))
             .collect();
         entries.sort_by(|left, right| compare_entries(left, right));
         for entry in entries {

@@ -6,6 +6,7 @@ publish = false
 
 [dependencies]
 perspective-pathmap-prototype = { path = "../pathmap-kb" }
+serde_json = "1"
 
 [lib]
 name = "pathmap_kb_ffi"

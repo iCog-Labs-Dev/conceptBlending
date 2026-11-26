@@ -207,6 +207,7 @@ name = "pathmap_kb_ffi"
 version = "0.1.0"
 dependencies = [
  "perspective-pathmap-prototype",
+ "serde_json",
 ]
 
 [[package]]

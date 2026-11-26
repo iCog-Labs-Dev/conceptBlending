@@ -33,6 +33,21 @@ pathmap_typed(Command, Fields, Result) :-
     pathmap_kb("open-capacity", Request, Response),
     pathmap_response(Response, Result).
 
+'pathmap-open-overlay!'(Handle, Root, Overlay, Capacity, Result) :-
+    pathmap_request([Handle, Root, Overlay, Capacity], Request),
+    pathmap_kb("open-overlay", Request, Response),
+    pathmap_response(Response, Result).
+
+'pathmap-overlay-apply!'(Handle, ActionJson, Result) :-
+    pathmap_request([Handle, ActionJson], Request),
+    pathmap_kb("overlay-apply", Request, Response),
+    pathmap_response(Response, Result).
+
+'pathmap-overlay-clear!'(Handle, Result) :-
+    pathmap_request([Handle], Request),
+    pathmap_kb("overlay-clear", Request, Response),
+    pathmap_response(Response, Result).
+
 'pathmap-cache-stats'(Handle, Result) :-
     pathmap_request([Handle], Request),
     pathmap_kb("cache-stats", Request, Response),

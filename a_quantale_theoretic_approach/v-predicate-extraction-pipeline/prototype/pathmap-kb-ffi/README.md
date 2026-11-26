@@ -30,6 +30,9 @@ PeTTa functions:
 ```metta
 !(pathmap-open! spec-kb "/path/to/index")
 !(pathmap-open-cached! spec-kb "/path/to/index" 8)
+!(pathmap-open-overlay! spec-kb "/path/to/index" "/path/to/overlay.json" 8)
+!(pathmap-overlay-apply! spec-kb $canonical-overlay-action-json)
+!(pathmap-overlay-clear! spec-kb)
 !(pathmap-cache-stats spec-kb)
 !(pathmap-query-algebra spec-kb descriptive_property a2 sort)
 !(pathmap-query-properties spec-kb descriptive_property a2)
@@ -40,6 +43,9 @@ PeTTa functions:
 
 `pathmap-open-cached!` sets a per-handle shard limit. The stats tuple reports cache hits, loads,
 evictions, resident shards, and capacity, which makes memory-bound behavior directly testable.
+`pathmap-open-overlay!` additionally attaches a durable mutable overlay. Its JSON actions use the
+versioned Rust overlay contract and support upsert and retract operations without modifying the
+immutable snapshot.
 
 The same query names with a `-detailed` suffix append a metadata term without changing the
 legacy row shapes, for example `(metadata $provenance $origin $payload-provenance
