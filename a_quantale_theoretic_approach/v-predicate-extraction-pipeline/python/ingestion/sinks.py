@@ -21,6 +21,10 @@ class BaseSink(ABC):
     def flush(self) -> None:
         """Flush buffered facts to underlying storage."""
 
+    def register_atomspace_record(self, record: Any) -> Any:
+        """Register atomspace record (optional hook for sinks supporting it)."""
+        pass
+
 
 class MettaFileSink(BaseSink):
     """Persists canonical v-predicate/1 or legacy MeTTa facts to a .metta knowledge base file."""

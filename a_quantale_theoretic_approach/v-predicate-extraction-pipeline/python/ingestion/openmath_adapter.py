@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Union
 
+from .acquisition import SourceArtifact
 from .base_adapter import BaseSourceAdapter
 from .models import FactType, IngestionProvenance, KnowledgeSource, MettaFact, NormalizedRecord, RawRecord
 from v_predicate_contract import (
@@ -141,32 +142,31 @@ class OpenMathAdapter(BaseSourceAdapter):
             license=self.license,
         )
 
-    def fetch(self, download: bool = False, cache_dir: Optional[Path] = None) -> Path:
+    def fetch_artifact(
+        self,
+        download: bool = False,
+        cache_dir: Optional[Path] = None,
+        force_refresh: bool = False,
+    ) -> SourceArtifact:
+        """Acquire the OpenMath OCD artifact using the unified acquisition engine."""
         target_dir = cache_dir.resolve() if cache_dir else self.cache_dir
-        cached_file = target_dir / "group1.ocd"
+        artifact = self.acquisition_engine.acquire(
+            source_key="openmath",
+            source_uri=self.source_uri,
+            target_filename="group1.ocd",
+            cache_dir=target_dir,
+            download=download,
+            force_refresh=force_refresh,
+            fixture_path=self.ocd_path,
+            version=self.source_version,
+            license_str=self.license,
+        )
+        self.last_artifact = artifact
+        return artifact
 
-        if cached_file.exists():
-            return cached_file
-
-        if download:
-            target_dir.mkdir(parents=True, exist_ok=True)
-            import urllib.request
-
-            req = urllib.request.Request(
-                self.source_uri, headers={"User-Agent": "conceptBlending/1.0 (Linux x86_64)"}
-            )
-            tmp_file = target_dir / "group1.ocd.tmp"
-            try:
-                with urllib.request.urlopen(req, timeout=15) as resp, tmp_file.open("wb") as out:
-                    while chunk := resp.read(65536):
-                        out.write(chunk)
-                tmp_file.replace(cached_file)
-                return cached_file
-            except Exception:
-                if tmp_file.exists():
-                    tmp_file.unlink()
-
-        return self.ocd_path
+    def fetch(self, download: bool = False, cache_dir: Optional[Path] = None) -> Path:
+        """Locate or retrieve the raw OpenMath OCD file (backward compatible wrapper)."""
+        return self.fetch_artifact(download=download, cache_dir=cache_dir).local_path
 
     def stream_facts(self, limit: Optional[int] = None) -> Iterator[FactRecord]:
         """Stream canonical typed V-predicate fact records under v-predicate/1."""

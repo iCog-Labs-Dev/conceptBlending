@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Union
 
+from .acquisition import SourceArtifact
 from .base_adapter import BaseSourceAdapter
 from .models import FactType, IngestionProvenance, KnowledgeSource, MettaFact, NormalizedRecord, RawRecord
 from .wordnet_adapter import safe_metta_symbol
@@ -97,28 +98,33 @@ class ChebiAdapter(BaseSourceAdapter):
             license=self.license,
         )
 
-    def fetch(self, download: bool = False, cache_dir: Optional[Path] = None) -> Path:
+    def fetch_artifact(
+        self,
+        download: bool = False,
+        cache_dir: Optional[Path] = None,
+        force_refresh: bool = False,
+    ) -> SourceArtifact:
+        """Acquire the ChEBI Lite OBO artifact using the unified acquisition engine."""
         cache = cache_dir.resolve() if cache_dir else self.cache_dir
-        cached_file = cache / "chebi_lite.obo"
+        artifact = self.acquisition_engine.acquire(
+            source_key="chebi",
+            source_uri=self.source_uri,
+            target_filename="chebi_lite.obo",
+            cache_dir=cache,
+            download=download,
+            force_refresh=force_refresh,
+            fixture_path=self.obo_path,
+            version=self.version,
+            license_str=self.license,
+            version_extractor=self._get_file_version,
+        )
+        self.last_artifact = artifact
+        self.version = artifact.source_version
+        return artifact
 
-        if cached_file.exists():
-            self.version = self._get_file_version(cached_file)
-            return cached_file
-
-        if download:
-            cache.mkdir(parents=True, exist_ok=True)
-            import urllib.request
-
-            req = urllib.request.Request(
-                self.source_uri, headers={"User-Agent": "conceptBlending/1.0 (Linux x86_64)"}
-            )
-            with urllib.request.urlopen(req) as resp, cached_file.open("wb") as out:
-                while chunk := resp.read(65536):
-                    out.write(chunk)
-            self.version = self._get_file_version(cached_file)
-            return cached_file
-
-        return self.obo_path
+    def fetch(self, download: bool = False, cache_dir: Optional[Path] = None) -> Path:
+        """Locate or retrieve the raw ChEBI OBO file (backward compatible wrapper)."""
+        return self.fetch_artifact(download=download, cache_dir=cache_dir).local_path
 
     def parse_obo(self, stream_or_path: Union[str, Path, Iterator[str]]) -> Iterator[Dict[str, Any]]:
         """Line-by-line streaming generator that yields non-obsolete chemical term records."""
