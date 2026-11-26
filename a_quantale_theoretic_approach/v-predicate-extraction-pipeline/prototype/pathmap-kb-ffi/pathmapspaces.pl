@@ -38,6 +38,21 @@ pathmap_typed(Command, Fields, Result) :-
     pathmap_kb("open-overlay", Request, Response),
     pathmap_response(Response, Result).
 
+'pathmap-open-snapshot!'(Handle, Repository, Capacity, Result) :-
+    pathmap_request([Handle, Repository, Capacity], Request),
+    pathmap_kb("open-snapshot", Request, Response),
+    pathmap_response(Response, Result).
+
+'pathmap-open-snapshot-overlay!'(Handle, Repository, Overlay, Capacity, Result) :-
+    pathmap_request([Handle, Repository, Overlay, Capacity], Request),
+    pathmap_kb("open-snapshot-overlay", Request, Response),
+    pathmap_response(Response, Result).
+
+'pathmap-switch-snapshot!'(Handle, Generation, Result) :-
+    pathmap_request([Handle, Generation], Request),
+    pathmap_kb("snapshot-switch", Request, Response),
+    pathmap_response(Response, Result).
+
 'pathmap-overlay-apply!'(Handle, ActionJson, Result) :-
     pathmap_request([Handle, ActionJson], Request),
     pathmap_kb("overlay-apply", Request, Response),

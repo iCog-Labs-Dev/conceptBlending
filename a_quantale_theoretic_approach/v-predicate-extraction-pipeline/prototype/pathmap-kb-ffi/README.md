@@ -31,6 +31,8 @@ PeTTa functions:
 !(pathmap-open! spec-kb "/path/to/index")
 !(pathmap-open-cached! spec-kb "/path/to/index" 8)
 !(pathmap-open-overlay! spec-kb "/path/to/index" "/path/to/overlay.json" 8)
+!(pathmap-open-snapshot! spec-kb "/path/to/snapshot-repository" 8)
+!(pathmap-switch-snapshot! spec-kb generation-2026-11-26)
 !(pathmap-overlay-apply! spec-kb $canonical-overlay-action-json)
 !(pathmap-overlay-clear! spec-kb)
 !(pathmap-cache-stats spec-kb)
@@ -46,6 +48,11 @@ evictions, resident shards, and capacity, which makes memory-bound behavior dire
 `pathmap-open-overlay!` additionally attaches a durable mutable overlay. Its JSON actions use the
 versioned Rust overlay contract and support upsert and retract operations without modifying the
 immutable snapshot.
+
+Snapshot repositories publish immutable indexes under versioned generation directories. Switching
+the handle validates the selected generation, atomically updates `current`, and drops the handle's
+old mmap/LRU store. Existing files are never modified in place, and switching back to an earlier
+generation provides rollback.
 
 The same query names with a `-detailed` suffix append a metadata term without changing the
 legacy row shapes, for example `(metadata $provenance $origin $payload-provenance

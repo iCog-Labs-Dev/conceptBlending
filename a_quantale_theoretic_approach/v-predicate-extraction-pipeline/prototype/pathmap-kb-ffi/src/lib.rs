@@ -1,11 +1,12 @@
 use perspective_pathmap_prototype::overlay::{FactKey, OverlayAction, OverlayStore};
+use perspective_pathmap_prototype::snapshot::SnapshotManager;
 use perspective_pathmap_prototype::{ImmutableShardStore, MappedShardIndex, ResultRow};
 use std::collections::HashMap;
 use std::ffi::c_void;
 use std::ffi::{CStr, CString};
 use std::io;
 use std::os::raw::c_char;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 
 #[derive(Default)]
@@ -14,6 +15,7 @@ struct RegisteredIndex {
     store: Option<ImmutableShardStore>,
     cache_capacity: usize,
     overlay: Option<OverlayStore>,
+    snapshot_root: Option<PathBuf>,
 }
 
 enum QueryScope<'a> {
@@ -195,15 +197,23 @@ fn specification_to_metta(rows: &[ResultRow]) -> String {
 
 fn execute(command: &str, input: &str) -> Result<String, String> {
     match command {
-        "open" | "open-capacity" | "open-overlay" => {
+        "open" | "open-capacity" | "open-overlay" | "open-snapshot" | "open-snapshot-overlay" => {
             let expected = match command {
                 "open" => 2,
-                "open-capacity" => 3,
+                "open-capacity" | "open-snapshot" => 3,
                 _ => 4,
             };
             let parts = fields(input, expected)?;
             let handle = parts[0];
-            let root = Path::new(parts[1]);
+            let snapshot_root = matches!(command, "open-snapshot" | "open-snapshot-overlay")
+                .then(|| PathBuf::from(parts[1]));
+            let root = if let Some(snapshot_root) = &snapshot_root {
+                SnapshotManager::open(snapshot_root)
+                    .and_then(|manager| manager.current_index())
+                    .map_err(|error| format!("failed to resolve current snapshot: {error}"))?
+            } else {
+                PathBuf::from(parts[1])
+            };
             let cache_capacity = if command != "open" {
                 parts[expected - 1]
                     .parse::<usize>()
@@ -229,10 +239,10 @@ fn execute(command: &str, input: &str) -> Result<String, String> {
             registry.indexes.insert(
                 handle.to_owned(),
                 RegisteredIndex {
-                    root: root.to_owned(),
+                    root,
                     store: None,
                     cache_capacity,
-                    overlay: if command == "open-overlay" {
+                    overlay: if matches!(command, "open-overlay" | "open-snapshot-overlay") {
                         Some(
                             OverlayStore::open(PathBuf::from(parts[2]))
                                 .map_err(|error| format!("failed to open overlay: {error}"))?,
@@ -240,6 +250,7 @@ fn execute(command: &str, input: &str) -> Result<String, String> {
                     } else {
                         None
                     },
+                    snapshot_root,
                 },
             );
             Ok("true".to_owned())
@@ -304,6 +315,26 @@ fn execute(command: &str, input: &str) -> Result<String, String> {
                 .clear()
                 .map(|()| "true".to_owned())
                 .map_err(|error| format!("failed to clear overlay: {error}"))
+        }
+        "snapshot-switch" => {
+            let parts = fields(input, 2)?;
+            let mut registry = registry()
+                .lock()
+                .map_err(|_| "index registry is poisoned".to_owned())?;
+            let registered = registry
+                .indexes
+                .get_mut(parts[0])
+                .ok_or_else(|| format!("unknown index handle: {}", parts[0]))?;
+            let snapshot_root = registered
+                .snapshot_root
+                .as_ref()
+                .ok_or_else(|| format!("handle is not snapshot-managed: {}", parts[0]))?;
+            let root = SnapshotManager::open(snapshot_root)
+                .and_then(|manager| manager.switch(parts[1]))
+                .map_err(|error| format!("failed to switch snapshot: {error}"))?;
+            registered.root = root;
+            registered.store = None;
+            Ok("true".to_owned())
         }
         "query-algebra" => {
             let parts = fields(input, 4)?;
@@ -757,5 +788,54 @@ mod tests {
         execute("close", &handle).unwrap();
         fs::remove_dir_all(root).unwrap();
         fs::remove_file(overlay_path).unwrap();
+    }
+
+    #[test]
+    fn ffi_snapshot_switch_invalidates_mapped_cache() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("pathmap-ffi-snapshots-{nonce}"));
+        fs::create_dir_all(&root).unwrap();
+        let manager = SnapshotManager::open(root.join("repository")).unwrap();
+        for (generation, sort) in [("one", "artifact"), ("two", "machine")] {
+            let mut index = Index::default();
+            let mut stats = BuildStats::default();
+            index
+                .ingest_algebra_line(
+                    &format!(
+                        "(: {generation}_ev (≞ (has_sort {generation}_ev computer taxonomic_kind {sort}) (stv 1.000 0.900)))"
+                    ),
+                    &mut stats,
+                )
+                .unwrap();
+            let staged = root.join(format!("staged-{generation}"));
+            index.save(&staged, stats).unwrap();
+            manager.publish(generation, &staged).unwrap();
+        }
+        manager.switch("one").unwrap();
+        let handle = format!("snapshot_{nonce}");
+        execute(
+            "open-snapshot",
+            &format!("{handle}\t{}\t1", manager.root().display()),
+        )
+        .unwrap();
+        let rows = query_rows(
+            "query-algebra",
+            &format!("{handle}\ttaxonomic_kind\tcomputer\tsort"),
+        )
+        .unwrap();
+        assert_eq!(rows[0].feature, "artifact");
+        execute("snapshot-switch", &format!("{handle}\ttwo")).unwrap();
+        let rows = query_rows(
+            "query-algebra",
+            &format!("{handle}\ttaxonomic_kind\tcomputer\tsort"),
+        )
+        .unwrap();
+        assert_eq!(rows[0].feature, "machine");
+        assert_eq!(execute("cache-stats", &handle).unwrap(), "(cache-stats 0 1 0 1 1)");
+        execute("close", &handle).unwrap();
+        fs::remove_dir_all(root).unwrap();
     }
 }

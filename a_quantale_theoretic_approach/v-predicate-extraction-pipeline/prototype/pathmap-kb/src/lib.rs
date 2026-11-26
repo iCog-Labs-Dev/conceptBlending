@@ -1,6 +1,7 @@
 pub mod canonical_jsonl;
 pub mod overlay;
 pub mod shard_format;
+pub mod snapshot;
 
 use canonical_jsonl::{CanonicalKind, visit_jsonl_file};
 use memmap2::Mmap;
