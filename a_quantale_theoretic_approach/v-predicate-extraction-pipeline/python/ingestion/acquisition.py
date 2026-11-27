@@ -8,7 +8,6 @@ from enum import Enum
 import hashlib
 import json
 from pathlib import Path
-import socket
 import time
 from typing import Any, Callable, Dict, Optional
 import urllib.error
@@ -285,20 +284,20 @@ class SourceAcquisitionEngine:
 
                 computed_sha = hasher.hexdigest()
 
-                if expected_sha256 and computed_sha != expected_sha256:
-                    raise SourceAcquisitionError(
-                        f"Checksum verification failed for '{source_key}': "
-                        f"expected {expected_sha256}, got {computed_sha}",
-                        source_key=source_key,
-                        uri=source_uri,
-                    )
-
                 byte_size = temp_file.stat().st_size
                 if byte_size == 0:
                     temp_file.unlink(missing_ok=True)
                     temp_sidecar.unlink(missing_ok=True)
                     raise SourceAcquisitionError(
                         f"Acquired artifact for '{source_key}' is empty (0 bytes)",
+                        source_key=source_key,
+                        uri=source_uri,
+                    )
+
+                if expected_sha256 and computed_sha != expected_sha256:
+                    raise SourceAcquisitionError(
+                        f"Checksum verification failed for '{source_key}': "
+                        f"expected {expected_sha256}, got {computed_sha}",
                         source_key=source_key,
                         uri=source_uri,
                     )
@@ -345,7 +344,6 @@ class SourceAcquisitionEngine:
             except (
                 urllib.error.URLError,
                 TimeoutError,
-                socket.timeout,
                 ConnectionResetError,
                 OSError,
             ) as exc:

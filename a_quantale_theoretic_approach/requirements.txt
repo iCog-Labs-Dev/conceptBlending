@@ -4,4 +4,5 @@ sentence-transformers
 openai
 requests
 pytest
+nltk>=3.8.1
 

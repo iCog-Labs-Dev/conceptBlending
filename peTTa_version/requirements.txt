@@ -11,3 +11,4 @@ cachetools>=5.0.0
 sentence-transformers
 scikit-learn
 google-genai
+nltk>=3.8.1
