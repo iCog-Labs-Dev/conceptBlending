@@ -1,0 +1,31 @@
+{
+  "source": "wordnet",
+  "version": "3.1",
+  "license": "WordNet-3.0",
+  "lexicon": {
+    "phone": {
+      "hypernyms": ["electronic_equipment", "communicator", "device"],
+      "part_meronyms": ["dial", "mouthpiece", "transceiver", "battery", "display"],
+      "gloss_attributes": ["transmit_voice", "convert_sound", "telecommunication"],
+      "worlds": ["cellphone", "landline", "smartphone", "office", "home"]
+    },
+    "computer": {
+      "hypernyms": ["machine", "electronic_equipment", "device"],
+      "part_meronyms": ["processor", "memory", "keyboard", "display"],
+      "gloss_attributes": ["process_data", "store_information", "compute"],
+      "worlds": ["laptop", "desktop", "server", "workstation"]
+    },
+    "battery": {
+      "hypernyms": ["power_source", "device", "energy_accumulator"],
+      "part_meronyms": ["cell", "electrode", "electrolyte", "terminal"],
+      "gloss_attributes": ["store_energy", "supply_electricity", "portable_power"],
+      "worlds": ["cellphone", "laptop", "flashlight", "electric_vehicle"]
+    },
+    "display": {
+      "hypernyms": ["electronic_device", "interface"],
+      "part_meronyms": ["screen", "pixel", "backlight"],
+      "gloss_attributes": ["render_image", "visual_output"],
+      "worlds": ["phone", "computer", "television"]
+    }
+  }
+}

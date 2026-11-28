@@ -130,10 +130,57 @@ python3 a_quantale_theoretic_approach/v-predicate-extraction-pipeline/python/ing
 
 ---
 
-## 5. Verification Checklist & Issue Traceability
+## 5. Source Adapters Specification
+
+### 5.1 Gene Ontology (`go_adapter.py`)
+- Target: `http://purl.obolibrary.org/obo/go.obo`
+- Format: Open Biomedical Ontologies (OBO) v1.2.
+- Streaming: Line-by-line generator yielding non-obsolete term records.
+- Canonical Perspectives: `taxonomic_kind` (`is_a`), `structural_composition` (`part_of`), `behavioral_process` (`regulates`).
+
+### 5.2 ChEBI (`chebi_adapter.py`)
+- Target: `https://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi_lite.obo`
+- Format: OBO Lite v1.2.
+- Streaming: Line-by-line generator.
+- Canonical Perspectives: `taxonomic_kind` (`is_a`), `structural_composition` (`has_part`).
+
+### 5.3 OpenMath (`openmath_adapter.py`)
+- Target: `https://www.openmath.org/cd/group1.ocd`
+- Format: OpenMath 2.0 Content Dictionaries (XML).
+- Canonical Perspectives: `functional_use` (operation signatures and properties), `causal_prerequisite` (axiomatic equations).
+
+### 5.4 WordNet (`wordnet_adapter.py`)
+- Target: `https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip`
+- Format: WordNet 3.0 Lexical Database archive.
+- Acquisition: Downloaded via `SourceAcquisitionEngine`, extracted with safe permissions into cache directory, and configured with NLTK `WordNetCorpusReader`.
+- Traversal & Filtering:
+  - Controlled concept filtering via `concepts: Optional[Iterable[str]] = None`.
+  - When `full_traversal=False`, defaults to Q4 target concepts (`phone`, `computer`, `battery`, `display`).
+  - When `full_traversal=True`, streams all synsets incrementally via lazy generator (`yield`) without accumulating intermediate lists in memory (Rule 5).
+- Offline Fallback: Deterministic offline fixture `fixtures/wordnet_sub.json` preserved for zero-network testing.
+- Canonical Perspectives: `taxonomic_kind` (hypernyms), `structural_composition` (part meronyms), `functional_use` (hyponyms and gloss properties).
+
+### 5.5 ConceptNet (`conceptnet_adapter.py`)
+- Target: `https://s3.amazonaws.com/conceptnet/downloads/2019/edges/conceptnet-assertions-5.7.0.csv.gz`
+- Format: Compressed tab-separated assertions (`URI \t relation \t start \t end \t metadata_json`).
+- Streaming: Direct line-by-line decompression via `gzip.open` in text mode with bounded memory footprint (< 400MB RAM ceiling).
+- Filtering:
+  - Language filter: filters on-the-fly for English concepts (`/c/en/` prefix on start and end nodes, configurable via `languages`).
+  - Relation filter: configurable subset filtering via `relations: Optional[Set[str]] = None`.
+  - Concept filter: seed concept extraction via `concepts: Optional[Set[str]] = None`.
+- Offline Fallback: Preserves `fixtures/conceptnet_sub.json` for deterministic offline testing.
+- Canonical Perspectives: Maps all 7 canonical perspectives (`taxonomic_kind`, `structural_composition`, `functional_use`, `behavioral_process`, `spatial_context`, `descriptive_property`, `causal_prerequisite`).
+
+---
+
+## 6. Verification Checklist & Issue Traceability
 
 - **Parent Issue:** [#111](https://github.com/iCog-Labs-Dev/conceptBlending/issues/111)
-- **Task Issue:** [#112](https://github.com/iCog-Labs-Dev/conceptBlending/issues/112)
-- **Unit Test Suite:** `tests/python/test_source_acquisition.py` (9 offline mock HTTP & cache tests).
-- **Regression Invariance:** Full pre-push test suite (115+ items) runs throttled via `pytest -n 2` under 400MB RSS memory ceiling.
+- **Acquisition Foundation Milestone:** [#112](https://github.com/iCog-Labs-Dev/conceptBlending/issues/112) (`[Ingestion 1/5]`)
+- **WordNet & ConceptNet Production Milestone:** [#113](https://github.com/iCog-Labs-Dev/conceptBlending/issues/113) (`[Ingestion 2/5]`)
+- **Unit Test Suites:**
+  - `tests/python/test_source_acquisition.py` (offline mock HTTP & cache tests)
+  - `tests/python/test_wordnet_adapter.py` (WordNet corpus acquisition, synset traversal, concept filtering, cache reuse)
+  - `tests/python/test_conceptnet_adapter.py` (ConceptNet compressed streaming, language filtering, relation filtering, corrupt stream handling)
+- **Regression Invariance:** Full pre-push test suite runs throttled via `pytest -n 2` under 400MB RSS memory ceiling.
 - **Static Typing:** Verified 0 errors under `npx pyright`.

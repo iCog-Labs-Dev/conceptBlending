@@ -3,14 +3,24 @@
 from __future__ import annotations
 
 import hashlib
-import re
+import json
+import logging
+import os
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
+import re
+import shutil
+import stat
+from typing import Any, Dict, Iterable, Iterator, List, Optional
+import zipfile
 
+from .acquisition import (
+    ProvenanceType,
+    SourceAcquisitionError,
+    SourceArtifact,
+)
 from .base_adapter import BaseSourceAdapter
 from .models import FactType, IngestionProvenance, KnowledgeSource, MettaFact, NormalizedRecord, RawRecord
 from v_predicate_contract import (
-    FactKind,
     FactOrigin,
     FactRecord,
     Perspective,
@@ -22,6 +32,8 @@ from v_predicate_contract import (
     TruthValue,
     stable_evidence_id,
 )
+
+logger = logging.getLogger(__name__)
 
 PIPELINE_ROOT = Path(__file__).resolve().parents[2]
 
@@ -88,6 +100,20 @@ OFFLINE_LEXICON: Dict[str, Dict[str, Any]] = {
 }
 
 
+def _load_offline_lexicon() -> Dict[str, Dict[str, Any]]:
+    """Load offline lexicon from bundled fixture JSON file, falling back to constant."""
+    fixture_file = PIPELINE_ROOT / "fixtures" / "wordnet_sub.json"
+    if fixture_file.exists():
+        try:
+            with fixture_file.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict) and "lexicon" in data and isinstance(data["lexicon"], dict):
+                    return data["lexicon"]
+        except Exception:
+            pass
+    return OFFLINE_LEXICON
+
+
 class WordNetAdapter(BaseSourceAdapter):
     """Extracts lexical taxonomy, compositional meronyms, and gloss properties from WordNet."""
 
@@ -97,35 +123,34 @@ class WordNetAdapter(BaseSourceAdapter):
         max_worlds_per_prop: int = 5,
         use_nltk: bool = True,
         full_traversal: bool = False,
+        concepts: Optional[Iterable[str]] = None,
         cache_dir: Optional[Path] = None,
+        fixture_path: Optional[Path] = None,
     ) -> None:
         self.max_props_per_concept = max_props_per_concept
         self.max_worlds_per_prop = max_worlds_per_prop
         self.use_nltk = use_nltk
         self.full_traversal = full_traversal
+        self.concepts = list(concepts) if concepts is not None else None
         self.cache_dir = (
             cache_dir.resolve()
             if cache_dir
             else (PIPELINE_ROOT / "data" / "cache" / "wordnet").resolve()
         )
+        self.fixture_path = (
+            fixture_path.resolve()
+            if fixture_path
+            else (PIPELINE_ROOT / "fixtures" / "wordnet_sub.json").resolve()
+        )
         self.source_name = "wordnet"
-        self.version = "3.1"
+        self.version = "3.0"
         self.license = "WordNet-3.0"
+        self.expected_sha256 = "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59"
         self.transformation = "wordnet_adapter_v1"
+        self.source_uri = "https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip"
+        self.target_filename = "wordnet.zip"
+        self._corpus_mode: Optional[str] = None
         self._wn: Any = None
-        if self.use_nltk:
-            self._try_init_nltk()
-        self.source_uri = "nltk://wordnet-3.1" if self._wn else "bundled://wordnet_offline"
-
-    def _try_init_nltk(self) -> None:
-        try:
-            import nltk
-            from nltk.corpus import wordnet as wn
-            # Check if synsets method is callable and corpus is available
-            wn.synsets("phone")
-            self._wn = wn
-        except Exception:
-            self._wn = None
 
     @property
     def source_type(self) -> KnowledgeSource:
@@ -135,320 +160,462 @@ class WordNetAdapter(BaseSourceAdapter):
     def provenance(self) -> IngestionProvenance:
         return IngestionProvenance(
             source=KnowledgeSource.WORDNET,
-            source_uri_or_path="nltk://wordnet-3.1" if self._wn else "bundled://wordnet_offline",
-            source_version="3.1",
-            license="WordNet-3.0",
+            source_uri_or_path=self.source_uri if self._corpus_mode == "production" else "bundled://wordnet_offline",
+            source_version=self.version,
+            license=self.license,
         )
 
-    def fetch(self, download: bool = False, cache_dir: Optional[Path] = None) -> Path:
+    def fetch_artifact(
+        self,
+        download: bool = False,
+        cache_dir: Optional[Path] = None,
+        force_refresh: bool = False,
+    ) -> SourceArtifact:
+        """Acquire WordNet corpus archive using the unified acquisition engine."""
         target_dir = cache_dir.resolve() if cache_dir else self.cache_dir
         target_dir.mkdir(parents=True, exist_ok=True)
-        local_marker = target_dir / "wordnet_ready.txt"
-        if not local_marker.exists():
-            local_marker.write_text("WordNet adapter initialized.\n", encoding="utf-8")
-        return local_marker
 
-    def stream_facts(self, limit: Optional[int] = None) -> Iterator[FactRecord]:
+        artifact = self.acquisition_engine.acquire(
+            source_key="wordnet",
+            source_uri=self.source_uri,
+            target_filename=self.target_filename,
+            cache_dir=target_dir,
+            download=download,
+            force_refresh=force_refresh,
+            fixture_path=self.fixture_path,
+            expected_sha256=self.expected_sha256,
+            version=self.version,
+            license_str=self.license,
+        )
+
+        if artifact.provenance_type == ProvenanceType.FIXTURE:
+            self._corpus_mode = "fixture"
+            self._wn = None
+            self.last_artifact = artifact
+        elif artifact.provenance_type in {ProvenanceType.DOWNLOADED, ProvenanceType.CACHED}:
+            if artifact.local_path.exists() and str(artifact.local_path).endswith(".zip"):
+                marker = target_dir / f".extracted_wordnet_{artifact.sha256_checksum[:16]}"
+                if not marker.exists() or force_refresh:
+                    wn_dir = target_dir / "wordnet"
+                    if wn_dir.exists():
+                        shutil.rmtree(wn_dir, ignore_errors=True)
+                    for old_marker in target_dir.glob(".extracted_wordnet*"):
+                        old_marker.unlink(missing_ok=True)
+
+                    try:
+                        with zipfile.ZipFile(artifact.local_path, "r") as zf:
+                            zf.extractall(target_dir)
+
+                        for root, dirs, files in os.walk(target_dir):
+                            for d in dirs:
+                                try:
+                                    os.chmod(os.path.join(root, d), stat.S_IRWXU)
+                                except OSError:
+                                    pass
+                            for f in files:
+                                p = os.path.join(root, f)
+                                if not os.path.islink(p):
+                                    try:
+                                        os.chmod(p, stat.S_IRUSR | stat.S_IWUSR)
+                                    except OSError:
+                                        pass
+                        try:
+                            os.chmod(target_dir, stat.S_IRWXU)
+                        except OSError:
+                            pass
+
+                        marker.write_text(f"extracted {artifact.sha256_checksum}\n", encoding="utf-8")
+                    except Exception as e:
+                        if wn_dir.exists():
+                            shutil.rmtree(wn_dir, ignore_errors=True)
+                        marker.unlink(missing_ok=True)
+                        self._wn = None
+                        raise SourceAcquisitionError(
+                            f"Failed to extract WordNet archive: {e}",
+                            source_key="wordnet",
+                            uri=self.source_uri,
+                            cause=e,
+                        )
+
+                if self.use_nltk:
+                    try:
+                        import nltk.data
+                        from nltk.corpus.reader.wordnet import WordNetCorpusReader
+
+                        wn_root = target_dir / "wordnet"
+                        if not wn_root.exists():
+                            wn_root = target_dir
+
+                        parent_str = str(target_dir.resolve())
+                        if parent_str not in nltk.data.path:
+                            nltk.data.path.insert(0, parent_str)
+
+                        corpora_dir = target_dir / "corpora"
+                        corpora_wn = corpora_dir / "wordnet"
+                        if not corpora_wn.exists():
+                            try:
+                                corpora_dir.mkdir(parents=True, exist_ok=True)
+                                try:
+                                    os.chmod(corpora_dir, stat.S_IRWXU)
+                                except OSError:
+                                    pass
+                                if wn_root != corpora_wn:
+                                    corpora_wn.symlink_to(wn_root, target_is_directory=True)
+                            except OSError:
+                                pass
+
+                        pointer = nltk.data.FileSystemPathPointer(str(wn_root.resolve()))
+                        self._wn = WordNetCorpusReader(pointer, None)
+                    except Exception as e:
+                        self._wn = None
+                        raise SourceAcquisitionError(
+                            f"WordNet corpus initialization failed: {e}",
+                            source_key="wordnet",
+                            uri=self.source_uri,
+                            cause=e,
+                        )
+
+            self._corpus_mode = "production"
+            self.last_artifact = artifact
+
+        return artifact
+
+    def fetch(self, download: bool = False, cache_dir: Optional[Path] = None) -> Path:
+        """Locate or retrieve raw WordNet artifact path (backward compatible wrapper)."""
+        return self.fetch_artifact(download=download, cache_dir=cache_dir).local_path
+
+    def _emit_synset_facts(self, syn: Any, prov_source_uri: str) -> Iterator[FactRecord]:
+        """Emit typed V-predicate facts for a single NLTK Synset."""
+        c_sym = safe_metta_symbol(syn.lemmas()[0].name())
+        if not c_sym:
+            return
+
+        # 1. Hypernyms -> SortFact (taxonomic_kind)
+        for h in syn.hypernyms()[: self.max_props_per_concept]:
+            h_sym = safe_metta_symbol(h.lemmas()[0].name())
+            edge_id = stable_evidence_id("sort", "wordnet", c_sym, h_sym)
+            prov = Provenance(
+                source="wordnet",
+                source_record_id=f"{c_sym}_{h_sym}",
+                source_uri=prov_source_uri,
+                source_version=self.version,
+                license=self.license,
+                transformation=self.transformation,
+                origin=FactOrigin.ASSERTED,
+            )
+            yield SortFact(
+                evidence_id=edge_id,
+                edge_id=edge_id,
+                concept=c_sym,
+                perspective=Perspective.TAXONOMIC_KIND,
+                sort=h_sym,
+                truth=TruthValue(0.95, 0.90),
+                provenance=prov,
+            )
+
+        # 2. Meronyms -> PredicateFact (structural_composition)
+        for m in syn.part_meronyms()[: self.max_props_per_concept]:
+            m_sym = safe_metta_symbol(m.lemmas()[0].name())
+            edge_id = stable_evidence_id("predicate", "wordnet", c_sym, "part_of", m_sym)
+            prov = Provenance(
+                source="wordnet",
+                source_record_id=f"{c_sym}_part_{m_sym}",
+                source_uri=prov_source_uri,
+                source_version=self.version,
+                license=self.license,
+                transformation=self.transformation,
+                origin=FactOrigin.ASSERTED,
+            )
+            yield PredicateFact(
+                evidence_id=edge_id,
+                edge_id=edge_id,
+                concept=c_sym,
+                perspective=Perspective.STRUCTURAL_COMPOSITION,
+                predicate=f"(part_of {m_sym} {c_sym})",
+                truth=TruthValue(0.90, 0.85),
+                provenance=prov,
+            )
+
+        # 3. Functional properties and worlds
+        hyponyms = syn.hyponyms()
+        source_worlds = [
+            safe_metta_symbol(hyp.lemmas()[0].name())
+            for hyp in hyponyms[: self.max_worlds_per_prop]
+        ]
+        gloss_words = re.findall(r"\b[A-Za-z]{4,}\b", syn.definition())
+        heuristic_props = [safe_metta_symbol(gw) for gw in gloss_words[:3]]
+
+        for prop in heuristic_props:
+            prop_id = stable_evidence_id("prop", "wordnet", c_sym, prop)
+            edge_id = stable_evidence_id("property", "wordnet", c_sym, prop)
+            prov = Provenance(
+                source="wordnet",
+                source_record_id=f"{c_sym}_{prop}",
+                source_uri=prov_source_uri,
+                source_version=self.version,
+                license=self.license,
+                transformation=self.transformation,
+                origin=FactOrigin.ASSERTED,
+            )
+            yield PropertyFact(
+                evidence_id=edge_id,
+                edge_id=edge_id,
+                concept=c_sym,
+                perspective=Perspective.FUNCTIONAL_USE,
+                property_id=prop_id,
+                property_name=prop,
+                truth=TruthValue(0.85, 0.80),
+                provenance=prov,
+            )
+
+            for sw in source_worlds:
+                w_edge = stable_evidence_id("world", "wordnet", prop_id, sw)
+                w_prov = Provenance(
+                    source="wordnet",
+                    source_record_id=f"{prop_id}_{sw}",
+                    source_uri=prov_source_uri,
+                    source_version=self.version,
+                    license=self.license,
+                    transformation=self.transformation,
+                    origin=FactOrigin.ASSERTED,
+                )
+                yield PropertyWorldFact(
+                    evidence_id=w_edge,
+                    edge_id=w_edge,
+                    property_id=prop_id,
+                    perspective=Perspective.FUNCTIONAL_USE,
+                    world=sw,
+                    truth=TruthValue(0.85, 0.85),
+                    provenance=w_prov,
+                )
+
+            # Heuristic generated world
+            h_world = f"{c_sym}_world"
+            h_edge = stable_evidence_id("world", "wordnet", prop_id, h_world)
+            h_prov = Provenance(
+                source="wordnet",
+                source_record_id=f"{prop_id}_{h_world}",
+                source_uri=prov_source_uri,
+                source_version=self.version,
+                license=self.license,
+                transformation="wordnet_heuristic_world_projection",
+                origin=FactOrigin.GENERATED,
+            )
+            yield PropertyWorldFact(
+                evidence_id=h_edge,
+                edge_id=h_edge,
+                property_id=prop_id,
+                perspective=Perspective.FUNCTIONAL_USE,
+                world=h_world,
+                truth=TruthValue(0.70, 0.65),
+                provenance=h_prov,
+            )
+
+    def _emit_lexicon_facts(
+        self, concept: str, lex_data: Dict[str, Any], prov_source_uri: str
+    ) -> Iterator[FactRecord]:
+        """Emit typed V-predicate facts for a concept from the offline lexicon fixture."""
+        c_sym = safe_metta_symbol(concept)
+        if not c_sym:
+            return
+
+        for h in lex_data.get("hypernyms", [])[: self.max_props_per_concept]:
+            h_sym = safe_metta_symbol(h)
+            edge_id = stable_evidence_id("sort", "wordnet", c_sym, h_sym)
+            prov = Provenance(
+                source="wordnet",
+                source_record_id=f"{c_sym}_{h_sym}",
+                source_uri=prov_source_uri,
+                source_version=self.version,
+                license=self.license,
+                transformation=self.transformation,
+                origin=FactOrigin.ASSERTED,
+            )
+            yield SortFact(
+                evidence_id=edge_id,
+                edge_id=edge_id,
+                concept=c_sym,
+                perspective=Perspective.TAXONOMIC_KIND,
+                sort=h_sym,
+                truth=TruthValue(0.95, 0.90),
+                provenance=prov,
+            )
+
+        for m in lex_data.get("part_meronyms", [])[: self.max_props_per_concept]:
+            m_sym = safe_metta_symbol(m)
+            edge_id = stable_evidence_id("predicate", "wordnet", c_sym, "part_of", m_sym)
+            prov = Provenance(
+                source="wordnet",
+                source_record_id=f"{c_sym}_part_{m_sym}",
+                source_uri=prov_source_uri,
+                source_version=self.version,
+                license=self.license,
+                transformation=self.transformation,
+                origin=FactOrigin.ASSERTED,
+            )
+            yield PredicateFact(
+                evidence_id=edge_id,
+                edge_id=edge_id,
+                concept=c_sym,
+                perspective=Perspective.STRUCTURAL_COMPOSITION,
+                predicate=f"(part_of {m_sym} {c_sym})",
+                truth=TruthValue(0.90, 0.85),
+                provenance=prov,
+            )
+
+        lex_worlds = [safe_metta_symbol(w) for w in lex_data.get("worlds", [])[: self.max_worlds_per_prop]]
+        for g in lex_data.get("gloss_attributes", [])[: self.max_props_per_concept]:
+            g_sym = safe_metta_symbol(g)
+            prop_id = stable_evidence_id("prop", "wordnet", c_sym, g_sym)
+            edge_id = stable_evidence_id("property", "wordnet", c_sym, g_sym)
+            prov = Provenance(
+                source="wordnet",
+                source_record_id=f"{c_sym}_{g_sym}",
+                source_uri=prov_source_uri,
+                source_version=self.version,
+                license=self.license,
+                transformation=self.transformation,
+                origin=FactOrigin.ASSERTED,
+            )
+            yield PropertyFact(
+                evidence_id=edge_id,
+                edge_id=edge_id,
+                concept=c_sym,
+                perspective=Perspective.FUNCTIONAL_USE,
+                property_id=prop_id,
+                property_name=g_sym,
+                truth=TruthValue(0.85, 0.80),
+                provenance=prov,
+            )
+
+            for lw in lex_worlds:
+                w_edge = stable_evidence_id("world", "wordnet", prop_id, lw)
+                w_prov = Provenance(
+                    source="wordnet",
+                    source_record_id=f"{prop_id}_{lw}",
+                    source_uri=prov_source_uri,
+                    source_version=self.version,
+                    license=self.license,
+                    transformation=self.transformation,
+                    origin=FactOrigin.ASSERTED,
+                )
+                yield PropertyWorldFact(
+                    evidence_id=w_edge,
+                    edge_id=w_edge,
+                    property_id=prop_id,
+                    perspective=Perspective.FUNCTIONAL_USE,
+                    world=lw,
+                    truth=TruthValue(0.85, 0.80),
+                    provenance=w_prov,
+                )
+
+            # Heuristic generated world
+            h_world = f"{c_sym}_heuristic_world"
+            h_edge = stable_evidence_id("world", "wordnet", prop_id, h_world)
+            h_prov = Provenance(
+                source="wordnet",
+                source_record_id=f"{prop_id}_{h_world}",
+                source_uri=prov_source_uri,
+                source_version=self.version,
+                license=self.license,
+                transformation="wordnet_heuristic_world_projection",
+                origin=FactOrigin.GENERATED,
+            )
+            yield PropertyWorldFact(
+                evidence_id=h_edge,
+                edge_id=h_edge,
+                property_id=prop_id,
+                perspective=Perspective.FUNCTIONAL_USE,
+                world=h_world,
+                truth=TruthValue(0.70, 0.65),
+                provenance=h_prov,
+            )
+
+    def stream_facts(
+        self,
+        limit: Optional[int] = None,
+        concepts: Optional[Iterable[str]] = None,
+    ) -> Iterator[FactRecord]:
         """Stream canonical typed V-predicate fact records under v-predicate/1."""
-        self.fetch(download=False)
+        if self._corpus_mode == "production" and self._wn is None:
+            raise SourceAcquisitionError("WordNet production corpus reader is not initialized")
+        if self.last_artifact is None:
+            self.fetch_artifact(download=False)
+        if self._corpus_mode == "production" and self._wn is None:
+            raise SourceAcquisitionError("WordNet production corpus reader is not initialized")
         emitted_count = 0
 
-        # Determine concepts stream
-        concepts_to_process: Iterator[str]
-        if self.full_traversal and self._wn is not None:
-            def _synset_concepts() -> Iterator[str]:
-                seen: Set[str] = set()
+        # Production Mode: stream exclusively from genuine WordNet corpus reader
+        if self._corpus_mode == "production":
+            if self._wn is None:
+                raise SourceAcquisitionError("WordNet production corpus reader is not initialized")
+            prov_source_uri = self.source_uri
+
+            active_concepts = concepts if concepts is not None else self.concepts
+            if active_concepts is not None:
+                for concept in active_concepts:
+                    c_clean = str(concept).strip().lower()
+                    synsets = self._wn.synsets(c_clean, pos=self._wn.NOUN)
+                    if synsets:
+                        for fact in self._emit_synset_facts(synsets[0], prov_source_uri):
+                            yield fact
+                            emitted_count += 1
+                            if limit is not None and emitted_count >= limit:
+                                return
+                    else:
+                        logger.debug(
+                            "Concept '%s' not found in WordNet production corpus; skipping (zero fallback)",
+                            c_clean,
+                        )
+            elif self.full_traversal:
                 for syn in self._wn.all_synsets(pos=self._wn.NOUN):
-                    name = safe_metta_symbol(syn.lemmas()[0].name())
-                    if name not in seen:
-                        seen.add(name)
-                        yield name
-            concepts_to_process = _synset_concepts()
+                    for fact in self._emit_synset_facts(syn, prov_source_uri):
+                        yield fact
+                        emitted_count += 1
+                        if limit is not None and emitted_count >= limit:
+                            return
+            else:
+                default_concepts = ["phone", "computer", "battery", "display"]
+                for concept in default_concepts:
+                    c_clean = str(concept).strip().lower()
+                    synsets = self._wn.synsets(c_clean, pos=self._wn.NOUN)
+                    if synsets:
+                        for fact in self._emit_synset_facts(synsets[0], prov_source_uri):
+                            yield fact
+                            emitted_count += 1
+                            if limit is not None and emitted_count >= limit:
+                                return
+                    else:
+                        logger.debug(
+                            "Concept '%s' not found in WordNet production corpus; skipping (zero fallback)",
+                            c_clean,
+                        )
+            return
+
+        # Fixture Mode: stream strictly from bundled offline lexicon
+        prov_source_uri = "bundled://wordnet_offline"
+        offline_lex = _load_offline_lexicon()
+        active_concepts = concepts if concepts is not None else self.concepts
+
+        if active_concepts is not None:
+            concepts_to_process = list(active_concepts)
         else:
-            concepts_to_process = iter(OFFLINE_LEXICON.keys())
+            concepts_to_process = list(offline_lex.keys())
 
         for concept in concepts_to_process:
-            c_sym = safe_metta_symbol(concept)
-            if not c_sym:
-                continue
-
-            # Check if NLTK synset available
-            if self._wn is not None and self.use_nltk:
-                synsets = self._wn.synsets(concept, pos=self._wn.NOUN)
-            else:
-                synsets = []
-
-            if synsets:
-                primary_syn = synsets[0]
-                # 1. Hypernyms -> SortFact (taxonomic_kind)
-                for h in primary_syn.hypernyms()[: self.max_props_per_concept]:
-                    h_sym = safe_metta_symbol(h.lemmas()[0].name())
-                    edge_id = stable_evidence_id("sort", "wordnet", c_sym, h_sym)
-                    prov = Provenance(
-                        source="wordnet",
-                        source_record_id=f"{c_sym}_{h_sym}",
-                        source_uri="nltk://wordnet-3.1",
-                        source_version="3.1",
-                        license="WordNet-3.0",
-                        transformation="wordnet_adapter_v1",
-                        origin=FactOrigin.ASSERTED,
-                    )
-                    yield SortFact(
-                        evidence_id=edge_id,
-                        edge_id=edge_id,
-                        concept=c_sym,
-                        perspective=Perspective.TAXONOMIC_KIND,
-                        sort=h_sym,
-                        truth=TruthValue(0.95, 0.90),
-                        provenance=prov,
-                    )
-                    emitted_count += 1
-                    if limit is not None and emitted_count >= limit:
-                        return
-
-                # 2. Meronyms -> PredicateFact (structural_composition)
-                for m in primary_syn.part_meronyms()[: self.max_props_per_concept]:
-                    m_sym = safe_metta_symbol(m.lemmas()[0].name())
-                    edge_id = stable_evidence_id("predicate", "wordnet", c_sym, "part_of", m_sym)
-                    prov = Provenance(
-                        source="wordnet",
-                        source_record_id=f"{c_sym}_part_{m_sym}",
-                        source_uri="nltk://wordnet-3.1",
-                        source_version="3.1",
-                        license="WordNet-3.0",
-                        transformation="wordnet_adapter_v1",
-                        origin=FactOrigin.ASSERTED,
-                    )
-                    yield PredicateFact(
-                        evidence_id=edge_id,
-                        edge_id=edge_id,
-                        concept=c_sym,
-                        perspective=Perspective.STRUCTURAL_COMPOSITION,
-                        predicate=f"(part_of {m_sym} {c_sym})",
-                        truth=TruthValue(0.90, 0.85),
-                        provenance=prov,
-                    )
-                    emitted_count += 1
-                    if limit is not None and emitted_count >= limit:
-                        return
-
-                # 3. Functional properties and worlds
-                hyponyms = primary_syn.hyponyms()
-                source_worlds = [
-                    safe_metta_symbol(hyp.lemmas()[0].name())
-                    for hyp in hyponyms[: self.max_worlds_per_prop]
-                ]
-                gloss_words = re.findall(r"\b[A-Za-z]{4,}\b", primary_syn.definition())
-                heuristic_props = [safe_metta_symbol(gw) for gw in gloss_words[:3]]
-
-                for prop in heuristic_props:
-                    prop_id = stable_evidence_id("prop", "wordnet", c_sym, prop)
-                    edge_id = stable_evidence_id("property", "wordnet", c_sym, prop)
-                    prov = Provenance(
-                        source="wordnet",
-                        source_record_id=f"{c_sym}_{prop}",
-                        source_uri="nltk://wordnet-3.1",
-                        source_version="3.1",
-                        license="WordNet-3.0",
-                        transformation="wordnet_adapter_v1",
-                        origin=FactOrigin.ASSERTED,
-                    )
-                    yield PropertyFact(
-                        evidence_id=edge_id,
-                        edge_id=edge_id,
-                        concept=c_sym,
-                        perspective=Perspective.FUNCTIONAL_USE,
-                        property_id=prop_id,
-                        property_name=prop,
-                        truth=TruthValue(0.85, 0.80),
-                        provenance=prov,
-                    )
-                    emitted_count += 1
-                    if limit is not None and emitted_count >= limit:
-                        return
-
-                    for sw in source_worlds:
-                        w_edge = stable_evidence_id("world", "wordnet", prop_id, sw)
-                        w_prov = Provenance(
-                            source="wordnet",
-                            source_record_id=f"{prop_id}_{sw}",
-                            source_uri="nltk://wordnet-3.1",
-                            source_version="3.1",
-                            license="WordNet-3.0",
-                            transformation="wordnet_adapter_v1",
-                            origin=FactOrigin.ASSERTED,
-                        )
-                        yield PropertyWorldFact(
-                            evidence_id=w_edge,
-                            edge_id=w_edge,
-                            property_id=prop_id,
-                            perspective=Perspective.FUNCTIONAL_USE,
-                            world=sw,
-                            truth=TruthValue(0.85, 0.85),
-                            provenance=w_prov,
-                        )
-                        emitted_count += 1
-                        if limit is not None and emitted_count >= limit:
-                            return
-
-                    # Heuristic generated world
-                    h_world = f"{c_sym}_world"
-                    h_edge = stable_evidence_id("world", "wordnet", prop_id, h_world)
-                    h_prov = Provenance(
-                        source="wordnet",
-                        source_record_id=f"{prop_id}_{h_world}",
-                        source_uri="nltk://wordnet-3.1",
-                        source_version="3.1",
-                        license="WordNet-3.0",
-                        transformation="wordnet_heuristic_world_projection",
-                        origin=FactOrigin.GENERATED,
-                    )
-                    yield PropertyWorldFact(
-                        evidence_id=h_edge,
-                        edge_id=h_edge,
-                        property_id=prop_id,
-                        perspective=Perspective.FUNCTIONAL_USE,
-                        world=h_world,
-                        truth=TruthValue(0.70, 0.65),
-                        provenance=h_prov,
-                    )
-                    emitted_count += 1
-                    if limit is not None and emitted_count >= limit:
-                        return
-
-            else:
-                # Fallback to bundled OFFLINE_LEXICON
-                lex_data = OFFLINE_LEXICON.get(concept, {})
-                for h in lex_data.get("hypernyms", [])[: self.max_props_per_concept]:
-                    h_sym = safe_metta_symbol(h)
-                    edge_id = stable_evidence_id("sort", "wordnet", c_sym, h_sym)
-                    prov = Provenance(
-                        source="wordnet",
-                        source_record_id=f"{c_sym}_{h_sym}",
-                        source_uri="bundled://wordnet_offline",
-                        source_version="3.1",
-                        license="WordNet-3.0",
-                        transformation="wordnet_adapter_v1",
-                        origin=FactOrigin.ASSERTED,
-                    )
-                    yield SortFact(
-                        evidence_id=edge_id,
-                        edge_id=edge_id,
-                        concept=c_sym,
-                        perspective=Perspective.TAXONOMIC_KIND,
-                        sort=h_sym,
-                        truth=TruthValue(0.95, 0.90),
-                        provenance=prov,
-                    )
-                    emitted_count += 1
-                    if limit is not None and emitted_count >= limit:
-                        return
-
-                for m in lex_data.get("part_meronyms", [])[: self.max_props_per_concept]:
-                    m_sym = safe_metta_symbol(m)
-                    edge_id = stable_evidence_id("predicate", "wordnet", c_sym, "part_of", m_sym)
-                    prov = Provenance(
-                        source="wordnet",
-                        source_record_id=f"{c_sym}_part_{m_sym}",
-                        source_uri="bundled://wordnet_offline",
-                        source_version="3.1",
-                        license="WordNet-3.0",
-                        transformation="wordnet_adapter_v1",
-                        origin=FactOrigin.ASSERTED,
-                    )
-                    yield PredicateFact(
-                        evidence_id=edge_id,
-                        edge_id=edge_id,
-                        concept=c_sym,
-                        perspective=Perspective.STRUCTURAL_COMPOSITION,
-                        predicate=f"(part_of {m_sym} {c_sym})",
-                        truth=TruthValue(0.90, 0.85),
-                        provenance=prov,
-                    )
-                    emitted_count += 1
-                    if limit is not None and emitted_count >= limit:
-                        return
-
-                lex_worlds = [safe_metta_symbol(w) for w in lex_data.get("worlds", [])[: self.max_worlds_per_prop]]
-                for g in lex_data.get("gloss_attributes", [])[: self.max_props_per_concept]:
-                    g_sym = safe_metta_symbol(g)
-                    prop_id = stable_evidence_id("prop", "wordnet", c_sym, g_sym)
-                    edge_id = stable_evidence_id("property", "wordnet", c_sym, g_sym)
-                    prov = Provenance(
-                        source="wordnet",
-                        source_record_id=f"{c_sym}_{g_sym}",
-                        source_uri="bundled://wordnet_offline",
-                        source_version="3.1",
-                        license="WordNet-3.0",
-                        transformation="wordnet_adapter_v1",
-                        origin=FactOrigin.ASSERTED,
-                    )
-                    yield PropertyFact(
-                        evidence_id=edge_id,
-                        edge_id=edge_id,
-                        concept=c_sym,
-                        perspective=Perspective.FUNCTIONAL_USE,
-                        property_id=prop_id,
-                        property_name=g_sym,
-                        truth=TruthValue(0.85, 0.80),
-                        provenance=prov,
-                    )
-                    emitted_count += 1
-                    if limit is not None and emitted_count >= limit:
-                        return
-
-                    for lw in lex_worlds:
-                        w_edge = stable_evidence_id("world", "wordnet", prop_id, lw)
-                        w_prov = Provenance(
-                            source="wordnet",
-                            source_record_id=f"{prop_id}_{lw}",
-                            source_uri="bundled://wordnet_offline",
-                            source_version="3.1",
-                            license="WordNet-3.0",
-                            transformation="wordnet_adapter_v1",
-                            origin=FactOrigin.ASSERTED,
-                        )
-                        yield PropertyWorldFact(
-                            evidence_id=w_edge,
-                            edge_id=w_edge,
-                            property_id=prop_id,
-                            perspective=Perspective.FUNCTIONAL_USE,
-                            world=lw,
-                            truth=TruthValue(0.85, 0.80),
-                            provenance=w_prov,
-                        )
-                        emitted_count += 1
-                        if limit is not None and emitted_count >= limit:
-                            return
-
-                    # Heuristic generated world
-                    h_world = f"{c_sym}_heuristic_world"
-                    h_edge = stable_evidence_id("world", "wordnet", prop_id, h_world)
-                    h_prov = Provenance(
-                        source="wordnet",
-                        source_record_id=f"{prop_id}_{h_world}",
-                        source_uri="bundled://wordnet_offline",
-                        source_version="3.1",
-                        license="WordNet-3.0",
-                        transformation="wordnet_heuristic_world_projection",
-                        origin=FactOrigin.GENERATED,
-                    )
-                    yield PropertyWorldFact(
-                        evidence_id=h_edge,
-                        edge_id=h_edge,
-                        property_id=prop_id,
-                        perspective=Perspective.FUNCTIONAL_USE,
-                        world=h_world,
-                        truth=TruthValue(0.70, 0.65),
-                        provenance=h_prov,
-                    )
+            c_clean = str(concept).strip().lower()
+            lex_data = offline_lex.get(c_clean, {})
+            if lex_data:
+                for fact in self._emit_lexicon_facts(c_clean, lex_data, prov_source_uri):
+                    yield fact
                     emitted_count += 1
                     if limit is not None and emitted_count >= limit:
                         return
 
     def extract_raw_records(self, limit: Optional[int] = None) -> Iterator[RawRecord]:
         count = 0
-        for concept in OFFLINE_LEXICON:
+        lex = _load_offline_lexicon()
+        for concept in lex:
             for record in self.extract_concept_records(concept):
                 yield record
                 count += 1
@@ -459,15 +626,17 @@ class WordNetAdapter(BaseSourceAdapter):
         """Extract lexical properties for a given concept string."""
         concept_clean = concept.strip().lower()
 
-        if self._wn is not None:
+        if self._corpus_mode == "production":
+            if self._wn is None:
+                raise SourceAcquisitionError("WordNet production corpus reader is not initialized")
             yield from self._extract_nltk_records(concept_clean)
         else:
             yield from self._extract_offline_records(concept_clean)
 
     def _extract_offline_records(self, concept: str) -> Iterator[RawRecord]:
-        data = OFFLINE_LEXICON.get(concept)
+        lex = _load_offline_lexicon()
+        data = lex.get(concept)
         if not data:
-            # Fallback for arbitrary words: generate base hypernym and property
             yield RawRecord(
                 source_id=f"{concept}.n.01",
                 concept_name=concept,
@@ -482,7 +651,6 @@ class WordNetAdapter(BaseSourceAdapter):
         emitted = 0
         worlds = data.get("worlds", [])[: self.max_worlds_per_prop]
 
-        # 1. Hypernyms
         for h in data.get("hypernyms", []):
             if emitted >= self.max_props_per_concept:
                 return
@@ -497,7 +665,6 @@ class WordNetAdapter(BaseSourceAdapter):
             )
             emitted += 1
 
-        # 2. Part Meronyms
         for m in data.get("part_meronyms", []):
             if emitted >= self.max_props_per_concept:
                 return
@@ -512,7 +679,6 @@ class WordNetAdapter(BaseSourceAdapter):
             )
             emitted += 1
 
-        # 3. Gloss Attributes
         for g in data.get("gloss_attributes", []):
             if emitted >= self.max_props_per_concept:
                 return
@@ -530,13 +696,11 @@ class WordNetAdapter(BaseSourceAdapter):
     def _extract_nltk_records(self, concept: str) -> Iterator[RawRecord]:
         synsets = self._wn.synsets(concept, pos=self._wn.NOUN)
         if not synsets:
-            yield from self._extract_offline_records(concept)
             return
 
         primary_syn = synsets[0]
         emitted = 0
 
-        # Worlds from hyponyms
         hyponyms = primary_syn.hyponyms()
         worlds = [
             safe_metta_symbol(h.lemmas()[0].name())
@@ -545,7 +709,6 @@ class WordNetAdapter(BaseSourceAdapter):
         if not worlds:
             worlds = [safe_metta_symbol(concept)]
 
-        # Hypernyms
         for h in primary_syn.hypernyms():
             if emitted >= self.max_props_per_concept:
                 return
@@ -561,7 +724,6 @@ class WordNetAdapter(BaseSourceAdapter):
             )
             emitted += 1
 
-        # Part Meronyms
         for m in primary_syn.part_meronyms():
             if emitted >= self.max_props_per_concept:
                 return
@@ -577,7 +739,6 @@ class WordNetAdapter(BaseSourceAdapter):
             )
             emitted += 1
 
-        # Gloss words as functional attributes
         gloss_words = re.findall(r"\b[A-Za-z]{4,}\b", primary_syn.definition())
         for gw in gloss_words[:3]:
             if emitted >= self.max_props_per_concept:
@@ -600,7 +761,6 @@ class WordNetAdapter(BaseSourceAdapter):
         if not concept_sym or not target_sym:
             return None
 
-        # Determine canonical perspective and relation
         if record.relation in {"hypernym", "isA"}:
             perspective = "taxonomic-kind"
             relation = "isA"
@@ -662,7 +822,6 @@ class WordNetAdapter(BaseSourceAdapter):
                     stv=stv,
                 )
             )
-            # operation_signature shares the same edge_id as has_operation for MeTTa spec-operation-rule unification
             facts.append(
                 MettaFact(
                     fact_type=FactType.OPERATION_SIGNATURE,
@@ -687,7 +846,6 @@ class WordNetAdapter(BaseSourceAdapter):
         prop_id = f"prop_{record.concept}_{record.property_or_target}"
         edge_id = _edge_id("pw", record.concept, record.perspective, prop_id)
 
-        # 1. Concept-Property assertion
         facts.append(
             MettaFact(
                 fact_type=FactType.HAS_SCOPED_PROPERTY,
@@ -696,7 +854,6 @@ class WordNetAdapter(BaseSourceAdapter):
             )
         )
 
-        # 2. Perspective Match assertion (arity 3 matching MeTTa rule contracts)
         facts.append(
             MettaFact(
                 fact_type=FactType.PERSPECTIVE_MATCH,
@@ -705,14 +862,13 @@ class WordNetAdapter(BaseSourceAdapter):
             )
         )
 
-        # 3. Worlds relevance
-        # Retrieve candidate worlds from lexicon or concept context
         raw_concept = record.concept
+        lex = _load_offline_lexicon()
         worlds_pool: List[str] = []
-        if raw_concept in OFFLINE_LEXICON:
+        if raw_concept in lex:
             worlds_pool = [
                 safe_metta_symbol(w)
-                for w in OFFLINE_LEXICON[raw_concept].get("worlds", [])
+                for w in lex[raw_concept].get("worlds", [])
             ]
         if not worlds_pool:
             worlds_pool = [record.concept, f"{record.concept}_domain"]
@@ -728,4 +884,3 @@ class WordNetAdapter(BaseSourceAdapter):
             )
 
         return facts
-

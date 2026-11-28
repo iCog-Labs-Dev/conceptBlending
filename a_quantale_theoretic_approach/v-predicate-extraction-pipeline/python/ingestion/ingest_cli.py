@@ -63,6 +63,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Download latest live source ontologies over network instead of bundled fixtures.",
     )
     parser.add_argument(
+        "--force-refresh",
+        action="store_true",
+        help="Force re-download of knowledge sources even if valid cache exists.",
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         default=None,
@@ -104,6 +109,7 @@ def main(args: Optional[List[str]] = None) -> int:
         download=parsed_args.download,
         output_dir=output_dir,
         verbose=parsed_args.verbose,
+        force_refresh=parsed_args.force_refresh,
     )
 
     print("\n=== Ingestion Complete ===")
@@ -113,6 +119,13 @@ def main(args: Optional[List[str]] = None) -> int:
     print(f"Total Property-World Facts:  {summary.total_property_world_facts}")
     if summary.manifest_path:
         print(f"Execution Manifest:          {summary.manifest_path}")
+    if summary.source_summaries:
+        print("Source Provenance:")
+        for src, info in summary.source_summaries.items():
+            art = info.get("artifact")
+            prov_type = art.get("provenance_type", "unknown").upper() if art else "N/A"
+            sha = art.get("sha256_checksum", "")[:12] if art else "N/A"
+            print(f"  - {src}: [{prov_type}] version={info.get('version')} (sha256={sha}...)")
     print("Generated Files:")
     for out_file in summary.output_files:
         print(f"  - {out_file} ({out_file.stat().st_size if out_file.exists() else 0} bytes)")

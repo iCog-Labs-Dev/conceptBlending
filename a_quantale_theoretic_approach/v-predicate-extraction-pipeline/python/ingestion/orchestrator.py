@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import datetime
 import hashlib
 import json
+import logging
 from pathlib import Path
 import shutil
 from typing import (
@@ -13,10 +14,8 @@ from typing import (
     Callable,
     Dict,
     Iterable,
-    Iterator,
     List,
     Optional,
-    Set,
     Union,
     cast,
 )
@@ -25,19 +24,18 @@ from .base_adapter import BaseSourceAdapter
 from .chebi_adapter import ChebiAdapter
 from .conceptnet_adapter import ConceptNetAdapter
 from .go_adapter import GeneOntologyAdapter
-from .models import FactType, KnowledgeSource, MettaFact, NormalizedRecord
+from .models import KnowledgeSource
 from .openmath_adapter import OpenMathAdapter
-from .sinks import BaseSink, InMemoryTestSink, MettaFileSink, PathMapSink
+from .sinks import BaseSink, MettaFileSink
 from .wordnet_adapter import WordNetAdapter
 from v_predicate_contract import (
     CONTRACT_VERSION,
-    ContractValidationError,
     FactKind,
-    FactRecord,
     validate_record_set,
 )
 
 PIPELINE_ROOT = Path(__file__).resolve().parents[2]
+logger = logging.getLogger(__name__)
 
 
 def _file_sha256(path: Path) -> str:
@@ -100,6 +98,7 @@ class MultiSourceOrchestrator:
         download: bool = False,
         output_dir: Optional[Path] = None,
         verbose: bool = False,
+        force_refresh: bool = False,
     ) -> IngestionSummary:
         """Execute streaming ingestion across selected sources with atomic staging and validation."""
         target_dir = Path(output_dir or (PIPELINE_ROOT / "data" / "generated")).resolve()
@@ -168,14 +167,21 @@ class MultiSourceOrchestrator:
                 # Ensure source data is localized
                 if hasattr(adapter, "fetch_artifact") and callable(getattr(adapter, "fetch_artifact")):
                     try:
-                        artifact = adapter.fetch_artifact(download=download)
+                        artifact = adapter.fetch_artifact(download=download, force_refresh=force_refresh)
                         resolved_file = artifact.local_path
+                        prov_label = (
+                            artifact.provenance_type.value.upper()
+                            if hasattr(artifact.provenance_type, "value")
+                            else str(artifact.provenance_type).upper()
+                        )
+                        logger.info(
+                            "[Acquisition] %s -> %s (SHA-256: %s..., bytes: %d)",
+                            src_key,
+                            prov_label,
+                            artifact.sha256_checksum[:12],
+                            artifact.byte_size,
+                        )
                         if verbose:
-                            prov_label = (
-                                artifact.provenance_type.value.upper()
-                                if hasattr(artifact.provenance_type, "value")
-                                else str(artifact.provenance_type).upper()
-                            )
                             print(
                                 f"[Acquisition] {src_key} -> {prov_label} "
                                 f"(SHA-256: {artifact.sha256_checksum[:12]}..., bytes: {artifact.byte_size})"

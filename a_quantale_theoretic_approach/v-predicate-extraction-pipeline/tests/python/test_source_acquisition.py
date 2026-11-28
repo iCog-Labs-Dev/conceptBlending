@@ -21,7 +21,6 @@ from ingestion.acquisition import (
     ProvenanceType,
     SourceAcquisitionEngine,
     SourceAcquisitionError,
-    SourceArtifact,
     compute_file_sha256,
 )
 from ingestion.chebi_adapter import ChebiAdapter

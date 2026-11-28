@@ -2,14 +2,26 @@
 
 from __future__ import annotations
 
+import gzip
+import io
+import json
 from pathlib import Path
 import sys
+import tempfile
 import unittest
-from typing import Iterator
+from unittest.mock import MagicMock, patch
+import urllib.error
 
 PIPELINE_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(PIPELINE_ROOT / "python"))
+if str(PIPELINE_ROOT / "python") not in sys.path:
+    sys.path.insert(0, str(PIPELINE_ROOT / "python"))
 
+from ingestion.acquisition import (  # noqa: E402
+    ProvenanceType,
+    SourceAcquisitionError,
+    SourceArtifact,
+)
+from ingestion.conceptnet_adapter import ConceptNetAdapter, _sanitize_symbol  # noqa: E402
 from v_predicate_contract import (  # noqa: E402
     CONTRACT_VERSION,
     FactKind,
@@ -22,7 +34,34 @@ from v_predicate_contract import (  # noqa: E402
     validate_record_set,
 )
 
-from ingestion.conceptnet_adapter import ConceptNetAdapter  # noqa: E402
+
+class MockStreamingResponse:
+    """Mock HTTP streaming response for deterministic offline acquisition tests."""
+
+    def __init__(self, data: bytes) -> None:
+        self.buffer = io.BytesIO(data)
+
+    def read(self, amt: int = 65536) -> bytes:
+        return self.buffer.read(amt)
+
+    def __enter__(self) -> MockStreamingResponse:
+        return self
+
+    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
+        pass
+
+
+def _create_mock_conceptnet_tsv_gz() -> bytes:
+    """Create a minimal gzip-compressed ConceptNet assertions file."""
+    lines = [
+        "/a/[/r/IsA/,/c/en/computer/,/c/en/machine/]\t/r/IsA\t/c/en/computer\t/c/en/machine\t{\"weight\": 3.5}\n",
+        "/a/[/r/UsedFor/,/c/en/computer/,/c/en/compute/]\t/r/UsedFor\t/c/en/computer\t/c/en/compute\t{\"weight\": 2.8}\n",
+        "/a/[/r/CapableOf/,/c/en/computer/,/c/en/process/]\t/r/CapableOf\t/c/en/computer\t/c/en/process\t{\"weight\": 2.0}\n",
+        "/a/[/r/IsA/,/c/fr/ordinateur/,/c/fr/machine/]\t/r/IsA\t/c/fr/ordinateur\t/c/fr/machine\t{\"weight\": 3.0}\n",
+        "/a/[/r/HasProperty/,/c/en/computer/,/c/en/electronic/]\t/r/HasProperty\t/c/en/computer\t/c/en/electronic\t{\"weight\": 2.5}\n",
+    ]
+    raw = "".join(lines).encode("utf-8")
+    return gzip.compress(raw)
 
 
 class ConceptNetAdapterTests(unittest.TestCase):
@@ -40,11 +79,177 @@ class ConceptNetAdapterTests(unittest.TestCase):
         self.assertTrue(fetched.exists())
         self.assertEqual(fetched.resolve(), self.fixture_path.resolve())
 
+    def test_fetch_artifact_fixture(self) -> None:
+        artifact = self.adapter.fetch_artifact(download=False)
+        self.assertIsInstance(artifact, SourceArtifact)
+        self.assertEqual(artifact.provenance_type, ProvenanceType.FIXTURE)
+        self.assertEqual(artifact.local_path.resolve(), self.fixture_path.resolve())
+        self.assertEqual(artifact.source_version, "5.7.0")
+        self.assertEqual(artifact.license, "CC-BY-SA-4.0")
+        self.assertGreater(artifact.byte_size, 0)
+        self.assertEqual(len(artifact.sha256_checksum), 64)
+
+    @patch("urllib.request.urlopen")
+    def test_fetch_artifact_mock_download_and_cache(self, mock_urlopen: MagicMock) -> None:
+        mock_gz_bytes = _create_mock_conceptnet_tsv_gz()
+        mock_urlopen.return_value = MockStreamingResponse(mock_gz_bytes)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cache_path = Path(tmp_dir)
+            adapter = ConceptNetAdapter(cache_dir=cache_path, fixture_path=self.fixture_path)
+
+            # 1. Cold download
+            artifact = adapter.fetch_artifact(download=True)
+            self.assertEqual(artifact.provenance_type, ProvenanceType.DOWNLOADED)
+            self.assertTrue(artifact.local_path.exists())
+            self.assertEqual(artifact.byte_size, len(mock_gz_bytes))
+
+            sidecar = cache_path / "conceptnet-assertions-5.7.0.csv.gz.meta.json"
+            self.assertTrue(sidecar.is_file())
+            sidecar_data = json.loads(sidecar.read_text(encoding="utf-8"))
+            self.assertEqual(sidecar_data["sha256_checksum"], artifact.sha256_checksum)
+
+            # 2. Cache hit
+            mock_urlopen.reset_mock()
+            cached_artifact = adapter.fetch_artifact(download=True, force_refresh=False)
+            mock_urlopen.assert_not_called()
+            self.assertEqual(cached_artifact.provenance_type, ProvenanceType.CACHED)
+            self.assertEqual(cached_artifact.sha256_checksum, artifact.sha256_checksum)
+
+    @patch("urllib.request.urlopen")
+    def test_zero_byte_download_rejection(self, mock_urlopen: MagicMock) -> None:
+        mock_urlopen.return_value = MockStreamingResponse(b"")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cache_path = Path(tmp_dir)
+            adapter = ConceptNetAdapter(cache_dir=cache_path, fixture_path=self.fixture_path)
+
+            with self.assertRaises(SourceAcquisitionError) as ctx:
+                adapter.fetch_artifact(download=True)
+
+            self.assertIn("0 bytes", str(ctx.exception))
+            tmp_files = list(cache_path.glob("*.tmp*"))
+            self.assertEqual(len(tmp_files), 0, "No orphaned temporary files on failure")
+
+    @patch("urllib.request.urlopen")
+    def test_download_failure_raises_and_preserves_offline_mode(self, mock_urlopen: MagicMock) -> None:
+        mock_urlopen.side_effect = urllib.error.URLError("Network unreachable")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cache_path = Path(tmp_dir)
+            adapter = ConceptNetAdapter(cache_dir=cache_path, fixture_path=self.fixture_path)
+
+            # Fail-fast enforcement: download=True raises SourceAcquisitionError
+            with self.assertRaises(SourceAcquisitionError):
+                adapter.fetch_artifact(download=True)
+
+            # Offline mode download=False cleanly falls back to bundled fixture
+            fallback_art = adapter.fetch_artifact(download=False)
+            self.assertEqual(fallback_art.provenance_type, ProvenanceType.FIXTURE)
+            self.assertTrue(fallback_art.local_path.exists())
+
+    def test_corrupt_compressed_stream_handling(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cache_path = Path(tmp_dir)
+            corrupt_file = cache_path / "conceptnet-assertions-5.7.0.csv.gz"
+            corrupt_file.write_bytes(b"\x1f\x8b\x08\x00\x00\x00corrupted_non_gzip_data")
+
+            # Seed sidecar to simulate cached corrupt archive
+            sidecar = cache_path / "conceptnet-assertions-5.7.0.csv.gz.meta.json"
+            sidecar.write_text(json.dumps({"sha256_checksum": "dummy"}), encoding="utf-8")
+
+            adapter = ConceptNetAdapter(cache_dir=cache_path)
+            adapter.last_artifact = SourceArtifact(
+                local_path=corrupt_file,
+                source_uri="mock://test",
+                source_version="5.7.0",
+                license="CC-BY-SA-4.0",
+                retrieval_time="2026-11-27T00:00:00Z",
+                byte_size=corrupt_file.stat().st_size,
+                sha256_checksum="dummy",
+                provenance_type=ProvenanceType.CACHED,
+            )
+
+            with self.assertRaises(ValueError) as ctx:
+                list(adapter.stream_facts())
+            self.assertIn("Corrupted compressed ConceptNet archive", str(ctx.exception))
+
+    def test_compressed_gzip_streaming_and_parsing(self) -> None:
+        mock_gz_bytes = _create_mock_conceptnet_tsv_gz()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cache_path = Path(tmp_dir)
+            gz_file = cache_path / "conceptnet-assertions-5.7.0.csv.gz"
+            gz_file.write_bytes(mock_gz_bytes)
+
+            adapter = ConceptNetAdapter(cache_dir=cache_path)
+            adapter.last_artifact = SourceArtifact(
+                local_path=gz_file,
+                source_uri="mock://conceptnet",
+                source_version="5.7.0",
+                license="CC-BY-SA-4.0",
+                retrieval_time="2026-11-27T00:00:00Z",
+                byte_size=len(mock_gz_bytes),
+                sha256_checksum="dummy",
+                provenance_type=ProvenanceType.CACHED,
+            )
+
+            facts = list(adapter.stream_facts())
+            self.assertGreater(len(facts), 0)
+            # French assertion must be filtered out by default English language filter
+            concepts = {getattr(f, "concept", "") for f in facts if hasattr(f, "concept")}
+            self.assertIn("computer", concepts)
+            self.assertNotIn("ordinateur", concepts)
+            validate_record_set(facts)
+
+    def test_language_filtering(self) -> None:
+        mock_gz_bytes = _create_mock_conceptnet_tsv_gz()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cache_path = Path(tmp_dir)
+            gz_file = cache_path / "conceptnet-assertions-5.7.0.csv.gz"
+            gz_file.write_bytes(mock_gz_bytes)
+
+            # English only
+            adapter_en = ConceptNetAdapter(cache_dir=cache_path, languages={"en"})
+            adapter_en.last_artifact = SourceArtifact(
+                local_path=gz_file,
+                source_uri="mock://conceptnet",
+                source_version="5.7.0",
+                license="CC-BY-SA-4.0",
+                retrieval_time="2026-11-27T00:00:00Z",
+                byte_size=len(mock_gz_bytes),
+                sha256_checksum="dummy",
+                provenance_type=ProvenanceType.CACHED,
+            )
+            en_facts = list(adapter_en.stream_facts())
+            self.assertTrue(all(getattr(f, "concept", None) == "computer" for f in en_facts))
+
+            # French only
+            adapter_fr = ConceptNetAdapter(cache_dir=cache_path, languages={"fr"})
+            adapter_fr.last_artifact = adapter_en.last_artifact
+            fr_facts = list(adapter_fr.stream_facts())
+            self.assertEqual(len(fr_facts), 1)
+            self.assertEqual(getattr(fr_facts[0], "concept", None), "ordinateur")
+
+    def test_relation_filtering(self) -> None:
+        # Filter for only IsA relations
+        facts = list(self.adapter.stream_facts(relations={"/r/IsA"}))
+        self.assertGreater(len(facts), 0)
+        for f in facts:
+            self.assertIsInstance(f, SortFact)
+            if isinstance(f, SortFact):
+                self.assertEqual(f.perspective, Perspective.TAXONOMIC_KIND)
+
+    def test_concept_seed_filtering(self) -> None:
+        # Filter for only computer
+        facts = list(self.adapter.stream_facts(concepts={"computer"}))
+        self.assertGreater(len(facts), 0)
+        for f in facts:
+            self.assertEqual(getattr(f, "concept", None), "computer")
+
     def test_stream_facts_returns_generator(self) -> None:
         stream = self.adapter.stream_facts()
         self.assertTrue(hasattr(stream, "__iter__"))
         self.assertTrue(hasattr(stream, "__next__"))
-        # Ensure it yields records lazily
         first_five = [next(stream) for _ in range(5)]
         self.assertEqual(len(first_five), 5)
 
@@ -111,7 +316,6 @@ class ConceptNetAdapterTests(unittest.TestCase):
     def test_all_facts_pass_contract_validation(self) -> None:
         facts = list(self.adapter.stream_facts())
         self.assertGreater(len(facts), 10)
-        # validate_record_set raises ContractValidationError if invalid
         validate_record_set(facts)
 
     def test_render_document_compatibility(self) -> None:
@@ -129,20 +333,10 @@ class ConceptNetAdapterTests(unittest.TestCase):
         self.assertEqual([f.to_metta() for f in facts1], [f.to_metta() for f in facts2])
 
     def test_symbol_sanitization(self) -> None:
-        from ingestion.conceptnet_adapter import _sanitize_symbol
         self.assertEqual(_sanitize_symbol("/c/en/computer/n"), "computer")
         self.assertEqual(_sanitize_symbol("3d-printer"), "n_3d_printer")
         self.assertEqual(_sanitize_symbol("personal computer"), "personal_computer")
         self.assertEqual(_sanitize_symbol(""), "unknown")
-
-    def test_download_fallback_on_network_error(self) -> None:
-        # Mock network failure by pointing cache_dir to temporary path
-        import tempfile
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            adapter = ConceptNetAdapter(fixture_path=self.fixture_path, cache_dir=Path(tmp_dir))
-            # Even if download=True, fallback returns fixture if network fails
-            path = adapter.fetch(download=True)
-            self.assertTrue(path.exists())
 
 
 if __name__ == "__main__":
